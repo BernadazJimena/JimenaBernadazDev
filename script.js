@@ -1,8 +1,26 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 const year = document.querySelector('#year');
+const statusDot = document.querySelector('.status-dot');
 
 if (year) year.textContent = new Date().getFullYear();
+
+const updateAvailabilityStatus = () => {
+    if (!statusDot) return;
+
+    const argentinaTime = new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        hour12: false,
+        timeZone: 'America/Argentina/Buenos_Aires'
+    }).formatToParts(new Date());
+    const currentHour = Number(argentinaTime.find(({ type }) => type === 'hour').value);
+    const isOutsideHours = currentHour >= 17 || currentHour < 9;
+
+    statusDot.classList.toggle('is-closed', isOutsideHours);
+};
+
+updateAvailabilityStatus();
+setInterval(updateAvailabilityStatus, 60 * 1000);
 
 menuToggle?.addEventListener('click', () => {
     const isOpen = mainNav.classList.toggle('is-open');
