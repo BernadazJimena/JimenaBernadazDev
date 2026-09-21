@@ -5,25 +5,25 @@ const year = document.querySelector('#year');
 if (year) year.textContent = new Date().getFullYear();
 
 menuToggle?.addEventListener('click', () => {
-  const isOpen = mainNav.classList.toggle('is-open');
-  menuToggle.setAttribute('aria-expanded', String(isOpen));
-  menuToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+    const isOpen = mainNav.classList.toggle('is-open');
+    menuToggle.setAttribute('aria-expanded', String(isOpen));
+    menuToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
 });
 
 document.querySelectorAll('.main-nav a').forEach((link) => {
-  link.addEventListener('click', () => {
-    mainNav.classList.remove('is-open');
-    menuToggle?.setAttribute('aria-expanded', 'false');
-    menuToggle?.setAttribute('aria-label', 'Abrir menú');
-  });
+    link.addEventListener('click', () => {
+        mainNav.classList.remove('is-open');
+        menuToggle?.setAttribute('aria-expanded', 'false');
+        menuToggle?.setAttribute('aria-label', 'Abrir menú');
+    });
 });
 
 const revealObserver = new IntersectionObserver((entries, observer) => {
-  entries.forEach((entry) => {
-    if (!entry.isIntersecting) return;
-    entry.target.classList.add('is-visible');
-    observer.unobserve(entry.target);
-  });
+    entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+    });
 }, { threshold: 0.12 });
 
 document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe(element));
@@ -34,18 +34,18 @@ const footer = document.querySelector('.site-footer');
 const topFloat = document.querySelector('.top-float');
 
 if (contactSection && whatsappFloat) {
-  const contactObserver = new IntersectionObserver(([entry]) => {
-    whatsappFloat.classList.toggle('is-hidden', entry.isIntersecting);
-  }, { threshold: 0.2 });
+    const contactObserver = new IntersectionObserver(([entry]) => {
+        whatsappFloat.classList.toggle('is-hidden', entry.isIntersecting);
+    }, { threshold: 0.2 });
 
-  contactObserver.observe(contactSection);
+    contactObserver.observe(contactSection);
 }
 
 if (footer && topFloat) {
-  const footerObserver = new IntersectionObserver(([entry]) => {
-    topFloat.classList.toggle('is-hidden', entry.isIntersecting);
-  }, { threshold: 0.1 });
+    const footerObserver = new IntersectionObserver(([entry]) => {
+        topFloat.classList.toggle('is-hidden', entry.isIntersecting);
+    }, { threshold: 0.1 });
 
-  footerObserver.observe(footer);
+    footerObserver.observe(footer);
 }
 
