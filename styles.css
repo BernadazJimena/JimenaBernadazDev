@@ -537,6 +537,23 @@ h2 {
     color: #d8e8ff;
 }
 
+.plan-includes-block {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.plan-includes {
+    font-family: "Manrope", sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.plan-card-featured .plan-includes {
+    color: var(--white);
+}
+
 .plan-card .button {
     align-self: flex-start;
     margin-top: auto;
