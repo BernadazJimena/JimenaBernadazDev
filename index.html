@@ -5,8 +5,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
-    content="Landing pages estratégicas para profesionales independientes. Diseño web de Jimena Bernadaz.">
-  <title>Jimena Bernadaz | Landing pages que hablan por vos</title>
+    content="Landing pages y sitios web a medida para profesionales independientes en Latinoamérica. Planes básico y premium, presupuesto sin costo. Diseño web por Jimena Bernadaz.">
+  <meta name="author" content="Jimena Bernadaz">
+  <meta name="robots" content="index, follow">
+  <title>Jimena Bernadaz | Diseño de Landing Pages y Sitios Web</title>
+  <link rel="canonical" href="https://jnbcreativestudio.vercel.app/">
+  <link rel="alternate" hreflang="es" href="https://jnbcreativestudio.vercel.app/">
+  <link rel="alternate" hreflang="en" href="https://jnbcreativestudio.vercel.app/index-en.html">
+  <link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.vercel.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="JNB Creative Studio">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:title" content="Jimena Bernadaz | Diseño de Landing Pages y Sitios Web">
+  <meta property="og:description"
+    content="Landing pages y sitios web a medida para profesionales independientes en Latinoamérica. Planes básico y premium, presupuesto sin costo.">
+  <meta property="og:url" content="https://jnbcreativestudio.vercel.app/">
+  <meta property="og:image" content="https://jnbcreativestudio.vercel.app/Dise%C3%B1o%20sin%20t%C3%ADtulo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Jimena Bernadaz | Diseño de Landing Pages y Sitios Web">
+  <meta name="twitter:description"
+    content="Landing pages y sitios web a medida para profesionales independientes en Latinoamérica.">
+  <meta name="twitter:image" content="https://jnbcreativestudio.vercel.app/Dise%C3%B1o%20sin%20t%C3%ADtulo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -14,6 +34,48 @@
     rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "JNB Creative Studio",
+    "founder": {
+      "@type": "Person",
+      "name": "Jimena Bernadaz"
+    },
+    "description": "Diseño y desarrollo de landing pages y sitios web a medida para profesionales independientes.",
+    "areaServed": {
+      "@type": "Place",
+      "name": "Latinoamérica"
+    },
+    "availableLanguage": ["es", "en"],
+    "sameAs": ["https://github.com/BernadazJimena/"],
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "https://schema.org/Monday",
+        "https://schema.org/Tuesday",
+        "https://schema.org/Wednesday",
+        "https://schema.org/Thursday",
+        "https://schema.org/Friday"
+      ],
+      "opens": "09:00",
+      "closes": "17:00"
+    },
+    "makesOffer": [
+      {
+        "@type": "Offer",
+        "name": "Plan Básico",
+        "description": "Landing page de una sola página, diseño adaptado a celulares y computadoras, botón de contacto por WhatsApp y una ronda de ajustes."
+      },
+      {
+        "@type": "Offer",
+        "name": "Plan Premium",
+        "description": "Landing page multi-sección a medida, diseño visual personalizado, optimización básica para buscadores y acompañamiento en la publicación."
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
@@ -27,7 +89,7 @@
     </button>
     <nav class="main-nav" id="main-nav" aria-label="Navegación principal">
       <a href="#sobre-mi">Sobre mí</a>
-      <a href="#portfolio">Portfolio</a>
+      <a href="#planes">Planes</a>
       <a href="#disponibilidad">Disponibilidad</a>
       <a href="index-en.html">English</a>
       <a class="nav-cta" href="#contacto">Hablemos <span aria-hidden="true">↗</span></a>
@@ -44,12 +106,12 @@
         <div class="hero-actions">
           <a class="button button-primary" href="#contacto">Hablemos de tu proyecto <span
               aria-hidden="true">↗</span></a>
-          <a class="button button-ghost" href="#portfolio">Ver portfolio <span aria-hidden="true">↓</span></a>
+          <a class="button button-ghost" href="#planes">Ver planes <span aria-hidden="true">↓</span></a>
         </div>
       </div>
       <div class="hero-image reveal reveal-delay">
-        <div class="hero-image-frame"><img src="Diseño sin título.png"
-            alt="Diseño visual de una página web creada por Jimena Bernadaz"></div>
+        <div class="hero-image-frame"><img src="Diseño sin título.png" width="800" height="1000"
+            alt="Diseño de landing page a medida creada por Jimena Bernadaz para profesionales independientes"></div>
       </div>
       <div class="hero-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
     </section>
@@ -70,24 +132,57 @@
       </div>
     </section>
 
-    <section class="portfolio section-shell" id="portfolio">
+    <section class="plans section-shell" id="planes">
       <div class="section-heading reveal">
         <div>
-          <p class="eyebrow">TRABAJO SELECCIONADO</p>
-          <h2>Ideas que se vuelven presencia.</h2>
+          <p class="eyebrow">PLANES Y SERVICIOS</p>
+          <h2>Un plan para cada etapa de tu proyecto.</h2>
+        </div>
+      </div>
+      <div class="plan-grid reveal">
+        <div class="plan-card">
+          <div class="plan-card-head">
+            <p class="eyebrow">PLAN BÁSICO</p>
+            <h3>Landing esencial</h3>
+            <p class="plan-copy">Para quienes necesitan una presencia digital clara, directa y lista para
+              compartir.</p>
+          </div>
+          <ul class="plan-features">
+            <li>Landing page de una sola página</li>
+            <li>Diseño adaptado a celulares y computadoras</li>
+            <li>Botón de contacto directo por WhatsApp</li>
+            <li>Una ronda de ajustes incluida</li>
+          </ul>
+          <a class="button button-ghost" href="#contacto">Consultar plan básico <span
+              aria-hidden="true">↗</span></a>
+        </div>
+        <div class="plan-card plan-card-featured">
+          <div class="plan-card-head">
+            <p class="eyebrow eyebrow-light">PLAN PREMIUM</p>
+            <h3>Landing a medida</h3>
+            <p class="plan-copy">Para quienes buscan una web más completa, con más secciones y una identidad
+              propia.</p>
+          </div>
+          <ul class="plan-features">
+            <li>Landing page multi-sección a medida</li>
+            <li>Diseño visual personalizado según tu marca</li>
+            <li>Optimización básica para buscadores (SEO)</li>
+            <li>Rondas de ajustes ampliadas</li>
+            <li>Acompañamiento en la publicación del sitio</li>
+          </ul>
+          <a class="button button-primary" href="#contacto">Consultar plan premium <span
+              aria-hidden="true">↗</span></a>
         </div>
       </div>
       <div class="portfolio-note reveal">
         <div>
-          <p class="lead">Conocé proyectos, ideas y trabajos publicados en mi portfolio de GitHub.</p>
-          <p class="portfolio-copy">También podés solicitar ejemplos de páginas web según tu rubro y consultar
-            presupuestos para tu proyecto.</p>
+          <p class="lead">¿Querés ver ejemplos antes de decidir?</p>
+          <p class="portfolio-copy">Podés solicitar muestras de páginas realizadas según tu rubro, y pedir un
+            presupuesto a medida sin costo ni compromiso.</p>
         </div>
         <div class="portfolio-actions">
-          <a class="button button-primary" href="https://github.com/BernadazJimena/" target="_blank"
-            rel="noreferrer">Ver portfolio en GitHub <span aria-hidden="true">↗</span></a>
-          <a class="button button-ghost" href="#contacto">Pedir ejemplos y presupuesto <span
-              aria-hidden="true">↓</span></a>
+          <a class="button button-primary" href="#contacto">Pedir muestras y presupuesto <span
+              aria-hidden="true">↗</span></a>
         </div>
       </div>
     </section>
@@ -127,7 +222,7 @@
   <a class="top-float" href="#inicio" aria-label="Volver al inicio">↑ <span>Inicio</span></a>
 
   <footer class="site-footer"><span>© <span id="year"></span> JNB creative Studio </span><span>Sistemas digitales que ordenan
-      tu práctica profesional.</span><a href="#inicio">Volver arriba ↑</a></footer>
+      tu práctica profesional.</span><span class="footer-links"><a href="terminos.html">Términos y condiciones</a><a href="#inicio">Volver arriba ↑</a></span></footer>
 </body>
 
 </html>

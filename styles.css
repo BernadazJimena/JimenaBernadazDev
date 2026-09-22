@@ -360,11 +360,85 @@ h2 {
     white-space: nowrap;
 }
 
-.portfolio {
+.portfolio,
+.plans {
     background: var(--white);
     max-width: none;
     padding-left: max(2rem, calc((100% - var(--content)) / 2));
     padding-right: max(2rem, calc((100% - var(--content)) / 2));
+}
+
+.plan-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom: 3rem;
+}
+
+.plan-card {
+    background: var(--mist);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    padding: 2.5rem;
+}
+
+.plan-card-featured {
+    background: var(--ink);
+    border-color: var(--ink);
+}
+
+.plan-card-head h3 {
+    font-family: "Manrope", sans-serif;
+    font-size: 1.7rem;
+    letter-spacing: -.03em;
+    margin: .6rem 0 0;
+}
+
+.plan-card-featured .plan-card-head h3 {
+    color: var(--white);
+}
+
+.plan-copy {
+    color: var(--muted);
+    margin: .8rem 0 0;
+}
+
+.plan-card-featured .plan-copy {
+    color: #d8e8ff;
+}
+
+.plan-features {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.plan-features li {
+    border-top: .08rem solid var(--line);
+    color: var(--muted);
+    font-size: .92rem;
+    padding-top: .75rem;
+}
+
+.plan-features li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.plan-card-featured .plan-features li {
+    border-top-color: #294579;
+    color: #d8e8ff;
+}
+
+.plan-card .button {
+    align-self: flex-start;
+    margin-top: auto;
 }
 
 .section-heading {
@@ -693,6 +767,73 @@ h2 {
     font-weight: 700;
 }
 
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.legal-hero {
+    background: var(--sky);
+    padding: clamp(4rem, 9vw, 6rem) max(2rem, calc((100% - var(--content)) / 2)) clamp(3rem, 6vw, 4rem);
+}
+
+.legal-hero-content {
+    max-width: 42rem;
+}
+
+.legal-hero h1 {
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    letter-spacing: -.065em;
+    line-height: .98;
+    margin: 0 0 1.2rem;
+}
+
+.legal-updated {
+    color: var(--muted);
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.legal-content {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 3.5rem);
+    max-width: 46rem;
+}
+
+.legal-block {
+    border-top: .08rem solid var(--line);
+    padding-top: 2rem;
+}
+
+.legal-block:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.legal-block h2 {
+    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    margin: 0 0 1rem;
+}
+
+.legal-block p,
+.legal-block li {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0 0 1rem;
+}
+
+.legal-block ul {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+}
+
+.legal-block li {
+    margin-bottom: .5rem;
+}
+
 .reveal {
     opacity: 0;
     transform: translateY(1.25rem);
@@ -861,6 +1002,10 @@ h2 {
 
     .portfolio-actions {
         justify-content: start;
+    }
+
+    .plan-grid {
+        grid-template-columns: 1fr;
     }
 
     .whatsapp-float {
