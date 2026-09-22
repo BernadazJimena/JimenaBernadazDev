@@ -1,18 +1,46 @@
 :root {
     --ink: #0b1f4b;
+    --white: #ffffff;
+    --text: #0b1f4b;
     --muted: #55719b;
     --blue: #1769e0;
     --blue-dark: #0c3b91;
     --sky: #e5f0ff;
     --mist: #f4f8ff;
     --line: #cfe0f7;
-    --white: #ffffff;
+    --surface: #ffffff;
     --radius: 1.25rem;
     --content: 75rem;
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    --text: #e8eefc;
+    --muted: #8fa8d4;
+    --blue: #4f8fff;
+    --blue-dark: #1c6fe0;
+    --sky: #111f3d;
+    --mist: #060d1f;
+    --line: #1e2f57;
+    --surface: #0d1c38;
+    color-scheme: dark;
+}
+
+/* .plan-card-featured and .availability use a fixed navy background (not a
+   variable), so they need an explicit dark-mode override to keep standing
+   out against the now-dark page instead of blending into it. */
+:root[data-theme="dark"] .plan-card-featured,
+:root[data-theme="dark"] .availability {
+    background: linear-gradient(145deg, #1769e0, #0b1f4b);
+}
+
+:root[data-theme="dark"] .plan-card-featured {
+    border-color: #1769e0;
 }
 
 * {
     box-sizing: border-box;
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
 }
 
 html {
@@ -21,7 +49,7 @@ html {
 
 body {
     margin: 0;
-    color: var(--ink);
+    color: var(--text);
     background: var(--mist);
     font-family: "DM Sans", sans-serif;
     font-size: 1rem;
@@ -96,8 +124,32 @@ a {
     padding: .5rem;
 }
 
+.theme-toggle {
+    align-items: center;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: "DM Sans", sans-serif;
+    font-size: .85rem;
+    gap: .5rem;
+    padding: 0;
+    transition: color .2s ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    color: var(--blue);
+}
+
+.theme-toggle-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
 .menu-toggle span {
-    background: var(--ink);
+    background: var(--text);
     display: block;
     height: .12rem;
     margin: .3rem 0;
@@ -362,7 +414,7 @@ h2 {
 
 .portfolio,
 .plans {
-    background: var(--white);
+    background: var(--surface);
     max-width: none;
     padding-left: max(2rem, calc((100% - var(--content)) / 2));
     padding-right: max(2rem, calc((100% - var(--content)) / 2));
@@ -441,6 +493,99 @@ h2 {
     margin-top: auto;
 }
 
+.quote-meta {
+    border-top: .08rem solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+}
+
+.quote-meta>div {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.quote-meta-label {
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.fill-in {
+    border-bottom: .08rem dashed var(--blue);
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.plan-quote-detail {
+    border-top: .08rem solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin: 0;
+    padding-top: 1.5rem;
+}
+
+.plan-quote-detail div {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.plan-quote-detail dt {
+    color: var(--muted);
+    font-size: .85rem;
+    margin: 0;
+}
+
+.plan-quote-detail dd {
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    margin: 0;
+}
+
+.plan-card-featured .plan-quote-detail {
+    border-top-color: #294579;
+}
+
+.plan-card-featured .plan-quote-detail dt {
+    color: #d8e8ff;
+}
+
+.addon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.addon-item {
+    align-items: baseline;
+    border-top: .08rem solid var(--line);
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1.1rem 0;
+}
+
+.addon-item:first-child {
+    border-top: 0;
+}
+
+.addon-price {
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .section-heading {
     align-items: end;
     display: flex;
@@ -504,7 +649,7 @@ h2 {
 }
 
 .top-float {
-    background: var(--white);
+    background: var(--surface);
     border: .08rem solid var(--line);
     box-shadow: 0 .35rem 1rem rgba(11, 31, 75, .12);
     color: var(--blue);
@@ -904,6 +1049,7 @@ h2 {
         scroll-behavior: auto;
     }
 
+    *,
     .hero-content.hero-enter,
     .hero-content.hero-enter>*,
     .reveal,
@@ -929,7 +1075,7 @@ h2 {
 
     .main-nav {
         align-items: stretch;
-        background: var(--white);
+        background: var(--surface);
         box-shadow: 0 1rem 2rem rgba(11, 31, 75, .12);
         flex-direction: column;
         gap: 0;
@@ -951,7 +1097,8 @@ h2 {
         transform: translateY(0);
     }
 
-    .main-nav a {
+    .main-nav a,
+    .main-nav .theme-toggle {
         border-bottom: .08rem solid var(--line);
         padding: .9rem 0;
     }

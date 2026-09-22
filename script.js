@@ -2,8 +2,41 @@ const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 const year = document.querySelector('#year');
 const statusDot = document.querySelector('.status-dot');
+const themeToggle = document.querySelector('.theme-toggle');
 
 if (year) year.textContent = new Date().getFullYear();
+
+const THEME_KEY = 'jnb-theme';
+const isEnglish = document.documentElement.lang === 'en';
+const themeLabels = isEnglish
+    ? { toDark: 'Dark mode', toLight: 'Light mode' }
+    : { toDark: 'Modo oscuro', toLight: 'Modo claro' };
+
+const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+
+    if (!themeToggle) return;
+    const isDark = theme === 'dark';
+    const label = isDark ? themeLabels.toLight : themeLabels.toDark;
+    themeToggle.setAttribute('aria-pressed', String(isDark));
+    themeToggle.setAttribute('aria-label', label);
+    const icon = themeToggle.querySelector('.theme-toggle-icon');
+    const text = themeToggle.querySelector('.theme-toggle-label');
+    if (icon) icon.textContent = isDark ? '☀' : '☾';
+    if (text) text.textContent = label;
+};
+
+applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+
+themeToggle?.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try {
+        localStorage.setItem(THEME_KEY, next);
+    } catch (error) {
+        /* localStorage unavailable (private mode) — theme just won't persist */
+    }
+    applyTheme(next);
+});
 
 const updateAvailabilityStatus = () => {
     if (!statusDot) return;

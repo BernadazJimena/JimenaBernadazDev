@@ -3,6 +3,15 @@
 
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('jnb-theme');
+        var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
     content="Landing pages y sitios web a medida para profesionales independientes en Latinoamérica. Planes básico y premium, presupuesto sin costo. Diseño web por JNB Creative Studio.">
@@ -88,6 +97,10 @@
       <a href="#planes">Planes</a>
       <a href="#disponibilidad">Disponibilidad</a>
       <a href="index-en.html">English</a>
+      <button class="theme-toggle" type="button" aria-pressed="false" aria-label="Modo oscuro">
+        <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+        <span class="theme-toggle-label">Modo oscuro</span>
+      </button>
       <a class="nav-cta" href="#contacto">Hablemos <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
@@ -161,10 +174,12 @@
           </div>
           <ul class="plan-features">
             <li>Landing page multi-sección a medida</li>
+            <li>Diseño adaptado a celulares y computadoras</li>
             <li>Diseño visual personalizado según tu marca</li>
+            <li>Botón de contacto directo por WhatsApp</li>
             <li>Optimización básica para buscadores (SEO)</li>
             <li>Rondas de ajustes ampliadas</li>
-            <li>Acompañamiento en la publicación del sitio</li>
+            <li>Acompañamiento en la publicación del sitio y vinculación de dominio</li>
           </ul>
           <a class="button button-primary" href="#contacto">Consultar plan premium <span
               aria-hidden="true">↗</span></a>
