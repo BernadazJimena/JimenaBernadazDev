@@ -379,7 +379,6 @@ h2 {
     white-space: nowrap;
 }
 
-.portfolio,
 .plans {
     background: var(--surface);
     max-width: none;
@@ -391,7 +390,6 @@ h2 {
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(2, 1fr);
-    margin-bottom: 3rem;
 }
 
 .plan-card {
@@ -579,33 +577,6 @@ h2 {
 
 .section-heading h2 {
     font-size: clamp(2.4rem, 4vw, 3.8rem);
-}
-
-.portfolio-note {
-    align-items: end;
-    border-top: .08rem solid var(--line);
-    display: grid;
-    gap: 3rem;
-    grid-template-columns: 1fr 1fr;
-    padding-top: 2.5rem;
-}
-
-.portfolio-note .lead {
-    margin: 0;
-    max-width: 32rem;
-}
-
-.portfolio-copy {
-    color: var(--muted);
-    margin: 1.2rem 0 0;
-    max-width: 29rem;
-}
-
-.portfolio-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: flex-end;
 }
 
 .whatsapp-float,
@@ -1130,15 +1101,6 @@ h2 {
         gap: 1.5rem;
     }
 
-    .portfolio-note {
-        align-items: start;
-        grid-template-columns: 1fr;
-    }
-
-    .portfolio-actions {
-        justify-content: start;
-    }
-
     .plan-grid {
         grid-template-columns: 1fr;
     }
@@ -1201,7 +1163,7 @@ h2 {
     }
 
     .section-shell,
-    .portfolio {
+    .plans {
         padding-left: 1.25rem;
         padding-right: 1.25rem;
     }
