@@ -281,6 +281,7 @@ h2 em {
 
 .button-primary {
     background: var(--blue);
+    border: .08rem solid var(--blue-dark);
     color: var(--white);
 }
 
@@ -290,7 +291,7 @@ h2 em {
 }
 
 .button-ghost {
-    background: var(--surface);
+    background: var(--line);
     border: .08rem solid var(--text);
     color: var(--text);
 }
@@ -632,8 +633,8 @@ h2 {
 }
 
 .top-float {
-    background: var(--surface);
-    border: .08rem solid var(--line);
+    background: var(--line);
+    border: .08rem solid var(--blue);
     box-shadow: 0 .35rem 1rem rgba(11, 31, 75, .12);
     color: var(--blue);
     gap: .4rem;
