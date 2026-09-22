@@ -160,6 +160,43 @@ a {
     line-height: 1;
 }
 
+.lang-switch {
+    align-items: center;
+    display: flex;
+    gap: .35rem;
+}
+
+.lang-flag {
+    align-items: center;
+    border-radius: 50%;
+    display: inline-flex;
+    filter: grayscale(65%);
+    height: 1.9rem;
+    justify-content: center;
+    opacity: .5;
+    transition: filter .2s ease, opacity .2s ease, transform .2s ease;
+    width: 1.9rem;
+}
+
+.lang-flag svg {
+    border-radius: .15rem;
+    display: block;
+    height: .85rem;
+    width: 1.2rem;
+}
+
+.lang-flag:hover,
+.lang-flag:focus-visible {
+    filter: grayscale(0%);
+    opacity: .85;
+    transform: translateY(-.1rem);
+}
+
+.lang-flag.is-active {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
 .menu-toggle span {
     background: var(--text);
     display: block;
@@ -1130,9 +1167,7 @@ h2 {
     }
 
     .hero-image {
-        justify-self: start;
-        max-width: 18rem;
-        transform: rotate(2deg);
+        display: none;
     }
 
     .hero-decoration {
