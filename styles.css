@@ -92,6 +92,18 @@ a {
     width: 2rem;
 }
 
+.nav-group {
+    align-items: center;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.header-actions {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+}
+
 .main-nav {
     align-items: center;
     display: flex;
@@ -134,7 +146,7 @@ a {
     font-family: "DM Sans", sans-serif;
     font-size: .85rem;
     gap: .5rem;
-    padding: 0;
+    padding: .4rem;
     transition: color .2s ease;
 }
 
@@ -1097,10 +1109,13 @@ h2 {
         transform: translateY(0);
     }
 
-    .main-nav a,
-    .main-nav .theme-toggle {
+    .main-nav a {
         border-bottom: .08rem solid var(--line);
         padding: .9rem 0;
+    }
+
+    .theme-toggle-label {
+        display: none;
     }
 
     .main-nav .nav-cta {
