@@ -26,7 +26,7 @@ const applyTheme = (theme) => {
     if (text) text.textContent = label;
 };
 
-applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
 
 themeToggle?.addEventListener('click', () => {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';

@@ -7,7 +7,7 @@
     (function () {
       try {
         var stored = localStorage.getItem('jnb-theme');
-        var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        var theme = stored || 'dark';
         document.documentElement.setAttribute('data-theme', theme);
       } catch (e) {}
     })();
@@ -74,6 +74,11 @@
         "@type": "Offer",
         "name": "Plan Básico",
         "description": "Landing page de tres secciones básicas, diseño 100% adaptable, botón de contacto por WhatsApp, integración con redes sociales y Google Maps, entrega en 5 días hábiles, optimización de velocidad y SEO básico, y una ronda de ajustes."
+      },
+      {
+        "@type": "Offer",
+        "name": "Plan Emprendedor",
+        "description": "Incluye todo lo del Plan Básico, más diseño y configuración de tienda online en Tienda Nube, carga inicial de productos e integración de medios de pago y envíos."
       },
       {
         "@type": "Offer",
@@ -192,6 +197,24 @@
             <li>Una ronda de ajustes incluida</li>
           </ul>
           <a class="button button-ghost" href="#contacto">Consultar plan básico <span
+              aria-hidden="true">↗</span></a>
+        </div>
+        <div class="plan-card">
+          <div class="plan-card-head">
+            <p class="eyebrow">PLAN EMPRENDEDOR</p>
+            <h3>Kit emprendedor</h3>
+            <p class="plan-copy">Para quienes están arrancando un negocio y necesitan landing y tienda online en un
+              solo paquete.</p>
+          </div>
+          <div class="plan-includes-block">
+            <p class="plan-includes">Incluye todo lo del Plan Básico, más:</p>
+            <ul class="plan-features">
+              <li>Diseño y configuración de tienda online en Tienda Nube</li>
+              <li>Carga inicial de productos</li>
+              <li>Integración de medios de pago y envíos</li>
+            </ul>
+          </div>
+          <a class="button button-ghost" href="#contacto">Consultar kit emprendedor <span
               aria-hidden="true">↗</span></a>
         </div>
         <div class="plan-card plan-card-featured">

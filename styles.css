@@ -389,7 +389,7 @@ h2 {
 .plan-grid {
     display: grid;
     gap: 2rem;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
 }
 
 .plan-card {
