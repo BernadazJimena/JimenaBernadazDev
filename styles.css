@@ -721,6 +721,12 @@ h2 {
     max-width: 29rem;
 }
 
+.availability-info p.response-time {
+    color: #a9c8f7;
+    font-size: .82rem;
+    margin: -.8rem 0 1.5rem;
+}
+
 .contact {
     align-items: end;
     display: grid;
