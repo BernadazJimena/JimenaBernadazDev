@@ -403,8 +403,8 @@ h2 {
 }
 
 .plan-card-entrepreneur {
-    background: var(--sky);
-    border-color: var(--line);
+    background: var(--line);
+    border-color: var(--blue);
 }
 
 .plan-card-featured {
