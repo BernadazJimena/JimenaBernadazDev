@@ -402,6 +402,11 @@ h2 {
     padding: 2.5rem;
 }
 
+.plan-card-entrepreneur {
+    background: var(--sky);
+    border-color: var(--line);
+}
+
 .plan-card-featured {
     background: var(--ink);
     border-color: var(--ink);
