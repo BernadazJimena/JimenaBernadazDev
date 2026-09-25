@@ -271,7 +271,7 @@ h2 em {
     gap: .8rem;
     justify-content: center;
     padding: 1rem 1.35rem;
-    transition: background .2s ease, color .2s ease, transform .2s ease;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
 }
 
 .button:hover,
@@ -294,6 +294,13 @@ h2 em {
     background: var(--line);
     border: .08rem solid var(--text);
     color: var(--text);
+}
+
+.button-ghost:hover,
+.button-ghost:focus-visible {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: var(--white);
 }
 
 .time-zone {
