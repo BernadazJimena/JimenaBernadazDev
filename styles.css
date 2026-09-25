@@ -407,6 +407,21 @@ h2 {
     border-color: var(--blue);
 }
 
+.plan-card-entrepreneur .plan-copy,
+.plan-card-entrepreneur .plan-features li {
+    color: var(--text);
+}
+
+.plan-card-entrepreneur .plan-features li {
+    border-top-color: rgba(23, 105, 224, .4);
+}
+
+.plan-card-entrepreneur .button-ghost {
+    background: var(--text);
+    border-color: var(--text);
+    color: var(--mist);
+}
+
 .plan-card-featured {
     background: var(--ink);
     border-color: var(--ink);
@@ -454,7 +469,7 @@ h2 {
 }
 
 .plan-card-featured .plan-features li {
-    border-top-color: #294579;
+    border-top-color: rgba(216, 232, 255, .35);
     color: #d8e8ff;
 }
 
