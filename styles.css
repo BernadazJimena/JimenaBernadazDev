@@ -403,8 +403,20 @@ h2 {
 }
 
 .plan-card-entrepreneur {
-    background: var(--line);
+    background: linear-gradient(145deg, #e3efff, #a9c8f7);
     border-color: var(--blue);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur {
+    background: linear-gradient(215deg, #24498d, #0c1d3f);
+}
+
+.plan-card-entrepreneur .eyebrow {
+    color: var(--blue-dark);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .eyebrow {
+    color: #9cc3ff;
 }
 
 .plan-card-entrepreneur .plan-copy,
@@ -417,15 +429,25 @@ h2 {
 }
 
 .plan-card-entrepreneur .button-ghost {
-    background: #0b5cad;
-    border-color: #08447f;
+    background: #0c3b91;
+    border-color: #082a66;
     color: var(--white);
 }
 
+.plan-card-entrepreneur .button-ghost:hover,
+.plan-card-entrepreneur .button-ghost:focus-visible {
+    background: #082a66;
+}
+
 :root[data-theme="dark"] .plan-card-entrepreneur .button-ghost {
-    background: #7dd3fc;
-    border-color: #bae6fd;
-    color: #06223d;
+    background: #93c5fd;
+    border-color: #dbeafe;
+    color: #0b1f4b;
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost:hover,
+:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost:focus-visible {
+    background: #bfdbfe;
 }
 
 .plan-card-featured {
