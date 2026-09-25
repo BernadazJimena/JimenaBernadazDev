@@ -417,9 +417,15 @@ h2 {
 }
 
 .plan-card-entrepreneur .button-ghost {
-    background: var(--text);
-    border-color: var(--text);
-    color: var(--mist);
+    background: #0b5cad;
+    border-color: #08447f;
+    color: var(--white);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost {
+    background: #7dd3fc;
+    border-color: #bae6fd;
+    color: #06223d;
 }
 
 .plan-card-featured {
@@ -471,6 +477,18 @@ h2 {
 .plan-card-featured .plan-features li {
     border-top-color: rgba(216, 232, 255, .35);
     color: #d8e8ff;
+}
+
+:root[data-theme="dark"] .plan-features li {
+    border-top-color: rgba(143, 168, 212, .4);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .plan-features li {
+    border-top-color: rgba(232, 238, 252, .4);
+}
+
+:root[data-theme="dark"] .plan-card-featured .plan-features li {
+    border-top-color: rgba(216, 232, 255, .4);
 }
 
 .plan-includes-block {
