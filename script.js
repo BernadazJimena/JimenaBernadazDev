@@ -1,9 +1,7 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 const year = document.querySelector('#year');
-const statusDot = document.querySelector('.status-dot');
-const statusLabel = document.querySelector('.status-label');
-const themeToggle = document.querySelector('.theme-toggle');
+const statusDot = document.querySelector('.status-dot');const themeToggle = document.querySelector('.theme-toggle');
 
 if (year) year.textContent = new Date().getFullYear();
 
@@ -54,7 +52,6 @@ const updateAvailabilityStatus = () => {
     const isOutsideHours = isWeekend || currentHour >= 17 || currentHour < 9;
 
     statusDot.classList.toggle('is-closed', isOutsideHours);
-    if (statusLabel) statusLabel.textContent = isOutsideHours ? 'Offline' : 'Online';
 };
 
 updateAvailabilityStatus();
