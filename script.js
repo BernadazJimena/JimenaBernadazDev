@@ -2,6 +2,7 @@ const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 const year = document.querySelector('#year');
 const statusDot = document.querySelector('.status-dot');
+const statusLabel = document.querySelector('.status-label');
 const themeToggle = document.querySelector('.theme-toggle');
 
 if (year) year.textContent = new Date().getFullYear();
@@ -42,14 +43,18 @@ const updateAvailabilityStatus = () => {
     if (!statusDot) return;
 
     const argentinaTime = new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
         hour: 'numeric',
         hour12: false,
         timeZone: 'America/Argentina/Buenos_Aires'
     }).formatToParts(new Date());
     const currentHour = Number(argentinaTime.find(({ type }) => type === 'hour').value);
-    const isOutsideHours = currentHour >= 17 || currentHour < 9;
+    const currentDay = argentinaTime.find(({ type }) => type === 'weekday').value;
+    const isWeekend = currentDay === 'Sat' || currentDay === 'Sun';
+    const isOutsideHours = isWeekend || currentHour >= 17 || currentHour < 9;
 
     statusDot.classList.toggle('is-closed', isOutsideHours);
+    if (statusLabel) statusLabel.textContent = isOutsideHours ? 'Offline' : 'Online';
 };
 
 updateAvailabilityStatus();
