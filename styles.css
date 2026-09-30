@@ -1,24 +1,24 @@
 :root {
     --ink: #0b1f4b;
     --white: #ffffff;
-    --text: #102b59;
-    --muted: #4a6991;
+    --text: #0b1f4b;
+    --muted: #55719b;
     --blue: #1769e0;
-    --blue-dark: #2462ad;
-    --sky: #d8e8ff;
-    --mist: #eaf3ff;
-    --line: #c2d7f2;
-    --surface: #f3f8ff;
-    --chrome-bg: #c5dcf6;
-    --chrome-text: #102b59;
-    --chrome-link: #0c3b91;
-    --chrome-border: #a9c9f0;
-    --feature-bg: linear-gradient(145deg, #d6e7ff, #c3dcfa);
-    --feature-border: #a9c9f0;
-    --feature-heading: #102b59;
-    --feature-copy: #315882;
-    --feature-rule: rgba(16, 43, 89, .2);
-    --feature-detail-border: #a9c9f0;
+    --blue-dark: #0c3b91;
+    --sky: #e5f0ff;
+    --mist: #f4f8ff;
+    --line: #cfe0f7;
+    --surface: #ffffff;
+    --chrome-bg: var(--mist);
+    --chrome-text: var(--muted);
+    --chrome-link: var(--blue);
+    --chrome-border: var(--line);
+    --feature-bg: var(--ink);
+    --feature-border: var(--ink);
+    --feature-heading: #ffffff;
+    --feature-copy: #d8e8ff;
+    --feature-rule: rgba(216, 232, 255, .35);
+    --feature-detail-border: #294579;
     --availability-bg: linear-gradient(145deg, #b7d3f6 0%, #e3efff 58%, #c0d9f7 100%);
     --availability-text: #102b59;
     --availability-accent: #0c3b91;
@@ -39,16 +39,7 @@
     --mist: #060d1f;
     --line: #1e2f57;
     --surface: #0d1c38;
-    --chrome-bg: #0b1f4b;
-    --chrome-text: #d7e5ff;
-    --chrome-link: #d7e5ff;
-    --chrome-border: rgba(255, 255, 255, .14);
-    --feature-bg: linear-gradient(145deg, #1769e0, #0b1f4b);
-    --feature-border: #1769e0;
-    --feature-heading: #ffffff;
-    --feature-copy: #d8e8ff;
     --feature-rule: rgba(216, 232, 255, .4);
-    --feature-detail-border: #294579;
     --availability-bg: linear-gradient(145deg, #1769e0, #0b1f4b);
     --availability-text: #ffffff;
     --availability-accent: #6ea9ff;
@@ -56,6 +47,11 @@
     --availability-muted: #a9c8f7;
     --availability-line: #294579;
     color-scheme: dark;
+}
+
+:root[data-theme="dark"] .plan-card-featured {
+    background: linear-gradient(145deg, #1769e0, #0b1f4b);
+    border-color: #1769e0;
 }
 
 * {
@@ -84,6 +80,7 @@ a {
 .site-header {
     align-items: center;
     background: var(--chrome-bg);
+     border-bottom: .08rem solid var(--chrome-border);
     display: flex;
     justify-content: space-between;
     padding: 1.65rem max(2rem, calc((100% - var(--content)) / 2 + 2rem));
@@ -91,7 +88,7 @@ a {
 
 .brand {
     align-items: center;
-    color: var(--chrome-text);
+    color: var(--text);
     display: inline-flex;
     font-family: "Manrope", sans-serif;
     font-size: .92rem;
@@ -101,7 +98,7 @@ a {
 
 .brand-mark {
     align-items: center;
-    background: var(--blue);
+    background: var(--ink);
     border-radius: .45rem;
     color: var(--white);
     display: inline-flex;
@@ -221,7 +218,7 @@ a {
 }
 
 .menu-toggle span {
-    background: var(--chrome-text);
+    background: var(--text);
     display: block;
     height: .12rem;
     margin: .3rem 0;
@@ -236,6 +233,10 @@ a {
     overflow: hidden;
     padding: clamp(4rem, 9vw, 8rem) max(2rem, calc((100% - var(--content)) / 2));
     position: relative;
+}
+
+.portfolio-page main {
+    background: var(--sky);
 }
 
 .hero-content {
@@ -433,7 +434,7 @@ h2 {
 }
 
 .plan-card-entrepreneur {
-    background: linear-gradient(145deg, #d8e8ff, #b6d0f5);
+    background: linear-gradient(145deg, #e3efff, #a9c8f7);
     border-color: var(--blue);
 }
 
@@ -459,14 +460,14 @@ h2 {
 }
 
 .plan-card-entrepreneur .button-ghost {
-    background: var(--blue);
-    border-color: var(--blue-dark);
+    background: #0c3b91;
+    border-color: #082a66;
     color: var(--white);
 }
 
 .plan-card-entrepreneur .button-ghost:hover,
 .plan-card-entrepreneur .button-ghost:focus-visible {
-    background: var(--blue-dark);
+    background: #082a66;
 }
 
 :root[data-theme="dark"] .plan-card-entrepreneur .button-ghost {
@@ -745,7 +746,7 @@ h2 {
     height: 100%;
     max-height: 100%;
     max-width: 100%;
-    object-fit: contain;
+    object-fit: cover;
     width: 100%;
 }
 
