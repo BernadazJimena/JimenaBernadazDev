@@ -642,8 +642,15 @@ h2 {
     margin-bottom: 3rem;
 }
 
+.section-heading h1,
 .section-heading h2 {
     font-size: clamp(2.4rem, 4vw, 3.8rem);
+}
+
+.section-heading h1.portfolio-page-title {
+    font-size: 2.6rem;
+    line-height: 1.12;
+    max-width: 18ch;
 }
 
 .whatsapp-float,
@@ -689,8 +696,8 @@ h2 {
 
 .portfolio-grid {
     display: grid;
-    gap: 2rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 34rem));
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 31rem));
     justify-content: center;
 }
 
@@ -705,9 +712,11 @@ h2 {
     aspect-ratio: 2.08 / 1;
     background: var(--line);
     line-height: 0;
+    padding: .6rem;
 }
 
 .portfolio-image img {
+    background: var(--surface);
     display: block;
     height: 100%;
     object-fit: contain;
@@ -718,10 +727,11 @@ h2 {
     padding: 1.5rem;
 }
 
-.portfolio-card-meta h3 {
+.portfolio-card-meta h2 {
     font-family: "Manrope", sans-serif;
-    font-size: 1.1rem;
-    margin: 0 0 .35rem;
+    font-size: 1.15rem;
+    line-height: 1.35;
+    margin: 0 0 .5rem;
 }
 
 .portfolio-card-meta p {
@@ -1067,6 +1077,14 @@ h2 {
         align-items: start;
         flex-direction: column;
         gap: 1.5rem;
+    }
+
+    .section-heading h1.portfolio-page-title {
+        font-size: 2rem;
+    }
+
+    .portfolio-card-meta {
+        padding: 1.1rem;
     }
 
     .plan-grid {

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('jnb-theme');
+        var theme = stored || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Web projects created by JNB Creative Studio.">
+  <meta name="author" content="JNB Creative Studio">
+  <meta name="robots" content="index, follow">
+  <title>Portfolio | JNB Creative Studio</title>
+  <link rel="canonical" href="https://jnbcreativestudio.com/portfolio-en.html">
+  <link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com/portfolio.html">
+  <link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com/portfolio-en.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <header class="site-header">
+    <a class="brand" href="index-en.html" aria-label="Back to the homepage">
+      <span class="brand-mark">JNB</span>
+      <span>Creative Studio</span>
+    </a>
+    <div class="nav-group">
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+        <a href="index-en.html">Home</a>
+        <a href="index-en.html#contacto">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Change language">
+          <a class="lang-flag" href="portfolio.html" hreflang="es" aria-label="Español">
+            <svg viewBox="0 0 20 14" aria-hidden="true">
+              <rect width="20" height="14" fill="#c60b1e" />
+              <rect y="3.5" width="20" height="7" fill="#ffc400" />
+            </svg>
+          </a>
+          <a class="lang-flag is-active" href="portfolio-en.html" hreflang="en" aria-current="page" aria-label="English">
+            <svg viewBox="0 0 20 14" aria-hidden="true">
+              <rect width="20" height="14" fill="#00247d" />
+              <g stroke="#fff" stroke-width="2.2">
+                <path d="M0,0 L20,14 M20,0 L0,14" />
+              </g>
+              <g stroke="#cf142b" stroke-width="1.3">
+                <path d="M0,0 L20,14 M20,0 L0,14" />
+              </g>
+              <path d="M8.5,0 H11.5 V14 H8.5 Z" fill="#fff" />
+              <path d="M0,5.5 H20 V8.5 H0 Z" fill="#fff" />
+              <path d="M9.2,0 H10.8 V14 H9.2 Z" fill="#cf142b" />
+              <path d="M0,6.2 H20 V7.8 H0 Z" fill="#cf142b" />
+            </svg>
+          </a>
+        </div>
+        <button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode">
+          <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+        </button>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav"
+          aria-label="Open menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section-shell" aria-labelledby="portfolio-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="eyebrow">PORTFOLIO</p>
+          <h1 class="portfolio-page-title" id="portfolio-title">Projects already live online.</h1>
+        </div>
+      </div>
+      <div class="portfolio-grid reveal">
+        <article class="portfolio-card">
+          <div class="portfolio-image">
+            <img src="versionweb.png" width="1314" height="647"
+              alt="Basic landing page built for a registered nurse" loading="lazy">
+          </div>
+          <div class="portfolio-card-meta">
+            <h2>Basic landing page for a registered nurse</h2>
+            <p>Basic Plan</p>
+          </div>
+        </article>
+        <article class="portfolio-card">
+          <div class="portfolio-image">
+            <img src="web2.png" width="1349" height="624"
+              alt="Basic landing page for a nutritionist" loading="lazy">
+          </div>
+          <div class="portfolio-card-meta">
+            <h2>Basic landing page for a nutritionist</h2>
+            <p>Basic Plan</p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <a class="top-float" href="#" aria-label="Back to the top">↑ <span>Top</span></a>
+
+  <footer class="site-footer"><span>© <span id="year"></span> JNB Creative Studio</span><span>Digital systems that bring clarity to your professional practice.</span><span class="footer-links"><a href="index-en.html">Home</a><a
+        href="terminos-en.html">Terms and conditions</a></span></footer>
+</body>
+
+</html>
