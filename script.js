@@ -1,7 +1,8 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 const year = document.querySelector('#year');
-const statusDot = document.querySelector('.status-dot');const themeToggle = document.querySelector('.theme-toggle');
+const statusDot = document.querySelector('.status-dot');
+const themeToggle = document.querySelector('.theme-toggle');
 
 if (year) year.textContent = new Date().getFullYear();
 
@@ -10,6 +11,9 @@ const isEnglish = document.documentElement.lang === 'en';
 const themeLabels = isEnglish
     ? { toDark: 'Dark mode', toLight: 'Light mode' }
     : { toDark: 'Modo oscuro', toLight: 'Modo claro' };
+const menuLabels = isEnglish
+    ? { open: 'Open menu', close: 'Close menu' }
+    : { open: 'Abrir menú', close: 'Cerrar menú' };
 
 const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -60,14 +64,14 @@ setInterval(updateAvailabilityStatus, 60 * 1000);
 menuToggle?.addEventListener('click', () => {
     const isOpen = mainNav.classList.toggle('is-open');
     menuToggle.setAttribute('aria-expanded', String(isOpen));
-    menuToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+    menuToggle.setAttribute('aria-label', isOpen ? menuLabels.close : menuLabels.open);
 });
 
 document.querySelectorAll('.main-nav a').forEach((link) => {
     link.addEventListener('click', () => {
         mainNav.classList.remove('is-open');
         menuToggle?.setAttribute('aria-expanded', 'false');
-        menuToggle?.setAttribute('aria-label', 'Abrir menú');
+        menuToggle?.setAttribute('aria-label', menuLabels.open);
     });
 });
 
