@@ -21,6 +21,16 @@
     padding: 2.5rem;
 }
 
+.plan-card-basic {
+    background: linear-gradient(145deg, #f4f8ff 0%, #dceaff 100%);
+    border-color: #c0d9f7;
+}
+
+:root[data-theme="dark"] .plan-card-basic {
+    background: linear-gradient(145deg, #172a50 0%, #0d1c38 100%);
+    border-color: #294579;
+}
+
 .plan-card-entrepreneur {
     background: linear-gradient(145deg, #e3efff, #a9c8f7);
     border-color: var(--blue);
