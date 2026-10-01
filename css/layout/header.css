@@ -1,0 +1,44 @@
+.site-header {
+    align-items: center;
+    background: var(--chrome-bg);
+     border-bottom: .08rem solid var(--chrome-border);
+    display: flex;
+    justify-content: space-between;
+    padding: 1.65rem max(2rem, calc((100% - var(--content)) / 2 + 2rem));
+}
+
+.brand {
+    align-items: center;
+    color: var(--text);
+    display: inline-flex;
+    font-family: "Manrope", sans-serif;
+    font-size: .92rem;
+    font-weight: 700;
+    gap: .7rem;
+}
+
+.brand-mark {
+    align-items: center;
+    background: var(--ink);
+    border-radius: .45rem;
+    color: var(--white);
+    display: inline-flex;
+    font-size: .72rem;
+    height: 2rem;
+    justify-content: center;
+    letter-spacing: -.04em;
+    width: 2rem;
+}
+
+.nav-group {
+    align-items: center;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.header-actions {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+}
+

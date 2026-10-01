@@ -1,0 +1,126 @@
+.hero {
+    background: var(--sky);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 38rem;
+    overflow: hidden;
+    padding: clamp(4rem, 9vw, 8rem) max(2rem, calc((100% - var(--content)) / 2));
+    position: relative;
+}
+
+.portfolio-page main {
+    background: var(--sky);
+}
+
+.hero-content {
+    align-self: center;
+    justify-self: center;
+    max-width: 42rem;
+    position: relative;
+    z-index: 1;
+}
+
+.eyebrow {
+    color: var(--blue);
+    font-family: "Manrope", sans-serif;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    margin: 0 0 1.2rem;
+}
+
+.hero h1 {
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(3.2rem, 6.5vw, 6.15rem);
+    letter-spacing: -.075em;
+    line-height: .96;
+    margin: 0;
+    max-width: 10ch;
+}
+
+h1 em,
+h2 em {
+    color: var(--blue);
+    font-style: normal;
+}
+
+.hero-copy {
+    color: var(--muted);
+    font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    margin: 2rem 0;
+    max-width: 34rem;
+}
+
+.hero-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.button {
+    align-items: center;
+    border-radius: 999rem;
+    display: inline-flex;
+    font-family: "Manrope", sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    gap: .8rem;
+    justify-content: center;
+    padding: 1rem 1.35rem;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.button:hover,
+.button:focus-visible {
+    transform: translateY(-.15rem);
+}
+
+.button-primary {
+    background: var(--blue);
+    border: .08rem solid var(--blue-dark);
+    color: var(--white);
+}
+
+.button-primary:hover,
+.button-primary:focus-visible {
+    background: var(--blue-dark);
+}
+
+.button-ghost {
+    background: var(--line);
+    border: .08rem solid var(--text);
+    color: var(--text);
+}
+
+.button-ghost:hover,
+.button-ghost:focus-visible {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: var(--white);
+}
+
+.time-zone {
+    color: var(--availability-muted);
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .15em;
+}
+
+.hero-decoration {
+    bottom: -7rem;
+    display: flex;
+    gap: 1rem;
+    position: absolute;
+    right: 7%;
+    transform: rotate(-25deg);
+}
+
+.hero-decoration span {
+    border: .1rem solid #a9c8f7;
+    border-radius: 50%;
+    height: 19rem;
+    opacity: .5;
+    width: 19rem;
+}
+

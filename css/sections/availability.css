@@ -1,0 +1,63 @@
+.availability {
+    background: var(--availability-bg);
+    color: var(--availability-text);
+}
+
+.availability-inner {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+}
+
+.eyebrow-light {
+    color: var(--availability-accent);
+}
+
+.availability h2 {
+    font-size: clamp(2.5rem, 4vw, 4rem);
+}
+
+.availability-info {
+    border-left: .08rem solid var(--availability-line);
+    padding-left: 2rem;
+}
+
+.availability-line {
+    align-items: center;
+    display: flex;
+    gap: .7rem;
+}
+
+.status-dot {
+    background: #55d87c;
+    border-radius: 50%;
+    box-shadow: 0 0 0 .3rem rgba(85, 216, 124, .16);
+    height: .6rem;
+    width: .6rem;
+}
+
+.status-dot.is-closed {
+    background: #f05b5b;
+    box-shadow: 0 0 0 .3rem rgba(240, 91, 91, .16);
+}
+
+.availability-line strong {
+    color: var(--availability-accent);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.15rem;
+}
+
+.availability-info p {
+    color: var(--availability-copy);
+    font-size: 1.05rem;
+    margin: 1.2rem 0 1.5rem;
+    max-width: 29rem;
+}
+
+.availability-info p.response-time {
+    color: var(--availability-muted);
+    font-size: .82rem;
+    margin: -.8rem 0 1.5rem;
+}
+

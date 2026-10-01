@@ -1,0 +1,308 @@
+.plans {
+    background: var(--surface);
+    max-width: none;
+    padding-left: max(2rem, calc((100% - var(--content)) / 2));
+    padding-right: max(2rem, calc((100% - var(--content)) / 2));
+}
+
+.plan-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+}
+
+.plan-card {
+    background: var(--mist);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    padding: 2.5rem;
+}
+
+.plan-card-entrepreneur {
+    background: linear-gradient(145deg, #e3efff, #a9c8f7);
+    border-color: var(--blue);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur {
+    background: linear-gradient(215deg, #24498d, #0c1d3f);
+}
+
+.plan-card-entrepreneur .eyebrow {
+    color: var(--blue-dark);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .eyebrow {
+    color: #9cc3ff;
+}
+
+.plan-card-entrepreneur .plan-copy,
+.plan-card-entrepreneur .plan-features li {
+    color: var(--text);
+}
+
+.plan-card-entrepreneur .plan-features li {
+    border-top-color: rgba(23, 105, 224, .4);
+}
+
+.plan-card-entrepreneur .button-ghost {
+    background: #0c3b91;
+    border-color: #082a66;
+    color: var(--white);
+}
+
+.plan-card-entrepreneur .button-ghost:hover,
+.plan-card-entrepreneur .button-ghost:focus-visible {
+    background: #082a66;
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost {
+    background: #93c5fd;
+    border-color: #dbeafe;
+    color: #0b1f4b;
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost:hover,
+:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost:focus-visible {
+    background: #bfdbfe;
+}
+
+.plan-card-featured {
+    background: var(--feature-bg);
+    border-color: var(--feature-border);
+}
+
+.plan-card-head h3 {
+    font-family: "Manrope", sans-serif;
+    font-size: 1.7rem;
+    letter-spacing: -.03em;
+    margin: .6rem 0 0;
+}
+
+.plan-card-featured .plan-card-head h3 {
+    color: var(--feature-heading);
+}
+
+.plan-copy {
+    color: var(--muted);
+    margin: .8rem 0 0;
+}
+
+.plan-card-featured .plan-copy {
+    color: var(--feature-copy);
+}
+
+.plan-features {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.plan-features li {
+    border-top: .08rem solid var(--line);
+    color: var(--muted);
+    font-size: .92rem;
+    padding-top: .75rem;
+}
+
+.plan-features li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.plan-card-featured .plan-features li {
+    border-top-color: var(--feature-rule);
+    color: var(--feature-copy);
+}
+
+:root[data-theme="dark"] .plan-features li {
+    border-top-color: rgba(143, 168, 212, .4);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .plan-features li {
+    border-top-color: rgba(232, 238, 252, .4);
+}
+
+:root[data-theme="dark"] .plan-card-featured .plan-features li {
+    border-top-color: var(--feature-rule);
+}
+
+.plan-includes-block {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.plan-includes {
+    font-family: "Manrope", sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.plan-card-featured .plan-includes {
+    color: var(--feature-heading);
+}
+
+.plan-card .button {
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+.quote-meta {
+    border-top: .08rem solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+}
+
+.quote-meta>div {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.quote-meta-label {
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.fill-in {
+    border-bottom: .08rem dashed var(--blue);
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.plan-quote-detail {
+    border-top: .08rem solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin: 0;
+    padding-top: 1.5rem;
+}
+
+.plan-quote-detail div {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.plan-quote-detail dt {
+    color: var(--muted);
+    font-size: .85rem;
+    margin: 0;
+}
+
+.plan-quote-detail dd {
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    margin: 0;
+}
+
+.plan-card-featured .plan-quote-detail {
+    border-top-color: var(--feature-detail-border);
+}
+
+.plan-card-featured .plan-quote-detail dt {
+    color: var(--feature-copy);
+}
+
+.addon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.addon-item {
+    align-items: baseline;
+    border-top: .08rem solid var(--line);
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1.1rem 0;
+}
+
+.addon-item:first-child {
+    border-top: 0;
+}
+
+.addon-price {
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.section-heading {
+    align-items: end;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+}
+
+.section-heading h1,
+.section-heading h2 {
+    font-size: clamp(2.4rem, 4vw, 3.8rem);
+}
+
+.section-heading h1.portfolio-page-title {
+    font-size: 2.6rem;
+    line-height: 1.12;
+    max-width: 18ch;
+}
+
+.whatsapp-float,
+.top-float {
+    align-items: center;
+    border-radius: 999rem;
+    bottom: 1.25rem;
+    display: inline-flex;
+    font-family: "Manrope", sans-serif;
+    font-size: .72rem;
+    font-weight: 700;
+    position: fixed;
+    z-index: 10;
+}
+
+.whatsapp-float {
+    display: none;
+}
+
+.whatsapp-float.is-hidden,
+.top-float.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(1rem);
+}
+
+.top-float {
+    background: var(--line);
+    border: .08rem solid var(--blue);
+    box-shadow: 0 .35rem 1rem rgba(11, 31, 75, .12);
+    color: var(--blue);
+    gap: .4rem;
+    padding: .7rem .9rem;
+    right: 1.25rem;
+    transition: background .2s ease, color .2s ease;
+}
+
+.top-float:hover,
+.top-float:focus-visible {
+    background: var(--blue);
+    color: var(--white);
+}
+

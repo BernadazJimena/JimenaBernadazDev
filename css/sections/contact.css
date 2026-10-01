@@ -1,0 +1,23 @@
+.contact {
+    align-items: end;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+}
+
+.contact h2 {
+    font-size: clamp(3.5rem, 7vw, 7rem);
+}
+
+.contact-action {
+    border-top: .08rem solid var(--line);
+    padding-top: 1.5rem;
+}
+
+.contact-action p {
+    color: var(--muted);
+    font-size: 1.15rem;
+    margin: 0 0 1.5rem;
+    max-width: 24rem;
+}
+

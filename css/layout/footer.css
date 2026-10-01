@@ -1,0 +1,32 @@
+.site-footer {
+    background: var(--chrome-bg);
+    border-top: .08rem solid var(--chrome-border);
+    color: var(--chrome-text);
+    display: flex;
+    font-size: .76rem;
+    justify-content: space-between;
+    padding: 1.5rem max(2rem, calc((100% - var(--content)) / 2 + 2rem)) 2rem;
+}
+
+.site-footer a {
+    color: var(--chrome-link);
+    font-weight: 700;
+}
+
+.footer-social {
+    align-items: center;
+    display: inline-flex;
+    gap: .35rem;
+}
+
+.social-icon {
+    height: .9rem;
+    width: .9rem;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+

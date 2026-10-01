@@ -1,0 +1,104 @@
+.main-nav {
+    align-items: center;
+    display: flex;
+    font-size: .85rem;
+    gap: 2rem;
+}
+
+.main-nav a {
+    color: var(--chrome-text);
+    transition: color .2s ease;
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+    color: var(--blue);
+}
+
+.main-nav a:hover,
+.main-nav a:focus-visible {
+    color: var(--chrome-link);
+}
+
+.nav-cta {
+    color: var(--chrome-link) !important;
+    font-weight: 700;
+}
+
+.menu-toggle {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    display: none;
+    padding: .5rem;
+}
+
+.theme-toggle {
+    align-items: center;
+    background: none;
+    border: 0;
+    color: var(--chrome-text);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: "DM Sans", sans-serif;
+    font-size: .85rem;
+    gap: .5rem;
+    padding: .4rem;
+    transition: color .2s ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    color: var(--blue);
+}
+
+.theme-toggle-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.lang-switch {
+    align-items: center;
+    display: flex;
+    gap: .35rem;
+}
+
+.lang-flag {
+    align-items: center;
+    border-radius: 50%;
+    display: inline-flex;
+    filter: grayscale(65%);
+    height: 1.9rem;
+    justify-content: center;
+    opacity: .5;
+    transition: filter .2s ease, opacity .2s ease, transform .2s ease;
+    width: 1.9rem;
+}
+
+.lang-flag svg {
+    border-radius: .15rem;
+    display: block;
+    height: .85rem;
+    width: 1.2rem;
+}
+
+.lang-flag:hover,
+.lang-flag:focus-visible {
+    filter: grayscale(0%);
+    opacity: .85;
+    transform: translateY(-.1rem);
+}
+
+.lang-flag.is-active {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+.menu-toggle span {
+    background: var(--text);
+    display: block;
+    height: .12rem;
+    margin: .3rem 0;
+    width: 1.4rem;
+}
+
