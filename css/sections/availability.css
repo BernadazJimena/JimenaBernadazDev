@@ -18,6 +18,15 @@
     font-size: clamp(2.5rem, 4vw, 4rem);
 }
 
+/* English headline is longer: smaller type and a tighter gap */
+.availability-inner:lang(en) {
+    gap: 3.5rem;
+}
+
+.availability h2:lang(en) {
+    font-size: clamp(2rem, 3vw, 3rem);
+}
+
 .availability-info {
     border-left: .08rem solid var(--availability-line);
     padding-left: 2rem;
