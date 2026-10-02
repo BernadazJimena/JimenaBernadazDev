@@ -73,6 +73,30 @@
     width: 100%;
 }
 
+/* Desplegable de planes: flecha propia y colores del tema */
+.contact-field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%231769e0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: .75rem;
+    cursor: pointer;
+    padding-right: 2.75rem;
+}
+
+:root[data-theme="dark"] .contact-field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234f8fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.contact-field select:hover {
+    border-color: var(--blue);
+}
+
+.contact-field select option {
+    background: var(--surface);
+    color: var(--text);
+}
+
 .contact-field textarea {
     min-height: 7rem;
     resize: vertical;
