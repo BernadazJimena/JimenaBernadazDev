@@ -7,13 +7,15 @@ const themeToggle = document.querySelector('.theme-toggle');
 if (year) year.textContent = new Date().getFullYear();
 
 const THEME_KEY = 'jnb-theme';
-const isEnglish = document.documentElement.lang === 'en';
-const themeLabels = isEnglish
-    ? { toDark: 'Dark mode', toLight: 'Light mode' }
-    : { toDark: 'Modo oscuro', toLight: 'Modo claro' };
-const menuLabels = isEnglish
-    ? { open: 'Open menu', close: 'Close menu' }
-    : { open: 'Abrir menú', close: 'Cerrar menú' };
+// Textos de los botones según el idioma de la página (es, en, pt-BR)
+const pageLang = document.documentElement.lang.slice(0, 2);
+const uiLabels = {
+    es: { toDark: 'Modo oscuro', toLight: 'Modo claro', open: 'Abrir menú', close: 'Cerrar menú' },
+    en: { toDark: 'Dark mode', toLight: 'Light mode', open: 'Open menu', close: 'Close menu' },
+    pt: { toDark: 'Modo escuro', toLight: 'Modo claro', open: 'Abrir menu', close: 'Fechar menu' },
+}[pageLang] || { toDark: 'Modo oscuro', toLight: 'Modo claro', open: 'Abrir menú', close: 'Cerrar menú' };
+const themeLabels = { toDark: uiLabels.toDark, toLight: uiLabels.toLight };
+const menuLabels = { open: uiLabels.open, close: uiLabels.close };
 
 const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);

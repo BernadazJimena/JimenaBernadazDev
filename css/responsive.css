@@ -159,14 +159,24 @@
     }
 }
 
-/* Tablet horizontal: menú completo, pero más compacto */
+/* Tablet horizontal: menú completo, pero más compacto (entra también en portugués) */
 @media (min-width: 52.01rem) and (max-width: 64rem) {
     .main-nav {
-        gap: 1.25rem;
+        font-size: .8rem;
+        gap: .9rem;
+    }
+
+    .main-nav a,
+    .brand {
+        white-space: nowrap;
     }
 
     .nav-group {
-        gap: 1rem;
+        gap: .75rem;
+    }
+
+    .lang-switch {
+        gap: .15rem;
     }
 
     .theme-toggle-label {
@@ -205,6 +215,31 @@
 }
 
 @media (max-width: 35rem) {
+    /* Encabezado en una sola línea con las tres banderas */
+    .brand {
+        font-size: .85rem;
+        gap: .5rem;
+        white-space: nowrap;
+    }
+
+    .nav-group,
+    .header-actions {
+        gap: .4rem;
+    }
+
+    .lang-switch {
+        gap: .1rem;
+    }
+
+    .lang-flag {
+        height: 1.7rem;
+        width: 1.7rem;
+    }
+
+    .theme-toggle {
+        padding: .3rem;
+    }
+
     .hero {
         padding-left: 1.25rem;
         padding-right: 1.25rem;
@@ -235,5 +270,11 @@
         gap: .65rem;
         padding-left: 1.25rem;
         padding-right: 1.25rem;
+    }
+}
+/* Celulares muy chicos (320 px): solo el logo "JNB" para que entren las tres banderas */
+@media (max-width: 22rem) {
+    .brand span:not(.brand-mark) {
+        display: none;
     }
 }
