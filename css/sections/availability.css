@@ -37,6 +37,31 @@
     padding-left: 2rem;
 }
 
+/* Estado "Disponible ahora / Fuera de horario": punto + texto (no depende solo del color) */
+.availability-info .availability-status {
+    align-items: center;
+    background: rgba(255, 255, 255, .45);
+    border: .08rem solid var(--availability-line);
+    border-radius: 999rem;
+    color: var(--availability-text);
+    display: inline-flex;
+    font-family: "Manrope", sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    gap: .55rem;
+    margin: 0 0 1rem;
+    max-width: 100%;
+    padding: .45rem .9rem;
+}
+
+:root[data-theme="dark"] .availability-info .availability-status {
+    background: rgba(255, 255, 255, .08);
+}
+
+.availability-status .status-dot {
+    flex-shrink: 0;
+}
+
 .availability-line {
     align-items: center;
     display: flex;

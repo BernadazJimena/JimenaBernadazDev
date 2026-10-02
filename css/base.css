@@ -2,12 +2,13 @@
     --ink: #0b1f4b;
     --white: #ffffff;
     --text: #0b1f4b;
-    --muted: #55719b;
-    --blue: #1769e0;
+    --muted: #3f5985;
+    --blue: #1462d4;
     --blue-dark: #0c3b91;
     --sky: #e5f0ff;
     --mist: #f4f8ff;
     --line: #cfe0f7;
+    --field-border: #6f8ab3;
     --surface: #ffffff;
     --plans-bg: linear-gradient(180deg, #eaf3ff 0%, #dbe9fc 100%);
     --chrome-bg: var(--mist);
@@ -17,14 +18,14 @@
     --feature-bg: linear-gradient(145deg, #dbe9ff 0%, #a8c9f5 100%);
     --feature-border: #1769e0;
     --feature-heading: #0b1f4b;
-    --feature-copy: #315882;
+    --feature-copy: #2a4c74;
     --feature-rule: rgba(23, 105, 224, .35);
     --feature-detail-border: #a9c9f0;
     --availability-bg: linear-gradient(145deg, #b7d3f6 0%, #e3efff 58%, #c0d9f7 100%);
     --availability-text: #102b59;
     --availability-accent: #0c3b91;
     --availability-copy: #315882;
-    --availability-muted: #4a6991;
+    --availability-muted: #3b587e;
     --availability-line: #a9c9f0;
     --radius: 1.25rem;
     --content: 75rem;
@@ -39,24 +40,31 @@
     --sky: #111f3d;
     --mist: #060d1f;
     --line: #1e2f57;
+    --field-border: #5873a3;
     --surface: #0d1c38;
     --plans-bg: var(--surface);
     --feature-heading: #ffffff;
     --feature-copy: #d8e8ff;
     --feature-rule: rgba(216, 232, 255, .4);
     --feature-detail-border: #294579;
-    --availability-bg: linear-gradient(145deg, #1769e0, #0b1f4b);
+    --availability-bg: linear-gradient(145deg, #1150b8, #0b1f4b);
     --availability-text: #ffffff;
     --availability-accent: #b9d7ff;
     --availability-copy: #d8e8ff;
-    --availability-muted: #a9c8f7;
+    --availability-muted: #c6dcfb;
     --availability-line: #1769e0;
     color-scheme: dark;
 }
 
 :root[data-theme="dark"] .plan-card-featured {
-    background: linear-gradient(145deg, #1769e0, #0b1f4b);
+    background: linear-gradient(145deg, #1150b8, #0b1f4b);
     border-color: #1769e0;
+}
+
+/* Contorno visible al navegar con teclado (accesibilidad) */
+:focus-visible {
+    outline: .15rem solid var(--blue);
+    outline-offset: .2rem;
 }
 
 * {

@@ -91,6 +91,16 @@ h2 em {
     background: var(--blue-dark);
 }
 
+/* Modo oscuro: el azul principal es claro, el texto va oscuro para leerse bien */
+:root[data-theme="dark"] .button-primary {
+    color: #0b1f4b;
+}
+
+:root[data-theme="dark"] .button-primary:hover,
+:root[data-theme="dark"] .button-primary:focus-visible {
+    color: var(--white);
+}
+
 .button-ghost {
     background: var(--line);
     border: .08rem solid var(--text);

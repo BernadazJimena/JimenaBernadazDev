@@ -56,6 +56,13 @@ const updateAvailabilityStatus = () => {
     const isOutsideHours = isWeekend || currentHour >= 17 || currentHour < 9;
 
     statusDot.classList.toggle('is-closed', isOutsideHours);
+
+    // El estado también se muestra en texto, no solo con el color del punto
+    const statusText = document.querySelector('.status-text');
+    if (statusText) {
+        statusText.textContent = isOutsideHours ? statusText.dataset.closed : statusText.dataset.open;
+        statusText.closest('.availability-status')?.classList.toggle('is-closed', isOutsideHours);
+    }
 };
 
 updateAvailabilityStatus();

@@ -28,6 +28,18 @@
     border-color: #86c1ea;
 }
 
+.plan-card-basic .eyebrow {
+    color: var(--blue-dark);
+}
+
+:root[data-theme="dark"] .plan-card-basic .eyebrow {
+    color: var(--blue);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .text-link {
+    color: #bcd8ff;
+}
+
 .plan-card-basic .plan-features li {
     border-top-color: rgba(23, 105, 224, .3);
 }
@@ -193,6 +205,7 @@
 /* Color del hover de "Consultar plan" según el plan (modo claro) */
 .plan-card {
     --plan-button-hover: var(--blue-dark);
+    --plan-button-hover-text: var(--white);
 }
 
 .plan-card-basic {
@@ -210,6 +223,7 @@
 /* Color del hover según el plan (modo oscuro) */
 :root[data-theme="dark"] .plan-card-basic {
     --plan-button-hover: #4f8fff;
+    --plan-button-hover-text: #0b1f4b;
 }
 
 :root[data-theme="dark"] .plan-card-entrepreneur {
@@ -225,7 +239,7 @@
 :root .plan-card .button:focus-visible {
     background: var(--plan-button-hover);
     border-color: var(--plan-button-hover);
-    color: var(--white);
+    color: var(--plan-button-hover-text);
     transform: translateY(-.15rem);
 }
 
@@ -365,7 +379,7 @@
 }
 
 .top-float {
-    background: var(--line);
+    background: var(--surface);
     border: .08rem solid var(--blue);
     box-shadow: 0 .35rem 1rem rgba(11, 31, 75, .12);
     color: var(--blue);

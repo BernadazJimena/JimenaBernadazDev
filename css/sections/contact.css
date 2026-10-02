@@ -63,7 +63,7 @@
 .contact-field input,
 .contact-field textarea {
     background: var(--surface);
-    border: .08rem solid var(--line);
+    border: .08rem solid var(--field-border);
     border-radius: .75rem;
     color: var(--text);
     font: inherit;
@@ -114,7 +114,7 @@
 
 .contact-plan .plan-option span {
     background: var(--surface);
-    border: .08rem solid var(--line);
+    border: .08rem solid var(--field-border);
     border-radius: 999rem;
     color: var(--text);
     display: inline-block;
@@ -137,6 +137,11 @@
     color: var(--white);
 }
 
+/* En modo oscuro el azul es claro: texto oscuro para que se lea bien */
+:root[data-theme="dark"] .contact-plan .plan-option input:checked + span {
+    color: #0b1f4b;
+}
+
 .contact-plan .plan-option input:focus-visible + span {
     box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .3);
 }
@@ -149,7 +154,7 @@
 .contact-field input::placeholder,
 .contact-field textarea::placeholder {
     color: var(--muted);
-    opacity: .8;
+    opacity: 1;
 }
 
 .contact-field input:focus,
@@ -181,11 +186,11 @@
 }
 
 .contact-form-status.is-success {
-    color: #1b9e55;
+    color: #157a42;
 }
 
 .contact-form-status.is-error {
-    color: #d64545;
+    color: #b93232;
 }
 
 :root[data-theme="dark"] .contact-form-status.is-success {
