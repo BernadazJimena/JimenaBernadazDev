@@ -177,3 +177,25 @@ contactForm?.addEventListener('submit', async (event) => {
         submitButton.disabled = false;
     }
 });
+
+// Términos: abrir / cerrar todas las secciones desplegables
+const legalToggleAll = document.querySelector('.legal-toggle-all');
+const legalSections = document.querySelectorAll('.legal-accordion details');
+
+const syncLegalToggle = () => {
+    if (!legalToggleAll) return;
+    const allOpen = [...legalSections].every((section) => section.open);
+    legalToggleAll.textContent = allOpen ? legalToggleAll.dataset.close : legalToggleAll.dataset.open;
+    legalToggleAll.setAttribute('aria-expanded', String(allOpen));
+};
+
+legalToggleAll?.addEventListener('click', () => {
+    const openAll = ![...legalSections].every((section) => section.open);
+    legalSections.forEach((section) => { section.open = openAll; });
+    syncLegalToggle();
+});
+
+legalSections.forEach((section) => section.addEventListener('toggle', syncLegalToggle));
+
+// Al imprimir, se muestran todas las secciones
+window.addEventListener('beforeprint', () => legalSections.forEach((section) => { section.open = true; }));

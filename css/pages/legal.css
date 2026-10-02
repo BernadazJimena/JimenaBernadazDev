@@ -88,3 +88,88 @@
 .legal-summary li:last-child {
     margin-bottom: 0;
 }
+
+/* Capítulos desplegables (tipo preguntas frecuentes) */
+.legal-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -1.5rem;
+}
+
+.legal-toggle-all {
+    background: none;
+    border: 0;
+    color: var(--blue);
+    cursor: pointer;
+    font-family: "Manrope", sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    padding: .4rem 0;
+}
+
+.legal-toggle-all:hover {
+    text-decoration: underline;
+}
+
+.legal-accordion {
+    border-bottom: .08rem solid var(--line);
+}
+
+.legal-accordion .legal-block,
+.legal-accordion .legal-block:first-child {
+    border-top: .08rem solid var(--line);
+    padding: 0;
+}
+
+.legal-block summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    list-style: none;
+    padding: 1.25rem 0;
+}
+
+.legal-block summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Ícono + / − a la derecha del título */
+.legal-block summary::after {
+    align-items: center;
+    border: .08rem solid var(--field-border);
+    border-radius: 50%;
+    color: var(--blue);
+    content: "+";
+    display: inline-flex;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    height: 2rem;
+    justify-content: center;
+    line-height: 1;
+    width: 2rem;
+}
+
+.legal-block[open] summary::after {
+    content: "−";
+}
+
+.legal-accordion .legal-block h2 {
+    font-size: clamp(1.15rem, 2vw, 1.4rem);
+    margin: 0;
+    transition: color .2s ease;
+}
+
+.legal-block summary:hover h2 {
+    color: var(--blue);
+}
+
+.legal-panel {
+    padding: 0 0 1.5rem;
+}
+
+.legal-panel > :last-child {
+    margin-bottom: 0;
+}
