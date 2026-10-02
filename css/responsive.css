@@ -48,6 +48,69 @@
         padding-bottom: 0;
     }
 
+    /* Celular y tablet vertical: el ícono ☰ ya abre el menú, así que se oculta el botón "Menú"
+       y las opciones se muestran directamente */
+    .nav-dropdown-toggle {
+        display: none;
+    }
+
+    .nav-submenu-label {
+        border-bottom: .08rem solid var(--line);
+        font-size: .7rem;
+        padding: .9rem 0 .6rem;
+    }
+
+    /* "Planes" funciona como título y sus opciones se muestran debajo, con sangría */
+    .nav-subgroup-toggle {
+        border-bottom: .08rem solid var(--line);
+        border-radius: 0;
+        color: var(--muted);
+        font-family: "Manrope", sans-serif;
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        padding: .9rem 0 .6rem;
+        pointer-events: none;
+        text-transform: uppercase;
+        width: 100%;
+    }
+
+    .nav-subgroup-arrow {
+        display: none;
+    }
+
+    .nav-submenu.nav-submenu-nested {
+        padding-left: 1rem;
+    }
+
+    .nav-dropdown-arrow {
+        display: none;
+    }
+
+    .nav-submenu {
+        background: none;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        min-width: 0;
+        opacity: 1;
+        padding: 0;
+        pointer-events: inherit;
+        position: static;
+        transform: none;
+        visibility: inherit;
+    }
+
+    .nav-submenu::before {
+        display: none;
+    }
+
+    .nav-submenu a {
+        border-radius: 0;
+        color: var(--chrome-text);
+        padding: .75rem 0;
+    }
+
     .hero {
         min-height: auto;
         padding-bottom: 6rem;

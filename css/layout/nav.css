@@ -102,3 +102,256 @@
     width: 1.4rem;
 }
 
+
+/* Submenú "Planes" */
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-toggle {
+    background: none;
+    border: 0;
+    color: var(--chrome-text);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    transition: color .2s ease;
+}
+
+.nav-dropdown-toggle:hover,
+.nav-dropdown-toggle:focus-visible,
+.nav-dropdown.is-open .nav-dropdown-toggle {
+    color: var(--chrome-link);
+}
+
+.nav-dropdown-arrow {
+    display: inline-block;
+    font-size: .7em;
+    transition: transform .2s ease;
+}
+
+.nav-submenu {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: .75rem;
+    box-shadow: 0 1rem 2rem rgba(11, 31, 75, .14);
+    display: flex;
+    flex-direction: column;
+    left: 50%;
+    min-width: 13rem;
+    opacity: 0;
+    padding: .4rem;
+    pointer-events: none;
+    position: absolute;
+    top: calc(100% + .9rem);
+    transform: translate(-50%, .3rem);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
+    visibility: hidden;
+    z-index: 20;
+}
+
+/* Puente invisible para que el submenú no se cierre al bajar el mouse */
+.nav-submenu::before {
+    content: "";
+    height: .9rem;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: -.9rem;
+}
+
+.nav-dropdown:hover > .nav-submenu,
+.nav-dropdown:focus-within > .nav-submenu,
+.nav-dropdown.is-open > .nav-submenu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+    visibility: visible;
+}
+
+.nav-dropdown:hover .nav-dropdown-arrow,
+.nav-dropdown.is-open .nav-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.nav-submenu a {
+    border-radius: .5rem;
+    color: var(--text);
+    padding: .6rem .8rem;
+    white-space: nowrap;
+}
+
+.nav-submenu a:hover,
+.nav-submenu a:focus-visible {
+    background: var(--sky);
+    color: var(--chrome-link);
+}
+
+/* Subrayado que crece desde el centro, solo al pasar el mouse (escritorio) */
+@media (hover: hover) and (min-width: 52.01rem) {
+    .main-nav > a,
+    .nav-dropdown-toggle,
+    .nav-submenu a {
+        position: relative;
+    }
+
+    .main-nav > a::after,
+    .nav-dropdown-toggle::after,
+    .nav-submenu a::after {
+        background: currentColor;
+        border-radius: 1rem;
+        bottom: -.35rem;
+        content: "";
+        height: .12rem;
+        left: 50%;
+        position: absolute;
+        transition: left .25s ease, width .25s ease;
+        width: 0;
+    }
+
+    .nav-submenu a::after {
+        bottom: .35rem;
+    }
+
+    .nav-submenu .nav-submenu-child::after {
+        left: calc(50% + .4rem);
+    }
+
+    .main-nav > a:hover::after,
+    .nav-dropdown-toggle:hover::after,
+    .nav-submenu a:hover::after {
+        left: 0;
+        width: 100%;
+    }
+
+    .nav-submenu a:hover::after {
+        left: .8rem;
+        width: calc(100% - 1.6rem);
+    }
+
+    .nav-submenu .nav-submenu-child:hover::after {
+        left: 1.6rem;
+        width: calc(100% - 2.4rem);
+    }
+}
+
+/* Menú principal desplegable: grupo "Planes" con sus dos opciones */
+.nav-menu .nav-submenu {
+    min-width: 15rem;
+}
+
+.nav-submenu-label {
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    padding: .7rem .8rem .25rem;
+    text-transform: uppercase;
+}
+
+.nav-submenu .nav-submenu-child {
+    padding-left: 1.6rem;
+}
+
+.nav-submenu .nav-submenu-child::before {
+    color: var(--muted);
+    content: "–";
+    left: .8rem;
+    position: absolute;
+}
+
+.nav-submenu a {
+    position: relative;
+}
+
+/* Cada opción del menú ocupa solo el ancho de su texto, así el subrayado queda debajo de la palabra */
+@media (min-width: 52.01rem) {
+    .nav-submenu a,
+    .nav-submenu-label {
+        align-self: flex-start;
+    }
+
+    .nav-submenu a:hover,
+    .nav-submenu a:focus-visible {
+        background: none;
+    }
+}
+
+
+/* Segundo nivel: "Planes" abre un panel al costado (hacia la izquierda) */
+.nav-subgroup {
+    align-self: stretch;
+    position: relative;
+}
+
+.nav-subgroup-toggle {
+    background: none;
+    border: 0;
+    border-radius: .5rem;
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    padding: .6rem .8rem;
+    position: relative;
+    text-align: left;
+}
+
+.nav-subgroup-toggle:hover,
+.nav-subgroup-toggle:focus-visible,
+.nav-subgroup.is-open .nav-subgroup-toggle,
+.nav-subgroup:hover .nav-subgroup-toggle {
+    color: var(--chrome-link);
+}
+
+.nav-subgroup-arrow {
+    color: var(--muted);
+    display: inline-block;
+    margin-right: .2rem;
+}
+
+.nav-submenu-nested {
+    left: auto;
+    right: calc(100% + .9rem);
+    top: -.45rem;
+    transform: translateX(.3rem);
+}
+
+/* Puente invisible horizontal para pasar el mouse al panel lateral */
+.nav-submenu-nested::before {
+    height: auto;
+    left: auto;
+    right: -.9rem;
+    top: 0;
+    bottom: 0;
+    width: .9rem;
+}
+
+.nav-subgroup:hover > .nav-submenu-nested,
+.nav-subgroup:focus-within > .nav-submenu-nested,
+.nav-subgroup.is-open > .nav-submenu-nested {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+    visibility: visible;
+}
+
+/* Subrayado desde el centro también en "Planes" */
+@media (hover: hover) and (min-width: 52.01rem) {
+    .nav-subgroup-toggle::after {
+        background: currentColor;
+        border-radius: 1rem;
+        bottom: .35rem;
+        content: "";
+        height: .12rem;
+        left: 50%;
+        position: absolute;
+        transition: left .25s ease, width .25s ease;
+        width: 0;
+    }
+
+    .nav-subgroup-toggle:hover::after {
+        left: .8rem;
+        width: calc(100% - 1.6rem);
+    }
+}

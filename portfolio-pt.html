@@ -61,8 +61,24 @@
     </a>
     <div class="nav-group">
       <nav class="main-nav" id="main-nav" aria-label="Navegação principal">
-        <a href="index-pt.html">Início</a>
-        <a href="index-pt.html#contacto">Contato</a>
+        <div class="nav-dropdown nav-menu">
+          <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-main"
+            aria-label="Abrir menu de navegação">Menu <span class="nav-dropdown-arrow" aria-hidden="true">▾</span></button>
+          <div class="nav-submenu" id="nav-submenu-main">
+            <a href="index-pt.html#sobre-mi">Sobre mim</a>
+            <div class="nav-subgroup">
+              <button class="nav-subgroup-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-planes"
+                aria-label="Abrir submenu de planos"><span class="nav-subgroup-arrow" aria-hidden="true">‹</span> Planos</button>
+              <div class="nav-submenu nav-submenu-nested" id="nav-submenu-planes">
+                <a href="index-pt.html#planos">Ver planos</a>
+                <a href="planes-pt.html">Detalhes de cada plano</a>
+              </div>
+            </div>
+            <a href="portfolio-pt.html">Portfólio</a>
+            <a href="index-pt.html#disponibilidad">Disponibilidade</a>
+          </div>
+        </div>
+        <a class="nav-cta" href="index-pt.html#contacto">Fale conosco <span aria-hidden="true">↗</span></a>
       </nav>
       <div class="header-actions">
         <div class="lang-switch" role="group" aria-label="Mudar idioma">

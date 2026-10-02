@@ -143,10 +143,23 @@
     </a>
     <div class="nav-group">
       <nav class="main-nav" id="main-nav" aria-label="Main navigation">
-        <a href="#sobre-mi">About</a>
-        <a href="#plans">Plans</a>
-        <a href="portfolio-en.html">Portfolio</a>
-        <a href="#disponibilidad">Availability</a>
+        <div class="nav-dropdown nav-menu">
+          <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-main"
+            aria-label="Open navigation menu">Menu <span class="nav-dropdown-arrow" aria-hidden="true">▾</span></button>
+          <div class="nav-submenu" id="nav-submenu-main">
+            <a href="#sobre-mi">About</a>
+            <div class="nav-subgroup">
+              <button class="nav-subgroup-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-planes"
+                aria-label="Open plans submenu"><span class="nav-subgroup-arrow" aria-hidden="true">‹</span> Plans</button>
+              <div class="nav-submenu nav-submenu-nested" id="nav-submenu-planes">
+                <a href="#plans">View plans</a>
+                <a href="planes-en.html">Plan details</a>
+              </div>
+            </div>
+            <a href="portfolio-en.html">Portfolio</a>
+            <a href="#disponibilidad">Availability</a>
+          </div>
+        </div>
         <a class="nav-cta" href="#contacto">Let's talk <span aria-hidden="true">↗</span></a>
       </nav>
       <div class="header-actions">

@@ -212,3 +212,38 @@ const openSectionFromHash = () => {
 };
 openSectionFromHash();
 window.addEventListener('hashchange', openSectionFromHash);
+
+// Submenú "Planes" del menú principal: se abre con clic (pantallas táctiles y teclado)
+document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
+    const toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    const setOpen = (isOpen) => {
+        dropdown.classList.toggle('is-open', isOpen);
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    };
+    toggle.addEventListener('click', () => setOpen(!dropdown.classList.contains('is-open')));
+    document.addEventListener('click', (event) => {
+        if (!dropdown.contains(event.target)) setOpen(false);
+    });
+    dropdown.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setOpen(false);
+            toggle.focus();
+        }
+    });
+});
+
+// Segundo nivel del menú ("Planes"): se abre con clic en pantallas táctiles y con teclado
+document.querySelectorAll('.nav-subgroup').forEach((group) => {
+    const toggle = group.querySelector('.nav-subgroup-toggle');
+    const setOpen = (isOpen) => {
+        group.classList.toggle('is-open', isOpen);
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    };
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setOpen(!group.classList.contains('is-open'));
+    });
+    document.addEventListener('click', (event) => {
+        if (!group.contains(event.target)) setOpen(false);
+    });
+});

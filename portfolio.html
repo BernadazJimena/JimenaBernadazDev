@@ -61,8 +61,24 @@
     </a>
     <div class="nav-group">
       <nav class="main-nav" id="main-nav" aria-label="Navegación principal">
-        <a href="index.html">Inicio</a>
-        <a href="index.html#contacto">Contacto</a>
+        <div class="nav-dropdown nav-menu">
+          <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-main"
+            aria-label="Abrir menú de navegación">Menú <span class="nav-dropdown-arrow" aria-hidden="true">▾</span></button>
+          <div class="nav-submenu" id="nav-submenu-main">
+            <a href="index.html#sobre-mi">Sobre mí</a>
+            <div class="nav-subgroup">
+              <button class="nav-subgroup-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-planes"
+                aria-label="Abrir submenú de planes"><span class="nav-subgroup-arrow" aria-hidden="true">‹</span> Planes</button>
+              <div class="nav-submenu nav-submenu-nested" id="nav-submenu-planes">
+                <a href="index.html#planes">Ver planes</a>
+                <a href="planes.html">Detalle de cada plan</a>
+              </div>
+            </div>
+            <a href="portfolio.html">Portfolio</a>
+            <a href="index.html#disponibilidad">Disponibilidad</a>
+          </div>
+        </div>
+        <a class="nav-cta" href="index.html#contacto">Hablemos <span aria-hidden="true">↗</span></a>
       </nav>
       <div class="header-actions">
         <div class="lang-switch" role="group" aria-label="Cambiar idioma">
