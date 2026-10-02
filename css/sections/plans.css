@@ -406,3 +406,15 @@
 .plans-more .text-link {
     font-size: .95rem;
 }
+
+/* Aclaración debajo del precio (Plan Emprendedor) */
+.plan-price-note {
+    color: var(--text);
+    display: block;
+    font-family: "DM Sans", sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.4;
+    margin-top: .6rem;
+}
