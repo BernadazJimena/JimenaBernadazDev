@@ -244,3 +244,22 @@
 .plan-detail summary h2 {
     line-height: 1.25;
 }
+
+/* Términos: franja de color a la izquierda en cada sección, alternando los colores de los planes */
+.legal-accordion .legal-block,
+.legal-accordion .legal-block:first-child {
+    border-left: .25rem solid var(--plan-detail-color, var(--legal-accent));
+    padding-left: 1.25rem;
+}
+
+.legal-accordion .legal-block:nth-child(3n + 1) {
+    --legal-accent: #8f98e6;
+}
+
+.legal-accordion .legal-block:nth-child(3n + 2) {
+    --legal-accent: #86c1ea;
+}
+
+.legal-accordion .legal-block:nth-child(3n) {
+    --legal-accent: var(--blue);
+}
