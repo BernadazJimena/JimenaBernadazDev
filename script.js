@@ -98,7 +98,9 @@ if (contactSection && whatsappFloat) {
     contactObserver.observe(contactSection);
 }
 
-const heroSection = document.querySelector('.hero');
+const heroSection = document.querySelector('.hero, .legal-hero');
+// En términos el botón aparece recién cuando el encabezado sale de pantalla
+const heroHideRatio = heroSection?.classList.contains('legal-hero') ? 0 : 0.25;
 
 if (topFloat) {
     // El botón "Inicio" se oculta en la sección de inicio y en el footer
@@ -110,7 +112,9 @@ if (topFloat) {
 
     if (heroSection) {
         new IntersectionObserver(([entry]) => {
-            isHeroVisible = entry.intersectionRatio >= 0.25;
+            isHeroVisible = heroHideRatio === 0
+                ? entry.isIntersecting
+                : entry.intersectionRatio >= heroHideRatio;
             updateTopFloat();
         }, { threshold: [0, 0.25] }).observe(heroSection);
     }
