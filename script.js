@@ -201,3 +201,14 @@ legalSections.forEach((section) => section.addEventListener('toggle', syncLegalT
 
 // Al imprimir, se muestran todas las secciones
 window.addEventListener('beforeprint', () => legalSections.forEach((section) => { section.open = true; }));
+
+// Si se llega con un enlace a una sección (por ejemplo planes.html#emprendedor), se abre ese desplegable
+const openSectionFromHash = () => {
+    const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (target && target.tagName === 'DETAILS') {
+        target.open = true;
+        target.scrollIntoView({ block: 'start' });
+    }
+};
+openSectionFromHash();
+window.addEventListener('hashchange', openSectionFromHash);

@@ -91,4 +91,34 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/planes</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/planes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/planes-en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/planes-pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/planes" />
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/planes-en</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/planes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/planes-en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/planes-pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/planes" />
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/planes-pt</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/planes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/planes-en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/planes-pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/planes" />
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

@@ -173,3 +173,74 @@
 .legal-panel > :last-child {
     margin-bottom: 0;
 }
+
+/* Página de planes: cada plan es un desplegable con precio y franja de color */
+.plan-detail {
+    border-left: .25rem solid var(--plan-detail-color, var(--blue));
+    padding-left: 1.25rem !important;
+}
+
+.plan-detail-emprendedor {
+    --plan-detail-color: #8f98e6;
+}
+
+.plan-detail-basico {
+    --plan-detail-color: #86c1ea;
+}
+
+.plan-detail-premium {
+    --plan-detail-color: var(--blue);
+}
+
+.plan-detail summary {
+    flex-wrap: wrap;
+}
+
+.plan-detail summary h2 {
+    flex: 1 1 16rem;
+}
+
+.plan-detail-sub {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.plan-detail-price {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.plan-detail-price span {
+    color: var(--muted);
+    font-size: .75rem;
+    letter-spacing: .08em;
+}
+
+.legal-panel h3 {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1rem;
+    margin: 1.5rem 0 .5rem;
+}
+
+.legal-panel h3:first-child {
+    margin-top: 0;
+}
+
+.legal-panel .plan-detail-cta {
+    margin-top: 1.5rem;
+}
+
+.plan-detail-footnote {
+    color: var(--muted);
+    font-size: .92rem;
+    margin: 0;
+}
+
+.plan-detail summary h2 {
+    line-height: 1.25;
+}

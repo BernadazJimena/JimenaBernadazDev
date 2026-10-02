@@ -396,3 +396,13 @@
     color: var(--white);
 }
 
+
+/* Enlace a la página de detalle de planes */
+.plans-more {
+    margin: 2rem 0 0;
+    text-align: center;
+}
+
+.plans-more .text-link {
+    font-size: .95rem;
+}
