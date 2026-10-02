@@ -59,3 +59,32 @@
     margin-bottom: .5rem;
 }
 
+
+/* Resumen "En pocas palabras" al inicio de los términos */
+.legal-summary {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-left: .3rem solid var(--blue);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+}
+
+.legal-summary h2 {
+    font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+    margin: 0 0 1rem;
+}
+
+.legal-summary ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.legal-summary li {
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: .6rem;
+}
+
+.legal-summary li:last-child {
+    margin-bottom: 0;
+}
