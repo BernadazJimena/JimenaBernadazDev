@@ -136,6 +136,17 @@ if (topFloat) {
 
 const contactForm = document.querySelector('.contact-form');
 
+// Mensajes de validación en el idioma de la página (no en el del navegador)
+contactForm?.querySelectorAll('input[required], textarea[required]').forEach((field) => {
+    field.addEventListener('invalid', () => {
+        const { valueMissing, typeMismatch, patternMismatch } = field.validity;
+        const isBadEmail = field.type === 'email' && (typeMismatch || patternMismatch);
+        const message = isBadEmail ? field.dataset.msgInvalid : field.dataset.msgRequired;
+        field.setCustomValidity(valueMissing || isBadEmail || patternMismatch ? message || '' : '');
+    });
+    field.addEventListener('input', () => field.setCustomValidity(''));
+});
+
 contactForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
 

@@ -333,11 +333,15 @@
           <div class="contact-form-row">
             <label class="contact-field">
               <span>Name</span>
-              <input type="text" name="name" autocomplete="name" required>
+              <input type="text" name="name" autocomplete="name" required pattern=".*\S.*"
+                placeholder="Your first and last name" data-msg-required="Please enter your name so I know how to address you.">
             </label>
             <label class="contact-field">
               <span>Email</span>
-              <input type="email" name="email" autocomplete="email" required>
+              <input type="email" name="email" autocomplete="email" inputmode="email" required
+                pattern="[^@\s]+@[^@\s]+\.[^@\s]+" placeholder="you@email.com"
+                data-msg-required="Please enter your email so I can reply."
+                data-msg-invalid="Please check your email: it needs an @ and a domain, for example you@gmail.com.">
             </label>
           </div>
           <fieldset class="contact-field contact-plan">
@@ -351,7 +355,7 @@
           </fieldset>
           <label class="contact-field">
             <span>Message</span>
-            <textarea name="message" rows="4" required
+            <textarea name="message" rows="4" required data-msg-required="Please tell me briefly what you need."
               placeholder="Tell me about your project or business"></textarea>
           </label>
           <button class="button button-ghost" type="submit">Send message <span aria-hidden="true">↗</span></button>
