@@ -119,7 +119,7 @@
 
     .availability-info {
         border-left: 0;
-        border-top: .08rem solid #294579;
+        border-top: .08rem solid var(--availability-line);
         padding-left: 0;
         padding-top: 1.8rem;
     }

@@ -98,11 +98,28 @@ if (contactSection && whatsappFloat) {
     contactObserver.observe(contactSection);
 }
 
-if (footer && topFloat) {
-    const footerObserver = new IntersectionObserver(([entry]) => {
-        topFloat.classList.toggle('is-hidden', entry.isIntersecting);
-    }, { threshold: 0.1 });
+const heroSection = document.querySelector('.hero');
 
-    footerObserver.observe(footer);
+if (topFloat) {
+    // El botón "Inicio" se oculta en la sección de inicio y en el footer
+    let isHeroVisible = false;
+    let isFooterVisible = false;
+    const updateTopFloat = () => {
+        topFloat.classList.toggle('is-hidden', isHeroVisible || isFooterVisible);
+    };
+
+    if (heroSection) {
+        new IntersectionObserver(([entry]) => {
+            isHeroVisible = entry.intersectionRatio >= 0.25;
+            updateTopFloat();
+        }, { threshold: [0, 0.25] }).observe(heroSection);
+    }
+
+    if (footer) {
+        new IntersectionObserver(([entry]) => {
+            isFooterVisible = entry.isIntersecting;
+            updateTopFloat();
+        }, { threshold: 0.1 }).observe(footer);
+    }
 }
 
