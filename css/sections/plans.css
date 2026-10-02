@@ -63,20 +63,10 @@
     color: var(--white);
 }
 
-.plan-card-entrepreneur .button-ghost:hover,
-.plan-card-entrepreneur .button-ghost:focus-visible {
-    background: #082a66;
-}
-
 :root[data-theme="dark"] .plan-card-entrepreneur .button-ghost {
     background: #93c5fd;
     border-color: #dbeafe;
     color: #0b1f4b;
-}
-
-:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost:hover,
-:root[data-theme="dark"] .plan-card-entrepreneur .button-ghost:focus-visible {
-    background: #bfdbfe;
 }
 
 .plan-card-featured {
@@ -162,6 +152,45 @@
 .plan-card .button {
     align-self: flex-start;
     margin-top: auto;
+}
+
+/* Color del hover de "Consultar plan" según el plan (modo claro) */
+.plan-card {
+    --plan-button-hover: var(--blue-dark);
+}
+
+.plan-card-basic {
+    --plan-button-hover: #1769e0;
+}
+
+.plan-card-entrepreneur {
+    --plan-button-hover: #4338ca;
+}
+
+.plan-card-featured {
+    --plan-button-hover: #0b1f4b;
+}
+
+/* Color del hover según el plan (modo oscuro) */
+:root[data-theme="dark"] .plan-card-basic {
+    --plan-button-hover: #4f8fff;
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur {
+    --plan-button-hover: #1e40af;
+}
+
+:root[data-theme="dark"] .plan-card-featured {
+    --plan-button-hover: #1c6fe0;
+}
+
+/* Mismo efecto hover/focus en los botones de todos los planes */
+:root .plan-card .button:hover,
+:root .plan-card .button:focus-visible {
+    background: var(--plan-button-hover);
+    border-color: var(--plan-button-hover);
+    color: var(--white);
+    transform: translateY(-.15rem);
 }
 
 .quote-meta {
