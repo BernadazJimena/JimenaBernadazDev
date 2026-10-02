@@ -129,6 +129,83 @@
     }
 }
 
+/* Tablets (vertical y horizontal): entre celular y escritorio */
+@media (min-width: 35.01rem) and (max-width: 64rem) {
+    .plan-card {
+        padding: 2rem 1.75rem;
+        row-gap: 1.5rem;
+    }
+
+    .plan-card-head h3 {
+        font-size: 1.45rem;
+    }
+
+    .plan-price {
+        font-size: 1.75rem;
+    }
+
+    /* Botones de los planes a todo el ancho para que el texto no se corte */
+    .plan-card .button {
+        justify-self: stretch;
+        text-align: center;
+        width: 100%;
+    }
+
+    .site-footer {
+        flex-wrap: wrap;
+        gap: .75rem 2rem;
+    }
+
+    .portfolio-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Tablet horizontal: menú completo, pero más compacto */
+@media (min-width: 52.01rem) and (max-width: 64rem) {
+    .main-nav {
+        gap: 1.25rem;
+    }
+
+    .nav-group {
+        gap: 1rem;
+    }
+
+    .theme-toggle-label {
+        display: none;
+    }
+}
+
+/* Tablet horizontal ancha: los tres planes en columnas */
+@media (min-width: 60.01rem) and (max-width: 64rem) {
+    .plan-grid {
+        gap: 1.25rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .plan-card .button {
+        font-size: .78rem;
+        gap: .5rem;
+        padding: 1rem .9rem;
+    }
+}
+
+/* Tablet vertical: planes en dos columnas, el premium ocupa todo el ancho */
+@media (min-width: 35.01rem) and (max-width: 60rem) {
+    .plan-grid {
+        gap: 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .plan-card-featured {
+        grid-column: 1 / -1;
+    }
+
+    .contact-form-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (max-width: 35rem) {
     .hero {
         padding-left: 1.25rem;
