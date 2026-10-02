@@ -1,5 +1,5 @@
 .contact {
-    align-items: end;
+    align-items: start;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 5rem;
@@ -19,5 +19,113 @@
     font-size: 1.15rem;
     margin: 0 0 1.5rem;
     max-width: 24rem;
+}
+
+/* Formulario de contacto (Web3Forms) */
+.contact-form {
+    border-top: .08rem solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+}
+
+.contact-action .contact-form-intro {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.contact-form-row {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+.contact-field {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.contact-field span {
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.contact-field input,
+.contact-field select,
+.contact-field textarea {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: .75rem;
+    color: var(--text);
+    font: inherit;
+    font-size: .95rem;
+    padding: .8rem 1rem;
+    width: 100%;
+}
+
+.contact-field textarea {
+    min-height: 7rem;
+    resize: vertical;
+}
+
+.contact-field input::placeholder,
+.contact-field textarea::placeholder {
+    color: var(--muted);
+    opacity: .8;
+}
+
+.contact-field input:focus,
+.contact-field select:focus,
+.contact-field textarea:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .18);
+    outline: none;
+}
+
+.contact-form .button {
+    align-self: flex-start;
+    cursor: pointer;
+}
+
+.contact-form .button:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+/* Campo trampa para robots: invisible para las personas */
+.contact-form-botcheck {
+    display: none;
+}
+
+.contact-action .contact-form-status {
+    font-size: .92rem;
+    margin: 0;
+    min-height: 1.4em;
+}
+
+.contact-form-status.is-success {
+    color: #1b9e55;
+}
+
+.contact-form-status.is-error {
+    color: #d64545;
+}
+
+:root[data-theme="dark"] .contact-form-status.is-success {
+    color: #55d87c;
+}
+
+:root[data-theme="dark"] .contact-form-status.is-error {
+    color: #f08a8a;
 }
 

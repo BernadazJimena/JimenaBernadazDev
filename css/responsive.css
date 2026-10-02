@@ -65,6 +65,10 @@
         gap: 3rem;
     }
 
+    .contact-form-row {
+        grid-template-columns: 1fr;
+    }
+
     .about-details {
         align-items: start;
         flex-direction: column;

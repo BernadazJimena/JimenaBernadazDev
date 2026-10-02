@@ -278,6 +278,43 @@
           href="https://wa.me/5491127663667?text=Hola%20Jimena,%20quiero%20hablar%20sobre%20una%20landing%20page."
           target="_blank" rel="noreferrer" aria-label="Escribime por WhatsApp al +54 9 11 2766 3667">Escribime por
           WhatsApp <span aria-hidden="true">↗</span></a>
+
+        <form class="contact-form" action="https://api.web3forms.com/submit" method="POST"
+          data-sending="Enviando..." data-success="¡Gracias! Recibí tu mensaje y te respondo a la brevedad."
+          data-error="No se pudo enviar el mensaje. Probá de nuevo o escribime por WhatsApp.">
+          <p class="contact-form-intro">¿Preferís escribir por mail?</p>
+          <input type="hidden" name="access_key" value="c561c3a9-ac49-4900-b182-fed828cf142e">
+          <input type="hidden" name="subject" value="Nueva consulta desde la web (español)">
+          <input type="hidden" name="from_name" value="JNB Creative Studio">
+          <input type="checkbox" name="botcheck" class="contact-form-botcheck" tabindex="-1" autocomplete="off">
+
+          <div class="contact-form-row">
+            <label class="contact-field">
+              <span>Nombre</span>
+              <input type="text" name="name" autocomplete="name" required>
+            </label>
+            <label class="contact-field">
+              <span>Mail</span>
+              <input type="email" name="email" autocomplete="email" required>
+            </label>
+          </div>
+          <label class="contact-field">
+            <span>Plan que te interesa</span>
+            <select name="plan">
+              <option value="Plan Básico">Plan Básico</option>
+              <option value="Plan Emprendedor">Plan Emprendedor</option>
+              <option value="Plan Premium">Plan Premium</option>
+              <option value="No sé todavía" selected>No sé todavía</option>
+            </select>
+          </label>
+          <label class="contact-field">
+            <span>Mensaje</span>
+            <textarea name="message" rows="4" required
+              placeholder="Contame sobre tu proyecto o negocio"></textarea>
+          </label>
+          <button class="button button-ghost" type="submit">Enviar mensaje <span aria-hidden="true">↗</span></button>
+          <p class="contact-form-status" role="status" aria-live="polite"></p>
+        </form>
       </div>
     </section>
   </main>

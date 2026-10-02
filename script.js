@@ -127,3 +127,35 @@ if (topFloat) {
     }
 }
 
+const contactForm = document.querySelector('.contact-form');
+
+contactForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const status = contactForm.querySelector('.contact-form-status');
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    const { sending, success, error } = contactForm.dataset;
+
+    status.className = 'contact-form-status';
+    status.textContent = sending;
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(contactForm.action, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: new FormData(contactForm)
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message);
+
+        contactForm.reset();
+        status.classList.add('is-success');
+        status.textContent = success;
+    } catch (submitError) {
+        status.classList.add('is-error');
+        status.textContent = error;
+    } finally {
+        submitButton.disabled = false;
+    }
+});
