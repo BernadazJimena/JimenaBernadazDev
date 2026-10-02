@@ -127,8 +127,8 @@
     }
 }
 
-/* Tablets (vertical y horizontal): entre celular y escritorio */
-@media (min-width: 35.01rem) and (max-width: 64rem) {
+/* Tablets y notebooks chicas: entre celular y escritorio amplio */
+@media (min-width: 35.01rem) and (max-width: 72rem) {
     .plan-card {
         padding: 2rem 1.75rem;
         row-gap: 1.5rem;
@@ -174,8 +174,8 @@
     }
 }
 
-/* Tablet horizontal ancha: los tres planes en columnas */
-@media (min-width: 60.01rem) and (max-width: 64rem) {
+/* Tablet horizontal y notebooks chicas: los tres planes en columnas, más compactos */
+@media (min-width: 60.01rem) and (max-width: 72rem) {
     .plan-grid {
         gap: 1.25rem;
         grid-template-columns: repeat(3, minmax(0, 1fr));

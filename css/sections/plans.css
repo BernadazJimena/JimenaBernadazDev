@@ -8,7 +8,8 @@
 .plan-grid {
     display: grid;
     gap: 2rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+    /* Escritorio: siempre los tres planes en una fila (tablet y celular se ajustan en responsive.css) */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .plan-card {
