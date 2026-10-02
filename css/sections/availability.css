@@ -18,6 +18,11 @@
     font-size: clamp(2.5rem, 4vw, 4rem);
 }
 
+/* En modo oscuro, el azul del <em> se pierde sobre el fondo azul */
+:root[data-theme="dark"] .availability h2 em {
+    color: var(--availability-accent);
+}
+
 /* English headline is longer: smaller type and a tighter gap */
 .availability-inner:lang(en) {
     gap: 3.5rem;

@@ -1,5 +1,5 @@
 .plans {
-    background: var(--surface);
+    background: var(--plans-bg);
     max-width: none;
     padding-left: max(2rem, calc((100% - var(--content)) / 2));
     padding-right: max(2rem, calc((100% - var(--content)) / 2));
@@ -24,8 +24,12 @@
 }
 
 .plan-card-basic {
-    background: linear-gradient(145deg, #f4f8ff 0%, #dceaff 100%);
-    border-color: #c0d9f7;
+    background: linear-gradient(145deg, #eef8ff 0%, #b8e0fa 100%);
+    border-color: #86c1ea;
+}
+
+.plan-card-basic .plan-features li {
+    border-top-color: rgba(23, 105, 224, .3);
 }
 
 :root[data-theme="dark"] .plan-card-basic {
@@ -34,12 +38,13 @@
 }
 
 .plan-card-entrepreneur {
-    background: linear-gradient(145deg, #e3efff, #a9c8f7);
-    border-color: var(--blue);
+    background: linear-gradient(145deg, #f0f0ff 0%, #c5cbf6 100%);
+    border-color: #8f98e6;
 }
 
 :root[data-theme="dark"] .plan-card-entrepreneur {
     background: linear-gradient(215deg, #24498d, #0c1d3f);
+    border-color: var(--blue);
 }
 
 .plan-card-entrepreneur .eyebrow {
@@ -56,7 +61,7 @@
 }
 
 .plan-card-entrepreneur .plan-features li {
-    border-top-color: rgba(23, 105, 224, .4);
+    border-top-color: rgba(67, 56, 202, .3);
 }
 
 .plan-card-entrepreneur .button-ghost {
