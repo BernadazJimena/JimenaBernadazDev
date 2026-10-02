@@ -337,15 +337,15 @@
               <input type="email" name="email" autocomplete="email" required>
             </label>
           </div>
-          <label class="contact-field">
-            <span>Plan you're interested in</span>
-            <select name="plan">
-              <option value="Entrepreneur Plan">Entrepreneur Plan</option>
-              <option value="Basic Plan">Basic Plan</option>
-              <option value="Premium Plan">Premium Plan</option>
-              <option value="Not sure yet" selected>Not sure yet</option>
-            </select>
-          </label>
+          <fieldset class="contact-field contact-plan">
+            <legend>Plan you're interested in</legend>
+            <div class="plan-options">
+              <label class="plan-option"><input type="radio" name="plan" value="Entrepreneur Plan"><span>Entrepreneur</span></label>
+              <label class="plan-option"><input type="radio" name="plan" value="Basic Plan"><span>Basic</span></label>
+              <label class="plan-option"><input type="radio" name="plan" value="Premium Plan"><span>Premium</span></label>
+              <label class="plan-option"><input type="radio" name="plan" value="Not sure yet" checked><span>Not sure yet</span></label>
+            </div>
+          </fieldset>
           <label class="contact-field">
             <span>Message</span>
             <textarea name="message" rows="4" required
