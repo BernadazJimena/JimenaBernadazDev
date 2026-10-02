@@ -418,3 +418,23 @@
     line-height: 1.4;
     margin-top: .6rem;
 }
+
+/* Equivalente aproximado en dólares (versión en español) */
+.plan-price-usd {
+    color: var(--muted);
+    display: block;
+    font-family: "Manrope", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.4;
+    margin-top: .45rem;
+}
+
+.plan-card-featured .plan-price-usd {
+    color: var(--feature-copy);
+}
+
+.plan-card-entrepreneur .plan-price-usd {
+    color: var(--text);
+}

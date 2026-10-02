@@ -263,3 +263,12 @@
 .legal-accordion .legal-block:nth-child(3n) {
     --legal-accent: var(--blue);
 }
+
+.plan-detail-usd {
+    color: var(--muted);
+    display: block;
+    font-family: "Manrope", sans-serif;
+    font-size: .95rem;
+    font-weight: 800;
+    text-align: right;
+}
