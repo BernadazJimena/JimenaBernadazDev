@@ -75,7 +75,8 @@
         width: 100%;
     }
 
-    .nav-subgroup-arrow {
+    .nav-subgroup-arrow,
+    .nav-icon {
         display: none;
     }
 
@@ -108,6 +109,7 @@
     .nav-submenu a {
         border-radius: 0;
         color: var(--chrome-text);
+        display: flex;
         padding: .75rem 0;
     }
 

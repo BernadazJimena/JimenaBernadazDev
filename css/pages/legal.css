@@ -272,3 +272,9 @@
     font-weight: 800;
     text-align: right;
 }
+
+/* Precio en pesos y en dólares alineados a la derecha (también en celular) */
+.legal-block .plan-detail-price {
+    margin: 0 0 0 auto;
+    text-align: right;
+}

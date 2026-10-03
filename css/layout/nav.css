@@ -355,3 +355,48 @@
         width: calc(100% - 1.6rem);
     }
 }
+
+/* Íconos del menú desplegable (escritorio) */
+.nav-submenu a,
+.nav-subgroup-toggle {
+    align-items: center;
+    display: inline-flex;
+    gap: .6rem;
+}
+
+.nav-icon {
+    color: var(--blue);
+    flex-shrink: 0;
+    height: 1.05rem;
+    width: 1.05rem;
+}
+
+.nav-label {
+    position: relative;
+}
+
+/* El subrayado ahora va en el texto (no incluye el ícono) y crece desde el centro de la palabra */
+@media (hover: hover) and (min-width: 52.01rem) {
+    .nav-submenu a::after,
+    .nav-subgroup-toggle::after {
+        content: none;
+    }
+
+    .nav-label::after {
+        background: currentColor;
+        border-radius: 1rem;
+        bottom: -.3rem;
+        content: "";
+        height: .12rem;
+        left: 50%;
+        position: absolute;
+        transition: left .25s ease, width .25s ease;
+        width: 0;
+    }
+
+    .nav-submenu a:hover .nav-label::after,
+    .nav-subgroup-toggle:hover .nav-label::after {
+        left: 0;
+        width: 100%;
+    }
+}
