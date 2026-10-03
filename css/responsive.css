@@ -60,19 +60,28 @@
         padding: .9rem 0 .6rem;
     }
 
-    /* "Planes" funciona como título y sus opciones se muestran debajo, con sangría */
+    /* "Planes" se despliega al tocarlo (o al pasar el mouse) y muestra sus opciones con sangría */
     .nav-subgroup-toggle {
+        align-items: center;
         border-bottom: .08rem solid var(--line);
         border-radius: 0;
-        color: var(--muted);
-        font-family: "Manrope", sans-serif;
-        font-size: .7rem;
-        font-weight: 800;
-        letter-spacing: .1em;
-        padding: .9rem 0 .6rem;
-        pointer-events: none;
-        text-transform: uppercase;
+        color: var(--chrome-text);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        padding: .9rem 0;
+        pointer-events: inherit;
         width: 100%;
+    }
+
+    .nav-subgroup-toggle::after {
+        content: "▾";
+        font-size: .8rem;
+        transition: transform .2s ease;
+    }
+
+    .nav-subgroup.is-open .nav-subgroup-toggle::after {
+        transform: rotate(180deg);
     }
 
     .nav-subgroup-arrow,
@@ -81,7 +90,12 @@
     }
 
     .nav-submenu.nav-submenu-nested {
+        display: none;
         padding-left: 1rem;
+    }
+
+    .nav-subgroup.is-open > .nav-submenu.nav-submenu-nested {
+        display: flex;
     }
 
     .nav-dropdown-arrow {
@@ -132,6 +146,19 @@
 
     .contact-form-row {
         grid-template-columns: 1fr;
+    }
+
+    /* Pasos del recuadro de ayuda, uno debajo del otro */
+    .plans-help-steps {
+        grid-template-columns: 1fr;
+    }
+
+    .plans-help {
+        padding: 1.5rem;
+    }
+
+    .plans-help-head {
+        align-items: flex-start;
     }
 
     .about-details {
@@ -341,5 +368,13 @@
 @media (max-width: 22rem) {
     .brand span:not(.brand-mark) {
         display: none;
+    }
+}
+
+
+/* Menú del celular o tablet en pantallas con mouse: "Planes" se abre también al pasar el mouse */
+@media (max-width: 52rem) and (hover: hover) {
+    .nav-subgroup:hover > .nav-submenu.nav-submenu-nested {
+        display: flex;
     }
 }

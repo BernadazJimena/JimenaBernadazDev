@@ -438,3 +438,104 @@
 .plan-card-entrepreneur .plan-price-usd {
     color: var(--text);
 }
+
+/* Recuadro "¿Nunca publicaste una web? Te ayudamos" */
+.plans-help {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-left: .3rem solid var(--blue);
+    border-radius: var(--radius);
+    margin-top: 2.5rem;
+    padding: 2rem;
+}
+
+:root[data-theme="dark"] .plans-help {
+    background: var(--sky);
+}
+
+.plans-help-head {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.plans-help-icon {
+    background: var(--sky);
+    border-radius: 50%;
+    color: var(--blue);
+    flex-shrink: 0;
+    height: 3rem;
+    padding: .7rem;
+    width: 3rem;
+}
+
+:root[data-theme="dark"] .plans-help-icon {
+    background: var(--surface);
+}
+
+.plans-help-head h3 {
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(1.2rem, 2vw, 1.45rem);
+    letter-spacing: -.02em;
+    margin: 0 0 .25rem;
+}
+
+.plans-help-head p {
+    color: var(--muted);
+    margin: 0;
+}
+
+.plans-help-steps {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.plans-help-steps li {
+    align-items: flex-start;
+    display: flex;
+    gap: .85rem;
+}
+
+.plans-help-num {
+    align-items: center;
+    background: var(--blue);
+    border-radius: 50%;
+    color: var(--white);
+    display: inline-flex;
+    flex-shrink: 0;
+    font-family: "Manrope", sans-serif;
+    font-size: .85rem;
+    font-weight: 800;
+    height: 1.8rem;
+    justify-content: center;
+    width: 1.8rem;
+}
+
+:root[data-theme="dark"] .plans-help-num {
+    color: #0b1f4b;
+}
+
+.plans-help-steps strong {
+    display: block;
+    font-family: "Manrope", sans-serif;
+    margin-bottom: .25rem;
+}
+
+.plans-help-steps p {
+    color: var(--muted);
+    font-size: .92rem;
+    margin: 0;
+}
+
+.plans-help-note {
+    border-top: .08rem solid var(--line);
+    color: var(--muted);
+    font-size: .88rem;
+    margin: 1.5rem 0 0;
+    padding-top: 1rem;
+}

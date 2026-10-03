@@ -278,3 +278,258 @@
     margin: 0 0 0 auto;
     text-align: right;
 }
+
+/* ===== Guía "Cómo conseguir tu dominio" ===== */
+.domain-guide code {
+    background: var(--sky);
+    border-radius: .35rem;
+    color: var(--text);
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: .85em;
+    padding: .1rem .35rem;
+    white-space: nowrap;
+}
+
+.domain-section-title {
+    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    margin: 0;
+}
+
+/* Tarjetas comparativas de los tres sitios */
+.domain-cards {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.domain-card {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-left: .25rem solid var(--domain-color, var(--blue));
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+}
+
+.domain-card-nic { --domain-color: #8f98e6; }
+.domain-card-godaddy { --domain-color: #86c1ea; }
+.domain-card-registro { --domain-color: var(--blue); }
+
+.domain-card h3 {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    font-family: "Manrope", sans-serif;
+    font-size: 1.2rem;
+    gap: .5rem;
+    justify-content: space-between;
+    margin: 0 0 1rem;
+}
+
+.domain-card-time {
+    color: var(--muted);
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.domain-card dl {
+    margin: 0 0 1.25rem;
+}
+
+.domain-card dt {
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.domain-card dd {
+    color: var(--text);
+    font-size: .92rem;
+    line-height: 1.5;
+    margin: .2rem 0 .8rem;
+}
+
+.domain-card-link {
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+/* Qué tener a mano / Consejos */
+.domain-prep {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Desplegables de cada sitio */
+.legal-block .domain-time {
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    margin: 0 0 0 auto;
+    white-space: nowrap;
+}
+
+.legal-block .domain-intro {
+    color: var(--text);
+}
+
+.legal-block .domain-progress {
+    color: var(--blue);
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+    margin: 0 0 .2rem;
+}
+
+.legal-block .domain-hint {
+    font-size: .88rem;
+    margin: 0 0 .8rem;
+}
+
+/* Pasos para tildar */
+.domain-steps {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.legal-block .domain-steps li {
+    margin: 0;
+}
+
+.domain-steps label {
+    align-items: flex-start;
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: .75rem;
+    cursor: pointer;
+    display: flex;
+    gap: .75rem;
+    padding: .75rem .9rem;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.domain-steps label:hover {
+    border-color: var(--blue);
+}
+
+.domain-steps input {
+    accent-color: var(--blue);
+    flex-shrink: 0;
+    height: 1.15rem;
+    margin: .2rem 0 0;
+    width: 1.15rem;
+}
+
+.domain-step-num {
+    align-items: center;
+    background: var(--sky);
+    border-radius: 50%;
+    color: var(--blue);
+    display: inline-flex;
+    flex-shrink: 0;
+    font-family: "Manrope", sans-serif;
+    font-size: .78rem;
+    font-weight: 800;
+    height: 1.6rem;
+    justify-content: center;
+    width: 1.6rem;
+}
+
+.domain-step-text {
+    color: var(--text);
+    line-height: 1.55;
+}
+
+/* Paso completado */
+.domain-steps li:has(input:checked) label {
+    background: var(--sky);
+    border-color: var(--blue);
+}
+
+.domain-steps li:has(input:checked) .domain-step-num {
+    background: var(--blue);
+    color: var(--white);
+}
+
+:root[data-theme="dark"] .domain-steps li:has(input:checked) .domain-step-num {
+    color: #0b1f4b;
+}
+
+.domain-steps li:has(input:checked) .domain-step-text {
+    color: var(--muted);
+}
+
+.domain-reset {
+    background: none;
+    border: 0;
+    color: var(--blue);
+    cursor: pointer;
+    font-family: "Manrope", sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    margin-top: .6rem;
+    padding: .3rem 0;
+}
+
+.domain-reset:hover {
+    text-decoration: underline;
+}
+
+.legal-panel .domain-go {
+    margin-top: 1.25rem;
+}
+
+/* Llamado final */
+.domain-cta {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-left: .3rem solid var(--blue);
+    border-radius: var(--radius);
+    padding: 2rem;
+}
+
+:root[data-theme="dark"] .domain-cta,
+:root[data-theme="dark"] .domain-card {
+    background: var(--sky);
+}
+
+.domain-cta h2 {
+    font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+    margin: 0 0 .4rem;
+}
+
+.domain-cta p {
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+}
+
+@media (max-width: 52rem) {
+    .domain-cards,
+    .domain-prep {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* La guía del dominio usa más ancho que los términos, para que entren las tres tarjetas */
+.legal-content.domain-guide {
+    max-width: 62rem;
+}
+
+/* Aclaración debajo de las tarjetas de la guía del dominio */
+.domain-guide .domain-note {
+    background: var(--sky);
+    border-radius: .75rem;
+    color: var(--text);
+    font-size: .95rem;
+    line-height: 1.6;
+    margin: -1rem 0 0;
+    padding: 1rem 1.25rem;
+}
