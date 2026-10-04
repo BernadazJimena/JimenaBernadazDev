@@ -2,8 +2,11 @@
     background: var(--chrome-bg);
     border-top: .08rem solid var(--chrome-border);
     color: var(--chrome-text);
+    align-items: center;
     display: flex;
+    flex-wrap: wrap;
     font-size: .76rem;
+    gap: .75rem 2rem;
     justify-content: space-between;
     padding: 1.5rem max(2rem, calc((100% - var(--content)) / 2 + 2rem)) 2rem;
 }
@@ -27,6 +30,34 @@
 .footer-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: .75rem 1.25rem;
 }
 
+/* Desde tablet, cada parte del footer se mantiene en una sola línea (en pantallas grandes, todo el footer entra en una) */
+@media (min-width: 35.01rem) {
+    .site-footer > span,
+    .footer-links a {
+        white-space: nowrap;
+    }
+}
+
+
+/* Pantallas grandes: el footer entra en una sola línea; Instagram se muestra solo con su ícono */
+@media (min-width: 72.01rem) {
+    .site-footer {
+        gap: .75rem 1.5rem;
+    }
+
+    .footer-social span {
+        clip: rect(0 0 0 0);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        width: 1px;
+    }
+
+    .footer-social .social-icon {
+        height: 1.05rem;
+        width: 1.05rem;
+    }
+}

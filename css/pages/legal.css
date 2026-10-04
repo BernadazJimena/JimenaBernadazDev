@@ -533,3 +533,26 @@
     margin: -1rem 0 0;
     padding: 1rem 1.25rem;
 }
+
+/* Preguntas frecuentes: grupos de preguntas con su título */
+.faq-group-title {
+    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    margin: 0 0 1rem;
+}
+
+.legal-accordion .legal-block h3 {
+    font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+    line-height: 1.3;
+    margin: 0;
+    transition: color .2s ease;
+}
+
+.legal-block summary:hover h3 {
+    color: var(--blue);
+}
+
+.faq-more p {
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0;
+}
