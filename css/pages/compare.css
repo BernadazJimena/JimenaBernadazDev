@@ -171,3 +171,28 @@
         font-size: .66rem;
     }
 }
+
+/* Enlace a la comparación, arriba del detalle en la página Planes */
+.plans-compare-link {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-left: .3rem solid var(--blue);
+    border-radius: var(--radius);
+    color: var(--text);
+    margin: 0;
+    padding: 1rem 1.5rem;
+}
+
+/* Botones para ir al detalle de cada plan */
+.compare-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: -1.5rem;
+}
+
+.compare-details .button {
+    flex: 1 1 13rem;
+    justify-content: center;
+    text-align: center;
+}

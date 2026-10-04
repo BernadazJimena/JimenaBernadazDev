@@ -211,4 +211,34 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/comparar-planes/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/comparar-planes/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/comparar-planes/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/comparar-planes/en</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/comparar-planes/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/comparar-planes/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/comparar-planes/pt</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/comparar-planes/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/comparar-planes/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
