@@ -13,6 +13,7 @@
 
     const topicInput = () => form.querySelector('input[name="plan"]:checked');
     const activeGroup = () => groups.find((g) => !g.disabled);
+    const extraFields = (box) => (box.dataset.reveal ? [...form.querySelectorAll(`#${box.dataset.reveal} select, #${box.dataset.reveal} input`)] : []);
 
     // Muestra (y habilita) solo las opciones del plan elegido; las ocultas no se envían
     const syncGroups = () => {
@@ -33,10 +34,13 @@
         const group = activeGroup();
         if (!group) return [];
         return [...group.querySelectorAll('input[type="checkbox"]:checked')].map((box) => {
-            let text = box.closest('label').textContent.trim();
-            const extra = box.dataset.reveal && form.querySelector(`#${box.dataset.reveal} select, #${box.dataset.reveal} input`);
-            if (extra?.value) text += ` (${extra.selectedOptions ? extra.selectedOptions[0].textContent.trim() : extra.value})`;
-            return text;
+            const text = box.closest('label').textContent.trim();
+            // Cantidades elegidas (productos, secciones, páginas): "(4 a 5)" o "(Secciones: 4 a 5; Páginas secundarias: 1 a 3)"
+            const values = extraFields(box).filter((field) => field.value).map((field) => {
+                const shown = field.selectedOptions ? field.selectedOptions[0].textContent.trim() : field.value;
+                return field.dataset.short ? `${field.dataset.short}: ${shown}` : shown;
+            });
+            return values.length ? `${text} (${values.join('; ')})` : text;
         });
     };
 
@@ -60,8 +64,8 @@
         const boxes = group ? [...group.querySelectorAll('input[type="checkbox"]:checked')] : [];
         if (group && !boxes.length) return [t.errItems, group.querySelector('input')];
         for (const box of boxes) {
-            const extra = box.dataset.reveal && form.querySelector(`#${box.dataset.reveal} select, #${box.dataset.reveal} input`);
-            if (extra && !extra.value) return [extra.dataset.msg, extra];
+            const missing = extraFields(box).find((field) => !field.value);
+            if (missing) return [missing.dataset.msg, missing];
         }
         const needsDetails = topic === 'otro' || boxes.some((box) => box.dataset.other !== undefined);
         if (needsDetails && !details.value.trim()) return [t.errDetails, details];

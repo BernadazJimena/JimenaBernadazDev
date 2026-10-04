@@ -32,6 +32,9 @@
 
 /* Cantidad de productos o de páginas: aparece debajo de la opción marcada */
 .budget-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
     margin: -.2rem 0 .2rem 2.2rem;
 }
 
