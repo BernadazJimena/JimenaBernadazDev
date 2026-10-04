@@ -75,6 +75,7 @@
             aria-label="Abrir menu de navegação">Menu <span class="nav-dropdown-arrow" aria-hidden="true">▾</span></button>
           <div class="nav-submenu" id="nav-submenu-main">
             <a href="/inicio/pt#sobre-mi"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="nav-label">Sobre mim</span></a>
+            <a href="/como-trabajo/pt"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 2 2 4-4"/><path d="M13 6h8"/><path d="m3 13 2 2 4-4"/><path d="M13 13h8"/><path d="M13 20h8"/><path d="M5 20h.01"/></svg><span class="nav-label">Como eu trabalho</span></a>
             <div class="nav-subgroup">
               <button class="nav-subgroup-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-planes"
                 aria-label="Abrir submenu de planos"><span class="nav-subgroup-arrow" aria-hidden="true">‹</span><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg><span class="nav-label">Planos</span></button>
@@ -88,7 +89,7 @@
             <a href="/inicio/pt#disponibilidad"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-label">Disponibilidade</span></a>
           </div>
         </div>
-        <a class="nav-cta" href="/inicio/pt#contacto">Fale conosco <span aria-hidden="true">↗</span></a>
+        <a class="nav-cta" href="/inicio/pt#contacto">Vamos conversar <span aria-hidden="true">↗</span></a>
       </nav>
       <div class="header-actions">
         <div class="lang-switch" role="group" aria-label="Mudar idioma">
@@ -139,12 +140,48 @@
       <div class="legal-hero-content reveal is-visible">
         <p class="eyebrow">PLANOS E SERVIÇOS</p>
         <h1>O que cada plano inclui</h1>
-        <p class="hero-copy">Aqui você encontra os detalhes completos de cada plano: o que inclui, o que precisamos de você, os prazos de entrega e o que considerar antes de contratar.</p>
+        <p class="hero-copy">Aqui você encontra uma comparação rápida dos planos e os detalhes completos de cada um: o que inclui, o que preciso de você, os prazos de entrega e o que considerar antes de contratar.</p>
       </div>
     </section>
 
     <section class="legal section-shell">
       <div class="legal-content">
+        <section class="plans-compare" aria-labelledby="compare-title">
+          <h2 id="compare-title">Compare os planos</h2>
+          <div class="compare-scroll" role="region" aria-labelledby="compare-title" tabindex="0">
+            <table class="compare-table">
+              <thead>
+                <tr>
+                <th scope="col"><span class="visually-hidden">Característica</span></th>
+                <th scope="col" class="compare-emprendedor"><a href="#emprendedor">Empreen&shy;dedor</a><span>Loja virtual</span></th>
+                <th scope="col" class="compare-basico"><a href="#basico">Básico</a><span>Landing page essencial</span></th>
+                <th scope="col" class="compare-premium"><a href="#premium">Premium</a><span>Site sob medida</span></th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><th scope="row">Preço</th><td><span class="compare-price">$43 USD</span></td><td><span class="compare-price">$72 USD</span></td><td><span class="compare-price">$122 USD</span></td></tr>
+              <tr><th scope="row">Ideal para</th><td>Vender seus produtos online</td><td>Apresentar seu trabalho e receber contatos</td><td>Uma presença completa, com várias páginas</td></tr>
+              <tr><th scope="row">Como é feito</th><td>Na Nuvemshop / Tiendanube ou na Empretienda</td><td>Código próprio, sem templates</td><td>Código próprio, sem templates</td></tr>
+              <tr><th scope="row">Páginas</th><td>Sua loja na plataforma</td><td>1 (home)</td><td>Até 5 (home + 4 secundárias)</td></tr>
+              <tr><th scope="row">Seções da home</th><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td>5</td><td>6 a 10</td></tr>
+              <tr><th scope="row">Cadastro de produtos</th><td>Até 20</td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td></tr>
+              <tr><th scope="row">Configuração de pagamentos e frete</th><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td></tr>
+              <tr><th scope="row">Responsivo para celulares</th><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td></tr>
+              <tr><th scope="row">Botão de WhatsApp</th><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td></tr>
+              <tr><th scope="row">Redes sociais e Google Maps</th><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td></tr>
+              <tr><th scope="row">SEO básico</th><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td></tr>
+              <tr><th scope="row">Modo escuro / claro</th><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td></tr>
+              <tr><th scope="row">Indicador “aberto / fechado”</th><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-check" aria-hidden="true">✓</span><span class="visually-hidden">Incluído</span></td></tr>
+              <tr><th scope="row">Rodadas de ajustes</th><td>1</td><td>1</td><td>3</td></tr>
+              <tr><th scope="row">Entrega</th><td>7 dias úteis</td><td>5 dias úteis</td><td>15 dias úteis</td></tr>
+              <tr><th scope="row">Domínio e publicação</th><td>Pelo seu plano da plataforma</td><td>Hospedagem sem custo e apoio com o domínio</td><td>Hospedagem sem custo e apoio com o domínio</td></tr>
+              <tr><th scope="row">Suporte após a publicação</th><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td><span class="compare-dash" aria-hidden="true">—</span><span class="visually-hidden">Não incluído</span></td><td>30 dias corridos</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="compare-note">Todos os preços são de pagamento único. No Plano Empreendedor, a mensalidade da Nuvemshop / Tiendanube ou da Empretienda é paga à parte, diretamente à plataforma.</p>
+        </section>
+
         <div class="legal-toolbar">
           <button class="legal-toggle-all" type="button" aria-expanded="false" data-open="Abrir todos os planos"
             data-close="Fechar todos os planos">Abrir todos os planos</button>
@@ -167,7 +204,7 @@
                 <li>Uma loja em uma única plataforma, à sua escolha. O design de lojas nas duas plataformas é orçado à parte.</li>
                 <li>Uma rodada de ajustes.</li>
               </ul>
-              <h3>O que precisamos de você</h3>
+              <h3>O que preciso de você</h3>
               <ul>
                 <li>Os textos, as fotos e os preços dos produtos.</li>
                 <li>O logo e as cores da sua marca.</li>
@@ -179,15 +216,15 @@
               </ul>
               <h3>Importante saber</h3>
               <ul>
-                <li>Trabalhamos somente com a Nuvemshop / Tiendanube e a Empretienda; não criamos lojas em outras plataformas, como Shopify ou WooCommerce. A Nuvemshop atende o Brasil e, com o nome Tiendanube, vários países da América Latina; a Empretienda funciona somente na Argentina. Antes de contratar, verifique se a plataforma está disponível no seu país.</li>
-                <li><strong>A Nuvemshop / Tiendanube e a Empretienda cobram sua própria mensalidade</strong>, paga por você diretamente à plataforma, de acordo com o plano escolhido. Esse pagamento não depende da JNB Creative Studio, e não cobramos nada por ele: nem comissão nem taxa de intermediação. O preço do Plano Empreendedor é um pagamento único e corresponde somente ao design e à configuração da sua loja.</li>
+                <li>Trabalho somente com a Nuvemshop / Tiendanube e a Empretienda; não crio lojas em outras plataformas, como Shopify ou WooCommerce. A Nuvemshop atende o Brasil e, com o nome Tiendanube, vários países da América Latina; a Empretienda funciona somente na Argentina. Antes de contratar, verifique se a plataforma está disponível no seu país.</li>
+                <li><strong>A Nuvemshop / Tiendanube e a Empretienda cobram sua própria mensalidade</strong>, paga por você diretamente à plataforma, de acordo com o plano escolhido. Esse pagamento não depende da JNB Creative Studio, e não cobro nada por ele: nem comissão nem taxa de intermediação. O preço do Plano Empreendedor é um pagamento único e corresponde somente ao design e à configuração da sua loja.</li>
                 <li>O design e a configuração da loja (meios de pagamento, frete e dados do negócio) se limitam ao que o seu plano da plataforma permite. Se alguma função exigir um plano superior, você decide se o contrata; caso contrário, o design se adapta ao seu plano atual.</li>
                 <li>Se você tiver mais de 20 produtos, os adicionais são orçados à parte, de acordo com a quantidade.</li>
-                <li>Após a entrega, podemos cadastrar novos produtos no seu catálogo periodicamente, a seu pedido. Cada cadastro conta como uma atualização e é orçado à parte.</li>
-                <li>Cuidamos do design da loja e do cadastro inicial dos produtos. A administração do dia a dia (estoque, preços, pedidos, frete e atendimento aos compradores) fica a seu cargo.</li>
-                <li>A verificação de identidade da conta deve ser feita por você, pois exige seus dados pessoais e documentos. Nunca pediremos suas senhas bancárias nem documentos pessoais.</li>
+                <li>Após a entrega, posso cadastrar novos produtos no seu catálogo periodicamente, a seu pedido. Cada cadastro conta como uma atualização e é orçado à parte.</li>
+                <li>Cuido do design da loja e do cadastro inicial dos produtos. A administração do dia a dia (estoque, preços, pedidos, frete e atendimento aos compradores) fica a seu cargo.</li>
+                <li>A verificação de identidade da conta deve ser feita por você, pois exige seus dados pessoais e documentos. Nunca vou pedir suas senhas bancárias nem documentos pessoais.</li>
               </ul>
-              <a class="button button-primary plan-detail-cta" href="/inicio/pt#contacto">Quero o Plano Empreendedor <span aria-hidden="true">↗</span></a>
+              <a class="button button-primary plan-detail-cta" href="/inicio/pt#contacto">Consultar o plano empreendedor <span aria-hidden="true">↗</span></a>
             </div>
           </details>
           <details class="legal-block plan-detail plan-detail-basico" id="basico">
@@ -205,9 +242,9 @@
                 <li>Links para suas redes sociais e sua localização no Google Maps.</li>
                 <li>Carregamento rápido e SEO básico para aparecer no Google.</li>
                 <li>Uma rodada de ajustes.</li>
-                <li>Orientamos você a registrar seu domínio e conectá-lo à nossa hospedagem, onde publicamos seu site sem custo.</li>
+                <li>Oriento você a registrar seu domínio e conectá-lo à minha hospedagem, onde publico seu site sem custo.</li>
               </ul>
-              <h3>O que precisamos de você</h3>
+              <h3>O que preciso de você</h3>
               <ul>
                 <li>Os textos de cada seção.</li>
                 <li>As fotos ou imagens que você quer usar.</li>
@@ -218,7 +255,7 @@
               <ul>
                 <li>5 dias úteis, contados a partir do recebimento de todo o material.</li>
               </ul>
-              <a class="button button-primary plan-detail-cta" href="/inicio/pt#contacto">Quero o Plano Básico <span aria-hidden="true">↗</span></a>
+              <a class="button button-primary plan-detail-cta" href="/inicio/pt#contacto">Consultar o plano básico <span aria-hidden="true">↗</span></a>
             </div>
           </details>
           <details class="legal-block plan-detail plan-detail-premium" id="premium">
@@ -237,7 +274,7 @@
                 <li>3 (três) rodadas de ajustes.</li>
                 <li>30 dias corridos de suporte após a publicação, para dúvidas e pequenos ajustes sem custo.</li>
               </ul>
-              <h3>O que precisamos de você</h3>
+              <h3>O que preciso de você</h3>
               <ul>
                 <li>Os textos de cada seção.</li>
                 <li>As fotos ou imagens que você quer usar.</li>
@@ -248,7 +285,7 @@
               <ul>
                 <li>15 dias úteis, contados a partir do recebimento de todo o material.</li>
               </ul>
-              <a class="button button-primary plan-detail-cta" href="/inicio/pt#contacto">Quero o Plano Premium <span aria-hidden="true">↗</span></a>
+              <a class="button button-primary plan-detail-cta" href="/inicio/pt#contacto">Consultar o plano premium <span aria-hidden="true">↗</span></a>
             </div>
           </details>
         </div>
@@ -264,7 +301,7 @@
 
   <footer class="site-footer"><span>© <span id="year"></span> JNB Creative Studio</span><span>Soluções digitais para organizar sua atividade profissional.</span><span class="footer-links"><a class="footer-social"
         href="https://www.instagram.com/jnbcreativestudio/" target="_blank" rel="noreferrer"
-        aria-label="Siga-nos no Instagram: jnbcreativestudio"><svg class="social-icon" viewBox="0 0 24 24"
+        aria-label="Siga-me no Instagram: jnbcreativestudio"><svg class="social-icon" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="5" />
           <circle cx="12" cy="12" r="4.2" />

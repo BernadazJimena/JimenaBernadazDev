@@ -1,0 +1,173 @@
+/* Planes: tabla comparativa (en celulares se desliza hacia los costados, con la primera columna fija) */
+.plans-compare h2 {
+    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    margin: 0 0 1rem;
+}
+
+.compare-scroll {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    overflow-x: auto;
+}
+
+.compare-scroll:focus-visible {
+    outline: .15rem solid var(--blue);
+    outline-offset: .2rem;
+}
+
+.compare-table {
+    border-collapse: collapse;
+    font-size: .88rem;
+    min-width: 36rem;
+    width: 100%;
+}
+
+.compare-table th,
+.compare-table td {
+    border-bottom: .08rem solid var(--line);
+    line-height: 1.35;
+    padding: .7rem .85rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.compare-table tbody tr:last-child th,
+.compare-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.compare-table td {
+    color: var(--muted);
+}
+
+.compare-table tbody th,
+.compare-table thead th:first-child {
+    background: var(--surface);
+    left: 0;
+    position: sticky;
+    z-index: 1;
+}
+
+.compare-table tbody th {
+    color: var(--text);
+    font-weight: 600;
+    min-width: 9.5rem;
+    text-align: left;
+}
+
+.compare-table thead th {
+    border-bottom: .2rem solid var(--compare-color, var(--line));
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    vertical-align: bottom;
+}
+
+.compare-table thead th a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.compare-table thead th a:hover {
+    color: var(--blue);
+}
+
+.compare-table thead th span:not(.visually-hidden) {
+    color: var(--muted);
+    display: block;
+    font-family: "DM Sans", sans-serif;
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.compare-emprendedor {
+    --compare-color: #8f98e6;
+}
+
+.compare-basico {
+    --compare-color: #86c1ea;
+}
+
+.compare-premium {
+    --compare-color: var(--blue);
+}
+
+.compare-check {
+    color: var(--blue);
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.compare-dash {
+    color: var(--field-border);
+}
+
+.compare-price {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.compare-price small {
+    color: var(--muted);
+    display: block;
+    font-size: .76rem;
+}
+
+.compare-note {
+    color: var(--muted);
+    font-size: .88rem;
+    margin: .75rem 0 0;
+}
+
+/* Texto solo para lectores de pantalla */
+.visually-hidden {
+    clip: rect(0 0 0 0);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+/* Celulares: los tres planes entran a la vez, sin deslizar */
+@media (max-width: 35rem) {
+    .compare-table {
+        font-size: .72rem;
+        min-width: 0;
+        table-layout: fixed;
+    }
+
+    .compare-table th,
+    .compare-table td {
+        overflow-wrap: anywhere;
+        padding: .55rem .3rem;
+    }
+
+    .compare-table tbody th,
+    .compare-table thead th:first-child {
+        min-width: 0;
+        padding-left: .65rem;
+        width: 27%;
+    }
+
+    .compare-table thead th {
+        font-size: .74rem;
+        overflow-wrap: normal;
+    }
+
+    .compare-table thead th span:not(.visually-hidden) {
+        font-size: .66rem;
+    }
+
+    .compare-price {
+        white-space: normal;
+    }
+
+    .compare-price small {
+        font-size: .66rem;
+    }
+}

@@ -9,5 +9,7 @@
 @import url("sections/contact.css");
 @import url("layout/footer.css");
 @import url("pages/legal.css");
+@import url("pages/compare.css");
+@import url("pages/process.css");
 @import url("utilities/animations.css");
 @import url("responsive.css");
