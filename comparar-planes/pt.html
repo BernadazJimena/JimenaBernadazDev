@@ -60,6 +60,7 @@
   <script src="../js/contact-form.js" defer></script>
   <script src="../js/accordion.js" defer></script>
   <script src="../js/domain-guide.js" defer></script>
+  <script src="../js/plan-quiz.js" defer></script>
 </head>
 
 <body>
@@ -145,6 +146,81 @@
 
     <section class="legal section-shell">
       <div class="legal-content compare-content">
+        <section class="plan-quiz" id="test" aria-labelledby="quiz-title" hidden
+          data-step-label="Pergunta {n} de {total}" data-next="Próxima" data-finish="Ver meu plano"
+          data-wa-plan="Olá Jimena, fiz o teste do site e ele me recomendou o {plan}." data-wa-answers="Minhas respostas:" data-wa-both="Olá Jimena, fiz o teste do site: quero vender produtos online e também ter um site para mostrar meu trabalho. Pode me enviar um orçamento?">
+          <h2 id="quiz-title">Não sabe qual escolher?</h2>
+          <p class="plan-quiz-intro">Responda a algumas perguntas rápidas e eu recomendo o plano ideal para o seu projeto.</p>
+          <div class="plan-quiz-progress" aria-hidden="true"><span></span></div>
+          <p class="plan-quiz-step-label" aria-live="polite"></p>
+          <form class="plan-quiz-form">
+            <fieldset class="plan-quiz-step" data-step="goal" tabindex="-1">
+              <legend>O que você quer alcançar com o seu site?</legend>
+              <div class="plan-quiz-options">
+                <label class="plan-quiz-option"><input type="radio" name="goal" value="store"><span>Vender produtos online, com carrinho e pagamentos</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="goal" value="show"><span>Mostrar meu trabalho e receber contatos</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="goal" value="both"><span>As duas coisas</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="plan-quiz-step" data-step="size" tabindex="-1" hidden>
+              <legend>Quanta informação você precisa mostrar?</legend>
+              <div class="plan-quiz-options">
+                <label class="plan-quiz-option"><input type="radio" name="size" value="one"><span>O essencial em uma única página: quem sou, o que faço e como me contatar</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="size" value="several"><span>Várias páginas, por exemplo, cada serviço em detalhe, um guia ou perguntas frequentes</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="plan-quiz-step" data-step="extras" tabindex="-1" hidden>
+              <legend>Você tem interesse em algum destes extras?</legend>
+              <p class="plan-quiz-hint">Você pode escolher mais de um.</p>
+              <div class="plan-quiz-options">
+                <label class="plan-quiz-option"><input type="checkbox" name="extras" value="hours"><span>Mostrar se você está “aberto / fechado” de acordo com o seu horário</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" name="extras" value="dark"><span>Botão de modo claro / escuro</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" name="extras" value="support"><span>Mais rodadas de ajustes e suporte após a publicação</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" name="extras" value="none"><span>Nenhum</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="plan-quiz-step" data-step="login" tabindex="-1" hidden>
+              <legend>Você precisa que os visitantes se cadastrem ou façam login?</legend>
+              <p class="plan-quiz-hint">Por exemplo, uma área de clientes com usuário e senha.</p>
+              <div class="plan-quiz-options">
+                <label class="plan-quiz-option"><input type="radio" name="login" value="no"><span>Não é necessário</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="login" value="yes"><span>Sim, preciso</span></label>
+              </div>
+            </fieldset>
+            <div class="plan-quiz-nav">
+              <button class="button button-ghost plan-quiz-back" type="button" hidden>Voltar</button>
+              <button class="button button-primary plan-quiz-next" type="submit" disabled>Próxima</button>
+            </div>
+          </form>
+          <div class="plan-quiz-result" tabindex="-1" hidden>
+            <p class="eyebrow">MINHA RECOMENDAÇÃO</p>
+            <div class="plan-quiz-card compare-emprendedor" data-result="emprendedor" data-plan-name="Plano Empreendedor" hidden>
+              <h3>Plano Empreendedor · Loja virtual</h3>
+              <p>Você quer vender produtos online: crio o design da sua loja na Nuvemshop / Tiendanube ou na Empretienda, com a identidade da sua marca e até 20 produtos cadastrados.</p>
+              <a class="text-link" href="/planes/pt#emprendedor">Ver os detalhes do plano <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="plan-quiz-card compare-basico" data-result="basico" data-plan-name="Plano Básico" hidden>
+              <h3>Plano Básico · Landing page essencial</h3>
+              <p>Você precisa mostrar seu trabalho com clareza em uma única página, com tudo o que é essencial para receber contatos.</p>
+              <a class="text-link" href="/planes/pt#basico">Ver os detalhes do plano <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="plan-quiz-card compare-premium" data-result="premium" data-plan-name="Plano Premium" hidden>
+              <h3>Plano Premium · Site sob medida</h3>
+              <p>Seu projeto precisa de uma presença mais completa: várias páginas, design 100% personalizado e mais acompanhamento.</p>
+              <a class="text-link" href="/planes/pt#premium">Ver os detalhes do plano <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="plan-quiz-card compare-ambos" data-result="ambos" data-plan-name="" hidden>
+              <h3>Uma loja virtual e um site</h3>
+              <p>Para vender produtos e também mostrar seu trabalho, o ideal é combinar uma loja virtual com um site. Conte sobre o seu projeto, e eu envio um orçamento sob medida.</p>
+            </div>
+            <p class="plan-quiz-note" hidden>No momento, não faço projetos com cadastro de usuários ou login, porque eles precisam de um banco de dados. O plano recomendado não inclui essas funções.</p>
+            <div class="plan-quiz-actions">
+              <a class="button button-primary plan-quiz-wa" href="https://wa.me/5491127663667" target="_blank" rel="noreferrer">Consultar pelo WhatsApp <span aria-hidden="true">↗</span></a>
+              <button class="plan-quiz-restart" type="button">Começar de novo</button>
+            </div>
+          </div>
+        </section>
+
         <section class="plans-compare" aria-labelledby="inicio-title">
           <div class="compare-scroll" role="region" aria-labelledby="inicio-title" tabindex="0">
             <table class="compare-table">
