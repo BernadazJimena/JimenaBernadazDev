@@ -183,16 +183,49 @@
     padding: 1rem 1.5rem;
 }
 
-/* Botones para ir al detalle de cada plan */
-.compare-details {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .75rem;
-    margin-top: -1.5rem;
+
+/* "¿Cuál te conviene?": una tarjeta por plan con la franja de su color */
+.compare-choose h2 {
+    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    margin: 0 0 1rem;
 }
 
-.compare-details .button {
-    flex: 1 1 13rem;
-    justify-content: center;
-    text-align: center;
+.compare-choose-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.compare-choose-card {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    border-top: .3rem solid var(--compare-color);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 1.25rem;
+}
+
+.compare-choose-card h3 {
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+.compare-choose-card p {
+    color: var(--muted);
+    flex: 1;
+    font-size: .92rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.compare-choose-card .text-link {
+    font-size: .9rem;
+}
+
+@media (max-width: 52rem) {
+    .compare-choose-grid {
+        grid-template-columns: 1fr;
+    }
 }
