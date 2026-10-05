@@ -556,3 +556,11 @@
     line-height: 1.6;
     margin: 0;
 }
+
+/* Planes: frase de presentación de cada plan (la misma de las tarjetas del inicio) */
+.legal-panel .plan-detail-intro {
+    color: var(--text);
+    font-size: 1.05rem;
+    line-height: 1.55;
+    margin: 0 0 1.25rem;
+}
