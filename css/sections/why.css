@@ -81,3 +81,8 @@
         min-height: 100svh;
     }
 }
+
+/* El cuadro "¿Nunca publicaste una web?" va dentro de este bloque, debajo de las tres tarjetas */
+.why .plans-help {
+    margin-top: 1.25rem;
+}

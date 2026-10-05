@@ -543,51 +543,24 @@
     padding-top: 1rem;
 }
 
-/* Tarjetas de planes: los puntos principales a la vista y el resto en "Ver todo lo que incluye" */
-.plan-more summary {
+/* Tarjetas de planes: los puntos principales a la vista y un enlace al detalle completo */
+.plan-more-link {
+    align-self: flex-start;
     color: var(--blue);
-    cursor: pointer;
     font-family: "Manrope", sans-serif;
     font-size: .85rem;
     font-weight: 700;
-    list-style: none;
-    width: fit-content;
 }
 
-.plan-more summary::-webkit-details-marker {
-    display: none;
-}
-
-.plan-more summary::after {
-    content: " +";
-}
-
-.plan-more[open] summary::after {
-    content: " −";
-}
-
-.plan-more summary:hover {
+.plan-more-link:hover {
     text-decoration: underline;
 }
 
-.plan-more-close,
-.plan-more[open] .plan-more-open {
-    display: none;
-}
-
-.plan-more[open] .plan-more-close {
-    display: inline;
-}
-
-.plan-more[open] summary {
-    margin-bottom: .9rem;
-}
-
-.plan-card-entrepreneur .plan-more summary,
-.plan-card-featured .plan-more summary {
+.plan-card-entrepreneur .plan-more-link,
+.plan-card-featured .plan-more-link {
     color: var(--feature-heading);
 }
 
-:root[data-theme="dark"] .plan-card-entrepreneur .plan-more summary {
+:root[data-theme="dark"] .plan-card-entrepreneur .plan-more-link {
     color: var(--white);
 }
