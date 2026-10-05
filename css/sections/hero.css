@@ -145,3 +145,27 @@ h2 em {
     line-height: 1.5;
     max-width: none;
 }
+
+/* La línea que dice qué hago (landing pages · webs a medida · tiendas online) se lee de un vistazo */
+.hero h1 .hero-eyebrow {
+    font-size: .82rem;
+    letter-spacing: .14em;
+    margin-bottom: 1rem;
+}
+
+/* Notebooks (pantallas bajas): el título, la bajada y los botones entran sin tener que bajar */
+@media (min-width: 52.01rem) and (max-height: 50rem) {
+    .hero {
+        min-height: 0;
+        padding-bottom: clamp(3rem, 6vw, 5rem);
+        padding-top: clamp(2.5rem, 4.5vw, 4rem);
+    }
+
+    .hero h1 {
+        font-size: clamp(3rem, 5.2vw, 5rem);
+    }
+
+    .hero-copy {
+        margin: 1.25rem 0 1.5rem;
+    }
+}
