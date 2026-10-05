@@ -70,3 +70,14 @@
     }
 }
 
+
+/* Computadora: la franja también ocupa una pantalla completa, con el contenido centrado */
+@media (min-width: 52.01rem) {
+    .why.section-shell {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100vh;
+        min-height: 100svh;
+    }
+}
