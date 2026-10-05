@@ -37,7 +37,8 @@
             const text = box.closest('label').textContent.trim();
             // Cantidades elegidas (productos, secciones, páginas): "(4 a 5)" o "(Secciones: 4 a 5; Páginas secundarias: 1 a 3)"
             const values = extraFields(box).filter((field) => field.value).map((field) => {
-                const shown = field.selectedOptions ? field.selectedOptions[0].textContent.trim() : field.value;
+                let shown = field.selectedOptions ? field.selectedOptions[0].textContent.trim() : field.value;
+                if (field.type === 'date') shown = field.value.split('-').reverse().join('/');   // 2026-10-20 → 20/10/2026
                 return field.dataset.short ? `${field.dataset.short}: ${shown}` : shown;
             });
             return values.length ? `${text} (${values.join('; ')})` : text;
