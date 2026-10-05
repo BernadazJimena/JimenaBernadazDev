@@ -91,6 +91,11 @@
         }
     };
 
+    // Entrega urgente: no se pueden elegir fechas pasadas (el calendario arranca en el día de hoy)
+    const now = new Date();
+    const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    form.querySelectorAll('input[type="date"]').forEach((field) => { field.min = today; });
+
     form.addEventListener('change', update);
     form.addEventListener('input', update);
     form.addEventListener('reset', () => setTimeout(update, 0));
