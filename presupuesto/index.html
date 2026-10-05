@@ -162,9 +162,9 @@
           <fieldset class="budget-topic">
             <legend>¿Sobre qué es tu pedido?</legend>
             <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Emprendedor · Tienda online</span></label>
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Básico · Landing esencial</span></label>
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Premium · Web a medida</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Emprendedor · Tienda online</span><span class="budget-price">$66.990</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Básico · Landing esencial</span><span class="budget-price">$111.990</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Premium · Web a medida</span><span class="budget-price">$189.990</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="update" required data-msg-required="Elegí sobre qué es tu pedido."><span>Actualizar una web o tienda que ya me entregaste</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="otro" required data-msg-required="Elegí sobre qué es tu pedido."><span>Otro</span></label>
             </div>
@@ -173,13 +173,12 @@
             <fieldset class="budget-group" data-for="emprendedor" hidden disabled>
               <legend>¿Querés sumar algo? (opcional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-1"><span>Más productos</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-1"><span>Más productos</span><span class="budget-price">$9.990 cada 10 productos</span></label>
                 <div class="budget-extra" id="budget-extra-1" hidden><label class="contact-field"><span>¿Cuántos productos en total?</span><select data-msg="Elegí la cantidad de productos."><option value=""></option><option>21 a 40</option><option>41 a 60</option><option>61 a 80</option><option>81 a 100</option><option>Más de 100</option></select></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-2" data-key="landing"><span>Una landing page además de la tienda</span></label>
-                <div class="budget-extra" id="budget-extra-2" hidden><label class="contact-field"><span>¿Cuántas secciones?</span><input type="number" min="1" max="10" value="" inputmode="numeric" data-msg="Indicá cuántas secciones necesitás (de 1 a 10)." data-short="Secciones"></label><label class="contact-field"><span>¿Cuántas páginas secundarias?</span><input type="number" min="0" max="10" value="0" inputmode="numeric" data-msg="Indicá cuántas páginas secundarias necesitás (de 0 a 10)." data-short="Páginas secundarias"></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Tienda también en la segunda plataforma (Tiendanube y Empretienda)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-5"><span>Entrega urgente: la necesito para una fecha determinada</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-key="landing"><span>Una landing page además de la tienda (5 secciones, como el Plan Básico)</span><span class="budget-price">$94.990</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Tienda también en la segunda plataforma (Tiendanube y Empretienda)</span><span class="budget-price">$39.990</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span><span class="budget-price">$14.990 por mes</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-5"><span>Entrega urgente: la necesito para una fecha determinada</span><span class="budget-price">+30% sobre el total</span></label>
                 <div class="budget-extra" id="budget-extra-5" hidden><label class="contact-field"><span>¿Para qué fecha?</span><input type="date" data-msg="Indicá para qué fecha la necesitás."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Otro</span></label>
               </div>
@@ -187,16 +186,16 @@
             <fieldset class="budget-group" data-for="basico" hidden disabled>
               <legend>¿Querés sumar algo? (opcional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox"><span>Indicador de “abierto / cerrado” según tu horario</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Botón de modo claro / oscuro</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Indicador de “abierto / cerrado” según tu horario</span><span class="budget-price">$8.990</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Botón de modo claro / oscuro</span><span class="budget-price">$17.990</span></label>
                 <label class="plan-quiz-option"><input type="checkbox"><span>Otra función del Plan Premium</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-10"><span>Secciones extra</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-10"><span>Secciones extra</span><span class="budget-price">$11.990 cada una</span></label>
                 <div class="budget-extra" id="budget-extra-10" hidden><label class="contact-field"><span>¿Cuántas secciones extra?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Indicá cuántas secciones extra necesitás."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-11"><span>Páginas secundarias</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-11"><span>Páginas secundarias</span><span class="budget-price">$27.990 cada una</span></label>
                 <div class="budget-extra" id="budget-extra-11" hidden><label class="contact-field"><span>¿Cuántas páginas secundarias?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Indicá cuántas páginas secundarias necesitás."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Diseño de una tienda online en Tiendanube o Empretienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-14"><span>Entrega urgente: la necesito para una fecha determinada</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Diseño de una tienda online en Tiendanube o Empretienda</span><span class="budget-price">$49.990</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span><span class="budget-price">$14.990 por mes</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-14"><span>Entrega urgente: la necesito para una fecha determinada</span><span class="budget-price">+30% sobre el total</span></label>
                 <div class="budget-extra" id="budget-extra-14" hidden><label class="contact-field"><span>¿Para qué fecha?</span><input type="date" data-msg="Indicá para qué fecha la necesitás."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Otro</span></label>
               </div>
@@ -204,13 +203,13 @@
             <fieldset class="budget-group" data-for="premium" hidden disabled>
               <legend>¿Querés sumar algo? (opcional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-16"><span>Secciones extra</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-16"><span>Secciones extra</span><span class="budget-price">$11.990 cada una</span></label>
                 <div class="budget-extra" id="budget-extra-16" hidden><label class="contact-field"><span>¿Cuántas secciones extra?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Indicá cuántas secciones extra necesitás."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-17"><span>Más páginas secundarias (además de las 4 incluidas)</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-17"><span>Más páginas secundarias (además de las 4 incluidas)</span><span class="budget-price">$27.990 cada una</span></label>
                 <div class="budget-extra" id="budget-extra-17" hidden><label class="contact-field"><span>¿Cuántas páginas extra?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Indicá cuántas páginas extra necesitás."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Diseño de una tienda online en Tiendanube o Empretienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-20"><span>Entrega urgente: la necesito para una fecha determinada</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Diseño de una tienda online en Tiendanube o Empretienda</span><span class="budget-price">$49.990</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span><span class="budget-price">$14.990 por mes</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-20"><span>Entrega urgente: la necesito para una fecha determinada</span><span class="budget-price">+30% sobre el total</span></label>
                 <div class="budget-extra" id="budget-extra-20" hidden><label class="contact-field"><span>¿Para qué fecha?</span><input type="date" data-msg="Indicá para qué fecha la necesitás."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Otro</span></label>
               </div>
@@ -218,17 +217,20 @@
             <fieldset class="budget-group" data-for="update" hidden disabled>
               <legend>¿Qué querés actualizar?</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-22"><span>Actualizar una sección o una página (textos, imágenes o contenido)</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-22"><span>Actualizar una sección o una página (textos, imágenes o contenido)</span><span class="budget-price">$11.990 cada una</span></label>
                 <div class="budget-extra" id="budget-extra-22" hidden><label class="contact-field"><span>¿Cuántas secciones o páginas?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Indicá cuántas secciones o páginas querés actualizar."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-23"><span>Agregar secciones nuevas</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-23"><span>Agregar secciones nuevas</span><span class="budget-price">$11.990 cada una</span></label>
                 <div class="budget-extra" id="budget-extra-23" hidden><label class="contact-field"><span>¿Cuántas secciones nuevas?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Indicá cuántas secciones nuevas necesitás."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Cargar productos nuevos en la tienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-26"><span>Entrega urgente: la necesito para una fecha determinada</span></label>
-                <div class="budget-extra" id="budget-extra-26" hidden><label class="contact-field"><span>¿Para qué fecha?</span><input type="date" data-msg="Indicá para qué fecha la necesitás."></label></div>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Un cambio chico (hasta 30 minutos de trabajo)</span><span class="budget-price">$5.990</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Cargar productos nuevos en la tienda</span><span class="budget-price">$9.990 cada 10 productos</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Soporte por mes después de publicar (opcional, sin permanencia)</span><span class="budget-price">$14.990 por mes</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-27"><span>Entrega urgente: la necesito para una fecha determinada</span><span class="budget-price">+30% sobre el total</span></label>
+                <div class="budget-extra" id="budget-extra-27" hidden><label class="contact-field"><span>¿Para qué fecha?</span><input type="date" data-msg="Indicá para qué fecha la necesitás."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Otro</span></label>
               </div>
             </fieldset>
+
+          <p class="budget-prices-note">Los valores son de referencia y están en pesos argentinos. El presupuesto final te lo confirmo yo.</p>
 
           <label class="contact-field">
             <span>Contame los detalles</span>

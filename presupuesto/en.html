@@ -162,9 +162,9 @@
           <fieldset class="budget-topic">
             <legend>What is your request about?</legend>
             <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Choose what your request is about."><span>Entrepreneur Plan · Online store</span></label>
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Choose what your request is about."><span>Basic Plan · Essential landing page</span></label>
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Choose what your request is about."><span>Premium Plan · Custom website</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Choose what your request is about."><span>Entrepreneur Plan · Online store</span><span class="budget-price">USD 43</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Choose what your request is about."><span>Basic Plan · Essential landing page</span><span class="budget-price">USD 72</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Choose what your request is about."><span>Premium Plan · Custom website</span><span class="budget-price">USD 122</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="update" required data-msg-required="Choose what your request is about."><span>Update a website or store you already delivered</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="otro" required data-msg-required="Choose what your request is about."><span>Other</span></label>
             </div>
@@ -173,13 +173,12 @@
             <fieldset class="budget-group" data-for="emprendedor" hidden disabled>
               <legend>Do you want to add anything? (optional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-1"><span>More products</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-1"><span>More products</span><span class="budget-price">USD 6 per 10 products</span></label>
                 <div class="budget-extra" id="budget-extra-1" hidden><label class="contact-field"><span>How many products in total?</span><select data-msg="Choose the number of products."><option value=""></option><option>21 to 40</option><option>41 to 60</option><option>61 to 80</option><option>81 to 100</option><option>More than 100</option></select></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-2" data-key="landing"><span>A landing page in addition to the store</span></label>
-                <div class="budget-extra" id="budget-extra-2" hidden><label class="contact-field"><span>How many sections?</span><input type="number" min="1" max="10" value="" inputmode="numeric" data-msg="Tell me how many sections you need (1 to 10)." data-short="Sections"></label><label class="contact-field"><span>How many secondary pages?</span><input type="number" min="0" max="10" value="0" inputmode="numeric" data-msg="Tell me how many secondary pages you need (0 to 10)." data-short="Secondary pages"></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Store on the second platform too (Tiendanube and Empretienda)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-5"><span>Urgent delivery: I need it by a specific date</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-key="landing"><span>A landing page in addition to the store (5 sections, like the Basic Plan)</span><span class="budget-price">USD 61</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Store on the second platform too (Tiendanube and Empretienda)</span><span class="budget-price">USD 26</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span><span class="budget-price">USD 10 per month</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-5"><span>Urgent delivery: I need it by a specific date</span><span class="budget-price">+30% of the total</span></label>
                 <div class="budget-extra" id="budget-extra-5" hidden><label class="contact-field"><span>By what date?</span><input type="date" data-msg="Tell me the date you need it by."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Other</span></label>
               </div>
@@ -187,16 +186,16 @@
             <fieldset class="budget-group" data-for="basico" hidden disabled>
               <legend>Do you want to add anything? (optional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox"><span>“Open / closed” indicator based on your business hours</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Light / dark mode toggle</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>“Open / closed” indicator based on your business hours</span><span class="budget-price">USD 6</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Light / dark mode toggle</span><span class="budget-price">USD 12</span></label>
                 <label class="plan-quiz-option"><input type="checkbox"><span>Another Premium Plan feature</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-10"><span>Extra sections</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-10"><span>Extra sections</span><span class="budget-price">USD 8 each</span></label>
                 <div class="budget-extra" id="budget-extra-10" hidden><label class="contact-field"><span>How many extra sections?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Tell me how many extra sections you need."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-11"><span>Secondary pages</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-11"><span>Secondary pages</span><span class="budget-price">USD 18 each</span></label>
                 <div class="budget-extra" id="budget-extra-11" hidden><label class="contact-field"><span>How many secondary pages?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Tell me how many secondary pages you need."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Design of an online store on Tiendanube or Empretienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-14"><span>Urgent delivery: I need it by a specific date</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Design of an online store on Tiendanube or Empretienda</span><span class="budget-price">USD 32</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span><span class="budget-price">USD 10 per month</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-14"><span>Urgent delivery: I need it by a specific date</span><span class="budget-price">+30% of the total</span></label>
                 <div class="budget-extra" id="budget-extra-14" hidden><label class="contact-field"><span>By what date?</span><input type="date" data-msg="Tell me the date you need it by."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Other</span></label>
               </div>
@@ -204,13 +203,13 @@
             <fieldset class="budget-group" data-for="premium" hidden disabled>
               <legend>Do you want to add anything? (optional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-16"><span>Extra sections</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-16"><span>Extra sections</span><span class="budget-price">USD 8 each</span></label>
                 <div class="budget-extra" id="budget-extra-16" hidden><label class="contact-field"><span>How many extra sections?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Tell me how many extra sections you need."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-17"><span>More secondary pages (beyond the 4 included)</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-17"><span>More secondary pages (beyond the 4 included)</span><span class="budget-price">USD 18 each</span></label>
                 <div class="budget-extra" id="budget-extra-17" hidden><label class="contact-field"><span>How many extra pages?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Tell me how many extra pages you need."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Design of an online store on Tiendanube or Empretienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-20"><span>Urgent delivery: I need it by a specific date</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Design of an online store on Tiendanube or Empretienda</span><span class="budget-price">USD 32</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span><span class="budget-price">USD 10 per month</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-20"><span>Urgent delivery: I need it by a specific date</span><span class="budget-price">+30% of the total</span></label>
                 <div class="budget-extra" id="budget-extra-20" hidden><label class="contact-field"><span>By what date?</span><input type="date" data-msg="Tell me the date you need it by."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Other</span></label>
               </div>
@@ -218,17 +217,20 @@
             <fieldset class="budget-group" data-for="update" hidden disabled>
               <legend>What do you want to update?</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-22"><span>Update a section or a page (text, images, or content)</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-22"><span>Update a section or a page (text, images, or content)</span><span class="budget-price">USD 8 each</span></label>
                 <div class="budget-extra" id="budget-extra-22" hidden><label class="contact-field"><span>How many sections or pages?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Tell me how many sections or pages you want to update."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-23"><span>Add new sections</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-23"><span>Add new sections</span><span class="budget-price">USD 8 each</span></label>
                 <div class="budget-extra" id="budget-extra-23" hidden><label class="contact-field"><span>How many new sections?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Tell me how many new sections you need."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Upload new products to the store</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-26"><span>Urgent delivery: I need it by a specific date</span></label>
-                <div class="budget-extra" id="budget-extra-26" hidden><label class="contact-field"><span>By what date?</span><input type="date" data-msg="Tell me the date you need it by."></label></div>
+                <label class="plan-quiz-option"><input type="checkbox"><span>A small change (up to 30 minutes of work)</span><span class="budget-price">USD 4</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Upload new products to the store</span><span class="budget-price">USD 6 per 10 products</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Monthly support after launch (optional, no minimum commitment)</span><span class="budget-price">USD 10 per month</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-27"><span>Urgent delivery: I need it by a specific date</span><span class="budget-price">+30% of the total</span></label>
+                <div class="budget-extra" id="budget-extra-27" hidden><label class="contact-field"><span>By what date?</span><input type="date" data-msg="Tell me the date you need it by."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Other</span></label>
               </div>
             </fieldset>
+
+          <p class="budget-prices-note">Prices are for reference and are shown in US dollars. I will confirm the final quote.</p>
 
           <label class="contact-field">
             <span>Tell me the details</span>

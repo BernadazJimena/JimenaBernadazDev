@@ -13,6 +13,8 @@
 
     const topicInput = () => form.querySelector('input[name="plan"]:checked');
     const activeGroup = () => groups.find((g) => !g.disabled);
+    // Texto de una opción, sin el precio de referencia que tiene al lado
+    const optionText = (input) => input.closest('label').querySelector('span').textContent.trim();
     const extraFields = (box) => (box.dataset.reveal ? [...form.querySelectorAll(`#${box.dataset.reveal} select, #${box.dataset.reveal} input`)] : []);
 
     // Muestra (y habilita) solo las opciones del plan elegido; las ocultas no se envían
@@ -34,7 +36,7 @@
         const group = activeGroup();
         if (!group) return [];
         return [...group.querySelectorAll('input[type="checkbox"]:checked')].map((box) => {
-            const text = box.closest('label').textContent.trim();
+            const text = optionText(box);
             // Cantidades elegidas (productos, secciones, páginas): "(4 a 5)" o "(Secciones: 4 a 5; Páginas secundarias: 1 a 3)"
             const values = extraFields(box).filter((field) => field.value).map((field) => {
                 let shown = field.selectedOptions ? field.selectedOptions[0].textContent.trim() : field.value;
@@ -48,7 +50,7 @@
     const buildSummary = (withName) => {
         const lines = [];
         const topic = topicInput();
-        if (topic) lines.push(`${t.lTopic}: ${topic.closest('label').textContent.trim()}`);
+        if (topic) lines.push(`${t.lTopic}: ${optionText(topic)}`);
         const items = chosenItems();
         if (items.length) lines.push(`${t.lItems}: ${items.join('; ')}`);
         if (details.value.trim()) lines.push(`${t.lDetails}: ${details.value.trim()}`);

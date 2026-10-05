@@ -162,9 +162,9 @@
           <fieldset class="budget-topic">
             <legend>Sobre o que é o seu pedido?</legend>
             <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Plano Empreendedor · Loja virtual</span></label>
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Plano Básico · Landing page essencial</span></label>
-                <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Plano Premium · Site sob medida</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Plano Empreendedor · Loja virtual</span><span class="budget-price">USD 43</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Plano Básico · Landing page essencial</span><span class="budget-price">USD 72</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Plano Premium · Site sob medida</span><span class="budget-price">USD 122</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="update" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Atualizar um site ou loja que você já me entregou</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="otro" required data-msg-required="Escolha sobre o que é o seu pedido."><span>Outro</span></label>
             </div>
@@ -173,13 +173,12 @@
             <fieldset class="budget-group" data-for="emprendedor" hidden disabled>
               <legend>Quer adicionar algo? (opcional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-1"><span>Mais produtos</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-1"><span>Mais produtos</span><span class="budget-price">USD 6 a cada 10 produtos</span></label>
                 <div class="budget-extra" id="budget-extra-1" hidden><label class="contact-field"><span>Quantos produtos no total?</span><select data-msg="Escolha a quantidade de produtos."><option value=""></option><option>21 a 40</option><option>41 a 60</option><option>61 a 80</option><option>81 a 100</option><option>Mais de 100</option></select></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-2" data-key="landing"><span>Uma landing page além da loja</span></label>
-                <div class="budget-extra" id="budget-extra-2" hidden><label class="contact-field"><span>Quantas seções?</span><input type="number" min="1" max="10" value="" inputmode="numeric" data-msg="Informe quantas seções você precisa (de 1 a 10)." data-short="Seções"></label><label class="contact-field"><span>Quantas páginas secundárias?</span><input type="number" min="0" max="10" value="0" inputmode="numeric" data-msg="Informe quantas páginas secundárias você precisa (de 0 a 10)." data-short="Páginas secundárias"></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Loja também na segunda plataforma (Nuvemshop / Tiendanube e Empretienda)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-5"><span>Entrega urgente: preciso para uma data específica</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-key="landing"><span>Uma landing page além da loja (5 seções, como o Plano Básico)</span><span class="budget-price">USD 61</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Loja também na segunda plataforma (Nuvemshop / Tiendanube e Empretienda)</span><span class="budget-price">USD 26</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span><span class="budget-price">USD 10 por mês</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-5"><span>Entrega urgente: preciso para uma data específica</span><span class="budget-price">+30% sobre o total</span></label>
                 <div class="budget-extra" id="budget-extra-5" hidden><label class="contact-field"><span>Para qual data?</span><input type="date" data-msg="Informe para qual data você precisa."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Outro</span></label>
               </div>
@@ -187,16 +186,16 @@
             <fieldset class="budget-group" data-for="basico" hidden disabled>
               <legend>Quer adicionar algo? (opcional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox"><span>Indicador de “aberto / fechado” de acordo com o seu horário</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Botão de modo claro / escuro</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Indicador de “aberto / fechado” de acordo com o seu horário</span><span class="budget-price">USD 6</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Botão de modo claro / escuro</span><span class="budget-price">USD 12</span></label>
                 <label class="plan-quiz-option"><input type="checkbox"><span>Outra função do Plano Premium</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-10"><span>Seções extras</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-10"><span>Seções extras</span><span class="budget-price">USD 8 cada uma</span></label>
                 <div class="budget-extra" id="budget-extra-10" hidden><label class="contact-field"><span>Quantas seções extras?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Informe quantas seções extras você precisa."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-11"><span>Páginas secundárias</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-11"><span>Páginas secundárias</span><span class="budget-price">USD 18 cada uma</span></label>
                 <div class="budget-extra" id="budget-extra-11" hidden><label class="contact-field"><span>Quantas páginas secundárias?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Informe quantas páginas secundárias você precisa."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Design de uma loja virtual na Nuvemshop / Tiendanube ou na Empretienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-14"><span>Entrega urgente: preciso para uma data específica</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Design de uma loja virtual na Nuvemshop / Tiendanube ou na Empretienda</span><span class="budget-price">USD 32</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span><span class="budget-price">USD 10 por mês</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-14"><span>Entrega urgente: preciso para uma data específica</span><span class="budget-price">+30% sobre o total</span></label>
                 <div class="budget-extra" id="budget-extra-14" hidden><label class="contact-field"><span>Para qual data?</span><input type="date" data-msg="Informe para qual data você precisa."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Outro</span></label>
               </div>
@@ -204,13 +203,13 @@
             <fieldset class="budget-group" data-for="premium" hidden disabled>
               <legend>Quer adicionar algo? (opcional)</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-16"><span>Seções extras</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-16"><span>Seções extras</span><span class="budget-price">USD 8 cada uma</span></label>
                 <div class="budget-extra" id="budget-extra-16" hidden><label class="contact-field"><span>Quantas seções extras?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Informe quantas seções extras você precisa."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-17"><span>Mais páginas secundárias (além das 4 incluídas)</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-17"><span>Mais páginas secundárias (além das 4 incluídas)</span><span class="budget-price">USD 18 cada uma</span></label>
                 <div class="budget-extra" id="budget-extra-17" hidden><label class="contact-field"><span>Quantas páginas extras?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Informe quantas páginas extras você precisa."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Design de uma loja virtual na Nuvemshop / Tiendanube ou na Empretienda</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-20"><span>Entrega urgente: preciso para uma data específica</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Design de uma loja virtual na Nuvemshop / Tiendanube ou na Empretienda</span><span class="budget-price">USD 32</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span><span class="budget-price">USD 10 por mês</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-20"><span>Entrega urgente: preciso para uma data específica</span><span class="budget-price">+30% sobre o total</span></label>
                 <div class="budget-extra" id="budget-extra-20" hidden><label class="contact-field"><span>Para qual data?</span><input type="date" data-msg="Informe para qual data você precisa."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Outro</span></label>
               </div>
@@ -218,17 +217,20 @@
             <fieldset class="budget-group" data-for="update" hidden disabled>
               <legend>O que você quer atualizar?</legend>
               <div class="plan-quiz-options">
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-22"><span>Atualizar uma seção ou uma página (textos, imagens ou conteúdo)</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-22"><span>Atualizar uma seção ou uma página (textos, imagens ou conteúdo)</span><span class="budget-price">USD 8 cada uma</span></label>
                 <div class="budget-extra" id="budget-extra-22" hidden><label class="contact-field"><span>Quantas seções ou páginas?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Informe quantas seções ou páginas você quer atualizar."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-23"><span>Adicionar seções novas</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-23"><span>Adicionar seções novas</span><span class="budget-price">USD 8 cada uma</span></label>
                 <div class="budget-extra" id="budget-extra-23" hidden><label class="contact-field"><span>Quantas seções novas?</span><input type="number" min="1" max="50" value="" inputmode="numeric" data-msg="Informe quantas seções novas você precisa."></label></div>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Cadastrar produtos novos na loja</span></label>
-                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span></label>
-                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-26"><span>Entrega urgente: preciso para uma data específica</span></label>
-                <div class="budget-extra" id="budget-extra-26" hidden><label class="contact-field"><span>Para qual data?</span><input type="date" data-msg="Informe para qual data você precisa."></label></div>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Uma pequena mudança (até 30 minutos de trabalho)</span><span class="budget-price">USD 4</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Cadastrar produtos novos na loja</span><span class="budget-price">USD 6 a cada 10 produtos</span></label>
+                <label class="plan-quiz-option"><input type="checkbox"><span>Suporte mensal após a publicação (opcional, sem fidelidade)</span><span class="budget-price">USD 10 por mês</span></label>
+                <label class="plan-quiz-option"><input type="checkbox" data-reveal="budget-extra-27"><span>Entrega urgente: preciso para uma data específica</span><span class="budget-price">+30% sobre o total</span></label>
+                <div class="budget-extra" id="budget-extra-27" hidden><label class="contact-field"><span>Para qual data?</span><input type="date" data-msg="Informe para qual data você precisa."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Outro</span></label>
               </div>
             </fieldset>
+
+          <p class="budget-prices-note">Os valores são de referência e estão em dólares. Eu confirmo o orçamento final.</p>
 
           <label class="contact-field">
             <span>Conte os detalhes</span>

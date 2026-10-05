@@ -92,3 +92,38 @@
         margin-left: 0;
     }
 }
+
+/* Precio de referencia al lado de cada opción */
+.budget-form .plan-quiz-option > span:first-of-type {
+    flex: 1;
+}
+
+.budget-price {
+    color: var(--blue);
+    font-family: "Manrope", sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.budget-prices-note {
+    border-left: .25rem solid var(--blue);
+    color: var(--text);
+    font-size: .9rem;
+    line-height: 1.5;
+    margin: 0;
+    padding-left: .9rem;
+}
+
+@media (max-width: 35rem) {
+    .budget-form .plan-quiz-option {
+        flex-wrap: wrap;
+    }
+
+    .budget-price {
+        flex-basis: 100%;
+        margin-left: 1.8rem;
+        white-space: normal;
+    }
+}
