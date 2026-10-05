@@ -127,3 +127,23 @@
         white-space: normal;
     }
 }
+
+/* Aclaración corta debajo de una opción (qué es una sección, una página secundaria, etc.) */
+.budget-form .plan-quiz-option {
+    flex-wrap: wrap;
+}
+
+.budget-desc {
+    color: var(--muted);
+    flex-basis: 100%;
+    font-size: .84rem;
+    line-height: 1.45;
+    margin-top: -.35rem;
+    padding-left: 1.8rem;
+}
+
+.budget-help {
+    color: var(--muted);
+    font-size: .9rem;
+    margin: 0;
+}
