@@ -50,3 +50,12 @@
     text-transform: uppercase;
 }
 
+
+/* Aclaración de que los proyectos son diseños de muestra */
+.portfolio-intro {
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 1rem 0 0;
+    max-width: 38rem;
+}
