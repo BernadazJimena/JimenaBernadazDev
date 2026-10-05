@@ -65,7 +65,7 @@
         // Al pedir un plan, los adicionales son opcionales; en una actualización hay que indicar qué se quiere cambiar
         if (topic === 'update' && !boxes.length) return [t.errItems, group.querySelector('input')];
         for (const box of boxes) {
-            const missing = extraFields(box).find((field) => !field.value);
+            const missing = extraFields(box).find((field) => !field.value || !field.checkValidity());
             if (missing) return [missing.dataset.msg, missing];
         }
         const needsDetails = topic === 'otro' || boxes.some((box) => box.dataset.other !== undefined);
