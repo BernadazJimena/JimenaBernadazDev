@@ -274,8 +274,34 @@
             <p class="plan-quiz-note" hidden>Por el momento no hago proyectos con registro de usuarios o inicio de sesión, porque necesitan una base de datos. El plan recomendado no incluye esas funciones.</p>
             <div class="plan-quiz-actions">
               <a class="button button-primary plan-quiz-wa" href="https://wa.me/5491127663667" target="_blank" rel="noreferrer">Consultar por WhatsApp <span aria-hidden="true">↗</span></a>
+              <button class="button button-ghost plan-quiz-mail-toggle" type="button" aria-expanded="false">Enviar por mail</button>
               <button class="plan-quiz-restart" type="button">Volver a empezar</button>
             </div>
+            <form class="contact-form plan-quiz-mail" action="https://api.web3forms.com/submit" method="POST" hidden
+              data-sending="Enviando..." data-success="¡Gracias! Recibí tu consulta y te respondo a la brevedad." data-error="No se pudo enviar. Probá de nuevo o escribime por WhatsApp.">
+              <p class="plan-quiz-mail-intro">Dejame tu nombre y tu mail, y te respondo por ahí.</p>
+              <input type="hidden" name="access_key" value="c561c3a9-ac49-4900-b182-fed828cf142e">
+              <input type="hidden" name="subject" value="Consulta desde el test de planes (español)">
+              <input type="hidden" name="from_name" value="JNB Creative Studio">
+              <input type="hidden" name="message" value="">
+              <input type="checkbox" name="botcheck" class="contact-form-botcheck" tabindex="-1" autocomplete="off">
+              <div class="contact-form-row">
+                <label class="contact-field">
+                  <span>Nombre</span>
+                  <input type="text" name="name" autocomplete="name" required pattern=".*\S.*"
+                    placeholder="Tu nombre y apellido" data-msg-required="Escribí tu nombre para saber cómo llamarte.">
+                </label>
+                <label class="contact-field">
+                  <span>Mail</span>
+                  <input type="email" name="email" autocomplete="email" inputmode="email" required
+                    pattern="[^@\s]+@[^@\s]+\.[^@\s]+" placeholder="tunombre@email.com"
+                    data-msg-required="Escribí tu mail para que pueda responderte."
+                    data-msg-invalid="Revisá tu mail: tiene que tener @ y un dominio, por ejemplo, tunombre@gmail.com.">
+                </label>
+              </div>
+              <button class="button button-primary" type="submit">Enviar consulta <span aria-hidden="true">↗</span></button>
+              <p class="contact-form-status" role="status" aria-live="polite"></p>
+            </form>
           </div>
         </section>
 

@@ -13,6 +13,11 @@
     const loginNote = quiz.querySelector('.plan-quiz-note');
     const whatsapp = quiz.querySelector('.plan-quiz-wa');
     const restart = quiz.querySelector('.plan-quiz-restart');
+    // Envío por mail: lo hace contact-form.js (el formulario también tiene la clase .contact-form)
+    const mailToggle = quiz.querySelector('.plan-quiz-mail-toggle');
+    const mailForm = quiz.querySelector('.plan-quiz-mail');
+    const mailMessage = mailForm.querySelector('input[name="message"]');
+    let resultMessage = '';
 
     let path = [];          // preguntas ya respondidas, en orden
     let current = 'goal';   // pregunta que se está mostrando
@@ -55,13 +60,15 @@
         result.querySelectorAll('[data-result]').forEach((c) => { c.hidden = c !== card; });
         loginNote.hidden = !(value('goal') === 'show' && value('login') === 'yes');
 
-        // Mensaje de WhatsApp ya escrito, con el plan y las respuestas
+        // Mensaje ya escrito, con el plan y las respuestas (para WhatsApp o para el mail)
         let message = quiz.dataset.waBoth;
         if (plan !== 'ambos') {
             const answers = [...path, current].flatMap(answerTexts).join('; ');
             message = `${quiz.dataset.waPlan.replace('{plan}', card.dataset.planName)} ${quiz.dataset.waAnswers} ${answers}.`;
         }
         whatsapp.href = `https://wa.me/5491127663667?text=${encodeURIComponent(message)}`;
+        resultMessage = message;
+        mailMessage.value = message;
 
         bar.style.width = '100%';
         form.hidden = true;
@@ -105,8 +112,23 @@
         step(current).focus();
     });
 
+    mailToggle.addEventListener('click', () => {
+        mailForm.hidden = false;
+        mailToggle.setAttribute('aria-expanded', 'true');
+        mailForm.querySelector('input[name="name"]').focus();
+    });
+
+    // Antes de enviar se vuelve a cargar el resumen (contact-form.js limpia el formulario después de cada envío)
+    mailForm.addEventListener('submit', () => { mailMessage.value = resultMessage; }, true);
+
     restart.addEventListener('click', () => {
         form.reset();
+        mailForm.reset();
+        mailForm.hidden = true;
+        mailToggle.setAttribute('aria-expanded', 'false');
+        const mailStatus = mailForm.querySelector('.contact-form-status');
+        mailStatus.className = 'contact-form-status';
+        mailStatus.textContent = '';
         path = [];
         current = 'goal';
         form.hidden = false;

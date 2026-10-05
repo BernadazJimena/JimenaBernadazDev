@@ -190,6 +190,38 @@
     text-decoration: underline;
 }
 
+/* Envío del resultado por mail (se abre con el botón "Enviar por mail") */
+.plan-quiz-mail {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+}
+
+.plan-quiz-mail[hidden] {
+    display: none;
+}
+
+.plan-quiz-mail-intro {
+    color: var(--text);
+    font-weight: 600;
+    margin: 0;
+}
+
+.plan-quiz-mail .contact-form-status {
+    font-size: .92rem;
+    margin: 0;
+    min-height: 1.4em;
+}
+
+.plan-quiz-actions .button {
+    cursor: pointer;
+}
+
+@media (max-width: 35rem) {
+    .plan-quiz-mail .contact-form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
 .compare-ambos {
     --compare-color: var(--blue);
 }
