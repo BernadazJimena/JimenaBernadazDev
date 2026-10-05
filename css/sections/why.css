@@ -1,7 +1,7 @@
-/* Inicio: franja "No necesitás saber de webs para tener una" (después del hero) */
+/* Inicio: franja "No necesitás saber de webs para tener una" (entre "Sobre mí" y los planes) */
+/* Va después de "Sobre mí", que ya deja su espacio abajo */
 .why.section-shell {
-    padding-bottom: 0;
-    padding-top: clamp(3.5rem, 6vw, 5rem);
+    padding-top: 0;
 }
 
 .why-head h2 {
