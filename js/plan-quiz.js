@@ -10,7 +10,8 @@
     const back = quiz.querySelector('.plan-quiz-back');
     const next = quiz.querySelector('.plan-quiz-next');
     const result = quiz.querySelector('.plan-quiz-result');
-    const loginNote = quiz.querySelector('.plan-quiz-note');
+    const loginNote = quiz.querySelector('.plan-quiz-login-note');
+    const extrasNote = quiz.querySelector('.plan-quiz-extras-note');
     const whatsapp = quiz.querySelector('.plan-quiz-wa');
     const restart = quiz.querySelector('.plan-quiz-restart');
     // Envío por mail: lo hace contact-form.js (el formulario también tiene la clase .contact-form)
@@ -50,8 +51,8 @@
         const goal = value('goal');
         if (goal === 'store') return 'emprendedor';
         if (goal === 'both') return 'ambos';
-        const extras = checked('extras').map((input) => input.value).filter((v) => v !== 'none');
-        return value('size') === 'several' || extras.length ? 'premium' : 'basico';
+        // Una sola página → Básico (los extras elegidos se cotizan aparte); varias páginas → Premium
+        return value('size') === 'several' ? 'premium' : 'basico';
     };
 
     const showResult = () => {
@@ -59,6 +60,11 @@
         const card = result.querySelector(`[data-result="${plan}"]`);
         result.querySelectorAll('[data-result]').forEach((c) => { c.hidden = c !== card; });
         loginNote.hidden = !(value('goal') === 'show' && value('login') === 'yes');
+
+        // Plan Básico con funciones extra: se avisa que se cotizan aparte
+        const extras = checked('extras').filter((input) => input.value !== 'none').map((input) => input.closest('label').textContent.trim());
+        extrasNote.hidden = !(plan === 'basico' && extras.length);
+        extrasNote.querySelector('.plan-quiz-extras-text').textContent = extrasNote.dataset.template.replace('{extras}', extras.join('; '));
 
         // Mensaje ya escrito, con el plan y las respuestas (para WhatsApp o para el mail)
         let message = quiz.dataset.waBoth;
