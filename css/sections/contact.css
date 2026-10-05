@@ -201,3 +201,10 @@
     color: #f08a8a;
 }
 
+
+/* En escritorio, menos aire entre el formulario y el pie de página */
+@media (min-width: 52.01rem) {
+    .contact.section-shell {
+        padding-bottom: clamp(2.5rem, 4vw, 3.5rem);
+    }
+}
