@@ -399,8 +399,11 @@
 
 /* Enlace a la página de detalle de planes */
 .plans-more {
-    margin: 2rem 0 0;
-    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    justify-content: center;
+    margin: 2rem 0;
 }
 
 .plans-more .text-link {
@@ -538,4 +541,53 @@
     font-size: .88rem;
     margin: 1.5rem 0 0;
     padding-top: 1rem;
+}
+
+/* Tarjetas de planes: los puntos principales a la vista y el resto en "Ver todo lo que incluye" */
+.plan-more summary {
+    color: var(--blue);
+    cursor: pointer;
+    font-family: "Manrope", sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    list-style: none;
+    width: fit-content;
+}
+
+.plan-more summary::-webkit-details-marker {
+    display: none;
+}
+
+.plan-more summary::after {
+    content: " +";
+}
+
+.plan-more[open] summary::after {
+    content: " −";
+}
+
+.plan-more summary:hover {
+    text-decoration: underline;
+}
+
+.plan-more-close,
+.plan-more[open] .plan-more-open {
+    display: none;
+}
+
+.plan-more[open] .plan-more-close {
+    display: inline;
+}
+
+.plan-more[open] summary {
+    margin-bottom: .9rem;
+}
+
+.plan-card-entrepreneur .plan-more summary,
+.plan-card-featured .plan-more summary {
+    color: var(--feature-heading);
+}
+
+:root[data-theme="dark"] .plan-card-entrepreneur .plan-more summary {
+    color: var(--white);
 }
