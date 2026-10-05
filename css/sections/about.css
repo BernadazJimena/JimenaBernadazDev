@@ -57,3 +57,12 @@ h2 {
     white-space: nowrap;
 }
 
+
+/* Computadora: "Sobre mí" ocupa una pantalla completa, con el contenido centrado */
+@media (min-width: 52.01rem) {
+    .about.section-shell {
+        align-content: center;
+        min-height: 100vh;
+        min-height: 100svh;
+    }
+}
