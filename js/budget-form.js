@@ -62,7 +62,8 @@
         if (!topic) return [t.errTopic, form.querySelector('input[name="plan"]')];
         const group = activeGroup();
         const boxes = group ? [...group.querySelectorAll('input[type="checkbox"]:checked')] : [];
-        if (group && !boxes.length) return [t.errItems, group.querySelector('input')];
+        // Al pedir un plan, los adicionales son opcionales; en una actualización hay que indicar qué se quiere cambiar
+        if (topic === 'update' && !boxes.length) return [t.errItems, group.querySelector('input')];
         for (const box of boxes) {
             const missing = extraFields(box).find((field) => !field.value);
             if (missing) return [missing.dataset.msg, missing];
@@ -111,6 +112,11 @@
         const text = `${t.waIntro}\n${buildSummary(true)}`;
         window.open(`https://wa.me/5491127663667?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     });
+
+    // Si se llega desde "Consultar plan…" (por ejemplo /presupuesto/?plan=basico), ese plan ya viene elegido
+    const wanted = new URLSearchParams(location.search).get('plan');
+    const preset = wanted && [...form.querySelectorAll('input[name="plan"]')].find((input) => input.value === wanted);
+    if (preset) preset.checked = true;
 
     update();
 })();
