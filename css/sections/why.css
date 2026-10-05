@@ -4,11 +4,17 @@
     padding-top: 0;
 }
 
+/* Línea y aire para separarla de "Sobre mí", que tiene el mismo fondo */
+.why-head {
+    border-top: .08rem solid var(--line);
+    padding-top: clamp(3rem, 5vw, 4.5rem);
+}
+
 .why-head h2 {
     max-width: 16ch;
 }
 
-.why-head p {
+.why-head p:not(.eyebrow) {
     color: var(--muted);
     font-size: clamp(1.05rem, 1.7vw, 1.25rem);
     margin: 1.25rem 0 0;
