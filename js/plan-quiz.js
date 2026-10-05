@@ -12,6 +12,7 @@
     const result = quiz.querySelector('.plan-quiz-result');
     const loginNote = quiz.querySelector('.plan-quiz-login-note');
     const extrasNote = quiz.querySelector('.plan-quiz-extras-note');
+    const landingNote = quiz.querySelector('.plan-quiz-landing-note');
     const whatsapp = quiz.querySelector('.plan-quiz-wa');
     const restart = quiz.querySelector('.plan-quiz-restart');
     // Envío por mail: lo hace contact-form.js (el formulario también tiene la clase .contact-form)
@@ -28,14 +29,15 @@
     const value = (name) => checked(name)[0]?.value ?? null;
     const answerTexts = (name) => checked(name).map((input) => input.closest('label').textContent.trim());
 
-    // Quien quiere vender productos (o las dos cosas) ya tiene su resultado con la primera pregunta
+    // Vender productos → se pregunta por la landing que complementa la tienda. Mostrar el trabajo → tres preguntas más.
+    // "Las dos cosas" ya tiene su resultado con la primera pregunta.
     const nextStep = (name) => {
-        if (name === 'goal') return value('goal') === 'show' ? 'size' : null;
+        if (name === 'goal') return { store: 'landing', show: 'size' }[value('goal')] ?? null;
         if (name === 'size') return 'extras';
         if (name === 'extras') return 'login';
         return null;
     };
-    const total = () => (value('goal') && value('goal') !== 'show' ? 1 : steps.length);
+    const total = () => ({ store: 2, both: 1 }[value('goal')] ?? 4);
 
     const render = () => {
         steps.forEach((s) => { s.hidden = s.dataset.step !== current; });
@@ -65,6 +67,9 @@
         const extras = checked('extras').filter((input) => input.value !== 'none').map((input) => input.closest('label').textContent.trim());
         extrasNote.hidden = !(plan === 'basico' && extras.length);
         extrasNote.querySelector('.plan-quiz-extras-text').textContent = extrasNote.dataset.template.replace('{extras}', extras.join('; '));
+
+        // Tienda con landing page: la landing es un adicional del Plan Emprendedor
+        landingNote.hidden = !(plan === 'emprendedor' && value('landing') === 'yes');
 
         // Mensaje ya escrito, con el plan y las respuestas (para WhatsApp o para el mail)
         let message = quiz.dataset.waBoth;

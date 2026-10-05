@@ -120,4 +120,12 @@
     if (preset) preset.checked = true;
 
     update();
+
+    // Desde el test se puede llegar con un adicional ya marcado (por ejemplo ?plan=emprendedor&extra=landing)
+    const wantedExtra = new URLSearchParams(location.search).get('extra');
+    const extraBox = /^[a-z]+$/.test(wantedExtra || '') && activeGroup()?.querySelector(`input[data-key="${wantedExtra}"]`);
+    if (extraBox) {
+        extraBox.checked = true;
+        update();
+    }
 })();
