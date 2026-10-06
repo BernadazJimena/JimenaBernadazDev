@@ -253,7 +253,7 @@ h2 em {
     /* Modo claro: sobre fondo claro los círculos necesitan un poco más de presencia para verse */
     :root:not([data-theme="dark"]) .hero-decoration span,
     :root:not([data-theme="dark"]) .hero-actions::before {
-        opacity: .5;
+        opacity: .4;
     }
 }
 
