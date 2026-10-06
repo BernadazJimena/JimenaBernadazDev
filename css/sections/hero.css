@@ -190,13 +190,58 @@ h2 em {
     }
 }
 
-/* Computadora: los círculos van a la derecha del texto y suben en diagonal, sin cruzarse con él */
+/* Computadora: cuatro círculos alrededor del texto (derecha, arriba a la derecha, izquierda y abajo).
+   Se ubican tomando como referencia el bloque de texto, que mide 42rem y va centrado, así no cruzan lo escrito. */
 @media (min-width: 52.01rem) {
     .hero-decoration {
-        bottom: -3rem;
-        left: calc(50% + 27.5rem);
-        right: auto;
-        transform-origin: 0 100%;
+        display: block;
+        inset: 0;
+        transform: none;
+    }
+
+    .hero-decoration span {
+        position: absolute;
+    }
+
+    /* A la derecha del párrafo y los botones */
+    .hero-decoration span:nth-child(1) {
+        bottom: 0;
+        left: calc(50% + 22.5rem);
+    }
+
+    /* Arriba a la derecha del título: asoma desde el borde superior */
+    .hero-decoration span:nth-child(2) {
+        height: 16rem;
+        left: calc(50% + 9rem);
+        top: -5rem;
+        width: 16rem;
+    }
+
+    /* A la izquierda del texto, a media altura */
+    .hero-decoration span:nth-child(3) {
+        height: 17rem;
+        right: calc(50% + 22.5rem);
+        top: calc(50% - 8.5rem);
+        width: 17rem;
+    }
+
+    /* Abajo: nace a la altura de los botones y pasa por detrás de ellos, sin tocar el párrafo */
+    .hero-actions {
+        position: relative;
+    }
+
+    .hero-actions::before {
+        border: .1rem solid #a9c8f7;
+        border-radius: 50%;
+        content: "";
+        height: 19rem;
+        left: 5rem;
+        opacity: .5;
+        pointer-events: none;
+        position: absolute;
+        top: -.4rem;
+        width: 19rem;
+        z-index: -1;
     }
 }
 
