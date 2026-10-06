@@ -165,7 +165,7 @@ h2 em {
     }
 
     .hero h1 {
-        font-size: clamp(2.4rem, min(6.5vw, 10vh), 6.15rem);
+        font-size: clamp(2.4rem, min(5.2vw, 10vh), 5.4rem);
     }
 
     .hero h1 .hero-eyebrow {
