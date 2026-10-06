@@ -177,7 +177,7 @@ h2 em {
     }
 
     .hero h1 {
-        font-size: clamp(2.4rem, min(5.2vw, 9vh), 5rem);
+        font-size: clamp(2.4rem, min(5.2vw, 10vh), 5rem);
     }
 
     .hero h1 .hero-eyebrow {
@@ -185,10 +185,15 @@ h2 em {
         white-space: nowrap;
     }
 
+    /* La palabra en cursiva es más alta que el resto: así no separa de más los renglones del título */
+    .hero h1 em {
+        line-height: .8;
+    }
+
     .hero-copy {
-        font-size: clamp(1rem, 3vh, 1.25rem);
-        max-width: 38rem;
-        margin: 1rem 0 1.25rem;
+        font-size: clamp(1.05rem, 3.1vh, 1.25rem);
+        margin: .9rem 0 1.1rem;
+        max-width: 42rem;
     }
 
     .hero .button {
