@@ -190,11 +190,13 @@ h2 em {
     }
 }
 
-/* Pantallas bajas: los círculos bajan y se corren a la derecha para no cruzarse con el texto */
-@media (min-width: 52.01rem) and (max-height: 50rem) {
+/* Computadora: los círculos van a la derecha del texto y suben en diagonal, sin cruzarse con él */
+@media (min-width: 52.01rem) {
     .hero-decoration {
-        bottom: -13rem;
-        right: -2%;
+        bottom: -3rem;
+        left: calc(50% + 27.5rem);
+        right: auto;
+        transform-origin: 0 100%;
     }
 }
 
