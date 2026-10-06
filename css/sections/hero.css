@@ -153,35 +153,23 @@ h2 em {
     margin-bottom: 1rem;
 }
 
-/* Computadora: el menú y la portada ocupan justo una pantalla al abrir la página */
+/* Computadora: el menú y la portada ocupan justo una pantalla al abrir la página.
+   Los tamaños y los espacios dependen del ancho y del alto de la pantalla, así
+   el texto se ve grande en monitores y entra completo en notebooks, sin saltos. */
 @media (min-width: 52.01rem) {
     .hero {
         min-height: calc(100vh - 5.4rem);
         min-height: calc(100svh - 5.4rem);
-        padding-bottom: clamp(1.5rem, 5vh, 5rem);
-        padding-top: clamp(1.5rem, 5vh, 5rem);
-    }
-}
-
-/* Notebooks (pantallas bajas): el título, la bajada y los botones se achican según el alto de la pantalla para entrar sin tener que bajar */
-@media (min-width: 52.01rem) and (max-height: 50rem) {
-    .hero {
-        padding-bottom: clamp(.75rem, 2.5vh, 2.5rem);
-        padding-top: clamp(.75rem, 2.5vh, 2.5rem);
-    }
-
-    /* Los círculos bajan y se corren a la derecha para no cruzarse con el texto */
-    .hero-decoration {
-        bottom: -13rem;
-        right: -2%;
+        padding-bottom: clamp(.75rem, calc(10vh - 3rem), 5rem);
+        padding-top: clamp(.75rem, calc(10vh - 3rem), 5rem);
     }
 
     .hero h1 {
-        font-size: clamp(2.4rem, min(5.2vw, 10vh), 5rem);
+        font-size: clamp(2.4rem, min(6.5vw, 10vh), 6.15rem);
     }
 
     .hero h1 .hero-eyebrow {
-        margin-bottom: .6rem;
+        margin-bottom: clamp(.6rem, 1.6vh, 1rem);
         white-space: nowrap;
     }
 
@@ -192,12 +180,20 @@ h2 em {
 
     .hero-copy {
         font-size: clamp(1.05rem, 3.1vh, 1.25rem);
-        margin: .9rem 0 1.1rem;
+        margin: clamp(.8rem, calc(6vh - 1.5rem), 2rem) 0 clamp(1rem, calc(6vh - 1.3rem), 2rem);
         max-width: 42rem;
     }
 
     .hero .button {
-        padding-bottom: .85rem;
-        padding-top: .85rem;
+        padding-bottom: clamp(.85rem, 2.2vh, 1rem);
+        padding-top: clamp(.85rem, 2.2vh, 1rem);
+    }
+}
+
+/* Pantallas bajas: los círculos bajan y se corren a la derecha para no cruzarse con el texto */
+@media (min-width: 52.01rem) and (max-height: 50rem) {
+    .hero-decoration {
+        bottom: -13rem;
+        right: -2%;
     }
 }
