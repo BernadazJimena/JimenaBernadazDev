@@ -560,7 +560,7 @@
 /* Planes: frase de presentación de cada plan (la misma de las tarjetas del inicio) */
 .legal-panel .plan-detail-intro {
     color: var(--text);
-    font-size: 1.05rem;
+    font-size: 1rem;
     line-height: 1.55;
     margin: 0 0 1.25rem;
 }
@@ -571,8 +571,7 @@
     margin-top: 2rem;
 }
 
+/* El plazo se resalta solo con negrita: mismo tamaño y misma letra que el resto del texto */
 .plan-detail .legal-panel li strong {
     color: var(--text);
-    font-family: "Manrope", sans-serif;
-    font-size: 1.1em;
 }

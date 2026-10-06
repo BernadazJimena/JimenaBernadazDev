@@ -450,12 +450,6 @@
         font-size: 1.25rem;
     }
 
-    /* Enlaces dentro de un texto: del tamaño del texto que los rodea */
-    p .text-link,
-    li:not(.why-item) .text-link {
-        font-size: .94em;
-    }
-
     /* Aclaraciones al pie: un mismo tamaño */
     .compare-note,
     .budget-help,
@@ -465,5 +459,19 @@
     .plan-detail-footnote,
     .process-cta-more {
         font-size: .92rem;
+    }
+}
+
+/* Enlaces dentro de un texto: del tamaño del texto que los rodea, en todas las pantallas */
+p .text-link,
+li:not(.why-item) .text-link {
+    font-size: .94em;
+}
+
+/* Celulares: si el enlace es largo, puede pasar al renglón siguiente en vez de salirse de la pantalla */
+@media (max-width: 35rem) {
+    p .text-link,
+    li:not(.why-item) .text-link {
+        white-space: normal;
     }
 }
