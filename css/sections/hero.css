@@ -131,7 +131,7 @@ h2 em {
 }
 
 .hero-decoration span {
-    border: .1rem solid #a9c8f7;
+    border: .1rem solid var(--decoration);
     border-radius: 50%;
     height: 19rem;
     opacity: .5;
@@ -237,7 +237,7 @@ h2 em {
     /* En monitores altos el círculo crece con la pantalla, así siempre queda cortado por el borde de abajo */
     .hero-actions::before {
         --size: max(19rem, 45vh);
-        border: .1rem solid #a9c8f7;
+        border: .1rem solid var(--decoration);
         border-radius: 50%;
         content: "";
         height: var(--size);
@@ -248,6 +248,12 @@ h2 em {
         top: -.4rem;
         width: var(--size);
         z-index: -1;
+    }
+
+    /* Modo claro: sobre fondo claro los círculos necesitan un poco más de presencia para verse */
+    :root:not([data-theme="dark"]) .hero-decoration span,
+    :root:not([data-theme="dark"]) .hero-actions::before {
+        opacity: .5;
     }
 }
 

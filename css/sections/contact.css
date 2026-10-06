@@ -10,7 +10,7 @@
 }
 
 .contact-action {
-    border-top: .08rem solid var(--line);
+    border-top: .08rem solid var(--rule);
     padding-top: 1.5rem;
 }
 
@@ -23,7 +23,7 @@
 
 /* Formulario de contacto (Web3Forms) */
 .contact-form {
-    border-top: .08rem solid var(--line);
+    border-top: .08rem solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: 1rem;

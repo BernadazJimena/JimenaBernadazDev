@@ -8,6 +8,8 @@
     --sky: #e5f0ff;
     --mist: #f4f8ff;
     --line: #cfe0f7;
+    --rule: #a9c9f0;
+    --decoration: #1462d4;
     --field-border: #6f8ab3;
     --surface: #ffffff;
     --plans-bg: linear-gradient(180deg, #eaf3ff 0%, #dbe9fc 100%);
@@ -40,6 +42,8 @@
     --sky: #111f3d;
     --mist: #060d1f;
     --line: #1e2f57;
+    --rule: #1e2f57;
+    --decoration: #a9c8f7;
     --field-border: #5873a3;
     --surface: #0d1c38;
     --plans-bg: var(--surface);

@@ -6,7 +6,7 @@
 
 /* Línea y aire para separarla de "Sobre mí", que tiene el mismo fondo */
 .why-head {
-    border-top: .08rem solid var(--line);
+    border-top: .08rem solid var(--rule);
     padding-top: clamp(3rem, 5vw, 4.5rem);
 }
 

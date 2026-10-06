@@ -29,7 +29,7 @@
 }
 
 .legal-block {
-    border-top: .08rem solid var(--line);
+    border-top: .08rem solid var(--rule);
     padding-top: 2rem;
 }
 
@@ -112,12 +112,12 @@
 }
 
 .legal-accordion {
-    border-bottom: .08rem solid var(--line);
+    border-bottom: .08rem solid var(--rule);
 }
 
 .legal-accordion .legal-block,
 .legal-accordion .legal-block:first-child {
-    border-top: .08rem solid var(--line);
+    border-top: .08rem solid var(--rule);
     padding: 0;
 }
 

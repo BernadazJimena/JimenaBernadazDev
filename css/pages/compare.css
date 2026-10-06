@@ -25,7 +25,7 @@
 
 .compare-table th,
 .compare-table td {
-    border-bottom: .08rem solid var(--line);
+    border-bottom: .08rem solid var(--rule);
     line-height: 1.35;
     padding: .7rem .85rem;
     text-align: center;

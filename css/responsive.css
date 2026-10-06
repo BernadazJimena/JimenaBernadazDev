@@ -65,7 +65,7 @@
     }
 
     .main-nav a {
-        border-bottom: .08rem solid var(--line);
+        border-bottom: .08rem solid var(--rule);
         padding: .9rem 0;
     }
 
@@ -85,7 +85,7 @@
     }
 
     .nav-submenu-label {
-        border-bottom: .08rem solid var(--line);
+        border-bottom: .08rem solid var(--rule);
         font-size: .7rem;
         padding: .9rem 0 .6rem;
     }
@@ -93,7 +93,7 @@
     /* "Planes" se despliega al tocarlo (o al pasar el mouse) y muestra sus opciones con sangría */
     .nav-subgroup-toggle {
         align-items: center;
-        border-bottom: .08rem solid var(--line);
+        border-bottom: .08rem solid var(--rule);
         border-radius: 0;
         color: var(--chrome-text);
         cursor: pointer;
