@@ -160,7 +160,7 @@
     }
 
     .compare-table thead th span:not(.visually-hidden) {
-        font-size: .66rem;
+        font-size: .7rem;
     }
 
     .compare-price {
@@ -168,7 +168,7 @@
     }
 
     .compare-price small {
-        font-size: .66rem;
+        font-size: .7rem;
     }
 }
 

@@ -116,7 +116,7 @@ h2 em {
 
 .time-zone {
     color: var(--availability-muted);
-    font-size: .65rem;
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .15em;
 }
@@ -195,5 +195,12 @@ h2 em {
     .hero-decoration {
         bottom: -13rem;
         right: -2%;
+    }
+}
+
+/* Tablets: la línea superior de la portada entra en un solo renglón */
+@media (min-width: 35.01rem) and (max-width: 52rem) {
+    .hero h1 .hero-eyebrow {
+        white-space: nowrap;
     }
 }
