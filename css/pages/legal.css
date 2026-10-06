@@ -564,3 +564,15 @@
     line-height: 1.55;
     margin: 0 0 1.25rem;
 }
+
+/* Detalle de planes: los subtítulos de cada bloque se ubican de un vistazo */
+.plan-detail .legal-panel h3 {
+    color: var(--blue);
+    margin-top: 2rem;
+}
+
+.plan-detail .legal-panel li strong {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.1em;
+}
