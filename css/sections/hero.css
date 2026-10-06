@@ -199,14 +199,18 @@ h2 em {
         transform: none;
     }
 
+    /* Más tenues: son fondo, el texto es la figura */
     .hero-decoration span {
+        opacity: .32;
         position: absolute;
     }
 
-    /* A la derecha del párrafo y los botones */
+    /* Los cuatro quedan cortados por un borde de la portada, así se leen como marco y no compiten con el texto */
+
+    /* A la derecha: sale por el borde derecho, sin acercarse al párrafo */
     .hero-decoration span:nth-child(1) {
-        bottom: 0;
-        left: calc(50% + 22.5rem);
+        bottom: -1.5rem;
+        left: max(calc(100% - 13rem), calc(50% + 22.5rem));
     }
 
     /* Arriba a la derecha del título: asoma desde el borde superior */
@@ -217,10 +221,10 @@ h2 em {
         width: 16rem;
     }
 
-    /* A la izquierda del texto, a media altura */
+    /* A la izquierda: sale por el borde izquierdo, a media altura */
     .hero-decoration span:nth-child(3) {
         height: 17rem;
-        right: calc(50% + 22.5rem);
+        left: min(-6rem, calc(50% - 39.5rem));
         top: calc(50% - 8.5rem);
         width: 17rem;
     }
@@ -236,7 +240,7 @@ h2 em {
         content: "";
         height: 19rem;
         left: 5rem;
-        opacity: .5;
+        opacity: .32;
         pointer-events: none;
         position: absolute;
         top: -.4rem;
