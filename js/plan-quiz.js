@@ -29,15 +29,16 @@
     const value = (name) => checked(name)[0]?.value ?? null;
     const answerTexts = (name) => checked(name).map((input) => input.closest('label').textContent.trim());
 
-    // Vender productos → se pregunta por la landing que complementa la tienda. Mostrar el trabajo → tres preguntas más.
+    // Vender productos → se pregunta por la landing que complementa la tienda. Mostrar el trabajo → dos o tres preguntas más.
     // "Las dos cosas" ya tiene su resultado con la primera pregunta.
+    // Varias páginas → Plan Premium, que ya incluye los extras: esa pregunta se saltea.
     const nextStep = (name) => {
         if (name === 'goal') return { store: 'landing', show: 'size' }[value('goal')] ?? null;
-        if (name === 'size') return 'extras';
+        if (name === 'size') return value('size') === 'several' ? 'login' : 'extras';
         if (name === 'extras') return 'login';
         return null;
     };
-    const total = () => ({ store: 2, both: 1 }[value('goal')] ?? 4);
+    const total = () => ({ store: 2, both: 1 }[value('goal')] ?? (value('size') === 'several' ? 3 : 4));
 
     const render = () => {
         steps.forEach((s) => { s.hidden = s.dataset.step !== current; });
