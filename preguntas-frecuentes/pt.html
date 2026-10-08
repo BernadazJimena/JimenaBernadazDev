@@ -59,6 +59,7 @@
   <script src="../js/availability.js" defer></script>
   <script src="../js/contact-form.js" defer></script>
   <script src="../js/accordion.js" defer></script>
+  <script src="../js/faq-search.js" defer></script>
   <script src="../js/domain-guide.js" defer></script>
   <script src="../js/plan-quiz.js" defer></script>
   <script src="../js/budget-form.js" defer></script>
@@ -333,6 +334,16 @@
 
     <section class="legal section-shell">
       <div class="legal-content">
+        <form class="faq-search" role="search">
+          <label class="faq-search-label" for="faq-search-input">O que você quer saber?</label>
+          <div class="faq-search-field">
+            <svg class="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="faq-search-input" placeholder="Por exemplo: domínio, parcelas, prazos" autocomplete="off" enterkeyhint="search">
+            <button class="faq-search-clear" type="button" aria-label="Limpar a busca" hidden>×</button>
+          </div>
+          <p class="faq-search-status" role="status" aria-live="polite" data-one="1 pergunta encontrada" data-many="{n} perguntas encontradas"></p>
+          <p class="faq-search-empty" hidden>Não encontrei perguntas com essas palavras. Tente outra palavra ou <a class="text-link" href="/inicio/pt#contacto">escreva para mim e eu ajudo você</a>.</p>
+        </form>
         <div class="legal-toolbar">
           <button class="legal-toggle-all" type="button" aria-expanded="false" data-open="Abrir todas as perguntas"
             data-close="Fechar todas as perguntas">Abrir todas as perguntas</button>

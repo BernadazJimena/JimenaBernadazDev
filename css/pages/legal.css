@@ -618,3 +618,104 @@
 .faq-more .button {
     margin-top: 1.25rem;
 }
+
+/* Preguntas frecuentes: buscador que filtra las preguntas */
+.faq-search {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+
+.faq-search-label {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.faq-search-field {
+    position: relative;
+}
+
+.faq-search-icon {
+    color: var(--muted);
+    height: 1.2rem;
+    left: 1rem;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.2rem;
+}
+
+.faq-search-field input {
+    appearance: none;
+    background: var(--surface);
+    border: .08rem solid var(--field-border);
+    border-radius: 999rem;
+    color: var(--text);
+    font: inherit;
+    font-size: 1rem;
+    padding: .85rem 3rem .85rem 2.9rem;
+    width: 100%;
+}
+
+.faq-search-field input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+.faq-search-field input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .18);
+    outline: none;
+}
+
+/* Se usa el botón propio para borrar, no la cruz del navegador */
+.faq-search-field input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.faq-search-clear {
+    background: none;
+    border: 0;
+    border-radius: 50%;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1.5rem;
+    height: 2.2rem;
+    line-height: 1;
+    position: absolute;
+    right: .5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.2rem;
+}
+
+.faq-search-clear:hover {
+    color: var(--text);
+}
+
+.faq-search-status,
+.faq-search-empty {
+    color: var(--muted);
+    font-size: .92rem;
+    margin: 0;
+}
+
+.faq-search-status:empty {
+    display: none;
+}
+
+.faq-search-empty {
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.faq-search-clear[hidden],
+.faq-search-empty[hidden],
+.faq-group[hidden],
+.legal-toolbar[hidden],
+.legal-block[hidden] {
+    display: none;
+}
