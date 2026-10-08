@@ -1,0 +1,8 @@
+# Archivos del proyecto que no forman parte del sitio publicado
+.git
+.gitignore
+.assetsignore
+.wrangler
+node_modules
+wrangler.jsonc
+vercel.json

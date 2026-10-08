@@ -719,3 +719,23 @@
 .legal-block[hidden] {
     display: none;
 }
+
+/* Página no encontrada (404) */
+.notfound-lang {
+    display: contents;
+}
+
+.notfound-lang[hidden] {
+    display: none;
+}
+
+.notfound-hero {
+    min-height: 62vh;
+}
+
+.notfound-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.75rem;
+}
