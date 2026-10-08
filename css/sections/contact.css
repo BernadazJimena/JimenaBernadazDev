@@ -208,8 +208,8 @@
         padding-bottom: clamp(2.5rem, 4vw, 3.5rem);
     }
 
-    /* Escala de títulos: sección (4vw) < cierre (4.6vw) < portada (5.2vw), siempre en la misma proporción */
+    /* Escala de títulos: sección (4vw) < cierre (4.9vw, es el llamado a la acción) < portada (5.2vw), siempre en la misma proporción */
     .contact h2 {
-        font-size: clamp(2.8rem, 4.6vw, 4.7rem);
+        font-size: clamp(2.9rem, 4.9vw, 5rem);
     }
 }
