@@ -3,10 +3,6 @@
     padding: clamp(4rem, 9vw, 6rem) max(2rem, calc((100% - var(--content)) / 2)) clamp(3rem, 6vw, 4rem);
 }
 
-.legal-hero-content {
-    max-width: 42rem;
-}
-
 .legal-hero h1 {
     font-family: "Manrope", sans-serif;
     font-size: clamp(2.6rem, 5vw, 4.2rem);
@@ -19,6 +15,48 @@
     color: var(--muted);
     font-size: .82rem;
     font-weight: 600;
+}
+
+/* Cabecera de las páginas secundarias: mismos espacios en todas, para que al pasar de una a otra no "salte" */
+.legal-hero-content {
+    max-width: none;
+}
+
+.legal-hero-content > p {
+    max-width: 42rem;
+}
+
+.legal-hero .hero-copy {
+    font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    margin: .9rem 0 0;
+}
+
+/* Computadora: la franja de la cabecera mide lo mismo en todas las páginas (título + hasta tres renglones de bajada) */
+@media (min-width: 52.01rem) {
+    .legal-hero {
+        min-height: 23.25rem;
+    }
+}
+
+/* Términos: la aceptación y la fecha de actualización van al comienzo del contenido, no en la cabecera */
+.legal-accept p {
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.legal-accept .legal-updated {
+    color: var(--muted);
+    margin-top: .5rem;
+}
+
+/* Guía del dominio: aclaración que antes iba en la cabecera */
+.domain-lead {
+    color: var(--text);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 42rem;
 }
 
 .legal-content {
