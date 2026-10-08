@@ -26,6 +26,18 @@ h2 {
     align-self: end;
 }
 
+/* Foto de Jimena, debajo de la frase de "Sobre mí" */
+.about-photo {
+    aspect-ratio: 1;
+    border: .15rem solid var(--blue);
+    border-radius: 50%;
+    display: block;
+    height: auto;
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+    object-fit: cover;
+    width: clamp(6.5rem, 11vw, 10rem);
+}
+
 .lead {
     font-family: "Manrope", sans-serif;
     font-size: clamp(1.5rem, 2.5vw, 2.25rem);
