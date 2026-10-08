@@ -59,3 +59,9 @@
     margin: 1rem 0 0;
     max-width: 38rem;
 }
+
+/* Cierre del portfolio con el botón principal */
+.portfolio-cta {
+    margin: 2.5rem auto 0;
+    max-width: 63.5rem;
+}

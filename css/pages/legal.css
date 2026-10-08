@@ -575,3 +575,8 @@
 .plan-detail .legal-panel li strong {
     color: var(--text);
 }
+
+/* Preguntas frecuentes: botón de cierre debajo de "¿Tenés otra pregunta?" */
+.faq-more .button {
+    margin-top: 1.25rem;
+}
