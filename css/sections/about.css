@@ -35,7 +35,7 @@ h2 {
     height: auto;
     margin-top: clamp(1.5rem, 3vw, 2.25rem);
     object-fit: cover;
-    width: clamp(6.5rem, 11vw, 10rem);
+    width: clamp(7.5rem, 13vw, 11rem);
 }
 
 .lead {
