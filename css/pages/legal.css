@@ -721,16 +721,26 @@
 }
 
 /* Página no encontrada (404) */
+/* La página ocupa siempre toda la pantalla: el pie queda abajo, sin franja vacía debajo */
 .notfound-lang {
-    display: contents;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100svh;
 }
 
 .notfound-lang[hidden] {
     display: none;
 }
 
+.notfound-lang main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
 .notfound-hero {
-    min-height: 62vh;
+    flex: 1;
 }
 
 .notfound-actions {
