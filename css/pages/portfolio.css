@@ -61,7 +61,9 @@
 }
 
 /* Cierre del portfolio con el botón principal */
-.portfolio-cta {
+/* Mismo fondo que las tarjetas de arriba, para que no se pierda contra el fondo de la página */
+.legal-summary.portfolio-cta {
+    background: var(--mist);
     margin: 2.5rem auto 0;
     max-width: 63.5rem;
 }
