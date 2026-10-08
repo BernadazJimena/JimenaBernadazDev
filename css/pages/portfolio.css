@@ -1,12 +1,11 @@
 .portfolio-grid {
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 31rem));
-    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
 }
 
 .portfolio-card {
-    background: var(--mist);
+    background: var(--surface);
     border: .08rem solid var(--line);
     border-radius: var(--radius);
     overflow: hidden;
@@ -60,14 +59,7 @@
     max-width: 38rem;
 }
 
-/* Cierre del portfolio: el recuadro conserva su tono (el mismo que el resumen de Términos)
-   y va sobre una franja más oscura, como en esa página, para que no se pierda contra el fondo */
-.portfolio-cta-band {
-    background: var(--mist);
-    padding: clamp(3rem, 6vw, 4.5rem) 2rem;
-}
-
+/* Cierre del portfolio: mismo recuadro que el resumen de Términos, debajo de las tarjetas */
 .portfolio-cta {
-    margin: 0 auto;
-    max-width: 63.5rem;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
 }

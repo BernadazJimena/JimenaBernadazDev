@@ -63,7 +63,7 @@
   <script src="../js/budget-form.js" defer></script>
 </head>
 
-<body class="portfolio-page">
+<body>
   <header class="site-header">
     <a class="brand" href="/inicio/en" aria-label="Back to the homepage">
       <span class="brand-mark">JNB</span>
@@ -137,14 +137,15 @@
   </header>
 
   <main>
-    <section class="section-shell" aria-labelledby="portfolio-title">
-      <div class="section-heading reveal">
-        <div>
-          <p class="eyebrow">PORTFOLIO</p>
-          <h1 class="portfolio-page-title" id="portfolio-title">Sample projects</h1>
-          <p class="portfolio-intro">These designs are samples: I made them to show how I work and how your website could look. They are not client projects.</p>
-        </div>
+    <section class="legal-hero" id="inicio">
+      <div class="legal-hero-content reveal is-visible">
+        <p class="eyebrow">PORTFOLIO</p>
+        <h1 id="portfolio-title">Sample projects</h1>
+        <p class="hero-copy">These designs are samples: I made them to show how I work and how your website could look. They are not client projects.</p>
       </div>
+    </section>
+
+    <section class="legal section-shell" aria-labelledby="portfolio-title">
       <div class="portfolio-grid reveal">
         <article class="portfolio-card">
           <div class="portfolio-image">
@@ -167,14 +168,12 @@
           </div>
         </article>
       </div>
-    </section>
-    <div class="portfolio-cta-band">
       <aside class="legal-summary process-cta portfolio-cta reveal" aria-labelledby="portfolio-cta-title">
         <h2 id="portfolio-cta-title">Want a website like this for your project?</h2>
         <p>Tell me your idea, and I will help you choose the plan that best fits your project.</p>
         <a class="button button-primary" href="/inicio/en#contacto">Let's talk about your project <span aria-hidden="true">↗</span></a>
       </aside>
-    </div>
+    </section>
   </main>
 
   <a class="top-float" href="#" aria-label="Back to the top">↑ <span>Top</span></a>

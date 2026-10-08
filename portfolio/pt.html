@@ -63,7 +63,7 @@
   <script src="../js/budget-form.js" defer></script>
 </head>
 
-<body class="portfolio-page">
+<body>
   <header class="site-header">
     <a class="brand" href="/inicio/pt" aria-label="Voltar ao início">
       <span class="brand-mark">JNB</span>
@@ -136,14 +136,15 @@
   </header>
 
   <main>
-    <section class="section-shell" aria-labelledby="portfolio-title">
-      <div class="section-heading reveal">
-        <div>
-          <p class="eyebrow">PORTFÓLIO</p>
-          <h1 class="portfolio-page-title" id="portfolio-title">Projetos de exemplo</h1>
-          <p class="portfolio-intro">Estes designs são exemplos: eu os criei para mostrar como trabalho e como o seu site pode ficar. Não são projetos de clientes.</p>
-        </div>
+    <section class="legal-hero" id="inicio">
+      <div class="legal-hero-content reveal is-visible">
+        <p class="eyebrow">PORTFÓLIO</p>
+        <h1 id="portfolio-title">Projetos de exemplo</h1>
+        <p class="hero-copy">Estes designs são exemplos: eu os criei para mostrar como trabalho e como o seu site pode ficar. Não são projetos de clientes.</p>
       </div>
+    </section>
+
+    <section class="legal section-shell" aria-labelledby="portfolio-title">
       <div class="portfolio-grid reveal">
         <article class="portfolio-card">
           <div class="portfolio-image">
@@ -166,14 +167,12 @@
           </div>
         </article>
       </div>
-    </section>
-    <div class="portfolio-cta-band">
       <aside class="legal-summary process-cta portfolio-cta reveal" aria-labelledby="portfolio-cta-title">
         <h2 id="portfolio-cta-title">Quer um site assim para o seu projeto?</h2>
         <p>Conte sua ideia, e eu ajudo você a escolher o plano que melhor se adapta ao seu projeto.</p>
         <a class="button button-primary" href="/inicio/pt#contacto">Vamos conversar sobre seu projeto <span aria-hidden="true">↗</span></a>
       </aside>
-    </div>
+    </section>
   </main>
 
   <a class="top-float" href="#" aria-label="Voltar ao topo">↑ <span>Topo</span></a>

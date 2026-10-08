@@ -8,10 +8,6 @@
     position: relative;
 }
 
-.portfolio-page main {
-    background: var(--sky);
-}
-
 .hero-content {
     align-self: center;
     justify-self: center;

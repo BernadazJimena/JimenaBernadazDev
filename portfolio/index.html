@@ -63,7 +63,7 @@
   <script src="../js/budget-form.js" defer></script>
 </head>
 
-<body class="portfolio-page">
+<body>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Volver al inicio">
       <span class="brand-mark">JNB</span>
@@ -137,14 +137,15 @@
   </header>
 
   <main>
-    <section class="section-shell" aria-labelledby="portfolio-title">
-      <div class="section-heading reveal">
-        <div>
-          <p class="eyebrow">PORTFOLIO</p>
-          <h1 class="portfolio-page-title" id="portfolio-title">Proyectos de muestra</h1>
-          <p class="portfolio-intro">Estos diseños son ejemplos de muestra: los hice para que veas cómo trabajo y cómo puede quedar tu web. No son proyectos de clientes.</p>
-        </div>
+    <section class="legal-hero" id="inicio">
+      <div class="legal-hero-content reveal is-visible">
+        <p class="eyebrow">PORTFOLIO</p>
+        <h1 id="portfolio-title">Proyectos de muestra</h1>
+        <p class="hero-copy">Estos diseños son ejemplos de muestra: los hice para que veas cómo trabajo y cómo puede quedar tu web. No son proyectos de clientes.</p>
       </div>
+    </section>
+
+    <section class="legal section-shell" aria-labelledby="portfolio-title">
       <div class="portfolio-grid reveal">
         <article class="portfolio-card">
           <div class="portfolio-image">
@@ -167,14 +168,12 @@
           </div>
         </article>
       </div>
-    </section>
-    <div class="portfolio-cta-band">
       <aside class="legal-summary process-cta portfolio-cta reveal" aria-labelledby="portfolio-cta-title">
         <h2 id="portfolio-cta-title">¿Querés una web así para tu proyecto?</h2>
         <p>Contame tu idea y te ayudo a elegir el plan que mejor se adapta a tu proyecto.</p>
         <a class="button button-primary" href="/#contacto">Hablemos de tu proyecto <span aria-hidden="true">↗</span></a>
       </aside>
-    </div>
+    </section>
   </main>
 
   <a class="top-float" href="#" aria-label="Volver arriba">↑ <span>Inicio</span></a>

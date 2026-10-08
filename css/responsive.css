@@ -422,22 +422,6 @@
 
 /* Escritorio: tipografías parejas entre las páginas secundarias */
 @media (min-width: 52.01rem) {
-    /* Portfolio: el título y la bajada, iguales a los de las demás páginas */
-    .section-heading h1.portfolio-page-title {
-        font-family: "Manrope", sans-serif;
-        font-size: clamp(2.6rem, 5vw, 4.2rem);
-        letter-spacing: -.065em;
-        line-height: .98;
-        margin: 0 0 1.2rem;
-        max-width: none;
-    }
-
-    .portfolio-intro {
-        font-size: clamp(1.05rem, 1.7vw, 1.25rem);
-        margin-top: 0;
-        max-width: 42rem;
-    }
-
     /* Títulos de preguntas y de tarjetas: la misma familia que el resto de los títulos */
     .legal-accordion .legal-block h3,
     .compare-choose-card h3 {
@@ -446,6 +430,7 @@
 
     /* Títulos chicos (pasos y tarjetas): un mismo tamaño */
     .process-step h2,
+    .portfolio-card-meta h2,
     .domain-card h3 {
         font-size: 1.25rem;
     }
