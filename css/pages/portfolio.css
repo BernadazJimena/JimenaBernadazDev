@@ -60,10 +60,14 @@
     max-width: 38rem;
 }
 
-/* Cierre del portfolio con el botón principal */
-/* Mismo fondo que las tarjetas de arriba, para que no se pierda contra el fondo de la página */
-.legal-summary.portfolio-cta {
+/* Cierre del portfolio: el recuadro conserva su tono (el mismo que el resumen de Términos)
+   y va sobre una franja más oscura, como en esa página, para que no se pierda contra el fondo */
+.portfolio-cta-band {
     background: var(--mist);
-    margin: 2.5rem auto 0;
+    padding: clamp(3rem, 6vw, 4.5rem) 2rem;
+}
+
+.portfolio-cta {
+    margin: 0 auto;
     max-width: 63.5rem;
 }
