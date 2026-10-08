@@ -63,3 +63,26 @@
 .portfolio-cta {
     margin-top: clamp(2.5rem, 5vw, 3.5rem);
 }
+
+/* Computadora, con un solo proyecto de muestra: la tarjeta a la izquierda y la invitación a hablar al lado,
+   así la fila queda completa. Si se suman más proyectos, quitar la clase portfolio-body de la sección. */
+.portfolio-body .portfolio-grid {
+    grid-template-columns: minmax(0, 34.75rem);
+}
+
+@media (min-width: 52.01rem) {
+    .portfolio-body .portfolio-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .portfolio-body {
+        align-items: center;
+        display: grid;
+        gap: clamp(1.5rem, 3vw, 2.5rem);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .portfolio-body .portfolio-cta {
+        margin-top: 0;
+    }
+}
