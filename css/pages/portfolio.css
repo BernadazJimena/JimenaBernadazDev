@@ -1,7 +1,7 @@
 .portfolio-grid {
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
 }
 
 .portfolio-card {
@@ -64,12 +64,8 @@
     margin-top: clamp(2.5rem, 5vw, 3.5rem);
 }
 
-/* Con un solo proyecto de muestra: la tarjeta va más chica y la invitación a hablar, debajo.
-   Si se suman más proyectos, quitar la clase portfolio-body de la sección para volver a las tarjetas en fila. */
-.portfolio-body .portfolio-grid {
-    grid-template-columns: minmax(0, 30rem);
-}
-
+/* Los diseños van de a tres por fila en computadora, dos en tablet y uno en celular.
+   La invitación a hablar va debajo, con el ancho de la columna de texto de las demás páginas. */
 .portfolio-body .portfolio-cta {
     max-width: 46rem;
 }
