@@ -69,3 +69,18 @@
 .portfolio-body .portfolio-cta {
     max-width: 46rem;
 }
+
+/* La imagen del diseño de muestra es un enlace a la demo navegable */
+a.portfolio-image {
+    display: block;
+    transition: opacity .2s ease;
+}
+
+a.portfolio-image:hover,
+a.portfolio-image:focus-visible {
+    opacity: .85;
+}
+
+.portfolio-card-meta .portfolio-demo {
+    margin-top: 1rem;
+}

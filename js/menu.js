@@ -39,6 +39,18 @@
         if (event.matches) setMenu(false);
     });
 
+    // Barra fija en computadora: al bajar se achica. Los dos umbrales evitan que parpadee justo en el límite.
+    const header = document.querySelector('.site-header');
+    const updateHeader = () => {
+        const isScrolled = header.classList.contains('is-scrolled');
+        if (!isScrolled && window.scrollY > 90) header.classList.add('is-scrolled');
+        else if (isScrolled && window.scrollY < 20) header.classList.remove('is-scrolled');
+    };
+    if (header) {
+        window.addEventListener('scroll', updateHeader, { passive: true });
+        updateHeader();
+    }
+
     // Submenú "Planes" del menú principal: se abre con clic (pantallas táctiles y teclado)
     document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
         const toggle = dropdown.querySelector('.nav-dropdown-toggle');

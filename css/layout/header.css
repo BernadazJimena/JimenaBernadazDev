@@ -45,3 +45,23 @@
     gap: 1rem;
 }
 
+/* Computadora: la barra queda fija arriba al bajar y se achica a unos 60 px (menu.js agrega is-scrolled).
+   En celular y tablet no se fija, para no ocupar pantalla. */
+@media (min-width: 64rem) {
+    .site-header {
+        position: sticky;
+        top: 0;
+        transition: padding .2s ease, box-shadow .2s ease;
+    }
+
+    .site-header.is-scrolled {
+        box-shadow: 0 .4rem 1.2rem rgba(4, 10, 26, .18);
+        padding-bottom: .7rem;
+        padding-top: .7rem;
+    }
+
+    /* Los enlaces a una sección no quedan tapados por la barra fija */
+    html {
+        scroll-padding-top: 4.5rem;
+    }
+}

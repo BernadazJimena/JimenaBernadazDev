@@ -123,3 +123,10 @@ h2 {
         width: 6rem;
     }
 }
+
+/* "Este sitio lo diseñé y programé yo": línea chica debajo del párrafo */
+.about-own {
+    color: var(--muted);
+    font-size: .95rem;
+    margin: 1.25rem 0 0;
+}
