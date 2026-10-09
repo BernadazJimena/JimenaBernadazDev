@@ -101,7 +101,7 @@
 .budget-price {
     color: var(--blue);
     font-family: "Manrope", sans-serif;
-    font-size: .85rem;
+    font-size: .875rem;
     font-weight: 700;
     margin-left: auto;
     white-space: nowrap;
@@ -136,7 +136,7 @@
 .budget-desc {
     color: var(--muted);
     flex-basis: 100%;
-    font-size: .84rem;
+    font-size: .875rem;
     line-height: 1.45;
     margin-top: -.35rem;
     padding-left: 1.8rem;

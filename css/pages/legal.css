@@ -13,7 +13,7 @@
 
 .legal-updated {
     color: var(--muted);
-    font-size: .82rem;
+    font-size: .8125rem;
     font-weight: 600;
 }
 
@@ -140,7 +140,7 @@
     color: var(--blue);
     cursor: pointer;
     font-family: "Manrope", sans-serif;
-    font-size: .85rem;
+    font-size: .875rem;
     font-weight: 700;
     padding: .4rem 0;
 }
@@ -254,7 +254,7 @@
 
 .plan-detail-price span {
     color: var(--muted);
-    font-size: .75rem;
+    font-size: .8125rem;
     letter-spacing: .08em;
 }
 
@@ -367,7 +367,7 @@
 
 .domain-card-time {
     color: var(--muted);
-    font-size: .8rem;
+    font-size: .8125rem;
     font-weight: 700;
 }
 
@@ -378,7 +378,7 @@
 .domain-card dt {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .7rem;
+    font-size: .8125rem;
     font-weight: 800;
     letter-spacing: .08em;
     text-transform: uppercase;
@@ -424,7 +424,7 @@
 }
 
 .legal-block .domain-hint {
-    font-size: .88rem;
+    font-size: .875rem;
     margin: 0 0 .8rem;
 }
 
@@ -511,7 +511,7 @@
     color: var(--blue);
     cursor: pointer;
     font-family: "Manrope", sans-serif;
-    font-size: .85rem;
+    font-size: .875rem;
     font-weight: 700;
     margin-top: .6rem;
     padding: .3rem 0;

@@ -102,7 +102,7 @@ h2 {
 .text-link {
     color: var(--blue);
     font-family: "Manrope", sans-serif;
-    font-size: .82rem;
+    font-size: .8125rem;
     font-weight: 700;
     white-space: nowrap;
 }

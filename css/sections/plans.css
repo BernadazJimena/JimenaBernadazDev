@@ -117,7 +117,7 @@
 
 .plan-price-currency {
     color: var(--muted);
-    font-size: .85rem;
+    font-size: .875rem;
     font-weight: 700;
     letter-spacing: .08em;
 }
@@ -189,7 +189,7 @@
 
 .plan-includes {
     font-family: "Manrope", sans-serif;
-    font-size: .82rem;
+    font-size: .8125rem;
     font-weight: 700;
     margin: 0;
 }
@@ -262,7 +262,7 @@
 .quote-meta-label {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .7rem;
+    font-size: .8125rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
@@ -291,7 +291,7 @@
 
 .plan-quote-detail dt {
     color: var(--muted);
-    font-size: .85rem;
+    font-size: .875rem;
     margin: 0;
 }
 
@@ -415,7 +415,7 @@
     color: var(--text);
     display: block;
     font-family: "DM Sans", sans-serif;
-    font-size: .8rem;
+    font-size: .8125rem;
     font-weight: 600;
     letter-spacing: 0;
     line-height: 1.4;
@@ -512,7 +512,7 @@
     display: inline-flex;
     flex-shrink: 0;
     font-family: "Manrope", sans-serif;
-    font-size: .85rem;
+    font-size: .875rem;
     font-weight: 800;
     height: 1.8rem;
     justify-content: center;
@@ -538,7 +538,7 @@
 .plans-help-note {
     border-top: .08rem solid var(--rule);
     color: var(--muted);
-    font-size: .88rem;
+    font-size: .875rem;
     margin: 1.5rem 0 0;
     padding-top: 1rem;
 }
@@ -548,7 +548,7 @@
     align-self: flex-start;
     color: var(--blue);
     font-family: "Manrope", sans-serif;
-    font-size: .85rem;
+    font-size: .875rem;
     font-weight: 700;
 }
 
@@ -575,7 +575,7 @@
     border-radius: 999rem;
     color: var(--white);
     font-family: "Manrope", sans-serif;
-    font-size: .8rem;
+    font-size: .8125rem;
     font-weight: 800;
     left: 2.5rem;
     letter-spacing: .04em;

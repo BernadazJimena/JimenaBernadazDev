@@ -1,7 +1,7 @@
 .main-nav {
     align-items: center;
     display: flex;
-    font-size: .85rem;
+    font-size: .875rem;
     gap: 2rem;
 }
 
@@ -41,7 +41,7 @@
     cursor: pointer;
     display: inline-flex;
     font-family: "DM Sans", sans-serif;
-    font-size: .85rem;
+    font-size: .875rem;
     gap: .5rem;
     padding: .4rem;
     transition: color .2s ease;
@@ -243,7 +243,7 @@
 .nav-submenu-label {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .72rem;
+    font-size: .8125rem;
     font-weight: 800;
     letter-spacing: .1em;
     padding: .7rem .8rem .25rem;
@@ -556,7 +556,7 @@
 @media (min-width: 64rem) and (max-width: 75rem) {
     .main-nav,
     .main-nav .nav-menu > .nav-submenu {
-        font-size: .8rem;
+        font-size: .8125rem;
         gap: 1rem;
     }
 

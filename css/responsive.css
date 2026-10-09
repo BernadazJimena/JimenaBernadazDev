@@ -86,7 +86,7 @@
 
     .nav-submenu-label {
         border-bottom: .08rem solid var(--rule);
-        font-size: .7rem;
+        font-size: .8125rem;
         padding: .9rem 0 .6rem;
     }
 
@@ -316,7 +316,7 @@
     }
 
     .plan-card .button {
-        font-size: .78rem;
+        font-size: .8125rem;
         gap: .5rem;
         padding: 1rem .9rem;
     }
