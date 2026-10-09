@@ -460,3 +460,27 @@ li:not(.why-item) .text-link {
         white-space: normal;
     }
 }
+
+/* Celulares: tarjetas de planes más compactas, para que la sección no sea tan larga */
+@media (max-width: 35rem) {
+    .plan-card {
+        padding: 1.5rem 1.25rem;
+        row-gap: 1.15rem;
+    }
+
+    .plan-grid {
+        gap: 1rem;
+    }
+
+    .plan-features {
+        gap: .6rem;
+    }
+
+    .plan-features li {
+        padding-top: .6rem;
+    }
+
+    .plans-more {
+        margin: 1.5rem 0 0;
+    }
+}

@@ -400,3 +400,18 @@
         width: 100%;
     }
 }
+
+/* Escritorio: área de clic más grande para "Menú" y "Hablemos" (el texto no cambia de tamaño ni de lugar) */
+@media (min-width: 52.01rem) {
+    .nav-dropdown-toggle,
+    .main-nav > .nav-cta {
+        position: relative;
+    }
+
+    .nav-dropdown-toggle::before,
+    .main-nav > .nav-cta::before {
+        content: "";
+        inset: -.8rem -.4rem;
+        position: absolute;
+    }
+}
