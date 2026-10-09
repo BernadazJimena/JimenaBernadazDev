@@ -16,7 +16,8 @@
     const questions = groups.flatMap((group) => [...group.querySelectorAll('details')].map((item) => ({
         item,
         group,
-        text: plain(item.textContent),
+        // Además del texto, palabras clave por pregunta (data-keywords): "reembolso" encuentra la de cancelar
+        text: plain(`${item.textContent} ${item.dataset.keywords || ''}`),
     })));
 
     const filter = () => {

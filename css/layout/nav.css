@@ -590,6 +590,11 @@
     z-index: 25;
 }
 
+/* Menú hamburguesa abierto: la página de fondo queda quieta (menu.js agrega menu-open) */
+html.menu-open {
+    overflow: hidden;
+}
+
 .nav-backdrop.is-open {
     opacity: 1;
     pointer-events: auto;

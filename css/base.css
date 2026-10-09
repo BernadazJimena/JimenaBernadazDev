@@ -121,3 +121,8 @@ a {
 main:focus {
     outline: none;
 }
+
+/* Lo que tiene el atributo hidden queda oculto aunque su clase le dé otro display (por ejemplo, .button) */
+[hidden] {
+    display: none !important;
+}

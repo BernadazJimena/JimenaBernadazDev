@@ -47,7 +47,9 @@
         bar.style.width = `${((number - 1) / total()) * 100}%`;
         back.hidden = path.length === 0;
         next.disabled = checked(current).length === 0;
-        next.textContent = nextStep(current) ? quiz.dataset.next : quiz.dataset.finish;
+        // "Siguiente" mientras falte responder o queden preguntas; "Ver mi plan" solo en la última
+        const isLast = checked(current).length > 0 && !nextStep(current);
+        next.textContent = isLast ? quiz.dataset.finish : quiz.dataset.next;
     };
 
     const recommend = () => {
@@ -119,6 +121,8 @@
     });
 
     back.addEventListener('click', () => {
+        // En la primera pregunta no hay paso anterior: el botón no hace nada
+        if (!path.length) return;
         current = path.pop();
         render();
         step(current).focus();

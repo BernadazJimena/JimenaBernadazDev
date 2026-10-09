@@ -23,3 +23,7 @@
 /terminos.html  /terminos/  301
 /dominio.html  /dominio/  301
 /planes.html  /planes/  301
+
+# La carpeta inicio solo tiene las versiones en inglés y portugués: /inicio/ lleva al inicio en español
+/inicio/  /  301
+/inicio  /  301

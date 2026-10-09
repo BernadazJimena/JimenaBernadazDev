@@ -146,14 +146,15 @@
     });
 
     // Si se llega desde "Consultar plan…" (por ejemplo /presupuesto/?plan=basico), ese plan ya viene elegido
-    const wanted = new URLSearchParams(location.search).get('plan');
+    // Sin distinguir mayúsculas: ?plan=Basico también funciona
+    const wanted = new URLSearchParams(location.search).get('plan')?.toLowerCase();
     const preset = wanted && [...form.querySelectorAll('input[name="plan"]')].find((input) => input.value === wanted);
     if (preset) preset.checked = true;
 
     update();
 
     // Desde el test se puede llegar con un adicional ya marcado (por ejemplo ?plan=emprendedor&extra=landing)
-    const wantedExtra = new URLSearchParams(location.search).get('extra');
+    const wantedExtra = new URLSearchParams(location.search).get('extra')?.toLowerCase();
     const extraBox = /^[a-z]+$/.test(wantedExtra || '') && activeGroup()?.querySelector(`input[data-key="${wantedExtra}"]`);
     if (extraBox) {
         extraBox.checked = true;

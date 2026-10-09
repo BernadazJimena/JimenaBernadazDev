@@ -18,6 +18,8 @@
     const setMenu = (isOpen) => {
         mainNav.classList.toggle('is-open', isOpen);
         backdrop.classList.toggle('is-open', isOpen);
+        // Con el menú abierto, la página de fondo no se desplaza; al cerrarlo vuelve a desplazarse
+        document.documentElement.classList.toggle('menu-open', isOpen);
         menuToggle?.setAttribute('aria-expanded', String(isOpen));
         menuToggle?.setAttribute('aria-label', isOpen ? menuLabels.close : menuLabels.open);
     };
@@ -26,11 +28,11 @@
     backdrop.addEventListener('click', () => setMenu(false));
     document.querySelectorAll('.main-nav a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
 
-    // Tecla Escape: cierra el menú hamburguesa y devuelve el foco al botón
+    // Tecla Escape: cierra el menú hamburguesa y devuelve el foco al botón (sin mover la página: la barra es fija)
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && mainNav.classList.contains('is-open')) {
             setMenu(false);
-            menuToggle?.focus();
+            menuToggle?.focus({ preventScroll: true });
         }
     });
 
@@ -103,7 +105,7 @@
         dropdown.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 setOpen(false);
-                toggle.focus();
+                toggle.focus({ preventScroll: true });
             }
         });
     });
@@ -128,7 +130,7 @@
             if (event.key === 'Escape' && group.classList.contains('is-open')) {
                 event.stopPropagation();
                 setOpen(false);
-                toggle.focus();
+                toggle.focus({ preventScroll: true });
             }
         });
         document.addEventListener('click', (event) => {

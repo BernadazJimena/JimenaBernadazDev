@@ -4,9 +4,9 @@
     if (!contactForm) return;
 
     // ---- Plan preseleccionado desde un enlace (por ejemplo /?plan=basico#contacto)
-    // Solo marca la opción si el plan existe en este formulario; si no, no marca ninguna.
-    const planInput = (key) => (/^[a-z]+$/.test(key || '')
-        ? contactForm.querySelector(`input[name="plan"][data-plan="${key}"]`)
+    // Solo marca la opción si el plan existe en este formulario; si no, no marca ninguna. Acepta mayúsculas (?plan=Basico).
+    const planInput = (key) => (/^[a-z]+$/i.test(key || '')
+        ? contactForm.querySelector(`input[name="plan"][data-plan="${key.toLowerCase()}"]`)
         : null);
 
     const presetPlan = planInput(new URLSearchParams(location.search).get('plan'));
