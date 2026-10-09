@@ -245,3 +245,8 @@
     font-size: .8125rem;
     margin: 0;
 }
+
+/* El enlace de la línea de privacidad, del mismo tamaño que la línea */
+.form-privacy .text-link {
+    font-size: inherit;
+}

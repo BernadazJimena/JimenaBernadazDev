@@ -341,7 +341,7 @@
 @media (max-width: 35rem) {
     /* Encabezado en una sola línea con las tres banderas */
     .brand {
-        font-size: .85rem;
+        font-size: .8125rem;
         gap: .5rem;
         white-space: nowrap;
     }
@@ -448,6 +448,8 @@
 p .text-link,
 li:not(.why-item) .text-link {
     font-size: .94em;
+    /* Redondeado a px enteros: en textos de 16, 15 y 14 px el enlace queda en 15, 14 y 13 px, dentro de la escala */
+    font-size: round(.94em, 1px);
 }
 
 /* Celulares: si el enlace es largo, puede pasar al renglón siguiente en vez de salirse de la pantalla */
@@ -600,6 +602,23 @@ li:not(.why-item) .text-link {
 @media (max-width: 35rem) {
     p .text-link,
     li .text-link {
+        padding: .55rem 0;
+    }
+}
+
+/* Celular y tablet: el pie termina más arriba para que el botón de WhatsApp no tape "Volver arriba" */
+@media (max-width: 52rem) {
+    .site-footer {
+        padding-bottom: 4.75rem;
+    }
+}
+
+/* Celular: más alto de toque en los enlaces de la tabla comparativa y de "¿Cuál te conviene?" (el texto no se mueve) */
+@media (max-width: 35rem) {
+    .compare-table thead th a,
+    .compare-choose-card .text-link {
+        display: inline-block;
+        margin: -.55rem 0;
         padding: .55rem 0;
     }
 }
