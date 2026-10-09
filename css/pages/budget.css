@@ -57,7 +57,7 @@
 .budget-extra select:focus,
 .budget-extra input:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .18);
+    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .35);
     outline: none;
 }
 

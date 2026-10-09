@@ -161,7 +161,7 @@
 .contact-field input:focus,
 .contact-field textarea:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .18);
+    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .35);
     outline: none;
 }
 
@@ -213,4 +213,28 @@
     .contact h2 {
         font-size: clamp(2.9rem, 4.9vw, 5rem);
     }
+}
+
+/* Error junto al campo (lo agrega contact-form.js o budget-form.js) */
+.field-error {
+    color: #b93232;
+    font-size: .875rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin: .1rem 0 0;
+    text-transform: none;
+}
+
+:root[data-theme="dark"] .field-error {
+    color: #f08a8a;
+}
+
+.contact-field input[aria-invalid="true"],
+.contact-field textarea[aria-invalid="true"] {
+    border-color: #b93232;
+}
+
+:root[data-theme="dark"] .contact-field input[aria-invalid="true"],
+:root[data-theme="dark"] .contact-field textarea[aria-invalid="true"] {
+    border-color: #f08a8a;
 }

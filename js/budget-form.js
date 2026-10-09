@@ -76,9 +76,32 @@
         return null;
     };
 
+    // El error se muestra abajo, junto a los botones, y también al lado del campo que hay que completar
+    const clearFieldError = () => {
+        form.querySelector('.budget-field-error')?.remove();
+        form.querySelectorAll('[aria-invalid="true"]').forEach((input) => {
+            if (input.closest('.contact-field') && input.type !== 'radio' && input.type !== 'checkbox') return;
+            input.removeAttribute('aria-invalid');
+            input.removeAttribute('aria-describedby');
+        });
+    };
+
     const showError = ([message, field]) => {
         status.className = 'contact-form-status is-error';
         status.textContent = message;
+        clearFieldError();
+        if (field) {
+            const note = document.createElement('p');
+            note.className = 'field-error budget-field-error';
+            note.id = 'budget-field-error';
+            note.textContent = message;
+            const box = field.type === 'radio' || field.type === 'checkbox'
+                ? field.closest('fieldset')
+                : field.closest('label') || field.parentElement;
+            box.appendChild(note);
+            field.setAttribute('aria-invalid', 'true');
+            field.setAttribute('aria-describedby', note.id);
+        }
         field?.focus();
     };
 
@@ -88,6 +111,7 @@
         if (status.classList.contains('is-error')) {
             status.className = 'contact-form-status';
             status.textContent = '';
+            clearFieldError();
         }
     };
 
