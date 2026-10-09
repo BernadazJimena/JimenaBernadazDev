@@ -584,17 +584,14 @@ li:not(.why-item) .text-link {
     }
 }
 
-/* Tarjetas de planes: en tablet y computadora va la lista detallada; en celular, tres puntos cortos */
-.plan-features-short {
-    display: none;
-}
-
-@media (max-width: 35rem) {
-    .plan-features-full {
-        display: none;
+/* Computadora: tarjetas de planes más compactas, para ver el nombre, el precio y el botón sin bajar */
+@media (min-width: 72.01rem) {
+    .plan-card {
+        padding: 2rem;
+        row-gap: 1.25rem;
     }
 
-    .plan-features-short {
-        display: flex;
+    .plan-badge {
+        left: 2rem;
     }
 }

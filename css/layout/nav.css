@@ -598,3 +598,8 @@
         padding: .65rem .25rem;
     }
 }
+
+/* Botón de modo claro / oscuro: solo el ícono en todos los tamaños (el nombre queda en aria-label) */
+.theme-toggle-label {
+    display: none;
+}
