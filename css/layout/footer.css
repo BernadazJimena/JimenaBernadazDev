@@ -27,10 +27,29 @@
     width: .9rem;
 }
 
+/* Enlaces del pie en dos grupos (redes y tienda / páginas del sitio) y "Volver arriba" aparte */
 .footer-links {
+    align-items: center;
     display: flex;
     flex-wrap: wrap;
-    gap: .75rem 1.25rem;
+    gap: .75rem 3rem;
+}
+
+.footer-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1.5rem;
+}
+
+/* Desde tablet, los enlaces van en su propio renglón y "Volver arriba" queda a la derecha */
+@media (min-width: 35.01rem) {
+    .footer-links {
+        flex-basis: 100%;
+    }
+
+    .footer-top {
+        margin-left: auto;
+    }
 }
 
 /* Desde tablet, cada parte del footer se mantiene en una sola línea (en pantallas grandes, todo el footer entra en una) */

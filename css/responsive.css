@@ -575,10 +575,17 @@ li:not(.why-item) .text-link {
     }
 }
 
-/* Celulares: enlaces del pie con más alto para tocarlos */
+/* Celulares: un enlace del pie por renglón, con más alto para tocarlos; entre grupos, un poco más de espacio */
 @media (max-width: 35rem) {
+    .footer-links,
+    .footer-group {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0;
+    }
+
     .footer-links {
-        gap: 0 1.25rem;
+        gap: .75rem;
     }
 
     .footer-links a {
