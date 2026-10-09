@@ -81,6 +81,18 @@
             event.stopPropagation();
             setOpen(!group.classList.contains('is-open'));
         });
+        // Al pasar el mouse el submenú se ve: el atributo acompaña lo que se ve
+        group.addEventListener('mouseenter', () => toggle.setAttribute('aria-expanded', 'true'));
+        group.addEventListener('mouseleave', () => {
+            if (!group.classList.contains('is-open')) toggle.setAttribute('aria-expanded', 'false');
+        });
+        group.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && group.classList.contains('is-open')) {
+                event.stopPropagation();
+                setOpen(false);
+                toggle.focus();
+            }
+        });
         document.addEventListener('click', (event) => {
             if (!group.contains(event.target)) setOpen(false);
         });

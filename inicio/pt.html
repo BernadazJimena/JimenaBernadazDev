@@ -7,17 +7,15 @@
     (function () {
       try {
         var stored = localStorage.getItem('jnb-theme');
-        var theme = stored || 'dark';
+        var theme = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.setAttribute('data-theme', theme);
       } catch (e) { }
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
-    content="Landing pages, sites sob medida e lojas virtuais na Nuvemshop, Tiendanube ou Empretienda para profissionais e empreendedores da América Latina. Orçamento sem custo.">
+    content="Landing pages, sites sob medida e lojas virtuais na Nuvemshop / Tiendanube ou Empretienda para profissionais e empreendedores. Orçamento sem custo.">
   <meta name="author" content="JNB Creative Studio">
-  <meta name="keywords"
-    content="landing pages, web design, desenvolvimento web, sites sob medida, site sob medida, criação de landing page, profissionais autônomos, empreendedores, orçamento de site grátis, criação de loja virtual, design de loja Nuvemshop, design de loja Tiendanube, design de loja Empretienda, web design América Latina">
   <meta name="robots" content="index, follow">
   <title>Landing pages, sites sob medida e lojas virtuais | JNB Creative Studio</title>
   <link rel="canonical" href="https://jnbcreativestudio.com.ar/inicio/pt">
@@ -32,7 +30,7 @@
   <meta property="og:locale:alternate" content="en_US">
   <meta property="og:title" content="Landing pages, sites sob medida e lojas virtuais | JNB Creative Studio">
   <meta property="og:description"
-    content="Landing pages, sites sob medida e lojas virtuais na Nuvemshop, Tiendanube ou Empretienda para profissionais e empreendedores da América Latina. Orçamento sem custo.">
+    content="Landing pages, sites sob medida e lojas virtuais na Nuvemshop / Tiendanube ou Empretienda para profissionais e empreendedores. Orçamento sem custo.">
   <meta property="og:url" content="https://jnbcreativestudio.com.ar/inicio/pt">
   <meta property="og:image" content="https://jnbcreativestudio.com.ar/assets/images/og-cover-pt.png">
   <meta property="og:image:width" content="1200">
@@ -51,18 +49,31 @@
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Praise&family=Manrope:wght@500;600;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout/header.css">
+  <link rel="stylesheet" href="../css/layout/nav.css">
+  <link rel="stylesheet" href="../css/sections/hero.css">
+  <link rel="stylesheet" href="../css/sections/why.css">
+  <link rel="stylesheet" href="../css/sections/about.css">
+  <link rel="stylesheet" href="../css/sections/plans.css">
+  <link rel="stylesheet" href="../css/pages/portfolio.css">
+  <link rel="stylesheet" href="../css/sections/availability.css">
+  <link rel="stylesheet" href="../css/sections/contact.css">
+  <link rel="stylesheet" href="../css/layout/footer.css">
+  <link rel="stylesheet" href="../css/pages/legal.css">
+  <link rel="stylesheet" href="../css/pages/compare.css">
+  <link rel="stylesheet" href="../css/pages/process.css">
+  <link rel="stylesheet" href="../css/pages/plan-quiz.css">
+  <link rel="stylesheet" href="../css/pages/budget.css">
+  <link rel="stylesheet" href="../css/utilities/animations.css">
+  <link rel="stylesheet" href="../css/responsive.css">
   <script src="../js/theme.js" defer></script>
   <script src="../js/menu.js" defer></script>
   <script src="../js/footer.js" defer></script>
-  <script src="../js/reveal.js" defer></script>
   <script src="../js/floating.js" defer></script>
+  <script src="../js/reveal.js" defer></script>
   <script src="../js/availability.js" defer></script>
   <script src="../js/contact-form.js" defer></script>
-  <script src="../js/accordion.js" defer></script>
-  <script src="../js/domain-guide.js" defer></script>
-  <script src="../js/plan-quiz.js" defer></script>
-  <script src="../js/budget-form.js" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -150,6 +161,7 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#contenido">Pular para o conteúdo</a>
   <header class="site-header">
     <a class="brand" href="#inicio" aria-label="Voltar ao início">
       <span class="brand-mark">JNB</span>
@@ -176,7 +188,7 @@
             <a href="/preguntas-frecuentes/pt"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg><span class="nav-label">Perguntas frequentes</span></a>
           </div>
         </div>
-        <a class="nav-cta" href="#contacto">Vamos conversar <span aria-hidden="true">↗</span></a>
+        <a class="nav-cta" href="#contacto">Vamos conversar <span aria-hidden="true">→</span></a>
       </nav>
       <div class="header-actions">
         <div class="lang-switch" role="group" aria-label="Mudar idioma">
@@ -210,7 +222,7 @@
             </svg>
           </a>
         </div>
-        <button class="theme-toggle" type="button" aria-pressed="false" aria-label="Modo escuro">
+        <button class="theme-toggle" type="button" aria-label="Modo escuro">
           <span class="theme-toggle-icon" aria-hidden="true">☾</span>
           <span class="theme-toggle-label">Modo escuro</span>
         </button>
@@ -221,14 +233,14 @@
     </div>
   </header>
 
-  <main>
+  <main id="contenido" tabindex="-1">
     <section class="hero" id="inicio">
       <div class="hero-content hero-enter">
         <h1><span class="eyebrow hero-eyebrow">LANDING&nbsp;PAGES · SITES&nbsp;SOB&nbsp;MEDIDA · LOJAS&nbsp;VIRTUAIS</span>Crio espaços digitais <em>únicos</em> para você</h1>
         <p class="hero-copy">Desenvolvo landing pages, sites sob medida e lojas virtuais com clareza, estratégia e personalidade para profissionais autônomos e empreendedores que desejam uma presença online à altura do seu trabalho.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="#contacto">Vamos conversar sobre seu projeto <span
-              aria-hidden="true">↗</span></a>
+              aria-hidden="true">→</span></a>
           <a class="button button-ghost" href="#planos">Conhecer os planos <span aria-hidden="true">↓</span></a>
         </div>
       </div>
@@ -301,7 +313,7 @@
             <a class="plan-more-link" href="/planes/pt#emprendedor">Ver os detalhes do plano <span aria-hidden="true">→</span></a>
           </div>
           <a class="button button-ghost" href="?plan=emprendedor#contacto">Consultar o plano empreendedor <span
-              aria-hidden="true">↗</span></a>
+              aria-hidden="true">→</span></a>
         </div>
         <div class="plan-card plan-card-featured">
           <p class="plan-badge">Ideal para começar</p>
@@ -321,7 +333,7 @@
             </ul>
             <a class="plan-more-link" href="/planes/pt#basico">Ver os detalhes do plano <span aria-hidden="true">→</span></a>
           </div>
-          <a class="button button-primary" href="?plan=basico#contacto">Consultar o plano básico <span aria-hidden="true">↗</span></a>
+          <a class="button button-primary" href="?plan=basico#contacto">Consultar o plano básico <span aria-hidden="true">→</span></a>
         </div>
         <div class="plan-card plan-card-basic">
           <div class="plan-card-head">
@@ -341,7 +353,7 @@
             <a class="plan-more-link" href="/planes/pt#premium">Ver os detalhes do plano <span aria-hidden="true">→</span></a>
           </div>
           <a class="button button-ghost" href="?plan=premium#contacto">Consultar o plano premium <span
-              aria-hidden="true">↗</span></a>
+              aria-hidden="true">→</span></a>
         </div>
       </div>
       <div class="plans-more reveal">
@@ -386,7 +398,7 @@
         </div>
         <div class="availability-info">
           <p class="availability-status"><span class="status-dot" aria-hidden="true"></span><span class="status-text"
-              data-open="Disponível agora" data-closed="Fora do horário · respondo no próximo dia útil">Disponível agora</span></p>
+              data-open="Disponível agora" data-closed="Fora do horário · respondo no próximo dia útil a partir das 9h">Disponível agora</span></p>
           <div class="availability-line"><strong>Segunda a sexta / 9h às 17h (horário de Brasília)</strong></div>
           <p>Brasília e Argentina têm o mesmo fuso horário (GMT-3). Atendo profissionais autônomos e empreendedores que desejam criar seu site ou loja virtual em português. O atendimento em português é feito somente por escrito, pelo chat do WhatsApp ou por e-mail.</p>
 <span
@@ -404,7 +416,7 @@
         <p>Conte um pouco sobre o seu projeto e, juntos, criamos um site ou uma loja virtual que represente o seu negócio.</p><a
           class="button button-primary"
           href="https://wa.me/5491127663667?text=Ol%C3%A1%20Jimena,%20gostaria%20de%20falar%20sobre%20o%20meu%20projeto."
-          target="_blank" rel="noreferrer" aria-label="Fale com a Jimena pelo WhatsApp: +54 9 11 2766 3667">Falar pelo WhatsApp <span aria-hidden="true">↗</span></a>
+          target="_blank" rel="noopener noreferrer" aria-label="Fale com a Jimena pelo WhatsApp: +54 9 11 2766 3667">Falar pelo WhatsApp <span aria-hidden="true">↗</span></a>
 
         <form class="contact-form" action="https://api.web3forms.com/submit" method="POST"
           data-sending="Enviando..." data-success="Obrigada! Recebi sua mensagem e responderei em breve."
@@ -443,7 +455,7 @@
             <textarea name="message" rows="4" required data-msg-required="Escreva uma breve mensagem sobre o seu projeto."
               placeholder="Conte um pouco sobre o seu projeto ou negócio"></textarea>
           </label>
-          <button class="button button-primary" type="submit">Enviar mensagem <span aria-hidden="true">↗</span></button>
+          <button class="button button-primary" type="submit">Enviar mensagem <span aria-hidden="true">→</span></button>
           <p class="contact-form-status" role="status" aria-live="polite"></p>
         </form>
       </div>
@@ -452,18 +464,18 @@
 
   <a class="whatsapp-float"
     href="https://wa.me/5491127663667?text=Ol%C3%A1%20Jimena,%20gostaria%20de%20falar%20sobre%20o%20meu%20projeto."
-    target="_blank" rel="noreferrer" aria-label="Fale com a Jimena pelo WhatsApp: +54 9 11 2766 3667"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a>
+    target="_blank" rel="noopener noreferrer" aria-label="Fale com a Jimena pelo WhatsApp: +54 9 11 2766 3667"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a>
   <a class="top-float is-hidden" href="#inicio" aria-label="Voltar ao topo">↑ <span>Topo</span></a>
 
   <footer class="site-footer"><span>© <span id="year"></span> JNB Creative Studio</span><span>Espaços digitais únicos para você.</span><span class="footer-links"><a class="footer-social"
-        href="https://www.instagram.com/jnbcreativestudio/" target="_blank" rel="noreferrer"
+        href="https://www.instagram.com/jnbcreativestudio/" target="_blank" rel="noopener noreferrer"
         aria-label="Siga-me no Instagram: jnbcreativestudio"><svg class="social-icon" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="5" />
           <circle cx="12" cy="12" r="4.2" />
           <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor" stroke="none" />
         </svg><span>@jnbcreativestudio</span></a><a href="https://jnbcreativestudio.mitiendanube.com/" target="_blank"
-        rel="noopener noreferrer">Loja virtual</a><a href="/terminos/pt">Termos e condições</a><a href="/dominio/pt">Como conseguir seu domínio</a><a
+        rel="noopener noreferrer">Minha loja na Tiendanube</a><a href="/terminos/pt">Termos e condições</a><a href="/dominio/pt">Como conseguir seu domínio</a><a
         href="#inicio">Voltar ao topo ↑</a></span></footer>
 </body>
 

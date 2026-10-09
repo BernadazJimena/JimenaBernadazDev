@@ -94,3 +94,30 @@ a {
     text-decoration: none;
 }
 
+/* "Saltar al contenido": oculto hasta que se llega con el teclado */
+.skip-link {
+    background: var(--blue);
+    border-radius: 0 0 .75rem .75rem;
+    color: var(--white);
+    font-family: "Manrope", sans-serif;
+    font-size: .875rem;
+    font-weight: 700;
+    left: 1rem;
+    padding: .75rem 1.1rem;
+    position: absolute;
+    top: 0;
+    transform: translateY(-120%);
+    z-index: 60;
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+:root[data-theme="dark"] .skip-link {
+    color: #0b1f4b;
+}
+
+main:focus {
+    outline: none;
+}

@@ -5,10 +5,10 @@
 
     // Textos del botón según el idioma de la página (es, en, pt-BR)
     const themeLabels = {
-        es: { toDark: 'Modo oscuro', toLight: 'Modo claro' },
-        en: { toDark: 'Dark mode', toLight: 'Light mode' },
-        pt: { toDark: 'Modo escuro', toLight: 'Modo claro' },
-    }[document.documentElement.lang.slice(0, 2)] || { toDark: 'Modo oscuro', toLight: 'Modo claro' };
+        es: { toDark: 'Cambiar a modo oscuro', toLight: 'Cambiar a modo claro' },
+        en: { toDark: 'Switch to dark mode', toLight: 'Switch to light mode' },
+        pt: { toDark: 'Mudar para o modo escuro', toLight: 'Mudar para o modo claro' },
+    }[document.documentElement.lang.slice(0, 2)] || { toDark: 'Cambiar a modo oscuro', toLight: 'Cambiar a modo claro' };
 
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -16,7 +16,6 @@
         if (!themeToggle) return;
         const isDark = theme === 'dark';
         const label = isDark ? themeLabels.toLight : themeLabels.toDark;
-        themeToggle.setAttribute('aria-pressed', String(isDark));
         themeToggle.setAttribute('aria-label', label);
         const icon = themeToggle.querySelector('.theme-toggle-icon');
         const text = themeToggle.querySelector('.theme-toggle-label');
