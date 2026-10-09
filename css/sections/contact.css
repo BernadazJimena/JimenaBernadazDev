@@ -187,6 +187,12 @@
     min-height: 1.4em;
 }
 
+/* Mientras no hay mensaje, el aviso de envío no ocupa lugar (sigue en la página para que el lector de pantalla lo anuncie) */
+.contact-form-status:empty {
+    min-height: 0;
+    position: absolute;
+}
+
 .contact-form-status.is-success {
     color: #157a42;
 }
