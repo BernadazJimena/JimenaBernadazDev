@@ -415,3 +415,161 @@
         position: absolute;
     }
 }
+
+/* ============================================================
+   Menú a la vista (desde 1024 px): los cinco enlaces se muestran en la barra,
+   sin tener que abrir "Menú". "Planes" sigue desplegando su submenú, ahora hacia abajo,
+   y "Hablemos" pasa a ser un botón. Por debajo de ese ancho no cambia nada.
+   ============================================================ */
+@media (min-width: 64rem) {
+    .main-nav {
+        gap: 1.5rem;
+    }
+
+    .nav-menu > .nav-dropdown-toggle {
+        display: none;
+    }
+
+    /* La lista principal deja de ser un panel flotante y pasa a ser una fila */
+    .main-nav .nav-menu > .nav-submenu,
+    .main-nav .nav-menu:hover > .nav-submenu,
+    .main-nav .nav-menu:focus-within > .nav-submenu,
+    .main-nav .nav-menu.is-open > .nav-submenu {
+        align-items: center;
+        background: none;
+        border: 0;
+        box-shadow: none;
+        flex-direction: row;
+        gap: 1.5rem;
+        min-width: 0;
+        opacity: 1;
+        padding: 0;
+        pointer-events: auto;
+        position: static;
+        transform: none;
+        transition: none;
+        visibility: visible;
+    }
+
+    .main-nav .nav-menu > .nav-submenu::before {
+        content: none;
+    }
+
+    .nav-menu > .nav-submenu > a,
+    .nav-menu > .nav-submenu > .nav-subgroup > .nav-subgroup-toggle {
+        align-self: center;
+        color: var(--chrome-text);
+        padding: 0;
+    }
+
+    .nav-menu > .nav-submenu > a:hover,
+    .nav-menu > .nav-submenu > a:focus-visible,
+    .nav-menu > .nav-submenu > .nav-subgroup:hover > .nav-subgroup-toggle,
+    .nav-menu > .nav-submenu > .nav-subgroup.is-open > .nav-subgroup-toggle,
+    .nav-menu > .nav-submenu > .nav-subgroup > .nav-subgroup-toggle:focus-visible {
+        color: var(--chrome-link);
+    }
+
+    /* En la barra van solo las palabras; los íconos quedan para el submenú de Planes */
+    .nav-menu > .nav-submenu > a > .nav-icon,
+    .nav-menu > .nav-submenu > .nav-subgroup > .nav-subgroup-toggle > .nav-icon,
+    .nav-menu > .nav-submenu > .nav-subgroup > .nav-subgroup-toggle > .nav-subgroup-arrow {
+        display: none;
+    }
+
+    .nav-menu > .nav-submenu > .nav-subgroup {
+        align-self: center;
+    }
+
+    /* Flechita que indica que "Planes" se despliega */
+    .nav-menu > .nav-submenu > .nav-subgroup > .nav-subgroup-toggle {
+        gap: .35rem;
+    }
+
+    .nav-menu > .nav-submenu > .nav-subgroup > .nav-subgroup-toggle::before {
+        content: "▾";
+        font-size: .7em;
+        order: 2;
+        transition: transform .2s ease;
+    }
+
+    .nav-menu > .nav-submenu > .nav-subgroup:hover > .nav-subgroup-toggle::before,
+    .nav-menu > .nav-submenu > .nav-subgroup.is-open > .nav-subgroup-toggle::before {
+        transform: rotate(180deg);
+    }
+
+    /* El submenú de Planes se abre hacia abajo, centrado bajo la palabra */
+    .nav-menu .nav-submenu-nested {
+        left: 50%;
+        right: auto;
+        top: calc(100% + .9rem);
+        transform: translate(-50%, .3rem);
+    }
+
+    .nav-menu .nav-subgroup:hover > .nav-submenu-nested,
+    .nav-menu .nav-subgroup:focus-within > .nav-submenu-nested,
+    .nav-menu .nav-subgroup.is-open > .nav-submenu-nested {
+        transform: translate(-50%, 0);
+    }
+
+    /* Puente invisible para bajar el mouse hasta el submenú sin que se cierre */
+    .nav-menu .nav-submenu-nested::before {
+        bottom: auto;
+        height: .9rem;
+        left: 0;
+        right: 0;
+        top: -.9rem;
+        width: auto;
+    }
+
+    /* "Hablemos" como botón, diferenciado del resto */
+    .main-nav > .nav-cta {
+        background: var(--blue);
+        border-radius: 999rem;
+        color: var(--white) !important;
+        padding: .55rem 1.05rem;
+        transition: background .2s ease, transform .2s ease;
+        white-space: nowrap;
+    }
+
+    .main-nav > .nav-cta:hover,
+    .main-nav > .nav-cta:focus-visible {
+        background: var(--blue-dark);
+        transform: translateY(-.1rem);
+    }
+
+    :root[data-theme="dark"] .main-nav > .nav-cta {
+        color: #0b1f4b !important;
+    }
+
+    :root[data-theme="dark"] .main-nav > .nav-cta:hover,
+    :root[data-theme="dark"] .main-nav > .nav-cta:focus-visible {
+        color: var(--white) !important;
+    }
+
+    .main-nav > .nav-cta::after {
+        content: none;
+    }
+}
+
+/* Entre 1024 y 1200 px el lugar es justo: se compacta la barra y el botón de tema queda solo con el ícono */
+@media (min-width: 64rem) and (max-width: 75rem) {
+    .main-nav,
+    .main-nav .nav-menu > .nav-submenu {
+        font-size: .8rem;
+        gap: 1rem;
+    }
+
+    .main-nav a,
+    .brand {
+        white-space: nowrap;
+    }
+
+    .theme-toggle-label {
+        display: none;
+    }
+
+    .lang-switch {
+        gap: .15rem;
+    }
+}

@@ -564,3 +564,59 @@
 :root[data-theme="dark"] .plan-card-entrepreneur .plan-more-link {
     color: var(--white);
 }
+
+/* Plan destacado (Básico): etiqueta sobre el borde superior de la tarjeta */
+.plan-card {
+    position: relative;
+}
+
+.plan-badge {
+    background: var(--blue);
+    border-radius: 999rem;
+    color: var(--white);
+    font-family: "Manrope", sans-serif;
+    font-size: .72rem;
+    font-weight: 800;
+    left: 2.5rem;
+    letter-spacing: .04em;
+    margin: 0;
+    padding: .35rem .85rem;
+    position: absolute;
+    top: 0;
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+:root[data-theme="dark"] .plan-badge {
+    color: #0b1f4b;
+}
+
+/* Debajo de las tarjetas: una aclaración y una sola línea con los dos caminos para elegir */
+.plans-more {
+    align-items: center;
+    flex-direction: column;
+    gap: .6rem;
+    text-align: center;
+}
+
+.plans-note,
+.plans-choose {
+    margin: 0;
+}
+
+.plans-note {
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+.plans-choose {
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.plans-choose .text-link {
+    font-size: inherit;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+    white-space: normal;
+}

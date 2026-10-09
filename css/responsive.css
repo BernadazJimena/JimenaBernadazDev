@@ -325,14 +325,14 @@
     }
 }
 
-/* Tablet vertical: planes en dos columnas, el premium ocupa todo el ancho */
+/* Tablet vertical: planes en dos columnas, el último ocupa todo el ancho */
 @media (min-width: 35.01rem) and (max-width: 60rem) {
     .plan-grid {
         gap: 1.5rem;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .plan-card-featured {
+    .plan-grid > .plan-card:last-child {
         grid-column: 1 / -1;
     }
 
@@ -468,8 +468,13 @@ li:not(.why-item) .text-link {
         row-gap: 1.15rem;
     }
 
+    .plan-badge {
+        left: 1.25rem;
+    }
+
+    /* Un poco más de separación entre tarjetas, para que entre la etiqueta del plan destacado */
     .plan-grid {
-        gap: 1rem;
+        gap: 1.5rem;
     }
 
     .plan-features {
