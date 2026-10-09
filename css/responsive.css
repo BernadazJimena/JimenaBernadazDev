@@ -595,3 +595,11 @@ li:not(.why-item) .text-link {
         left: 2rem;
     }
 }
+
+/* Enlaces dentro de un texto: más alto de toque en celular (el relleno vertical de un enlace en línea no mueve el texto) */
+@media (max-width: 35rem) {
+    p .text-link,
+    li .text-link {
+        padding: .55rem 0;
+    }
+}

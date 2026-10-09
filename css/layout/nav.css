@@ -37,7 +37,7 @@
     align-items: center;
     background: none;
     border: 0;
-    color: var(--chrome-text);
+    color: var(--text);
     cursor: pointer;
     display: inline-flex;
     font-family: "DM Sans", sans-serif;

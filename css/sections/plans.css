@@ -575,7 +575,7 @@
     border-radius: 999rem;
     color: var(--white);
     font-family: "Manrope", sans-serif;
-    font-size: .72rem;
+    font-size: .8rem;
     font-weight: 800;
     left: 2.5rem;
     letter-spacing: .04em;
@@ -643,4 +643,24 @@
 
 .top-float span {
     display: none;
+}
+
+/* En modo claro: el plan destacado se diferencia más de los otros dos (que pasan a fondo blanco) */
+:root:not([data-theme="dark"]) .plan-card-basic {
+    background: var(--surface);
+    border-color: var(--line);
+}
+
+:root:not([data-theme="dark"]) .plan-card-featured {
+    border: .15rem solid var(--blue);
+    box-shadow: 0 1rem 2.5rem rgba(20, 98, 212, .22);
+}
+
+/* "↑": en pantallas donde el contenido llega al borde, va más chico y más al costado para no rozar las tarjetas */
+@media (max-width: 82rem) {
+    .top-float {
+        height: 2.5rem;
+        right: .5rem;
+        width: 2.5rem;
+    }
 }

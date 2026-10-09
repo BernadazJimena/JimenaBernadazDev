@@ -102,3 +102,33 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Celulares: tarjetas más compactas, con el ícono al lado del título */
+@media (max-width: 35rem) {
+    .why-item {
+        column-gap: .7rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        padding: 1.1rem 1.15rem;
+        row-gap: .4rem;
+    }
+
+    .why-item h3 {
+        align-self: center;
+        margin: 0;
+    }
+
+    .why-item > :not(.why-icon):not(h3) {
+        grid-column: 1 / -1;
+    }
+
+    .why-icon {
+        height: 1.4rem;
+        width: 1.4rem;
+    }
+
+    .why-grid {
+        gap: .75rem;
+        margin-top: 1.75rem;
+    }
+}

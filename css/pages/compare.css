@@ -4,7 +4,15 @@
     margin: 0 0 1rem;
 }
 
+/* La sección no se ensancha con la tabla: lo que se desliza es solo la tabla */
+.plans-compare {
+    min-width: 0;
+}
+
 .compare-scroll {
+    max-width: 100%;
+    /* Contiene los textos ocultos para lectores de pantalla, que si no ensanchan la página */
+    position: relative;
     background: var(--surface);
     border: .08rem solid var(--line);
     border-radius: var(--radius);
@@ -133,42 +141,23 @@
     width: 1px;
 }
 
-/* Celulares: los tres planes entran a la vez, sin deslizar */
+/* Celulares: la tabla se desliza hacia el costado y la primera columna queda fija.
+   Así la letra no se achica ni se parten las palabras. */
 @media (max-width: 35rem) {
     .compare-table {
-        font-size: .72rem;
-        min-width: 0;
-        table-layout: fixed;
+        font-size: .84rem;
+        min-width: 33rem;
     }
 
     .compare-table th,
     .compare-table td {
-        overflow-wrap: anywhere;
-        padding: .55rem .3rem;
+        padding: .65rem .6rem;
     }
 
     .compare-table tbody th,
     .compare-table thead th:first-child {
-        min-width: 0;
-        padding-left: .65rem;
-        width: 27%;
-    }
-
-    .compare-table thead th {
-        font-size: .74rem;
-        overflow-wrap: normal;
-    }
-
-    .compare-table thead th span:not(.visually-hidden) {
-        font-size: .7rem;
-    }
-
-    .compare-price {
-        white-space: normal;
-    }
-
-    .compare-price small {
-        font-size: .7rem;
+        box-shadow: .35rem 0 .5rem -.35rem rgba(4, 10, 26, .35);
+        min-width: 7.25rem;
     }
 }
 
