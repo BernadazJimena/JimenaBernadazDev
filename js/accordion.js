@@ -22,12 +22,25 @@
     // Al imprimir, se muestran todas las secciones
     window.addEventListener('beforeprint', () => legalSections.forEach((section) => { section.open = true; }));
 
-    // Si se llega con un enlace a una sección (por ejemplo planes.html#emprendedor), se abre ese desplegable
+    // Si se llega con un enlace a una sección (por ejemplo /planes/#premium), se abre ese desplegable
+    // y la página baja hasta él, dejando lugar para la barra fija del menú en computadora.
+    const scrollToSection = (target) => {
+        const header = document.querySelector('.site-header');
+        const isSticky = header && getComputedStyle(header).position === 'sticky';
+        const offset = isSticky ? 78 : 16;
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(top, 0), behavior: 'instant' });
+    };
+
     const openSectionFromHash = () => {
         const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
         if (target && target.tagName === 'DETAILS') {
             target.open = true;
-            target.scrollIntoView({ block: 'start' });
+            scrollToSection(target);
+            // Se repite cuando termina de cargar todo (tipografías e imágenes mueven el contenido)
+            if (document.readyState !== 'complete') {
+                window.addEventListener('load', () => scrollToSection(target), { once: true });
+            }
         }
     };
     openSectionFromHash();

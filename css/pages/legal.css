@@ -142,6 +142,7 @@
     font-family: "Manrope", sans-serif;
     font-size: .875rem;
     font-weight: 700;
+    min-height: 2.75rem;
     padding: .4rem 0;
 }
 
