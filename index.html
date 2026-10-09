@@ -71,6 +71,7 @@
   <script src="js/menu.js" defer></script>
   <script src="js/footer.js" defer></script>
   <script src="js/floating.js" defer></script>
+  <script src="js/updated.js" defer></script>
   <script src="js/reveal.js" defer></script>
   <script src="js/availability.js" defer></script>
   <script src="js/contact-form.js" defer></script>
@@ -357,6 +358,7 @@
       </div>
       <div class="plans-more reveal">
         <p class="plans-note">Los adicionales se cotizan aparte.</p>
+        <p class="plans-note prices-updated" data-updated="Valores en pesos argentinos. El equivalente en USD es de referencia y puede variar. Actualizado a {fecha}." hidden></p>
         <p class="plans-choose">¿No sabés cuál elegir? <a class="text-link" href="/comparar-planes/">Compará los planes</a> o <a class="text-link" href="/comparar-planes/#test">hacé el test</a>.</p>
       </div>
     </section>
@@ -397,7 +399,7 @@
         </div>
         <div class="availability-info">
           <p class="availability-status"><span class="status-dot" aria-hidden="true"></span><span class="status-text"
-              data-open="Disponible ahora" data-closed="Fuera de horario · respondo el próximo día hábil desde las 9:00">Disponible
+              data-open="Disponible ahora" data-early="Fuera de horario · respondo hoy desde las 9:00" data-closed="Fuera de horario · respondo el próximo día hábil desde las 9:00">Disponible
               ahora</span></p>
           <div class="availability-line"><strong>Lunes a viernes / 09:00 a 17:00
               hs</strong></div>
@@ -458,6 +460,7 @@
           </label>
           <button class="button button-primary" type="submit">Enviar mensaje <span aria-hidden="true">→</span></button>
           <p class="contact-form-status" role="status" aria-live="polite"></p>
+          <p class="form-privacy">Al enviar, aceptás la <a class="text-link" href="/privacidad/">política de privacidad</a>.</p>
         </form>
       </div>
     </section>
@@ -476,7 +479,7 @@
           <circle cx="12" cy="12" r="4.2" />
           <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor" stroke="none" />
         </svg><span>@jnbcreativestudio</span></a><a href="https://jnbcreativestudio.mitiendanube.com/" target="_blank"
-        rel="noopener noreferrer">Mi tienda en Tiendanube</a><a href="/terminos/">Términos y condiciones</a><a href="/dominio/">Cómo conseguir tu dominio</a><a
+        rel="noopener noreferrer">Mi tienda en Tiendanube</a><a href="/terminos/">Términos y condiciones</a><a href="/privacidad/">Privacidad</a><a href="/dominio/">Cómo conseguir tu dominio</a><a
         href="#inicio">Volver arriba ↑</a></span></footer>
 </body>
 

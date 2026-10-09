@@ -238,3 +238,10 @@
 :root[data-theme="dark"] .contact-field textarea[aria-invalid="true"] {
     border-color: #f08a8a;
 }
+
+/* Línea de privacidad debajo de cada formulario */
+.form-privacy {
+    color: var(--muted);
+    font-size: .8125rem;
+    margin: 0;
+}

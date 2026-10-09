@@ -271,4 +271,34 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/privacidad/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/privacidad/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/privacidad/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/privacidad/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/privacidad/" />
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/privacidad/en</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/privacidad/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/privacidad/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/privacidad/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/privacidad/" />
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/privacidad/pt</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/privacidad/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/privacidad/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/privacidad/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/privacidad/" />
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>

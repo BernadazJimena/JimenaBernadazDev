@@ -21,7 +21,12 @@
         // El estado también se muestra en texto, no solo con el color del punto
         const statusText = document.querySelector('.status-text');
         if (statusText) {
-            statusText.textContent = isOutsideHours ? statusText.dataset.closed : statusText.dataset.open;
+            // Antes de las 9 de un día hábil respondo ese mismo día; después de las 17 o el fin de semana, el próximo día hábil.
+            // No contempla feriados.
+            const isEarlyWeekday = !isWeekend && currentHour < 9;
+            statusText.textContent = !isOutsideHours ? statusText.dataset.open
+                : isEarlyWeekday && statusText.dataset.early ? statusText.dataset.early
+                    : statusText.dataset.closed;
             statusText.closest('.availability-status')?.classList.toggle('is-closed', isOutsideHours);
         }
     };

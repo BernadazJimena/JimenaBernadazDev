@@ -750,3 +750,8 @@
     gap: 1rem;
     margin-top: 1.75rem;
 }
+
+/* Privacidad: párrafos separados (usa el bloque de texto de Términos) */
+.privacy-text p + p {
+    margin-top: 1rem;
+}
