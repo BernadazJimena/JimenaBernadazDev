@@ -42,18 +42,10 @@
 }
 
 
-/* Pantallas grandes: el footer entra en una sola línea; Instagram se muestra solo con su ícono */
+/* Pantallas grandes: los enlaces del pie van en su propio renglón, así que Instagram lleva también su nombre */
 @media (min-width: 72.01rem) {
     .site-footer {
         gap: .75rem 1.5rem;
-    }
-
-    .footer-social span {
-        clip: rect(0 0 0 0);
-        height: 1px;
-        overflow: hidden;
-        position: absolute;
-        width: 1px;
     }
 
     .footer-social .social-icon {
