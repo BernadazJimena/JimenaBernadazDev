@@ -10,18 +10,33 @@
         pt: { open: 'Abrir menu', close: 'Fechar menu' },
     }[document.documentElement.lang.slice(0, 2)] || { open: 'Abrir menú', close: 'Cerrar menú' };
 
-    menuToggle?.addEventListener('click', () => {
-        const isOpen = mainNav.classList.toggle('is-open');
-        menuToggle.setAttribute('aria-expanded', String(isOpen));
-        menuToggle.setAttribute('aria-label', isOpen ? menuLabels.close : menuLabels.open);
+    // Fondo oscurecido detrás del menú hamburguesa: al tocarlo, el menú se cierra
+    const backdrop = document.createElement('div');
+    backdrop.className = 'nav-backdrop';
+    document.body.appendChild(backdrop);
+
+    const setMenu = (isOpen) => {
+        mainNav.classList.toggle('is-open', isOpen);
+        backdrop.classList.toggle('is-open', isOpen);
+        menuToggle?.setAttribute('aria-expanded', String(isOpen));
+        menuToggle?.setAttribute('aria-label', isOpen ? menuLabels.close : menuLabels.open);
+    };
+
+    menuToggle?.addEventListener('click', () => setMenu(!mainNav.classList.contains('is-open')));
+    backdrop.addEventListener('click', () => setMenu(false));
+    document.querySelectorAll('.main-nav a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+
+    // Tecla Escape: cierra el menú hamburguesa y devuelve el foco al botón
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && mainNav.classList.contains('is-open')) {
+            setMenu(false);
+            menuToggle?.focus();
+        }
     });
 
-    document.querySelectorAll('.main-nav a').forEach((link) => {
-        link.addEventListener('click', () => {
-            mainNav.classList.remove('is-open');
-            menuToggle?.setAttribute('aria-expanded', 'false');
-            menuToggle?.setAttribute('aria-label', menuLabels.open);
-        });
+    // Si la ventana se agranda hasta el menú de escritorio, el panel no queda abierto
+    window.matchMedia('(min-width: 64rem)').addEventListener('change', (event) => {
+        if (event.matches) setMenu(false);
     });
 
     // Submenú "Planes" del menú principal: se abre con clic (pantallas táctiles y teclado)

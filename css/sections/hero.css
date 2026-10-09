@@ -19,9 +19,9 @@
 .eyebrow {
     color: var(--blue);
     font-family: "Manrope", sans-serif;
-    font-size: .7rem;
+    font-size: .78rem;
     font-weight: 800;
-    letter-spacing: .18em;
+    letter-spacing: .16em;
     margin: 0 0 1.2rem;
 }
 
@@ -156,8 +156,8 @@ h2 em {
     .hero {
         min-height: calc(100vh - 5.4rem);
         min-height: calc(100svh - 5.4rem);
-        padding-bottom: clamp(.75rem, calc(10vh - 3rem), 5rem);
-        padding-top: clamp(.75rem, calc(10vh - 3rem), 5rem);
+        padding-bottom: clamp(.6rem, calc(10vh - 3.3rem), 5rem);
+        padding-top: clamp(.6rem, calc(10vh - 3.3rem), 5rem);
     }
 
     .hero h1 {
@@ -176,7 +176,7 @@ h2 em {
 
     .hero-copy {
         font-size: clamp(1.05rem, 3.1vh, 1.25rem);
-        margin: clamp(.8rem, calc(6vh - 1.5rem), 2rem) 0 clamp(1rem, calc(6vh - 1.3rem), 2rem);
+        margin: clamp(1.15rem, calc(6vh - 1.3rem), 2rem) 0 clamp(1rem, calc(6vh - 1.3rem), 2rem);
         max-width: 42rem;
     }
 

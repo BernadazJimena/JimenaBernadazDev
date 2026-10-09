@@ -1,4 +1,4 @@
-@media (max-width: 52rem) {
+@media (max-width: 63.99rem) {
     .site-header {
         padding-left: 1.25rem;
         padding-right: 1.25rem;
@@ -158,7 +158,9 @@
         display: flex;
         padding: .75rem 0;
     }
+}
 
+@media (max-width: 52rem) {
     .hero {
         min-height: auto;
         padding-bottom: 4rem;
@@ -286,13 +288,8 @@
     }
 }
 
-/* Tablet horizontal: menú completo, pero más compacto (entra también en portugués) */
-@media (min-width: 52.01rem) and (max-width: 64rem) {
-    .main-nav {
-        font-size: .8rem;
-        gap: .9rem;
-    }
-
+/* Tablet horizontal: encabezado más compacto */
+@media (min-width: 52.01rem) and (max-width: 63.99rem) {
     .main-nav a,
     .brand {
         white-space: nowrap;
@@ -414,7 +411,7 @@
 
 
 /* Menú del celular o tablet en pantallas con mouse: "Planes" se abre también al pasar el mouse */
-@media (max-width: 52rem) and (hover: hover) {
+@media (max-width: 63.99rem) and (hover: hover) {
     .nav-subgroup:hover > .nav-submenu.nav-submenu-nested {
         display: flex;
     }
@@ -487,5 +484,102 @@ li:not(.why-item) .text-link {
 
     .plans-more {
         margin: 1.5rem 0 0;
+    }
+}
+
+/* ============================================================
+   Menú hamburguesa: panel debajo de la barra (no tapa el logo, las banderas ni el botón de tema),
+   fondo oscurecido que cierra el menú, ícono que pasa a ✕ y "Hablemos" como botón.
+   ============================================================ */
+@media (max-width: 63.99rem) {
+    .main-nav {
+        border-radius: 0 0 1rem 1rem;
+        border-top: .08rem solid var(--chrome-border);
+        left: 0;
+        max-height: calc(100vh - 5.5rem);
+        max-height: calc(100svh - 5.5rem);
+        padding: .5rem 1.25rem 1.5rem;
+        right: 0;
+        top: 100%;
+        width: auto;
+    }
+
+    .main-nav .nav-cta {
+        background: var(--blue);
+        border-radius: 999rem;
+        color: var(--white) !important;
+        margin-top: 1.25rem;
+        padding: .9rem 1rem;
+        text-align: center;
+    }
+
+    :root[data-theme="dark"] .main-nav .nav-cta {
+        color: #0b1f4b !important;
+    }
+
+    /* Áreas táctiles de 44 px */
+    .menu-toggle {
+        padding: .82rem .7rem;
+    }
+
+    .menu-toggle span {
+        transition: transform .2s ease;
+    }
+
+    .menu-toggle[aria-expanded="true"] span:first-child {
+        transform: translateY(.21rem) rotate(45deg);
+    }
+
+    .menu-toggle[aria-expanded="true"] span:last-child {
+        transform: translateY(-.21rem) rotate(-45deg);
+    }
+
+    .theme-toggle {
+        justify-content: center;
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        padding: 0;
+    }
+
+    .lang-flag {
+        height: 2.75rem;
+        width: 2rem;
+    }
+
+    .header-actions {
+        gap: .25rem;
+    }
+
+    .lang-switch {
+        gap: 0;
+    }
+}
+
+/* Celulares: las banderas conservan los 44 px de alto pero van más angostas, para que entre todo el encabezado */
+@media (max-width: 35rem) {
+    .lang-flag {
+        height: 2.75rem;
+        width: 1.75rem;
+    }
+}
+
+@media (max-width: 24rem) {
+    .lang-flag {
+        width: 1.5rem;
+    }
+
+    .lang-flag svg {
+        width: 1.1rem;
+    }
+}
+
+/* Celulares: enlaces del pie con más alto para tocarlos */
+@media (max-width: 35rem) {
+    .footer-links {
+        gap: 0 1.25rem;
+    }
+
+    .footer-links a {
+        padding: .5rem 0;
     }
 }

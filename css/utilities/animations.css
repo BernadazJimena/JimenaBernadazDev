@@ -1,7 +1,7 @@
 .reveal {
     opacity: 0;
-    transform: translateY(1.25rem);
-    transition: opacity .7s ease, transform .7s ease;
+    transform: translateY(.75rem);
+    transition: opacity .35s ease, transform .35s ease;
 }
 
 .reveal.is-visible {
@@ -10,7 +10,7 @@
 }
 
 .reveal-delay {
-    transition-delay: .12s;
+    transition-delay: .06s;
 }
 
 .hero-content.hero-enter {

@@ -5,6 +5,9 @@
     display: flex;
     justify-content: space-between;
     padding: 1.65rem max(2rem, calc((100% - var(--content)) / 2 + 2rem));
+    /* El panel del menú hamburguesa se ubica respecto de la barra y queda por encima del fondo oscurecido */
+    position: relative;
+    z-index: 30;
 }
 
 .brand {

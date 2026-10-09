@@ -67,7 +67,8 @@
     border-radius: .75rem;
     color: var(--text);
     font: inherit;
-    font-size: .95rem;
+    /* 16 px: con menos, el iPhone hace zoom al tocar el campo */
+    font-size: 1rem;
     padding: .8rem 1rem;
     width: 100%;
 }

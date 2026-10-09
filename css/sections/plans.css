@@ -620,3 +620,14 @@
     text-underline-offset: .2em;
     white-space: normal;
 }
+
+/* Enlaces de texto de la sección de planes: más alto de toque, sin mover lo que los rodea */
+.plan-more-link {
+    margin: -.55rem 0;
+    padding: .55rem 0;
+}
+
+.plans-choose .text-link {
+    display: inline-block;
+    padding: .5rem 0;
+}
