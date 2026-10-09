@@ -2,9 +2,9 @@
 // Mientras esté vacía, las líneas que la usan quedan ocultas.
 (() => {
     const UPDATED = {
-        es: '',   // por ejemplo: 'octubre de 2026'
-        en: '',   // por ejemplo: 'October 2026'
-        pt: '',   // por ejemplo: 'outubro de 2026'
+        es: 'octubre de 2026',
+        en: 'October 2026',
+        pt: 'outubro de 2026',
     };
     const date = UPDATED[document.documentElement.lang.slice(0, 2)];
     if (!date) return;
