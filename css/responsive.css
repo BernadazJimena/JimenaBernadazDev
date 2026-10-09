@@ -583,3 +583,10 @@ li:not(.why-item) .text-link {
         padding: .5rem 0;
     }
 }
+
+/* Celulares: cada tarjeta de plan muestra tres puntos; los dos adicionales se ven desde tablet */
+@media (max-width: 35rem) {
+    .plan-features .plan-feature-extra {
+        display: none;
+    }
+}
