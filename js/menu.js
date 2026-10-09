@@ -51,6 +51,18 @@
         updateHeader();
     }
 
+    // Al entrar con un ancla (por ejemplo /#contacto desde otra página), la página baja hasta esa sección.
+    // El desplazamiento del navegador se cortaba cuando la barra fija se achica; los desplegables los maneja accordion.js.
+    const goToHash = () => {
+        const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+        if (!target || target.tagName === 'DETAILS') return;
+        target.scrollIntoView({ behavior: 'instant' });
+    };
+    if (location.hash) {
+        goToHash();
+        if (document.readyState !== 'complete') window.addEventListener('load', goToHash, { once: true });
+    }
+
     // Submenú "Planes" del menú principal: se abre con clic (pantallas táctiles y teclado)
     document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
         const toggle = dropdown.querySelector('.nav-dropdown-toggle');
