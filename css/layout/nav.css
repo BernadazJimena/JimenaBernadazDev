@@ -67,10 +67,10 @@
     align-items: center;
     border-radius: 50%;
     display: inline-flex;
-    filter: grayscale(35%);
+    filter: grayscale(55%);
     height: 1.9rem;
     justify-content: center;
-    opacity: .8;
+    opacity: .65;
     transition: filter .2s ease, opacity .2s ease, transform .2s ease;
     width: 1.9rem;
 }
@@ -92,12 +92,6 @@
 .lang-flag.is-active {
     filter: grayscale(0%);
     opacity: 1;
-}
-
-/* El idioma activo se marca con un contorno, no solo con el color */
-.lang-flag.is-active svg {
-    outline: .12rem solid var(--blue);
-    outline-offset: .15rem;
 }
 
 .menu-toggle span {
