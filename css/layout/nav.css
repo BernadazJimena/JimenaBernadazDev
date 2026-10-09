@@ -557,12 +557,17 @@
     .main-nav,
     .main-nav .nav-menu > .nav-submenu {
         font-size: .8125rem;
-        gap: 1rem;
+        gap: .7rem;
     }
 
     .main-nav a,
     .brand {
         white-space: nowrap;
+    }
+
+    .nav-group,
+    .header-actions {
+        gap: .6rem;
     }
 
     .theme-toggle-label {

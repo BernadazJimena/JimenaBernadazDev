@@ -155,7 +155,7 @@
 .plan-features li {
     border-top: .08rem solid var(--rule);
     color: var(--muted);
-    font-size: .92rem;
+    font-size: .9375rem;
     padding-top: .75rem;
 }
 
@@ -407,7 +407,7 @@
 }
 
 .plans-more .text-link {
-    font-size: .95rem;
+    font-size: .9375rem;
 }
 
 /* Aclaración debajo del precio (Plan Emprendedor) */
@@ -531,7 +531,7 @@
 
 .plans-help-steps p {
     color: var(--muted);
-    font-size: .92rem;
+    font-size: .9375rem;
     margin: 0;
 }
 
@@ -606,7 +606,7 @@
 
 .plans-note {
     color: var(--muted);
-    font-size: .9rem;
+    font-size: .9375rem;
 }
 
 .plans-choose {

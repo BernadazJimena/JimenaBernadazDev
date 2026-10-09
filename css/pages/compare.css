@@ -204,13 +204,13 @@
 .compare-choose-card p {
     color: var(--muted);
     flex: 1;
-    font-size: .92rem;
+    font-size: .9375rem;
     line-height: 1.55;
     margin: 0;
 }
 
 .compare-choose-card .text-link {
-    font-size: .9rem;
+    font-size: .9375rem;
 }
 
 @media (max-width: 52rem) {

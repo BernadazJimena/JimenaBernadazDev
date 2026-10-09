@@ -161,7 +161,7 @@
     border-left: .3rem solid #d9a441;
     border-radius: .9rem;
     color: var(--text);
-    font-size: .92rem;
+    font-size: .9375rem;
     line-height: 1.55;
     margin: .9rem 0 0;
     padding: .8rem 1rem;
@@ -207,7 +207,7 @@
 }
 
 .plan-quiz-mail .contact-form-status {
-    font-size: .92rem;
+    font-size: .9375rem;
     margin: 0;
     min-height: 1.4em;
 }
