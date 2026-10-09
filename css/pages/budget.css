@@ -190,3 +190,8 @@
 .budget-topic .plan-quiz-option:has(input:focus-visible) {
     box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .3);
 }
+
+/* Línea de privacidad a 12 px de los botones (este formulario deja 24 px entre elementos) */
+.budget-form .form-privacy {
+    margin-top: -.75rem;
+}

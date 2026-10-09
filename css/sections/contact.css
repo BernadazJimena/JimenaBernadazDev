@@ -14,7 +14,8 @@
     padding-top: 1.5rem;
 }
 
-.contact-action p {
+/* Solo el párrafo de presentación: los párrafos del formulario (errores, privacidad) tienen su propio tamaño */
+.contact-action > p {
     color: var(--muted);
     font-size: 1.15rem;
     margin: 0 0 1.5rem;
@@ -239,14 +240,17 @@
     border-color: #f08a8a;
 }
 
-/* Línea de privacidad debajo de cada formulario */
+/* Línea de privacidad justo debajo del botón de envío: 12 px de separación (el formulario deja 16 px entre elementos) */
 .form-privacy {
     color: var(--muted);
     font-size: .8125rem;
-    margin: 0;
+    margin: -.25rem 0 0;
 }
 
-/* El enlace de la línea de privacidad, del mismo tamaño que la línea */
+/* El enlace de la línea de privacidad, del mismo tamaño y peso que la línea (subrayado para que se distinga) */
 .form-privacy .text-link {
     font-size: inherit;
+    font-weight: inherit;
+    text-decoration: underline;
+    text-underline-offset: .15em;
 }

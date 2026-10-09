@@ -575,7 +575,7 @@ li:not(.why-item) .text-link {
     }
 }
 
-/* Celulares: un enlace del pie por renglón, con más alto para tocarlos; entre grupos, un poco más de espacio */
+/* Celulares: un enlace del pie por renglón, con más alto para tocarlos; entre grupos, más espacio para que se lean como dos bloques */
 @media (max-width: 35rem) {
     .footer-links,
     .footer-group {
@@ -585,11 +585,25 @@ li:not(.why-item) .text-link {
     }
 
     .footer-links {
-        gap: .75rem;
+        gap: 1.625rem;
     }
 
     .footer-links a {
         padding: .5rem 0;
+    }
+}
+
+/* Celulares grandes (desde unos 420 px): los dos grupos del pie en dos columnas; "Volver arriba" debajo */
+@media (min-width: 28rem) and (max-width: 35rem) {
+    .footer-links {
+        column-gap: 1.5rem;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, max-content));
+    }
+
+    .footer-top {
+        grid-column: 1 / -1;
+        justify-self: start;
     }
 }
 
