@@ -51,6 +51,32 @@
         updateHeader();
     }
 
+    // Celular y tablet: la barra se esconde al bajar y reaparece al subir, desde cualquier punto de la página.
+    // Reacciona recién después de 10 px en la misma dirección y nunca se esconde en los primeros 100 px.
+    // Con el menú abierto o con el foco del teclado adentro, queda visible.
+    const mobileQuery = window.matchMedia('(max-width: 63.99rem)');
+    let lastY = window.scrollY;
+    let travel = 0;
+    const setHidden = (isHidden) => header.classList.toggle('is-hidden', isHidden);
+    const updateHidden = () => {
+        const y = window.scrollY;
+        const delta = y - lastY;
+        lastY = y;
+        if (!mobileQuery.matches || y < 100 || mainNav.classList.contains('is-open') || header.contains(document.activeElement)) {
+            travel = 0;
+            setHidden(false);
+            return;
+        }
+        travel = (delta > 0) === (travel > 0) ? travel + delta : delta;
+        if (travel > 10) setHidden(true);
+        else if (travel < -10) setHidden(false);
+    };
+    if (header) {
+        window.addEventListener('scroll', updateHidden, { passive: true });
+        header.addEventListener('focusin', () => setHidden(false));
+        mobileQuery.addEventListener('change', updateHidden);
+    }
+
     // Al entrar con un ancla (por ejemplo /#contacto desde otra página), la página baja hasta esa sección.
     // El desplazamiento del navegador se cortaba cuando la barra fija se achica; los desplegables los maneja accordion.js.
     const goToHash = () => {

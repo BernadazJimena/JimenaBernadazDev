@@ -46,7 +46,7 @@
 }
 
 /* Computadora: la barra queda fija arriba al bajar y se achica a unos 60 px (menu.js agrega is-scrolled).
-   En celular y tablet no se fija, para no ocupar pantalla. */
+   En celular y tablet se esconde al bajar y reaparece al subir (ver más abajo). */
 @media (min-width: 64rem) {
     .site-header {
         position: sticky;
@@ -63,5 +63,38 @@
     /* Los enlaces a una sección no quedan tapados por la barra fija */
     html {
         scroll-padding-top: 4.5rem;
+    }
+}
+
+/* Celular y tablet: la barra se esconde al bajar y reaparece achicada apenas se sube (menu.js agrega is-hidden).
+   Sigue ocupando su lugar en la página, así el contenido no salta: lo que se achica el relleno lo compensa el margen. */
+@media (max-width: 63.99rem) {
+    .site-header {
+        position: sticky;
+        top: 0;
+        transition: transform .25s ease, padding .2s ease, margin .2s ease, box-shadow .2s ease;
+    }
+
+    .site-header.is-scrolled {
+        box-shadow: 0 .4rem 1.2rem rgba(4, 10, 26, .18);
+        margin-bottom: 1.9rem;
+        padding-bottom: .7rem;
+        padding-top: .7rem;
+    }
+
+    .site-header.is-hidden {
+        box-shadow: none;
+        transform: translateY(-100%);
+    }
+
+    /* Los enlaces a una sección no quedan tapados por la barra cuando reaparece */
+    html {
+        scroll-padding-top: 5rem;
+    }
+}
+
+@media (max-width: 63.99rem) and (prefers-reduced-motion: reduce) {
+    .site-header {
+        transition: none;
     }
 }
