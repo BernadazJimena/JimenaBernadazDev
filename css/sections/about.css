@@ -109,6 +109,13 @@ h2 {
 }
 
 
+/* Tablet y celular: arriba de la línea que la separa de "Cómo te acompaño" queda el mismo espacio que abajo */
+@media (max-width: 52rem) {
+    .about.section-shell {
+        padding-bottom: clamp(3rem, 5vw, 4.5rem);
+    }
+}
+
 /* Computadora: "Sobre mí" ocupa una pantalla completa, con el contenido centrado */
 @media (min-width: 52.01rem) {
     .about.section-shell {

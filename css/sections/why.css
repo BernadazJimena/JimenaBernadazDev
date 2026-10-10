@@ -1,13 +1,22 @@
 /* Inicio: franja "No necesitás saber de webs para tener una" (entre "Sobre mí" y los planes) */
-/* Va después de "Sobre mí", que ya deja su espacio abajo */
-.why.section-shell {
+/* Va después de "Sobre mí", que ya deja su espacio abajo.
+   "Qué te garantizo" usa la misma separación: va después de "Proyectos de muestra", con el mismo fondo */
+.why.section-shell,
+.guarantee.section-shell {
     padding-top: 0;
 }
 
-/* Línea y aire para separarla de "Sobre mí", que tiene el mismo fondo */
-.why-head {
+/* Línea y aire para separarlas de la sección anterior, que tiene el mismo fondo */
+.why-head,
+.guarantee-head {
     border-top: .08rem solid var(--rule);
     padding-top: clamp(3rem, 5vw, 4.5rem);
+}
+
+/* Arriba de la línea de "Qué te garantizo" queda el mismo espacio que abajo
+   (medio rem más, porque el enlace "Ver todo el portfolio" ocupa parte de ese espacio con su área de toque) */
+.samples.section-shell {
+    padding-bottom: calc(clamp(3rem, 5vw, 4.5rem) + .5rem);
 }
 
 .why-head h2 {
