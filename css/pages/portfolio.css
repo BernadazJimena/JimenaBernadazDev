@@ -106,23 +106,128 @@ a.portfolio-image:focus-visible {
     margin-top: 2rem;
 }
 
-/* Tablet y celular: las miniaturas van en una fila que se desliza, para no alargar el inicio */
+/* Puntos y flechas de la fila: solo existen donde la fila se desliza (los muestra samples.js) */
+.samples-controls {
+    display: none;
+}
+
+/* Tablet y celular: las miniaturas van en una fila que se desliza, para no alargar el inicio.
+   La barra de desplazamiento nativa se oculta: los puntos de abajo indican la posición. */
 @media (max-width: 52rem) {
     .samples .portfolio-grid {
         display: flex;
         gap: 1rem;
         overflow-x: auto;
         overscroll-behavior-x: contain;
-        padding-bottom: .75rem;
         scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        /* La tarjeta que asoma se desvanece hacia el borde, para que no se lea texto cortado (samples.js ajusta cada lado) */
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-left, 0px), #000 calc(100% - var(--fade-right, 2.25rem)), transparent);
+        mask-image: linear-gradient(to right, transparent, #000 var(--fade-left, 0px), #000 calc(100% - var(--fade-right, 2.25rem)), transparent);
     }
 
+    .samples .portfolio-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Celular: una tarjeta entera y un asomo de la siguiente (cerca del 11 % del ancho) */
     .samples .portfolio-card {
-        flex: 0 0 min(80%, 20rem);
+        flex: 0 0 calc(89% - 1rem);
         scroll-snap-align: start;
     }
 
+    .samples-controls:not([hidden]) {
+        align-items: center;
+        display: flex;
+        gap: .5rem;
+        justify-content: center;
+        margin-top: .5rem;
+    }
+
+    .samples-dots {
+        display: flex;
+    }
+
+    /* Cada punto tiene un área de toque de 44 x 44 px; el círculo visible es chico */
+    .samples-dot {
+        background: none;
+        border: 0;
+        cursor: pointer;
+        display: grid;
+        height: 2.75rem;
+        padding: 0;
+        place-items: center;
+        width: 2.75rem;
+    }
+
+    .samples-dot::before {
+        background: var(--field-border);
+        border-radius: 50%;
+        content: "";
+        height: .6rem;
+        transition: background .2s ease, transform .2s ease;
+        width: .6rem;
+    }
+
+    .samples-dot[aria-current="true"]::before {
+        background: var(--blue);
+        transform: scale(1.35);
+    }
+
+    .samples-arrow {
+        display: none;
+    }
+
     .samples-more {
-        margin-top: 1.25rem;
+        margin-top: 1rem;
+    }
+}
+
+/* Tablet (600 a 832 px): dos tarjetas enteras, un asomo de la tercera y flechas anterior / siguiente */
+@media (min-width: 37.5rem) and (max-width: 52rem) {
+    .samples .portfolio-card {
+        flex-basis: calc((100% - 2rem) / 2.13);
+    }
+
+    .samples-arrow {
+        align-items: center;
+        background: var(--line);
+        border: .08rem solid var(--text);
+        border-radius: 50%;
+        color: var(--text);
+        cursor: pointer;
+        display: inline-flex;
+        font-family: "Manrope", sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        height: 2.75rem;
+        justify-content: center;
+        padding: 0;
+        transition: background .2s ease, border-color .2s ease, color .2s ease;
+        width: 2.75rem;
+    }
+
+    .samples-arrow:not(:disabled):hover,
+    .samples-arrow:not(:disabled):focus-visible {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: var(--white);
+    }
+
+    :root[data-theme="dark"] .samples-arrow:not(:disabled):hover,
+    :root[data-theme="dark"] .samples-arrow:not(:disabled):focus-visible {
+        color: #100b1d;
+    }
+
+    .samples-arrow:disabled {
+        cursor: default;
+        opacity: .4;
+    }
+}
+
+@media (max-width: 52rem) and (prefers-reduced-motion: reduce) {
+    .samples-dot::before,
+    .samples-arrow {
+        transition: none;
     }
 }
