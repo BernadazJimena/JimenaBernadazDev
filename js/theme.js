@@ -13,6 +13,11 @@
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
 
+        // Barra del navegador en el celular: el mismo color que la barra del sitio en el tema activo
+        const themeColor = document.querySelector('meta[name="theme-color"]');
+        const barColor = getComputedStyle(document.documentElement).getPropertyValue('--mist').trim();
+        if (themeColor && barColor) themeColor.setAttribute('content', barColor);
+
         if (!themeToggle) return;
         const isDark = theme === 'dark';
         const label = isDark ? themeLabels.toLight : themeLabels.toDark;

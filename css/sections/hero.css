@@ -89,7 +89,7 @@ h2 em {
 
 /* Modo oscuro: el azul principal es claro, el texto va oscuro para leerse bien */
 :root[data-theme="dark"] .button-primary {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 :root[data-theme="dark"] .button-primary:hover,
@@ -108,6 +108,12 @@ h2 em {
     background: var(--blue);
     border-color: var(--blue);
     color: var(--white);
+}
+
+/* Modo oscuro: sobre el violeta claro, el texto del hover va oscuro para leerse bien */
+:root[data-theme="dark"] .button-ghost:hover,
+:root[data-theme="dark"] .button-ghost:focus-visible {
+    color: #100b1d;
 }
 
 .time-zone {

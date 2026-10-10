@@ -95,7 +95,7 @@
 }
 
 .compare-basico {
-    --compare-color: #86c1ea;
+    --compare-color: #b79cf0;
 }
 
 .compare-premium {
@@ -156,7 +156,7 @@
 
     .compare-table tbody th,
     .compare-table thead th:first-child {
-        box-shadow: .35rem 0 .5rem -.35rem rgba(4, 10, 26, .35);
+        box-shadow: .35rem 0 .5rem -.35rem rgba(9, 6, 18, .35);
         min-width: 7.25rem;
     }
 }

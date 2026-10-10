@@ -134,7 +134,7 @@
     background: var(--surface);
     border: .08rem solid var(--line);
     border-radius: .75rem;
-    box-shadow: 0 1rem 2rem rgba(11, 31, 75, .14);
+    box-shadow: 0 1rem 2rem rgba(33, 22, 50, .14);
     display: flex;
     flex-direction: column;
     left: 50%;
@@ -539,7 +539,7 @@
     }
 
     :root[data-theme="dark"] .main-nav > .nav-cta {
-        color: #0b1f4b !important;
+        color: #100b1d !important;
     }
 
     :root[data-theme="dark"] .main-nav > .nav-cta:hover,
@@ -581,7 +581,7 @@
 
 /* Fondo oscurecido detrás del menú hamburguesa abierto (lo crea menu.js); al tocarlo, el menú se cierra */
 .nav-backdrop {
-    background: rgba(4, 10, 26, .55);
+    background: rgba(9, 6, 18, .55);
     inset: 0;
     opacity: 0;
     pointer-events: none;

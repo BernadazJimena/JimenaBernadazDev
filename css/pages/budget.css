@@ -57,7 +57,7 @@
 .budget-extra select:focus,
 .budget-extra input:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .35);
+    box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .35);
     outline: none;
 }
 
@@ -184,11 +184,11 @@
 }
 
 :root[data-theme="dark"] .budget-topic .plan-quiz-option:has(input:checked) {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 .budget-topic .plan-quiz-option:has(input:focus-visible) {
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .3);
+    box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .3);
 }
 
 /* Línea de privacidad a 12 px de los botones (este formulario deja 24 px entre elementos) */

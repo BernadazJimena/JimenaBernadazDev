@@ -228,7 +228,7 @@
 }
 
 .plan-detail-basico {
-    --plan-detail-color: #86c1ea;
+    --plan-detail-color: #b79cf0;
 }
 
 .plan-detail-premium {
@@ -300,7 +300,7 @@
 }
 
 .legal-accordion .legal-block:nth-child(3n + 2) {
-    --legal-accent: #86c1ea;
+    --legal-accent: #b79cf0;
 }
 
 .legal-accordion .legal-block:nth-child(3n) {
@@ -357,7 +357,7 @@
 }
 
 .domain-card-nic { --domain-color: #8f98e6; }
-.domain-card-godaddy { --domain-color: #86c1ea; }
+.domain-card-godaddy { --domain-color: #b79cf0; }
 .domain-card-registro { --domain-color: var(--blue); }
 
 .domain-card h3 {
@@ -504,7 +504,7 @@
 }
 
 :root[data-theme="dark"] .domain-steps li:has(input:checked) .domain-step-num {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 .domain-steps li:has(input:checked) .domain-step-text {
@@ -673,7 +673,7 @@
 
 .faq-search-field input:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .35);
+    box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .35);
     outline: none;
 }
 

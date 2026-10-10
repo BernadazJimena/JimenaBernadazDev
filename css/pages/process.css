@@ -23,7 +23,7 @@
 }
 
 .process-step:nth-child(3n + 2) {
-    --step-color: #86c1ea;
+    --step-color: #b79cf0;
 }
 
 .process-step:nth-child(3n) {
@@ -46,7 +46,7 @@
 }
 
 :root[data-theme="dark"] .process-num {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 .process-step h2 {

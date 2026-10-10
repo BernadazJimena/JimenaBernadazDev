@@ -55,7 +55,7 @@
     }
 
     .site-header.is-scrolled {
-        box-shadow: 0 .4rem 1.2rem rgba(4, 10, 26, .18);
+        box-shadow: 0 .4rem 1.2rem rgba(9, 6, 18, .18);
         padding-bottom: .7rem;
         padding-top: .7rem;
     }
@@ -76,7 +76,7 @@
     }
 
     .site-header.is-scrolled {
-        box-shadow: 0 .4rem 1.2rem rgba(4, 10, 26, .18);
+        box-shadow: 0 .4rem 1.2rem rgba(9, 6, 18, .18);
         margin-bottom: 1.9rem;
         padding-bottom: .7rem;
         padding-top: .7rem;

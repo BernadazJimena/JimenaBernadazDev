@@ -13,7 +13,7 @@
     .main-nav {
         align-items: stretch;
         background: var(--surface);
-        box-shadow: 0 1rem 2rem rgba(11, 31, 75, .12);
+        box-shadow: 0 1rem 2rem rgba(33, 22, 50, .12);
         flex-direction: column;
         gap: 0;
         opacity: 0;
@@ -227,7 +227,7 @@
         border: .15rem solid var(--white);
         border-radius: 50%;
         bottom: 1rem;
-        box-shadow: 0 .35rem 1rem rgba(11, 31, 75, .2);
+        box-shadow: 0 .35rem 1rem rgba(33, 22, 50, .2);
         color: var(--white);
         display: inline-flex;
         height: 3.4rem;
@@ -516,7 +516,7 @@ li:not(.why-item) .text-link {
     }
 
     :root[data-theme="dark"] .main-nav .nav-cta {
-        color: #0b1f4b !important;
+        color: #100b1d !important;
     }
 
     /* Áreas táctiles de 44 px */

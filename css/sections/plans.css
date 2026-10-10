@@ -25,8 +25,8 @@
 }
 
 .plan-card-basic {
-    background: linear-gradient(145deg, #eef8ff 0%, #b8e0fa 100%);
-    border-color: #86c1ea;
+    background: linear-gradient(145deg, #fdfbff 0%, #ebe1fc 100%);
+    border-color: #c9b6f2;
 }
 
 .plan-card-basic .eyebrow {
@@ -34,7 +34,7 @@
 }
 
 :root[data-theme="dark"] .plan-card-basic .eyebrow {
-    color: var(--blue);
+    color: #b9a0ff;
 }
 
 :root[data-theme="dark"] .plan-card-entrepreneur .text-link {
@@ -42,12 +42,50 @@
 }
 
 .plan-card-basic .plan-features li {
-    border-top-color: rgba(23, 105, 224, .3);
+    border-top-color: rgba(117, 67, 214, .25);
 }
 
 :root[data-theme="dark"] .plan-card-basic {
-    background: linear-gradient(145deg, #172a50 0%, #0d1c38 100%);
-    border-color: #294579;
+    background: linear-gradient(145deg, #2a2045 0%, #1b1430 100%);
+    border-color: #3e3066;
+}
+
+/* Enlaces dentro de las tarjetas Premium y Emprendedor: un tono más oscuro (claro) o más luminoso (oscuro) para leerse sobre el degradado */
+.plan-card-basic .text-link,
+.plan-card-basic .plan-more-link {
+    color: var(--blue-dark);
+}
+
+:root[data-theme="dark"] .plan-card-basic .text-link,
+:root[data-theme="dark"] .plan-card-basic .plan-more-link {
+    color: #b9a0ff;
+}
+
+/* Plan Emprendedor: el azul índigo queda como acento secundario de la marca */
+.plan-card-store {
+    background: linear-gradient(145deg, #eef0ff 0%, #d3d7f7 100%);
+    border-color: #9aa0e3;
+}
+
+.plan-card-store .eyebrow,
+.plan-card-store .text-link,
+.plan-card-store .plan-more-link {
+    color: #3d3f9e;
+}
+
+.plan-card-store .plan-features li {
+    border-top-color: rgba(61, 63, 158, .25);
+}
+
+:root[data-theme="dark"] .plan-card-store {
+    background: linear-gradient(145deg, #23265a 0%, #16142f 100%);
+    border-color: #3d4290;
+}
+
+:root[data-theme="dark"] .plan-card-store .eyebrow,
+:root[data-theme="dark"] .plan-card-store .text-link,
+:root[data-theme="dark"] .plan-card-store .plan-more-link {
+    color: #aab1ff;
 }
 
 .plan-card-entrepreneur {
@@ -170,7 +208,7 @@
 }
 
 :root[data-theme="dark"] .plan-features li {
-    border-top-color: rgba(143, 168, 212, .4);
+    border-top-color: rgba(182, 174, 207, .3);
 }
 
 :root[data-theme="dark"] .plan-card-entrepreneur .plan-features li {
@@ -210,7 +248,11 @@
 }
 
 .plan-card-basic {
-    --plan-button-hover: #1769e0;
+    --plan-button-hover: #5d31b8;
+}
+
+.plan-card-store {
+    --plan-button-hover: #3d3f9e;
 }
 
 .plan-card-entrepreneur {
@@ -218,13 +260,17 @@
 }
 
 .plan-card-featured {
-    --plan-button-hover: #0b1f4b;
+    --plan-button-hover: #24185a;
 }
 
 /* Color del hover según el plan (modo oscuro) */
 :root[data-theme="dark"] .plan-card-basic {
-    --plan-button-hover: #4f8fff;
-    --plan-button-hover-text: #0b1f4b;
+    --plan-button-hover: #b9a0ff;
+    --plan-button-hover-text: #100b1d;
+}
+
+:root[data-theme="dark"] .plan-card-store {
+    --plan-button-hover: #aab1ff;
 }
 
 :root[data-theme="dark"] .plan-card-entrepreneur {
@@ -232,7 +278,7 @@
 }
 
 :root[data-theme="dark"] .plan-card-featured {
-    --plan-button-hover: #1c6fe0;
+    --plan-button-hover: #7c4ff0;
 }
 
 /* Mismo efecto hover/focus en los botones de todos los planes */
@@ -382,7 +428,7 @@
 .top-float {
     background: var(--surface);
     border: .08rem solid var(--blue);
-    box-shadow: 0 .35rem 1rem rgba(11, 31, 75, .12);
+    box-shadow: 0 .35rem 1rem rgba(33, 22, 50, .12);
     color: var(--blue);
     gap: .4rem;
     padding: .7rem .9rem;
@@ -520,7 +566,7 @@
 }
 
 :root[data-theme="dark"] .plans-help-num {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 .plans-help-steps strong {
@@ -588,7 +634,7 @@
 }
 
 :root[data-theme="dark"] .plan-badge {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 /* Debajo de las tarjetas: una aclaración y una sola línea con los dos caminos para elegir */
@@ -653,7 +699,7 @@
 
 :root:not([data-theme="dark"]) .plan-card-featured {
     border: .15rem solid var(--blue);
-    box-shadow: 0 1rem 2.5rem rgba(20, 98, 212, .22);
+    box-shadow: 0 1rem 2.5rem rgba(117, 67, 214, .22);
 }
 
 /* "↑": en pantallas donde el contenido llega al borde, va más chico y más al costado para no rozar las tarjetas */

@@ -141,11 +141,11 @@
 
 /* En modo oscuro el azul es claro: texto oscuro para que se lea bien */
 :root[data-theme="dark"] .contact-plan .plan-option input:checked + span {
-    color: #0b1f4b;
+    color: #100b1d;
 }
 
 .contact-plan .plan-option input:focus-visible + span {
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .3);
+    box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .3);
 }
 
 .contact-field textarea {
@@ -162,7 +162,7 @@
 .contact-field input:focus,
 .contact-field textarea:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 .2rem rgba(23, 105, 224, .35);
+    box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .35);
     outline: none;
 }
 
