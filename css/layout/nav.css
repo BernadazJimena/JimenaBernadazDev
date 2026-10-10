@@ -63,35 +63,99 @@
     gap: .35rem;
 }
 
+/* Banderas: área de toque de 44 x 44 px; la transparencia va en la bandera, así el texto "ES / EN / PT" se lee completo */
 .lang-flag {
     align-items: center;
-    border-radius: 50%;
+    border-radius: .5rem;
     display: inline-flex;
-    filter: grayscale(55%);
-    height: 1.9rem;
+    height: 2.75rem;
     justify-content: center;
-    opacity: .65;
-    transition: filter .2s ease, opacity .2s ease, transform .2s ease;
-    width: 1.9rem;
+    position: relative;
+    transition: transform .2s ease;
+    width: 2.75rem;
 }
 
 .lang-flag svg {
     border-radius: .15rem;
     display: block;
+    filter: grayscale(55%);
     height: .85rem;
+    opacity: .65;
+    transition: filter .2s ease, opacity .2s ease;
     width: 1.2rem;
 }
 
 .lang-flag:hover,
 .lang-flag:focus-visible {
-    filter: grayscale(0%);
-    opacity: .85;
     transform: translateY(-.1rem);
 }
 
-.lang-flag.is-active {
+.lang-flag:hover svg,
+.lang-flag:focus-visible svg {
+    filter: grayscale(0%);
+    opacity: .85;
+}
+
+.lang-flag.is-active svg {
     filter: grayscale(0%);
     opacity: 1;
+}
+
+/* Código del idioma debajo de la bandera: no ocupa lugar, así el encabezado no se mueve */
+.lang-code {
+    bottom: 0;
+    color: var(--muted);
+    font-family: "Manrope", sans-serif;
+    font-size: .8125rem;
+    font-weight: 700;
+    left: 50%;
+    letter-spacing: .04em;
+    line-height: 1;
+    pointer-events: none;
+    position: absolute;
+    transform: translateX(-50%);
+    transition: opacity .2s ease;
+}
+
+/* Idioma activo: el código en violeta y subrayado */
+.lang-flag.is-active .lang-code {
+    color: var(--blue);
+    text-decoration: underline;
+    text-decoration-thickness: .1rem;
+    text-underline-offset: .15rem;
+}
+
+/* Con mouse: el código aparece al pasar el mouse o al llegar con el teclado. En pantallas táctiles se ve siempre */
+@media (hover: hover) {
+    .lang-code {
+        opacity: 0;
+    }
+
+    .lang-flag:hover .lang-code,
+    .lang-flag:focus-visible .lang-code {
+        opacity: 1;
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+    .lang-code {
+        transition: none;
+    }
+}
+
+/* Computadora: el área de toque crece hacia el relleno de la barra, sin hacerla más alta */
+@media (min-width: 64rem) {
+    .lang-flag {
+        margin-bottom: -.4375rem;
+        margin-top: -.4375rem;
+    }
+}
+
+/* Computadoras con la barra más justa (hasta 1200 px): las banderas van un poco más angostas, con los mismos 44 px de alto */
+@media (min-width: 64rem) and (max-width: 75rem) {
+    .lang-flag {
+        width: 2.25rem;
+    }
 }
 
 .menu-toggle span {
