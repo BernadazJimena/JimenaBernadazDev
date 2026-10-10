@@ -545,7 +545,7 @@ li:not(.why-item) .text-link {
 
     .lang-flag {
         height: 2.75rem;
-        width: 2rem;
+        width: 2.75rem;
     }
 
     .header-actions {
@@ -572,6 +572,13 @@ li:not(.why-item) .text-link {
 
     .lang-flag svg {
         width: 1.1rem;
+    }
+}
+
+/* Celulares muy chicos: sin "Creative Studio" al lado del logo, las banderas vuelven a tener 44 x 44 px */
+@media (max-width: 22rem) {
+    .lang-flag {
+        width: 2.75rem;
     }
 }
 
