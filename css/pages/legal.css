@@ -322,6 +322,14 @@
     text-align: right;
 }
 
+/* Celulares: según el ancho, el precio entraba al lado del título y dejaba el + solo en el renglón de abajo.
+   El título ocupa todo el renglón, y el precio y el + quedan juntos debajo, a la derecha, igual en los tres planes */
+@media (max-width: 35rem) {
+    .plan-detail summary h2 {
+        flex-basis: 100%;
+    }
+}
+
 /* ===== Guía "Cómo conseguir tu dominio" ===== */
 .domain-guide code {
     background: var(--sky);
