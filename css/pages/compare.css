@@ -85,7 +85,7 @@
 .compare-table thead th span:not(.visually-hidden) {
     color: var(--muted);
     display: block;
-    font-family: "DM Sans", sans-serif;
+    font-family: "Manrope", sans-serif;
     font-size: .8125rem;
     font-weight: 600;
 }

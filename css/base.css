@@ -5,14 +5,15 @@
     --muted: #625970;
     --blue: #7543d6;
     --blue-dark: #5d31b8;
-    --sky: #f1ebff;
-    --mist: #fbf9ff;
-    --line: #e6ddf8;
-    --rule: #cdbdf1;
+    /* Fondos del modo claro: lilas cálidos (violeta con un toque rosado), monocromáticos como el modo oscuro y sin blanco puro */
+    --sky: #eadff1;
+    --mist: #f3ebf6;
+    --line: #e0d0ea;
+    --rule: #c9b2de;
     --decoration: #9b7be8;
     --field-border: #857a9c;
-    --surface: #ffffff;
-    --plans-bg: linear-gradient(180deg, #f6f1ff 0%, #ece3fd 100%);
+    --surface: #faf5fb;
+    --plans-bg: linear-gradient(180deg, #f1e7f6 0%, #eadff1 100%);
     --chrome-bg: var(--mist);
     --chrome-text: var(--muted);
     --chrome-link: var(--blue);
@@ -84,7 +85,7 @@ body {
     margin: 0;
     color: var(--text);
     background: var(--mist);
-    font-family: "DM Sans", sans-serif;
+    font-family: "Manrope", sans-serif;
     font-size: 1rem;
     line-height: 1.5;
 }

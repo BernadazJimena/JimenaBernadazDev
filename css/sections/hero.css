@@ -142,14 +142,14 @@ h2 em {
 
 
 /* La frase superior forma parte del h1 (SEO) pero se ve como antes */
-.hero h1 .hero-eyebrow {
+.hero .hero-eyebrow {
     display: block;
     line-height: 1.5;
     max-width: none;
 }
 
 /* La línea que dice qué hago (landing pages · webs a medida · tiendas online) se lee de un vistazo */
-.hero h1 .hero-eyebrow {
+.hero .hero-eyebrow {
     font-size: .8125rem;
     letter-spacing: .14em;
     margin-bottom: 1rem;
@@ -170,7 +170,7 @@ h2 em {
         font-size: clamp(2.4rem, min(5.2vw, 10vh), 5.4rem);
     }
 
-    .hero h1 .hero-eyebrow {
+    .hero .hero-eyebrow {
         margin-bottom: clamp(.6rem, 1.6vh, 1rem);
         white-space: nowrap;
     }
@@ -261,7 +261,7 @@ h2 em {
 
 /* Tablets: la línea superior de la portada entra en un solo renglón */
 @media (min-width: 35.01rem) and (max-width: 52rem) {
-    .hero h1 .hero-eyebrow {
+    .hero .hero-eyebrow {
         white-space: nowrap;
     }
 }

@@ -1,12 +1,21 @@
-.reveal {
+/* Aparición leve de las secciones al bajar: solo en la página de inicio. En las demás páginas se ven desde el principio */
+.page-home .reveal {
     opacity: 0;
     transform: translateY(.75rem);
     transition: opacity .35s ease, transform .35s ease;
 }
 
-.reveal.is-visible {
+.page-home .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Sin JavaScript, las secciones se ven desde el principio */
+@media (scripting: none) {
+    .page-home .reveal {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .reveal-delay {
@@ -14,51 +23,48 @@
 }
 
 .hero-content.hero-enter {
-    animation: hero-content-in .8s cubic-bezier(.2, .8, .2, 1) both;
+    animation: hero-content-in .5s cubic-bezier(.2, .8, .2, 1) both;
     opacity: 1;
 }
 
 .hero-content.hero-enter>* {
-    animation: hero-text-in .8s cubic-bezier(.2, .8, .2, 1) both;
+    animation: hero-text-in .5s cubic-bezier(.2, .8, .2, 1) both;
     opacity: 1;
 }
 
 .hero-content.hero-enter>.eyebrow {
-    animation-delay: .08s;
+    animation-delay: .04s;
 }
 
 .hero-content.hero-enter>h1 {
-    animation-delay: .18s;
+    animation-delay: .1s;
 }
 
 .hero-content.hero-enter>.hero-copy {
-    animation-delay: .3s;
+    animation-delay: .16s;
 }
 
 .hero-content.hero-enter>.hero-actions {
-    animation-delay: .42s;
+    animation-delay: .22s;
 }
 
+/* La portada entra sin desenfoque: el texto se puede leer desde el primer momento */
 @keyframes hero-content-in {
     from {
-        filter: blur(.2rem);
         transform: translateY(.5rem);
     }
 
     to {
-        filter: blur(0);
         transform: translateY(0);
     }
 }
 
 @keyframes hero-text-in {
     from {
-        filter: blur(.2rem);
-        transform: translateY(1rem);
+        transform: translateY(.75rem);
     }
 
     to {
-        filter: blur(0);
         transform: translateY(0);
     }
 }
@@ -74,6 +80,12 @@
     .reveal {
         animation: none;
         transition: none;
+    }
+
+    /* Con movimiento reducido, las secciones ya están a la vista: no esperan a que se baje */
+    .page-home .reveal {
+        opacity: 1;
+        transform: none;
     }
 }
 
