@@ -1,7 +1,7 @@
 // Portada: etiqueta que dice si estoy tomando proyectos nuevos.
 //
 // CÓMO CAMBIARLA: editar solo ESTADO (y, si querés, RESERVA_DESDE). Vale para los tres idiomas.
-//   'abierto' → "Tomando proyectos nuevos" (punto verde)
+//   'abierto' → "Disponible para nuevos proyectos" (punto verde)
 //   'agenda'  → "Agenda completa este mes · Reservá tu lugar para {mes}" (punto amarillo, abre la agenda de Google;
 //               en inglés y portugués lleva al contacto, porque las llamadas son solo en español)
 //   'cerrado' → "Por ahora no tomo proyectos nuevos · Escribime y te aviso cuando haya lugar" (punto rojo, lleva al contacto)
@@ -23,17 +23,17 @@
 
     const TEXTOS = {
         es: {
-            abierto: { text: 'Tomando proyectos nuevos' },
+            abierto: { text: 'Disponible para nuevos proyectos' },
             agenda: { text: 'Agenda completa este mes', link: `Reservá tu lugar para ${month}` },
             cerrado: { text: 'Por ahora no tomo proyectos nuevos', link: 'Escribime y te aviso cuando haya lugar' },
         },
         en: {
-            abierto: { text: 'Taking on new projects' },
+            abierto: { text: 'Available for new projects' },
             agenda: { text: 'Fully booked this month', link: `Book your spot for ${month}` },
             cerrado: { text: 'Not taking on new projects right now', link: "Message me and I'll let you know when a spot opens" },
         },
         pt: {
-            abierto: { text: 'Aceitando novos projetos' },
+            abierto: { text: 'Disponível para novos projetos' },
             agenda: { text: 'Agenda cheia este mês', link: `Reserve seu lugar para ${month}` },
             cerrado: { text: 'No momento não estou aceitando novos projetos', link: 'Me escreva e eu aviso quando houver vaga' },
         },
