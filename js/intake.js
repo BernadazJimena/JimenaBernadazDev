@@ -2,7 +2,8 @@
 //
 // CÓMO CAMBIARLA: editar solo ESTADO (y, si querés, RESERVA_DESDE). Vale para los tres idiomas.
 //   'abierto' → "Tomando proyectos nuevos" (punto verde)
-//   'agenda'  → "Agenda completa este mes · Reservá tu lugar para {mes}" (punto amarillo, abre la agenda de Google)
+//   'agenda'  → "Agenda completa este mes · Reservá tu lugar para {mes}" (punto amarillo, abre la agenda de Google;
+//               en inglés y portugués lleva al contacto, porque las llamadas son solo en español)
 //   'cerrado' → "Por ahora no tomo proyectos nuevos · Escribime y te aviso cuando haya lugar" (punto rojo, lleva al contacto)
 (() => {
     const ESTADO = 'abierto';
@@ -53,8 +54,9 @@
     if (copy.link) {
         const link = document.createElement('a');
         link.className = 'intake-link';
-        // En 'agenda' el enlace abre la reserva en otra pestaña; en 'cerrado' baja al contacto
-        const toBooking = ESTADO === 'agenda';
+        // En 'agenda' el enlace abre la reserva en otra pestaña; en 'cerrado' baja al contacto.
+        // Las llamadas son solo en español: en inglés y portugués, 'agenda' también baja al contacto (por escrito)
+        const toBooking = ESTADO === 'agenda' && lang === 'es';
         link.href = toBooking ? AGENDA_URL : '#contacto';
         if (toBooking) {
             link.target = '_blank';

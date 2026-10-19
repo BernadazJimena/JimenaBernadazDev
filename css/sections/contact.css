@@ -267,3 +267,11 @@
     flex-wrap: wrap;
     gap: .75rem;
 }
+
+/* Inglés y portugués: aclaración debajo de los botones (las llamadas son solo en español) */
+.contact-action .contact-note {
+    color: var(--muted);
+    font-size: .875rem;
+    margin: .75rem 0 0;
+    max-width: 28rem;
+}
