@@ -260,3 +260,10 @@
     text-decoration: underline;
     text-underline-offset: .15em;
 }
+
+/* WhatsApp y "Agendá una llamada" en la misma fila (en celular, uno debajo del otro) */
+.contact-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}

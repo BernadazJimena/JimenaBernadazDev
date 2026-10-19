@@ -53,6 +53,8 @@
         });
 
         track.addEventListener('scroll', update, { passive: true });
+        // Al girar el celular o cambiar el ancho de la ventana, los puntos vuelven a marcar la tarjeta correcta
+        window.addEventListener('resize', update);
         update();
     });
 })();
