@@ -141,3 +141,88 @@
         margin-top: 1.75rem;
     }
 }
+
+/* Inicio, solo en celulares: "Cómo te acompaño" y "Qué te garantizo" pasan a carrusel. Se ve un pedacito de la
+   tarjeta siguiente para que se note que hay más; se desliza con el dedo o se toca la tarjeta (cards-carousel.js) */
+.carousel-dots {
+    display: none;
+}
+
+@media (max-width: 35rem) {
+    .page-home .why-grid {
+        display: flex;
+        gap: .75rem;
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        padding: 0 1.25rem;
+        scroll-padding: 0 1.25rem;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+
+    .page-home .why-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .page-home .why-grid .why-item {
+        align-content: start;
+        cursor: pointer;
+        flex: 0 0 82%;
+        scroll-snap-align: start;
+        transition: background-color .25s ease, border-color .25s ease, opacity .3s ease, transform .3s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Efecto leve: la tarjeta del frente se ve plena y las de los costados, más tenues y apenas más chicas */
+    .page-home .why-grid .why-item:not(.is-active) {
+        opacity: .55;
+        transform: scale(.96);
+    }
+
+    .carousel-dots {
+        display: flex;
+        gap: .25rem;
+        justify-content: center;
+        margin-top: .5rem;
+    }
+
+    /* Área de toque de 44 px con el punto chico en el centro */
+    .carousel-dot {
+        align-items: center;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        display: inline-flex;
+        height: 2.75rem;
+        justify-content: center;
+        padding: 0;
+        width: 1.75rem;
+    }
+
+    .carousel-dot::before {
+        background: var(--rule);
+        border-radius: 1rem;
+        content: "";
+        height: .5rem;
+        transition: background-color .2s ease, width .2s ease;
+        width: .5rem;
+    }
+
+    .carousel-dot[aria-current]::before {
+        background: var(--blue);
+        width: 1.4rem;
+    }
+}
+
+@media (max-width: 35rem) and (prefers-reduced-motion: reduce) {
+    .carousel-dot::before,
+    .page-home .why-grid .why-item {
+        transition: none;
+    }
+
+    .page-home .why-grid .why-item:not(.is-active) {
+        transform: none;
+    }
+}

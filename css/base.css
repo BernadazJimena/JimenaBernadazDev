@@ -5,14 +5,14 @@
     --muted: #625970;
     --blue: #7543d6;
     --blue-dark: #5d31b8;
-    /* Fondos del modo claro: lilas cálidos (violeta con un toque rosado), monocromáticos como el modo oscuro y sin blanco puro */
+    /* Fondos del modo claro: lilas cálidos (violeta con un toque rosado), monocromáticos como el modo oscuro y sin blanco: las tarjetas son un lila un poco más saturado que el fondo, con borde para separarse */
     --sky: #eadff1;
     --mist: #f3ebf6;
-    --line: #e0d0ea;
+    --line: #d9c6e8;
     --rule: #c9b2de;
     --decoration: #9b7be8;
     --field-border: #857a9c;
-    --surface: #faf5fb;
+    --surface: #ecdff4;
     --plans-bg: linear-gradient(180deg, #f1e7f6 0%, #eadff1 100%);
     --chrome-bg: var(--mist);
     --chrome-text: var(--muted);
@@ -24,7 +24,7 @@
     --feature-copy: #46385f;
     --feature-rule: rgba(117, 67, 214, .35);
     --feature-detail-border: #cdbdf1;
-    --availability-bg: linear-gradient(145deg, #dccdf8 0%, #f3edff 58%, #e0d3f9 100%);
+    --availability-bg: linear-gradient(145deg, #dccdf8 0%, #ebdff7 58%, #e0d3f9 100%);
     --availability-text: #211632;
     --availability-accent: #5d31b8;
     --availability-copy: #4a3d63;

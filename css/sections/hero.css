@@ -273,3 +273,75 @@ h2 em {
         min-height: calc(100svh - 5.75rem);
     }
 }
+
+/* Portada: etiqueta "Tomando proyectos nuevos / Agenda completa / No tomo proyectos" (el estado se cambia en intake.js).
+   El lugar queda reservado desde el principio, así el título no se mueve cuando aparece. */
+.intake-status {
+    align-items: center;
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: 999rem;
+    color: var(--text);
+    column-gap: .55rem;
+    display: inline-flex;
+    flex-wrap: wrap;
+    font-size: .8125rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0 0 1.25rem;
+    min-height: 2.1rem;
+    padding: .35rem .95rem;
+    row-gap: .1rem;
+    visibility: hidden;
+}
+
+.intake-status.is-ready {
+    visibility: visible;
+}
+
+.intake-dot {
+    background: #2fae5a;
+    border-radius: 50%;
+    box-shadow: 0 0 0 .25rem rgba(47, 174, 90, .18);
+    flex-shrink: 0;
+    height: .55rem;
+    width: .55rem;
+}
+
+.intake-status[data-state="agenda"] .intake-dot {
+    background: #d9a441;
+    box-shadow: 0 0 0 .25rem rgba(217, 164, 65, .2);
+}
+
+.intake-status[data-state="cerrado"] .intake-dot {
+    background: #e05252;
+    box-shadow: 0 0 0 .25rem rgba(224, 82, 82, .18);
+}
+
+.intake-link {
+    color: var(--blue);
+    text-decoration: underline;
+    text-underline-offset: .15em;
+}
+
+.intake-link:hover,
+.intake-link:focus-visible {
+    color: var(--blue-dark);
+}
+
+:root[data-theme="dark"] .intake-link:hover,
+:root[data-theme="dark"] .intake-link:focus-visible {
+    color: var(--text);
+}
+
+/* Celulares: si el texto es largo, el enlace pasa abajo y la etiqueta deja de ser una píldora */
+@media (max-width: 35rem) {
+    .intake-status {
+        border-radius: .9rem;
+    }
+
+    .intake-link {
+        flex-basis: 100%;
+        padding-left: 1.1rem;
+    }
+}
