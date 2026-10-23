@@ -86,7 +86,7 @@
 
     .nav-submenu-label {
         border-bottom: .08rem solid var(--rule);
-        font-size: .8125rem;
+        font-size: var(--text-sm);
         padding: .9rem 0 .6rem;
     }
 
@@ -316,7 +316,7 @@
     }
 
     .plan-card .button {
-        font-size: .8125rem;
+        font-size: var(--text-sm);
         gap: .5rem;
         padding: 1rem .9rem;
     }
@@ -341,7 +341,7 @@
 @media (max-width: 35rem) {
     /* Encabezado en una sola línea con las tres banderas */
     .brand {
-        font-size: .8125rem;
+        font-size: var(--text-sm);
         gap: .5rem;
         white-space: nowrap;
     }
@@ -644,5 +644,12 @@ li:not(.why-item) .text-link {
         display: inline-block;
         margin: -.55rem 0;
         padding: .55rem 0;
+    }
+}
+
+/* Celular: los textos chicos pasan de 13 a 14 px para que se lean mejor */
+@media (max-width: 35rem) {
+    :root {
+        --text-sm: .875rem;
     }
 }

@@ -55,7 +55,7 @@
 .contact-field span {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: .06em;
     text-transform: uppercase;
@@ -85,7 +85,7 @@
 .contact-plan legend {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: .06em;
     margin-bottom: .4rem;
@@ -249,7 +249,7 @@
 /* Línea de privacidad justo debajo del botón de envío: 12 px de separación (el formulario deja 16 px entre elementos) */
 .form-privacy {
     color: var(--muted);
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     margin: -.25rem 0 0;
 }
 

@@ -13,7 +13,7 @@
 h2 {
     font-family: "Manrope", sans-serif;
     font-size: clamp(2.4rem, 4vw, 4.1rem);
-    letter-spacing: -.065em;
+    letter-spacing: -.025em;
     line-height: .98;
     margin: 0;
 }
@@ -103,7 +103,7 @@ h2 {
 .text-link {
     color: var(--blue);
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     white-space: nowrap;
 }

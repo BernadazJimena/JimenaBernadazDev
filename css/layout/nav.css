@@ -87,7 +87,7 @@
 .lang-code {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: .04em;
     line-height: 1;
@@ -272,7 +272,7 @@
 .nav-submenu-label {
     color: var(--muted);
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 800;
     letter-spacing: .1em;
     padding: .7rem .8rem .25rem;
@@ -585,7 +585,7 @@
 @media (min-width: 64rem) and (max-width: 75rem) {
     .main-nav,
     .main-nav .nav-menu > .nav-submenu {
-        font-size: .8125rem;
+        font-size: var(--text-sm);
         gap: .7rem;
     }
 

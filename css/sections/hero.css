@@ -19,7 +19,7 @@
 .eyebrow {
     color: var(--blue);
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 800;
     letter-spacing: .16em;
     margin: 0 0 1.2rem;
@@ -28,10 +28,10 @@
 .hero h1 {
     font-family: "Manrope", sans-serif;
     font-size: clamp(3.2rem, 6.5vw, 6.15rem);
-    letter-spacing: -.075em;
+    letter-spacing: -.025em;
     line-height: .96;
     margin: 0;
-    max-width: 10ch;
+    max-width: 11ch;
 }
 
 h1 em,
@@ -63,7 +63,7 @@ h2 em {
     border-radius: 999rem;
     display: inline-flex;
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     gap: .8rem;
     justify-content: center;
@@ -118,7 +118,7 @@ h2 em {
 
 .time-zone {
     color: var(--availability-muted);
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: .15em;
 }
@@ -150,7 +150,7 @@ h2 em {
 
 /* La línea que dice qué hago (landing pages · webs a medida · tiendas online) se lee de un vistazo */
 .hero .hero-eyebrow {
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     letter-spacing: .14em;
     margin-bottom: 1rem;
 }
@@ -285,7 +285,7 @@ h2 em {
     column-gap: .55rem;
     display: inline-flex;
     flex-wrap: wrap;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     line-height: 1.4;
     margin: 0 0 1.25rem;

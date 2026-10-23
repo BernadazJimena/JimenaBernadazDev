@@ -86,7 +86,7 @@
     color: var(--muted);
     display: block;
     font-family: "Manrope", sans-serif;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
     font-weight: 600;
 }
 
@@ -122,7 +122,7 @@
 .compare-price small {
     color: var(--muted);
     display: block;
-    font-size: .8125rem;
+    font-size: var(--text-sm);
 }
 
 .compare-note {
