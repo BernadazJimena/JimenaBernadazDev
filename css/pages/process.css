@@ -16,6 +16,36 @@
     display: flex;
     gap: 1rem;
     padding: 1.25rem 1.5rem;
+    position: relative;
+    transition: background-color .25s ease, border-color .25s ease;
+}
+
+/* Línea que une cada número con el del paso siguiente (continuidad de la Gestalt).
+   Va solo dentro de las cajas: ::after baja del número al borde inferior y ::before
+   sube del número al borde superior; en el espacio entre cajas se corta */
+.process-step::before,
+.process-step::after {
+    background: var(--line);
+    content: "";
+    left: calc(2.5rem - 1px);
+    position: absolute;
+    transition: background-color .25s ease;
+    width: 2px;
+}
+
+.process-step::before {
+    height: .9rem;
+    top: 0;
+}
+
+.process-step::after {
+    bottom: 0;
+    top: 3.6rem;
+}
+
+.process-step:first-child::before,
+.process-step:last-child::after {
+    display: none;
 }
 
 .process-step:nth-child(3n + 1) {
@@ -42,11 +72,56 @@
     font-weight: 800;
     height: 2rem;
     justify-content: center;
+    transition: background-color .25s ease, color .25s ease;
     width: 2rem;
 }
 
 :root[data-theme="dark"] .process-num {
     color: #100b1d;
+}
+
+/* Recorrido: al pasar el mouse por un paso se encienden ese paso y todos los anteriores,
+   cada uno con su color, como un camino que avanza del 1 al 8 */
+.process-step:hover,
+.process-step:focus-within,
+.process-step:has(~ .process-step:hover),
+.process-step:has(~ .process-step:focus-within) {
+    background: color-mix(in srgb, var(--step-color) 16%, var(--surface));
+    border-color: var(--step-color);
+}
+
+.process-step:hover .process-num,
+.process-step:focus-within .process-num,
+.process-step:has(~ .process-step:hover) .process-num,
+.process-step:has(~ .process-step:focus-within) .process-num {
+    background: var(--step-color);
+    color: var(--ink);
+}
+
+:root[data-theme="dark"] .process-step:hover .process-num,
+:root[data-theme="dark"] .process-step:focus-within .process-num,
+:root[data-theme="dark"] .process-step:has(~ .process-step:hover) .process-num,
+:root[data-theme="dark"] .process-step:has(~ .process-step:focus-within) .process-num {
+    color: #100b1d;
+}
+
+/* La línea se pinta solo entre pasos ya recorridos */
+.process-step:hover::before,
+.process-step:focus-within::before,
+.process-step:has(~ .process-step:hover)::before,
+.process-step:has(~ .process-step:focus-within)::before,
+.process-step:has(~ .process-step:hover)::after,
+.process-step:has(~ .process-step:focus-within)::after {
+    background: var(--step-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .process-step,
+    .process-step::before,
+    .process-step::after,
+    .process-num {
+        transition: none;
+    }
 }
 
 .process-step h2 {
@@ -76,5 +151,18 @@
 @media (max-width: 35rem) {
     .process-step {
         padding: 1.1rem 1.1rem 1.1rem 1rem;
+    }
+
+    .process-step::before,
+    .process-step::after {
+        left: calc(2rem - 1px);
+    }
+
+    .process-step::before {
+        height: .75rem;
+    }
+
+    .process-step::after {
+        top: 3.45rem;
     }
 }
