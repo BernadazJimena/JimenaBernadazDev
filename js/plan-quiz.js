@@ -22,7 +22,7 @@
     let resultMessage = '';
 
     let path = [];          // preguntas ya respondidas, en orden
-    let current = 'goal';   // pregunta que se está mostrando
+    let current = steps[0].dataset.step;   // pregunta que se está mostrando (en inglés no está la de objetivo)
 
     const step = (name) => steps.find((s) => s.dataset.step === name);
     const checked = (name) => [...form.querySelectorAll(`input[name="${name}"]:checked`)];
@@ -38,7 +38,7 @@
         if (name === 'extras') return 'login';
         return null;
     };
-    const total = () => ({ store: 2, both: 1 }[value('goal')] ?? (value('size') === 'several' ? 3 : 4));
+    const total = () => ({ store: 2, both: 1 }[value('goal')] ?? (value('size') === 'several' ? 3 : 4) - (step('goal') ? 0 : 1));
 
     const render = () => {
         steps.forEach((s) => { s.hidden = s.dataset.step !== current; });
@@ -64,7 +64,7 @@
         const plan = recommend();
         const card = result.querySelector(`[data-result="${plan}"]`);
         result.querySelectorAll('[data-result]').forEach((c) => { c.hidden = c !== card; });
-        loginNote.hidden = !(value('goal') === 'show' && value('login') === 'yes');
+        loginNote.hidden = !(current === 'login' && value('login') === 'yes');
 
         // Plan Básico con funciones extra: se avisa que se cotizan aparte
         const extras = checked('extras').filter((input) => input.value !== 'none').map((input) => input.closest('label').textContent.trim());
@@ -72,7 +72,7 @@
         extrasNote.querySelector('.plan-quiz-extras-text').textContent = extrasNote.dataset.template.replace('{extras}', extras.join('; '));
 
         // Tienda con landing page: la landing es un adicional del Plan Emprendedor
-        landingNote.hidden = !(plan === 'emprendedor' && value('landing') === 'yes');
+        if (landingNote) landingNote.hidden = !(plan === 'emprendedor' && value('landing') === 'yes');
 
         // Mensaje ya escrito, con el plan y las respuestas (para WhatsApp o para el mail)
         let message = quiz.dataset.waBoth;
@@ -146,7 +146,7 @@
         mailStatus.className = 'contact-form-status';
         mailStatus.textContent = '';
         path = [];
-        current = 'goal';
+        current = steps[0].dataset.step;
         form.hidden = false;
         label.hidden = false;
         result.hidden = true;

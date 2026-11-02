@@ -12,6 +12,12 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Versión en inglés: solo dos planes, centrados */
+.plan-grid-two {
+    margin-inline: auto;
+    max-width: 56rem;
+}
+
 .plan-card {
     background: var(--mist);
     border: .08rem solid var(--line);

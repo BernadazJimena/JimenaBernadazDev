@@ -653,3 +653,14 @@ li:not(.why-item) .text-link {
         --text-sm: .875rem;
     }
 }
+
+/* Versión en inglés: los dos planes siempre lado a lado, desde tablet */
+@media (min-width: 35.01rem) {
+    .plan-grid.plan-grid-two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .plan-grid.plan-grid-two > .plan-card:last-child {
+        grid-column: auto;
+    }
+}

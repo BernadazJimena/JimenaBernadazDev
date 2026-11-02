@@ -185,6 +185,11 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Versión en inglés: solo dos planes */
+.compare-choose-grid-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .compare-choose-card {
     background: var(--surface);
     border: .08rem solid var(--line);
@@ -217,4 +222,9 @@
     .compare-choose-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Con dos planes la tabla entra en el celular sin desplazarse */
+.compare-table-two {
+    min-width: 0;
 }
