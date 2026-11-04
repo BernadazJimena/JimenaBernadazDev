@@ -1,5 +1,6 @@
 .site-footer {
-    background: var(--chrome-bg);
+    /* Toma el tono del final del degradé de la página (base.css), así no aparece un corte más claro abajo */
+    background: var(--page-end);
     border-top: .08rem solid var(--chrome-border);
     color: var(--chrome-text);
     align-items: center;

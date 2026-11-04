@@ -128,3 +128,30 @@ main:focus {
 [hidden] {
     display: none !important;
 }
+
+/* Fondo de la página: para que no se vea tan liso, sin dibujos ni texturas.
+   1. Degradé muy suave: el lila se oscurece de a poco desde arriba hasta el contacto (--page-end).
+   2. Franja alternada: "Proyectos de muestra" y "Qué te garantizo" llevan un velo apenas más oscuro (--band),
+      de borde a borde, así las secciones se alternan y se distingue dónde empieza cada bloque.
+   Siempre en la gama lila (modo claro sin blancos). */
+:root {
+    --page-end: #e9ddf1;
+    --band: rgba(117, 67, 214, .05);
+}
+
+:root[data-theme="dark"] {
+    --page-end: #1a1230;
+    --band: rgba(155, 109, 255, .045);
+}
+
+body {
+    background: linear-gradient(180deg, var(--mist) 0%, var(--page-end) 100%);
+}
+
+/* La franja ocupa todo el ancho de la pantalla aunque la sección tenga ancho máximo */
+.samples.section-shell,
+.guarantee.section-shell {
+    box-shadow: 0 0 0 100vmax var(--band);
+    clip-path: inset(0 -100vmax);
+    background: var(--band);
+}
