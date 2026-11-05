@@ -6,10 +6,9 @@
     padding-top: 0;
 }
 
-/* Línea y aire para separarlas de la sección anterior, que tiene el mismo fondo */
+/* Aire arriba: el cambio de fondo (franja alternada) ya las separa de la sección anterior, sin línea */
 .why-head,
 .guarantee-head {
-    border-top: .08rem solid var(--rule);
     padding-top: clamp(3rem, 5vw, 4.5rem);
 }
 
