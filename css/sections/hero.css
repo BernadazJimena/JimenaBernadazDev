@@ -345,3 +345,114 @@ h2 em {
         padding-left: 1.1rem;
     }
 }
+
+
+/* ------------------------------------------------------------------
+   Portada: foto de fondo integrada al color de la sección.
+   No es una foto con un velo negro encima: la foto se tiñe con los violetas
+   de la marca y se funde con el fondo de la portada (--sky), así no hay
+   cortes ni diferencias de color con el resto de la sección.
+   Efectos elegidos (no todos los posibles, solo los que van con el estilo):
+   1. Color de marca: la foto pasa a violeta (filter) y se mezcla con el fondo
+      (mix-blend-mode). En modo claro quedan solo las líneas, en violeta;
+      en modo oscuro quedan solo las luces.
+   2. Fundido hacia el texto: la foto ocupa el lado derecho y se va borrando
+      hacia la izquierda, antes de llegar al párrafo.
+   3. Bordes arriba y abajo: la foto aparece y desaparece de a poco, así la
+      portada termina en su color de siempre y no hay corte con "Sobre mí".
+   4. Desenfoque leve: la foto queda en segundo plano y no se nota que
+      es chica cuando se agranda en pantallas grandes.
+   5. Halo detrás del texto: un degradé radial del color del fondo, solo donde
+      está el texto, para que el título y el párrafo se lean bien.
+   ------------------------------------------------------------------ */
+.hero {
+    --hero-photo-opacity: .55;
+    --hero-photo-filter: invert(1) grayscale(1) contrast(.6) brightness(1.1) sepia(1) hue-rotate(215deg) saturate(2.6) blur(var(--hero-photo-blur));
+    --hero-photo-blend: multiply;
+    --hero-halo: rgba(234, 223, 241, .96);
+    --hero-photo-blur: 1.2px;
+    isolation: isolate;
+}
+
+:root[data-theme="dark"] .hero {
+    --hero-photo-opacity: .85;
+    --hero-photo-filter: grayscale(1) sepia(1) hue-rotate(215deg) saturate(1.8) brightness(1.15) blur(var(--hero-photo-blur));
+    --hero-photo-blend: screen;
+    --hero-halo: rgba(24, 17, 43, .92);
+}
+
+/* Con la foto de fondo, los círculos decorativos ya no hacen falta:
+   la foto cumple ese papel y los dos juntos competían */
+.hero-decoration,
+.hero .hero-actions::before {
+    display: none;
+}
+
+/* La foto va del centro hacia la derecha; se ve la zona del código y la red */
+.hero::before {
+    background: url("../../assets/images/hero-fondo.webp") 35% 60% / cover no-repeat;
+    bottom: 0;
+    content: "";
+    filter: var(--hero-photo-filter);
+    left: calc(50% + 12rem);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-image:
+        linear-gradient(90deg, transparent 0, #000 22rem, #000 85%, rgba(0, 0, 0, .55) 100%),
+        linear-gradient(180deg, transparent 0, #000 22%, #000 68%, transparent 100%);
+    mask-image:
+        linear-gradient(90deg, transparent 0, #000 22rem, #000 85%, rgba(0, 0, 0, .55) 100%),
+        linear-gradient(180deg, transparent 0, #000 22%, #000 68%, transparent 100%);
+    mix-blend-mode: var(--hero-photo-blend);
+    opacity: var(--hero-photo-opacity);
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 0;
+}
+
+/* Pantallas grandes: la foto se agranda, un poco más de desenfoque */
+@media (min-width: 100rem) {
+    .hero {
+        --hero-photo-blur: 2px;
+    }
+}
+
+/* El halo va detrás del bloque de texto y se desvanece sin borde */
+.hero-content::before {
+    background: radial-gradient(closest-side, var(--hero-halo) 70%, transparent 100%);
+    content: "";
+    inset: -5rem -9rem;
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+}
+
+/* Celulares y tablets: el texto ocupa todo el ancho, así que la foto
+   queda en la parte de abajo, detrás de los botones, y más tenue */
+@media (max-width: 52rem) {
+    .hero {
+        --hero-photo-opacity: .55;
+    }
+
+    :root[data-theme="dark"] .hero {
+        --hero-photo-opacity: .55;
+    }
+
+    .hero::before {
+        background-position: 30% 70%;
+        left: 0;
+        top: 45%;
+        -webkit-mask-image:
+            linear-gradient(90deg, transparent 0, #000 70%),
+            linear-gradient(180deg, transparent 0, #000 45%, #000 70%, transparent 100%);
+        mask-image:
+            linear-gradient(90deg, transparent 0, #000 70%),
+            linear-gradient(180deg, transparent 0, #000 45%, #000 70%, transparent 100%);
+    }
+
+    .hero-content::before {
+        inset: -2rem -1.25rem;
+    }
+}
