@@ -161,55 +161,32 @@
     <section class="legal section-shell">
       <div class="legal-content domain-guide">
         <p class="domain-lead">El dominio no se compra para siempre. Se paga por un año y después se renueva cada año. Si no lo renovás, lo perdés y otra persona lo puede usar.</p>
-        <h2 class="domain-section-title">Cuál de los tres sitios te conviene</h2>
-        <div class="domain-cards">
-          <article class="domain-card domain-card-nic">
-            <h3>NIC Argentina <span class="domain-card-time">≈ 15 min</span></h3>
-            <dl>
-              <dt>Qué dominios da</dt><dd><code>.com.ar</code> <code>.ar</code> y otros de Argentina</dd>
-              <dt>Para quién es</dt><dd>Personas o empresas con CUIT o CUIL argentino</dd>
-              <dt>Qué te pide</dt><dd>Clave Fiscal de ARCA (ex AFIP)</dd>
-            </dl>
-            <a class="button button-ghost domain-card-link" href="#nic">Ver los pasos <span aria-hidden="true">↓</span></a>
-          </article>
-          <article class="domain-card domain-card-godaddy">
-            <h3>GoDaddy <span class="domain-card-time">≈ 10 min</span></h3>
-            <dl>
-              <dt>Qué dominios da</dt><dd><code>.com</code> <code>.net</code> <code>.org</code> y muchos más</dd>
-              <dt>Para quién es</dt><dd>Cualquier persona, de cualquier país</dd>
-              <dt>Qué te pide</dt><dd>Un correo electrónico y una tarjeta</dd>
-            </dl>
-            <a class="button button-ghost domain-card-link" href="#godaddy">Ver los pasos <span aria-hidden="true">↓</span></a>
-          </article>
-          <article class="domain-card domain-card-registro">
-            <h3>Registro.br <span class="domain-card-time">≈ 15 min</span></h3>
-            <dl>
-              <dt>Qué dominios da</dt><dd><code>.com.br</code> y otros de Brasil</dd>
-              <dt>Para quién es</dt><dd>Personas o empresas con CPF o CNPJ de Brasil</dd>
-              <dt>Qué te pide</dt><dd>CPF o CNPJ y un correo electrónico</dd>
-            </dl>
-            <a class="button button-ghost domain-card-link" href="#registro">Ver los pasos <span aria-hidden="true">↓</span></a>
-          </article>
+        <h2 class="domain-section-title">¿Cuál es tu caso?</h2>
+        <div class="domain-cards domain-cards-pick" aria-label="Opciones según tu caso">
+          <a class="domain-card domain-card-nic domain-pick domain-card-link" href="#nic">
+            <span class="domain-pick-case">Tengo CUIT o CUIL argentino</span>
+            <span class="domain-pick-site">NIC Argentina · <code>.com.ar</code></span>
+            <span class="domain-pick-go">Ver los pasos <span aria-hidden="true">↓</span> <span class="domain-card-time">≈ 15 min</span></span>
+          </a>
+          <a class="domain-card domain-card-godaddy domain-pick domain-card-link" href="#godaddy">
+            <span class="domain-pick-case">Quiero un <code>.com</code>, desde cualquier país</span>
+            <span class="domain-pick-site">GoDaddy · <code>.com</code></span>
+            <span class="domain-pick-go">Ver los pasos <span aria-hidden="true">↓</span> <span class="domain-card-time">≈ 10 min</span></span>
+          </a>
+          <a class="domain-card domain-card-registro domain-pick domain-card-link" href="#registro">
+            <span class="domain-pick-case">Tengo CPF o CNPJ de Brasil</span>
+            <span class="domain-pick-site">Registro.br · <code>.com.br</code></span>
+            <span class="domain-pick-go">Ver los pasos <span aria-hidden="true">↓</span> <span class="domain-card-time">≈ 15 min</span></span>
+          </a>
         </div>
-        <p class="domain-note"><strong>GoDaddy es solo un ejemplo.</strong> Hay otros sitios que también venden dominios <code>.com</code>, como Namecheap, Hostinger o DonWeb. Si ya tenés cuenta en alguno, podés registrar tu dominio ahí: los pasos son parecidos. Lo importante es que el dominio quede a tu nombre.</p>
+        <p class="domain-note">¿Estás en otro país? <a class="text-link domain-card-link" href="#otros-paises">Mirá dónde se registra el dominio de tu país</a>. ¿Ya tenés cuenta en otro sitio, como Namecheap o DonWeb? Podés usarlo: los pasos son parecidos.</p>
 
-        <div class="domain-prep">
-          <div class="legal-summary">
-            <h2>Qué tener a mano</h2>
-            <ul>
-              <li>Un correo electrónico que uses todos los días. Ahí te llegan los avisos.</li>
-              <li>Un medio de pago: tarjeta de crédito o débito.</li>
-              <li>Dos o tres ideas de nombre, por si el primero ya está ocupado.</li>
-            </ul>
-          </div>
-          <div class="legal-summary">
-            <h2>Consejos para elegir el nombre</h2>
-            <ul>
-              <li>Corto y fácil de decir en voz alta.</li>
-              <li>Sin guiones, sin números y sin letras raras como ñ o acentos.</li>
-              <li>Parecido al nombre de tu negocio o proyecto.</li>
-            </ul>
-          </div>
+        <div class="legal-summary domain-before">
+          <h2>Antes de empezar, tené a mano</h2>
+          <ul>
+            <li>Un correo que uses todos los días y una tarjeta de crédito o débito.</li>
+            <li>Dos o tres ideas de nombre: cortas, sin guiones ni acentos y parecidas al nombre de tu negocio.</li>
+          </ul>
         </div>
 
         <div class="legal-toolbar">
@@ -330,6 +307,23 @@
                 <li>Anotá la fecha de vencimiento y renová antes de esa fecha.</li>
               </ul>
               <a class="button button-primary domain-go" href="https://registro.br" target="_blank" rel="noopener noreferrer">Ir a registro.br <span aria-hidden="true">↗</span></a>
+            </div>
+          </details>
+          <details class="legal-block domain-other" id="otros-paises">
+            <summary><h2>¿Estás en otro país?</h2></summary>
+            <div class="legal-panel">
+              <p>Si querés el dominio de tu país, se registra en su sitio oficial. Los pasos son parecidos a los de NIC Argentina: buscás el nombre, creás una cuenta y pagás.</p>
+              <ul class="domain-countries">
+                <li><strong>Chile</strong> <code>.cl</code> <a class="text-link" href="https://www.nic.cl" target="_blank" rel="noopener noreferrer">nic.cl <span aria-hidden="true">↗</span></a></li>
+                <li><strong>Uruguay</strong> <code>.uy</code> <a class="text-link" href="https://nic.uy" target="_blank" rel="noopener noreferrer">nic.uy <span aria-hidden="true">↗</span></a></li>
+                <li><strong>Paraguay</strong> <code>.com.py</code> <a class="text-link" href="https://www.nic.py" target="_blank" rel="noopener noreferrer">nic.py <span aria-hidden="true">↗</span></a></li>
+                <li><strong>Bolivia</strong> <code>.bo</code> <a class="text-link" href="https://nic.bo" target="_blank" rel="noopener noreferrer">nic.bo <span aria-hidden="true">↗</span></a></li>
+                <li><strong>Perú</strong> <code>.pe</code> <a class="text-link" href="https://punto.pe" target="_blank" rel="noopener noreferrer">punto.pe <span aria-hidden="true">↗</span></a></li>
+                <li><strong>Ecuador</strong> <code>.ec</code> <a class="text-link" href="https://nic.ec" target="_blank" rel="noopener noreferrer">nic.ec <span aria-hidden="true">↗</span></a></li>
+                <li><strong>México</strong> <code>.mx</code> <a class="text-link" href="https://www.akky.mx" target="_blank" rel="noopener noreferrer">akky.mx <span aria-hidden="true">↗</span></a></li>
+                <li><strong>Colombia</strong> <code>.co</code> en sitios como GoDaddy o Namecheap</li>
+              </ul>
+              <p>Algunos países piden documento o empresa local. Si no cumplís con ese requisito, o preferís no complicarte, un dominio <code>.com</code> en <a class="text-link" href="#godaddy">GoDaddy</a> funciona desde cualquier país.</p>
             </div>
           </details>
         </div>
