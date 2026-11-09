@@ -352,3 +352,60 @@
         text-align: center;
     }
 }
+
+/* Todas las cards de una fila miden lo mismo: "Ver más" queda abajo de todo,
+   y al abrir una card la frase, la fecha y "Leer más" aparecen sobre la imagen,
+   así la card no cambia de altura ni desacomoda la fila */
+.blog-list {
+    align-items: stretch;
+}
+
+.blog-card {
+    container-type: inline-size;
+    display: grid;
+    position: relative;
+}
+
+/* "Ver más" va siempre abajo de todo de la card, aunque el título tenga más renglones */
+.blog-card-title {
+    padding-bottom: 2.6rem;
+}
+
+.blog-card-hint {
+    bottom: 1.1rem;
+    left: 1.25rem;
+    padding: 0;
+    position: absolute;
+}
+
+.blog-card-detail {
+    background: rgba(29, 19, 64, .94);
+    height: 62.5cqw; /* la altura de la foto (proporción 16:10) */
+    border-top: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    left: 0;
+    margin: 0;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.blog-card-detail .blog-card-quote {
+    color: #f3ebf6;
+    font-size: .95rem;
+    margin-bottom: .5rem;
+}
+
+.blog-card-detail .blog-meta {
+    color: #cdb9f6;
+    margin-bottom: .6rem;
+}
+
+.blog-card-detail .blog-card-more {
+    color: #d9c9ff;
+}
