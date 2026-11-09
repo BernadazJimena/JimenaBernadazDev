@@ -1,0 +1,190 @@
+/* Blog: listado de publicaciones en cards (tres por fila en computadora) */
+.blog-list {
+    align-items: start;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.blog-card {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.blog-card:hover,
+.blog-card[open] {
+    border-color: var(--decoration);
+    box-shadow: 0 .75rem 2rem rgba(117, 67, 214, .14);
+}
+
+/* La parte visible de la card: imagen y título. Al tocarla se despliega la frase, la fecha y "Leer más" */
+.blog-card summary {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+
+.blog-card summary::-webkit-details-marker {
+    display: none;
+}
+
+.blog-card summary:focus-visible {
+    outline: .15rem solid var(--blue);
+    outline-offset: -.15rem;
+}
+
+.blog-card-img {
+    aspect-ratio: 16 / 10;
+    display: block;
+    height: auto;
+    object-fit: cover;
+    object-position: top;
+    width: 100%;
+}
+
+.blog-card-title {
+    color: var(--text);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    line-height: 1.3;
+    padding: 1.1rem 1.25rem .4rem;
+}
+
+.blog-card-hint {
+    color: var(--blue);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    padding: 0 1.25rem 1.1rem;
+}
+
+.blog-card-hint-close,
+.blog-card[open] .blog-card-hint-open {
+    display: none;
+}
+
+.blog-card[open] .blog-card-hint-close {
+    display: inline;
+}
+
+.blog-card-detail {
+    border-top: .08rem solid var(--line);
+    margin: 0 1.25rem;
+    padding: 1rem 0 1.25rem;
+}
+
+.blog-card[open] .blog-card-detail {
+    animation: blog-card-in .25s ease;
+}
+
+@keyframes blog-card-in {
+    from { opacity: 0; transform: translateY(-.35rem); }
+    to { opacity: 1; transform: none; }
+}
+
+.blog-card-quote {
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.55;
+    margin: 0 0 .75rem;
+}
+
+.blog-meta {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    margin: 0 0 1rem;
+}
+
+.blog-card-more {
+    color: var(--blue);
+    font-weight: 800;
+}
+
+.blog-card-more:hover,
+.blog-card-more:focus-visible {
+    text-decoration: underline;
+}
+
+/* Página de cada artículo */
+.blog-back {
+    color: inherit;
+}
+
+.legal-hero .blog-meta {
+    margin: 1rem 0 0;
+}
+
+.blog-cover {
+    aspect-ratio: 16 / 9;
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    display: block;
+    height: auto;
+    object-fit: cover;
+    object-position: top;
+    width: 100%;
+}
+
+.blog-body {
+    color: var(--text);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.blog-body h2 {
+    font-size: clamp(1.35rem, 2.4vw, 1.6rem);
+    letter-spacing: -.015em;
+    line-height: 1.25;
+    margin: 2.25rem 0 .75rem;
+}
+
+.blog-body p,
+.blog-body ul {
+    margin: 0 0 1rem;
+}
+
+.blog-body li + li {
+    margin-top: .35rem;
+}
+
+.blog-cta {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 4vw, 2rem);
+}
+
+.blog-cta h2 {
+    font-size: 1.4rem;
+    margin: 0 0 .5rem;
+}
+
+.blog-cta p {
+    margin: 0;
+}
+
+.blog-cta-links {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    margin-top: 1.25rem !important;
+}
+
+/* Tablet: dos por fila. Celular: una */
+@media (max-width: 64rem) {
+    .blog-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 35rem) {
+    .blog-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
