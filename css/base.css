@@ -96,6 +96,19 @@ a {
     text-decoration: none;
 }
 
+/* Sin palabras huérfanas (una sola palabra sola en la última línea):
+   - Títulos: el navegador reparte las palabras en líneas de largo parecido.
+   - Párrafos y listas: el navegador acomoda las últimas líneas para que la última no quede con una palabra sola.
+   Vale para todas las páginas y todos los tamaños (celular, tablet y computadora). */
+h1, h2, h3, h4, h5, h6,
+.eyebrow, blockquote, figcaption, summary, legend, th {
+    text-wrap: balance;
+}
+
+p, li, dd, dt, td, label, small {
+    text-wrap: pretty;
+}
+
 /* "Saltar al contenido": oculto hasta que se llega con el teclado */
 .skip-link {
     background: var(--blue);

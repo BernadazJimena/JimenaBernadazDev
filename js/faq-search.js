@@ -11,7 +11,7 @@
     const groups = [...document.querySelectorAll('.faq-group')];
 
     // Se compara sin mayúsculas ni tildes: "dominio", "Dominio" y "domínio" encuentran lo mismo
-    const plain = (text) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const plain = (text) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s/g, ' '); // el espacio pegado de no-orphans.js cuenta como espacio
 
     const questions = groups.flatMap((group) => [...group.querySelectorAll('details')].map((item) => ({
         item,
