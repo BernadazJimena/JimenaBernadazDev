@@ -42,7 +42,7 @@
     display: block;
     height: auto;
     object-fit: cover;
-    object-position: top;
+    object-position: center;
     width: 100%;
 }
 
@@ -120,13 +120,13 @@
 }
 
 .blog-cover {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 10;
     border: .08rem solid var(--line);
     border-radius: var(--radius);
     display: block;
     height: auto;
     object-fit: cover;
-    object-position: top;
+    object-position: center;
     width: 100%;
 }
 
