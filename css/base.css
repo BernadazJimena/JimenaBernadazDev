@@ -187,6 +187,20 @@ body {
     --band-photo-blend: screen;
 }
 
+/* En celular y tablet la foto se agranda mucho para cubrir la sección y las líneas
+   de los bocetos quedan detrás del texto: ahí va mucho más suave y un poco desenfocada */
+@media (max-width: 768px) {
+    :root {
+        --band-photo-opacity: .05;
+        --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) blur(1.5px);
+    }
+
+    :root[data-theme="dark"] {
+        --band-photo-opacity: .08;
+        --band-photo-filter: saturate(.8) brightness(.9) blur(1.5px);
+    }
+}
+
 /* La foto ocupa todo el ancho de la pantalla; esto evita que aparezca una barra de desplazamiento horizontal */
 main {
     overflow-x: clip;
