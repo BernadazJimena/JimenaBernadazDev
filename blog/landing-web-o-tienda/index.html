@@ -26,14 +26,14 @@
   <meta property="og:description"
     content="¿Necesitás una landing page, una página web o una tienda online? Te explico sus diferencias y cuál es la mejor opción para tu negocio.">
   <meta property="og:url" content="https://jnbcreativestudio.com.ar/blog/landing-web-o-tienda/">
-  <meta property="og:image" content="https://jnbcreativestudio.com.ar/assets/images/blog/landing-web-o-tienda.png">
-  <meta property="og:image:width" content="1600">
-  <meta property="og:image:height" content="1000">
+  <meta property="og:image" content="https://jnbcreativestudio.com.ar/assets/images/blog/landing-web-o-tienda-foto.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Landing page, web o tienda online: ¿cuál elegir?">
   <meta name="twitter:description"
     content="¿Necesitás una landing page, una página web o una tienda online? Te explico sus diferencias y cuál es la mejor opción para tu negocio.">
-  <meta name="twitter:image" content="https://jnbcreativestudio.com.ar/assets/images/blog/landing-web-o-tienda.png">
+  <meta name="twitter:image" content="https://jnbcreativestudio.com.ar/assets/images/blog/landing-web-o-tienda-foto.jpg">
   <link rel="icon" href="../../assets/images/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="../../assets/images/apple-touch-icon.png">
   <meta name="theme-color" content="#100b1d">
@@ -67,13 +67,14 @@
   <script src="../../js/floating.js" defer></script>
   <script src="../../js/no-orphans.js" defer></script>
   <script src="../../js/reveal.js" defer></script>
+  <script src="../../js/blog-quiz.js" defer></script>
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   "headline": "Landing page, página web o tienda online: ¿cuál necesita tu negocio?",
   "description": "¿Necesitás una landing page, una página web o una tienda online? Te explico sus diferencias y cuál es la mejor opción para tu negocio.",
-  "image": "https://jnbcreativestudio.com.ar/assets/images/blog/landing-web-o-tienda.svg",
+  "image": "https://jnbcreativestudio.com.ar/assets/images/blog/landing-web-o-tienda-foto.jpg",
   "datePublished": "2026-11-09",
   "dateModified": "2026-11-09",
   "inLanguage": "es-AR",
@@ -182,7 +183,10 @@
 
     <section class="legal section-shell">
       <article class="legal-content blog-article">
-        <img class="blog-cover" src="/assets/images/blog/landing-web-o-tienda.svg" alt="Ilustración de una landing page, una página web y una tienda online, lado a lado" width="1600" height="1000">
+        <figure class="blog-figure">
+          <img class="blog-cover" src="/assets/images/blog/landing-web-o-tienda-foto.webp" alt="Emprendedora hablando por teléfono mientras trabaja con su laptop en su taller de ropa" width="1440" height="900" fetchpriority="high">
+          <figcaption>Foto: Vitaly Gariev en <a href="https://unsplash.com/es/fotos/disenadora-de-moda-al-telefono-trabajando-en-una-computadora-portatil-kk4J92iaSBk" target="_blank" rel="noopener noreferrer">Unsplash</a></figcaption>
+        </figure>
         <div class="blog-body">
           <p>Cuando alguien me escribe para tener presencia en internet, la primera duda casi siempre es la misma: ¿necesito una landing page, una página web o una tienda online?</p>
           <p>Aunque las tres opciones permiten mostrar tu negocio en internet, cada una cumple una función diferente. Por eso, antes de empezar cualquier proyecto, me gusta entender qué necesitás conseguir y qué esperás que haga una persona cuando visita tu sitio.</p>
@@ -235,6 +239,32 @@
             <li>Si querés que explore tu negocio, conozca tu trayectoria y vea todo lo que ofrecés, necesitás una <strong>página web</strong>.</li>
             <li>Si querés que consulte productos y realice compras directamente, lo que buscás es una <strong>tienda online</strong>.</li>
           </ul>
+          <div class="blog-quiz" data-blog-quiz>
+            <p class="blog-quiz-label">Probalo con tu caso</p>
+            <p class="blog-quiz-question" id="blog-quiz-q">Cuando alguien entra a tu sitio, ¿qué te gustaría que haga?</p>
+            <div class="blog-quiz-options" role="group" aria-labelledby="blog-quiz-q">
+              <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="landing">Que me escriba</button>
+              <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="web">Que me conozca</button>
+              <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="tienda">Que me compre</button>
+            </div>
+            <div class="blog-quiz-result" aria-live="polite">
+              <div class="blog-quiz-answer" data-result="landing" hidden>
+                <p class="blog-quiz-pick">Te conviene una <strong>landing page</strong></p>
+                <p>Una sola página clara, con todo lo necesario para que te contacten por WhatsApp o por formulario. Es la forma más rápida de empezar.</p>
+                <a class="text-link" href="/planes/#basico">Ver el Plan Básico →</a>
+              </div>
+              <div class="blog-quiz-answer" data-result="web" hidden>
+                <p class="blog-quiz-pick">Te conviene una <strong>página web</strong></p>
+                <p>Varias secciones para contar tu trayectoria, tus servicios y tus trabajos, con un diseño que refleje tu marca.</p>
+                <a class="text-link" href="/planes/#premium">Ver el Plan Premium →</a>
+              </div>
+              <div class="blog-quiz-answer" data-result="tienda" hidden>
+                <p class="blog-quiz-pick">Te conviene una <strong>tienda online</strong></p>
+                <p>Un catálogo con carrito, pagos y envíos, para que tus clientes compren solos y vos recibas los pedidos ordenados.</p>
+                <a class="text-link" href="/planes/#emprendedor">Ver el Plan Emprendedor →</a>
+              </div>
+            </div>
+          </div>
           <p>Y algo importante: no tenés que elegir una solución definitiva desde el primer día.</p>
           <p>Muchos negocios comienzan con una landing page y, a medida que crecen, incorporan nuevas secciones, un blog o incluso una tienda online.</p>
           <p>Cuando desarrollo un proyecto, también tengo en cuenta esa posibilidad: que el sitio pueda evolucionar junto con tu negocio, sin que tengas que empezar todo de cero.</p>
