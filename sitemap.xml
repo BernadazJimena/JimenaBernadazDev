@@ -303,7 +303,7 @@
   </url>
   <url>
     <loc>https://jnbcreativestudio.com.ar/blog/</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -311,6 +311,12 @@
     <loc>https://jnbcreativestudio.com.ar/blog/landing-web-o-tienda/</loc>
     <lastmod>2026-11-09</lastmod>
     <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/blog/tiendanube-o-empretienda/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 </urlset>

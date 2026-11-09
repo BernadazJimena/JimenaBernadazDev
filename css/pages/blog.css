@@ -353,6 +353,337 @@
     }
 }
 
+/* Aviso de datos actualizados */
+.blog-body .blog-note {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: .75rem;
+    color: var(--muted);
+    font-size: .95rem;
+    padding: .85rem 1.1rem;
+}
+
+.blog-body ol {
+    margin: 0 0 1rem;
+    padding-left: 1.4rem;
+}
+
+.blog-body ol li + li {
+    margin-top: .5rem;
+}
+
+/* Tabla comparativa: en celular se desliza de costado sin romper la página */
+.blog-table-wrap {
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    margin: 0 0 .75rem;
+    overflow-x: auto;
+}
+
+.blog-table-wrap:focus-visible {
+    outline: .15rem solid var(--blue);
+    outline-offset: .15rem;
+}
+
+.blog-table {
+    border-collapse: collapse;
+    font-size: .95rem;
+    line-height: 1.5;
+    min-width: 34rem;
+    width: 100%;
+}
+
+.blog-table th,
+.blog-table td {
+    border-top: .08rem solid var(--line);
+    padding: .8rem 1rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.blog-table thead th {
+    background: var(--surface);
+    border-top: 0;
+    color: var(--text);
+    font-weight: 800;
+}
+
+.blog-table tbody th {
+    color: var(--text);
+    font-weight: 700;
+    width: 26%;
+}
+
+.blog-table td {
+    color: var(--text);
+    width: 37%;
+}
+
+.blog-body .blog-table-note {
+    color: var(--muted);
+    font-size: var(--text-sm);
+}
+
+/* Preguntas encadenadas */
+.blog-quiz-step + .blog-quiz-step {
+    border-top: .08rem solid var(--availability-line);
+    margin-top: 1.25rem;
+    padding-top: 1.1rem;
+}
+
+.blog-quiz-foot {
+    display: none;
+}
+
+.blog-quiz-answer:not([hidden]) ~ .blog-quiz-foot {
+    color: var(--availability-copy);
+    display: block;
+    font-size: var(--text-sm);
+    margin: .75rem 0 0;
+}
+
+/* Celular: cada fila de la tabla se apila (criterio arriba, las dos plataformas debajo) */
+@media (max-width: 35rem) {
+    .blog-table-wrap {
+        overflow: visible;
+    }
+
+    .blog-table {
+        min-width: 0;
+    }
+
+    .blog-table thead {
+        display: none;
+    }
+
+    .blog-table tr,
+    .blog-table th,
+    .blog-table td {
+        display: block;
+        width: auto !important;
+    }
+
+    .blog-table tbody tr + tr {
+        border-top: .08rem solid var(--line);
+    }
+
+    .blog-table tbody th {
+        background: var(--surface);
+        border-top: 0;
+    }
+
+    .blog-table td {
+        border-top: 0;
+        padding-top: .35rem;
+    }
+
+    .blog-table td::before {
+        color: var(--blue);
+        content: attr(data-label);
+        display: block;
+        font-size: var(--text-sm);
+        font-weight: 800;
+    }
+}
+
+/* Calculadora de costo mensual (artículo Tiendanube o Empretienda) */
+.blog-calc {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    margin: 1.5rem 0 2rem;
+    padding: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.blog-body .blog-calc-title {
+    margin: 0 0 .4rem;
+}
+
+.blog-body .blog-calc-intro {
+    color: var(--muted);
+    font-size: .95rem;
+}
+
+.blog-calc-form {
+    display: grid;
+    gap: 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+.blog-calc-field {
+    border: 0;
+    display: grid;
+    gap: .4rem;
+    margin: 0;
+    padding: 0;
+}
+
+.blog-calc-field > span:first-child,
+.blog-calc-field legend {
+    color: var(--text);
+    font-size: .95rem;
+    font-weight: 700;
+    margin-bottom: .4rem;
+    padding: 0;
+}
+
+.blog-calc-field small {
+    color: var(--muted);
+    font-size: var(--text-sm);
+}
+
+.blog-calc-money {
+    align-items: center;
+    background: var(--mist);
+    border: .1rem solid var(--field-border);
+    border-radius: .75rem;
+    color: var(--text);
+    display: flex;
+    font-weight: 700;
+    gap: .35rem;
+    max-width: 16rem;
+    padding: 0 .9rem;
+}
+
+.blog-calc-money:focus-within {
+    border-color: var(--blue);
+    outline: .15rem solid var(--blue);
+    outline-offset: .1rem;
+}
+
+.blog-calc-money input {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    font-size: 1.05rem;
+    min-width: 0;
+    outline: none;
+    padding: .7rem 0;
+    width: 100%;
+}
+
+.blog-calc-radio,
+.blog-calc-check {
+    align-items: flex-start;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    font-size: .95rem;
+    gap: .55rem;
+    line-height: 1.45;
+}
+
+.blog-calc-radio + .blog-calc-radio {
+    margin-top: .35rem;
+}
+
+.blog-calc-radio input,
+.blog-calc-check input {
+    accent-color: var(--blue);
+    flex: none;
+    height: 1.05rem;
+    margin: .15rem 0 0;
+    width: 1.05rem;
+}
+
+.blog-calc-table {
+    border-collapse: collapse;
+    font-size: .95rem;
+    width: 100%;
+}
+
+.blog-calc-table th,
+.blog-calc-table td {
+    border-top: .08rem solid var(--line);
+    padding: .65rem .5rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.blog-calc-table th:first-child {
+    text-align: left;
+    white-space: normal;
+}
+
+.blog-calc-table thead th {
+    border-top: 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+.blog-calc-table tbody th {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.blog-calc-table td {
+    color: var(--text);
+}
+
+.blog-calc-table td:last-child {
+    font-weight: 800;
+}
+
+.blog-calc-table tr.is-unavailable td,
+.blog-calc-table tr.is-unavailable th {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.blog-calc-notes {
+    border-top: .08rem solid var(--line);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    margin: 1rem 0 0 !important;
+    padding: 1rem 0 0 1.1rem;
+}
+
+.blog-calc-notes li + li {
+    margin-top: .4rem;
+}
+
+.blog-calc-notes strong {
+    color: var(--text);
+}
+
+/* Celular: cada plan en su propio bloque, con la etiqueta de cada dato */
+@media (max-width: 35rem) {
+    .blog-calc-table thead {
+        display: none;
+    }
+
+    .blog-calc-table tr {
+        border-top: .08rem solid var(--line);
+        display: grid;
+        grid-template-columns: 1fr auto;
+        padding: .6rem 0;
+    }
+
+    .blog-calc-table th,
+    .blog-calc-table td {
+        border: 0;
+        padding: .15rem 0;
+    }
+
+    .blog-calc-table tbody th {
+        grid-column: 1 / -1;
+        margin-bottom: .2rem;
+    }
+
+    .blog-calc-table td {
+        display: contents;
+    }
+
+    .blog-calc-table td::before {
+        color: var(--muted);
+        content: attr(data-label);
+        text-align: left;
+    }
+}
+
 /* Todas las cards de una fila miden lo mismo: "Ver más" queda abajo de todo,
    y al abrir una card la frase, la fecha y "Leer más" aparecen sobre la imagen,
    así la card no cambia de altura ni desacomoda la fila */

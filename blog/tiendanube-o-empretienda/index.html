@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light dark" id="jnb-color-scheme">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('jnb-theme');
+        // Samsung Internet con modo oscuro oscurece el modo claro por su cuenta (el lila queda azul):
+        // ahí se usa siempre el modo oscuro propio del sitio, que se ve como está diseñado.
+        var forcedDark = /SamsungBrowser/i.test(navigator.userAgent) && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (forcedDark) document.documentElement.classList.add('theme-forced-dark');
+        var theme = forcedDark ? 'dark' : (stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+        document.documentElement.setAttribute('data-theme', theme);
+        // Avisa al navegador qué tema usa la página, para que no la oscurezca por su cuenta (Samsung Internet invertía los colores)
+        var scheme = document.getElementById('jnb-color-scheme');
+        if (scheme) scheme.content = theme === 'light' ? 'only light' : 'dark';
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Comparamos Tiendanube y Empretienda: costos, comisiones, medios de pago, envíos y diseño, para que elijas la plataforma que mejor va con tu negocio.">
+  <meta name="author" content="JNB Creative Studio">
+  <meta name="robots" content="index, follow">
+  <title>Tiendanube o Empretienda: ¿cuál conviene para tu tienda?</title>
+  <link rel="canonical" href="https://jnbcreativestudio.com.ar/blog/tiendanube-o-empretienda/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="JNB Creative Studio">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:title" content="Tiendanube o Empretienda: ¿cuál conviene para tu tienda?">
+  <meta property="og:description"
+    content="Comparamos Tiendanube y Empretienda: costos, comisiones, medios de pago, envíos y diseño, para que elijas la plataforma que mejor va con tu negocio.">
+  <meta property="og:url" content="https://jnbcreativestudio.com.ar/blog/tiendanube-o-empretienda/">
+  <meta property="og:image" content="https://jnbcreativestudio.com.ar/assets/images/blog/tiendanube-o-empretienda-foto.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tiendanube o Empretienda: ¿cuál conviene para tu tienda?">
+  <meta name="twitter:description"
+    content="Comparamos Tiendanube y Empretienda: costos, comisiones, medios de pago, envíos y diseño, para que elijas la plataforma que mejor va con tu negocio.">
+  <meta name="twitter:image" content="https://jnbcreativestudio.com.ar/assets/images/blog/tiendanube-o-empretienda-foto.jpg">
+  <link rel="icon" href="../../assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../assets/images/apple-touch-icon.png">
+  <meta name="theme-color" content="#100b1d">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../../css/base.css">
+  <link rel="stylesheet" href="../../css/layout/header.css">
+  <link rel="stylesheet" href="../../css/layout/nav.css">
+  <link rel="stylesheet" href="../../css/sections/hero.css">
+  <link rel="stylesheet" href="../../css/sections/why.css">
+  <link rel="stylesheet" href="../../css/sections/about.css">
+  <link rel="stylesheet" href="../../css/sections/plans.css">
+  <link rel="stylesheet" href="../../css/pages/portfolio.css">
+  <link rel="stylesheet" href="../../css/sections/availability.css">
+  <link rel="stylesheet" href="../../css/sections/contact.css">
+  <link rel="stylesheet" href="../../css/layout/footer.css">
+  <link rel="stylesheet" href="../../css/pages/legal.css">
+  <link rel="stylesheet" href="../../css/pages/compare.css">
+  <link rel="stylesheet" href="../../css/pages/process.css">
+  <link rel="stylesheet" href="../../css/pages/plan-quiz.css">
+  <link rel="stylesheet" href="../../css/pages/budget.css">
+  <link rel="stylesheet" href="../../css/utilities/animations.css">
+  <link rel="stylesheet" href="../../css/pages/blog.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+  <script src="../../js/theme.js" defer></script>
+  <script src="../../js/menu.js" defer></script>
+  <script src="../../js/footer.js" defer></script>
+  <script src="../../js/floating.js" defer></script>
+  <script src="../../js/no-orphans.js" defer></script>
+  <script src="../../js/reveal.js" defer></script>
+  <script src="../../js/blog-dates.js" defer></script>
+  <script src="../../js/blog-likes.js" defer></script>
+  <script src="../../js/blog-quiz.js" defer></script>
+  <script src="../../js/blog-calc.js" defer></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Tiendanube o Empretienda: cómo elegir la plataforma para tu tienda online",
+  "description": "Comparamos Tiendanube y Empretienda: costos, comisiones, medios de pago, envíos y diseño, para que elijas la plataforma que mejor va con tu negocio.",
+  "image": "https://jnbcreativestudio.com.ar/assets/images/blog/tiendanube-o-empretienda-foto.jpg",
+  "datePublished": "2026-11-11",
+  "dateModified": "2026-11-11",
+  "inLanguage": "es-AR",
+  "mainEntityOfPage": "https://jnbcreativestudio.com.ar/blog/tiendanube-o-empretienda/",
+  "keywords": "Tiendanube, Empretienda, tienda online, comparativa, plataforma de ecommerce",
+  "author": {
+    "@type": "Person",
+    "name": "Jimena Bernadaz",
+    "jobTitle": "Diseñadora y desarrolladora web",
+    "url": "https://jnbcreativestudio.com.ar/#sobre-mi",
+    "image": "https://jnbcreativestudio.com.ar/assets/images/jimena-bernadaz.jpg",
+    "sameAs": [
+      "https://www.instagram.com/jnbcreativestudio/"
+    ],
+    "worksFor": {
+      "@id": "https://jnbcreativestudio.com.ar/#negocio"
+    }
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "JNB Creative Studio",
+    "url": "https://jnbcreativestudio.com.ar/"
+  }
+}
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="brand-mark">JNB</span>
+      <span>Creative Studio</span>
+    </a>
+    <div class="nav-group">
+      <nav class="main-nav" id="main-nav" aria-label="Navegación principal">
+        <div class="nav-dropdown nav-menu">
+          <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-main"
+            aria-label="Abrir menú de navegación">Menú <span class="nav-dropdown-arrow" aria-hidden="true">▾</span></button>
+          <div class="nav-submenu" id="nav-submenu-main">
+            <a href="/#sobre-mi"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="nav-label">Sobre mí</span></a>
+            <a href="/como-trabajo/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 2 2 4-4"/><path d="M13 6h8"/><path d="m3 13 2 2 4-4"/><path d="M13 13h8"/><path d="M13 20h8"/><path d="M5 20h.01"/></svg><span class="nav-label">Cómo trabajo</span></a>
+            <div class="nav-subgroup">
+              <button class="nav-subgroup-toggle" type="button" aria-expanded="false" aria-controls="nav-submenu-planes"
+                aria-label="Abrir submenú de planes"><span class="nav-subgroup-arrow" aria-hidden="true">‹</span><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg><span class="nav-label">Planes</span></button>
+              <div class="nav-submenu nav-submenu-nested" id="nav-submenu-planes">
+                <a href="/comparar-planes/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 10v10"/><path d="M15 10v10"/></svg><span class="nav-label">Comparar planes</span></a>
+                <a href="/planes/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h7"/></svg><span class="nav-label">Qué incluye cada plan</span></a>
+                <a href="/presupuesto/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10a1 1 0 0 1 1 1v17l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="nav-label">Pedir presupuesto</span></a>
+              </div>
+            </div>
+            <a href="/portfolio/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg><span class="nav-label">Portfolio</span></a>
+            <a href="/preguntas-frecuentes/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></svg><span class="nav-label">Preguntas frecuentes</span></a>
+          </div>
+        </div>
+        <a class="nav-cta" href="/#contacto">Hablemos <span aria-hidden="true">→</span></a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Cambiar idioma">
+          <a class="lang-flag is-active" href="/blog/tiendanube-o-empretienda/" hreflang="es" lang="es" aria-current="page" aria-label="Español">
+            <svg viewBox="0 0 20 14" aria-hidden="true">
+              <rect width="20" height="14" fill="#c60b1e" />
+              <rect y="3.5" width="20" height="7" fill="#ffc400" />
+            </svg><span class="lang-code" aria-hidden="true">ES</span>
+          </a>
+          <a class="lang-flag" href="/inicio/en" hreflang="en" lang="en" aria-label="English">
+            <svg viewBox="0 0 20 14" aria-hidden="true">
+              <rect width="20" height="14" fill="#00247d" />
+              <g stroke="#fff" stroke-width="2.2">
+                <path d="M0,0 L20,14 M20,0 L0,14" />
+              </g>
+              <g stroke="#cf142b" stroke-width="1.3">
+                <path d="M0,0 L20,14 M20,0 L0,14" />
+              </g>
+              <path d="M8.5,0 H11.5 V14 H8.5 Z" fill="#fff" />
+              <path d="M0,5.5 H20 V8.5 H0 Z" fill="#fff" />
+              <path d="M9.2,0 H10.8 V14 H9.2 Z" fill="#cf142b" />
+              <path d="M0,6.2 H20 V7.8 H0 Z" fill="#cf142b" />
+            </svg><span class="lang-code" aria-hidden="true">EN</span>
+          </a>
+          <a class="lang-flag" href="/inicio/pt" hreflang="pt-BR" lang="pt-BR" aria-label="Português">
+            <svg viewBox="0 0 20 14" aria-hidden="true">
+              <rect width="20" height="14" fill="#009c3b" />
+              <path d="M10,1.6 L18.4,7 L10,12.4 L1.6,7 Z" fill="#ffdf00" />
+              <circle cx="10" cy="7" r="3.2" fill="#002776" />
+              <path d="M6.9,6.4 Q10,5.4 13.1,7.3" fill="none" stroke="#fff" stroke-width=".6" />
+            </svg><span class="lang-code" aria-hidden="true">PT</span>
+          </a>
+        </div>
+        <button class="theme-toggle" type="button" aria-label="Modo oscuro">
+          <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Modo oscuro</span>
+        </button>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav"
+          aria-label="Abrir menú">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <section class="legal-hero" id="inicio">
+      <div class="legal-hero-content reveal is-visible">
+        <p class="eyebrow"><a class="blog-back" href="/blog/">BLOG</a></p>
+        <h1>Tiendanube o Empretienda: cómo elegir la plataforma para tu tienda online</h1>
+        <p class="blog-meta">Por <a class="blog-author-link" href="/#sobre-mi">Jimena Bernadaz</a> · <span class="blog-published">Publicado el <time datetime="2026-11-11T09:00-03:00">11 de noviembre de 2026</time></span> · 5 minutos de lectura</p>
+      </div>
+    </section>
+
+    <section class="legal section-shell">
+      <article class="legal-content blog-article">
+        <figure class="blog-figure">
+          <img class="blog-cover" src="/assets/images/blog/tiendanube-o-empretienda-foto.webp" alt="Emprendedora revisando un pedido con el celular, junto a su laptop y cajas listas para enviar" width="1440" height="900" fetchpriority="high">
+          <figcaption>Foto: Rifki Kurniawan en <a href="https://unsplash.com/es/fotos/mujer-que-revisa-el-paquete-con-el-telefono-cerca-del-portatil-y-las-cajas-k63Or81F8-M" target="_blank" rel="noopener noreferrer">Unsplash</a></figcaption>
+        </figure>
+        <div class="blog-body">
+          <p>Si vendés productos y querés tener tu tienda online, es muy probable que te hayas cruzado con dos nombres: Tiendanube y Empretienda. Las dos son plataformas argentinas, las dos permiten armar una tienda sin saber programar y las dos funcionan muy bien. Entonces, ¿cuál elegir?</p>
+          <p>Diseño tiendas en las dos plataformas, así que no tengo preferencia por ninguna. En este artículo te cuento en qué se parecen, en qué se diferencian y en qué casos conviene cada una, para que puedas decidir con información clara.</p>
+          <p class="blog-note">Datos actualizados a noviembre de 2026, tomados de los sitios oficiales de <a class="text-link" href="https://www.tiendanube.com/planes-y-precios" target="_blank" rel="noopener noreferrer">Tiendanube</a> y <a class="text-link" href="https://empretienda.com/" target="_blank" rel="noopener noreferrer">Empretienda</a>. Los precios cambian seguido, así que te recomiendo confirmarlos antes de contratar.</p>
+
+          <h2>En qué se parecen</h2>
+          <p>Antes de ver las diferencias, vale aclarar que las dos cubren lo básico para vender online:</p>
+          <ul>
+            <li>Catálogo de productos con fotos, precios y control de stock.</li>
+            <li>Carrito de compras y cobro con tarjeta, transferencia y otros medios.</li>
+            <li>Envíos integrados con correos y la opción de retiro en persona.</li>
+            <li>Plantillas de diseño que se pueden personalizar.</li>
+            <li>Dominio propio (por ejemplo, <em>tumarca.com.ar</em>) y manejo desde el celular.</li>
+            <li>Cupones, descuentos y promociones.</li>
+          </ul>
+          <p>Es decir: con cualquiera de las dos podés tener una tienda profesional. La diferencia está en cómo cobran, hasta dónde llegan y cuántas herramientas suman.</p>
+
+          <h2>Comparación lado a lado</h2>
+          <div class="blog-table-wrap" role="region" aria-label="Tabla comparativa entre Tiendanube y Empretienda" tabindex="0">
+            <table class="blog-table">
+              <thead>
+                <tr><th scope="col">Criterio</th><th scope="col">Tiendanube</th><th scope="col">Empretienda</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Dónde funciona</th><td data-label="Tiendanube">Argentina y otros países de Latinoamérica</td><td data-label="Empretienda">Solo Argentina</td></tr>
+                <tr><th scope="row">Prueba gratis</th><td data-label="Tiendanube">Plan Inicial gratis, sin límite de tiempo. Los planes pagos tienen 7 días de prueba</td><td data-label="Empretienda">15 días con todas las funciones</td></tr>
+                <tr><th scope="row">Costo mensual</th><td data-label="Tiendanube">Abono por mes según el plan. Inicial: $0. Esencial: $27.999. Impulso: $79.999. Escala: $244.999. Pagando el año completo, 25% menos</td><td data-label="Empretienda">Abono de $10.490 por mes, el mismo para todas las tiendas (hay un solo plan)</td></tr>
+                <tr><th scope="row">Comisión de la plataforma por venta</th><td data-label="Tiendanube">Sin comisión si cobrás con Pago Nube. Con otros medios: 2%, 1% o 0,7% según el plan</td><td data-label="Empretienda">Sin comisión por venta</td></tr>
+                <tr><th scope="row">Medios de pago</th><td data-label="Tiendanube">Pago Nube en el plan Inicial. Todos los medios integrados en los planes pagos</td><td data-label="Empretienda">Mercado Pago, Ualá Bis, Go Cuotas, transferencia, efectivo o a convenir</td></tr>
+                <tr><th scope="row">Envíos</th><td data-label="Tiendanube">Envío Nube; más de 30 medios de envío en los planes pagos</td><td data-label="Empretienda">Andreani, Correo Argentino, OCA, Epick, envíos propios y retiro en el local</td></tr>
+                <tr><th scope="row">Diseño</th><td data-label="Tiendanube">Más de 65 diseños personalizables; acceso al código en los planes más completos</td><td data-label="Empretienda">Varias plantillas personalizables desde el panel</td></tr>
+                <tr><th scope="row">Herramientas extra</th><td data-label="Tiendanube">Herramientas con IA, aplicaciones, integraciones con Google, Meta y marketplaces, estadísticas según el plan</td><td data-label="Empretienda">Venta mayorista y minorista en la misma tienda, chat de WhatsApp, métricas de ventas, tienda física y online conectadas</td></tr>
+                <tr><th scope="row">Atención</th><td data-label="Tiendanube">Email y chat; WhatsApp desde el plan Impulso</td><td data-label="Empretienda">Personas reales, de lunes a sábados y feriados de 9 a 18</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="blog-table-note">Precios en pesos argentinos, por mes. En las dos plataformas, los medios de pago (como Mercado Pago o Pago Nube) cobran su propia comisión por cada venta, aparte del costo de la plataforma.</p>
+
+          <section class="blog-calc" data-blog-calc aria-labelledby="blog-calc-title">
+            <p class="blog-quiz-label">Calculadora</p>
+            <h3 class="blog-calc-title" id="blog-calc-title">¿Cuánto te cobraría cada plataforma por mes?</h3>
+            <p class="blog-calc-intro">Poné cuánto vendés (o pensás vender) en un mes y cómo cobrarías. La cuenta usa los precios publicados por cada plataforma.</p>
+            <form class="blog-calc-form" novalidate>
+              <label class="blog-calc-field">
+                <span>Ventas por mes, aproximadas</span>
+                <span class="blog-calc-money"><span aria-hidden="true">$</span><input type="text" inputmode="numeric" autocomplete="off" name="ventas" value="500.000" aria-describedby="blog-calc-help"></span>
+                <small id="blog-calc-help">En pesos argentinos. Es el total que cobrás a tus clientes en el mes.</small>
+              </label>
+              <fieldset class="blog-calc-field">
+                <legend>¿Cómo cobrarías en Tiendanube?</legend>
+                <label class="blog-calc-radio"><input type="radio" name="cobro" value="otro" checked> Con otro medio (Mercado Pago, transferencia, etc.)</label>
+                <label class="blog-calc-radio"><input type="radio" name="cobro" value="pagonube"> Con Pago Nube</label>
+              </fieldset>
+              <label class="blog-calc-check"><input type="checkbox" name="anual"> Pagar Tiendanube por año (25% menos)</label>
+            </form>
+            <div class="blog-calc-results" aria-live="polite">
+              <table class="blog-calc-table">
+                <caption class="visually-hidden">Costo mensual estimado de cada plataforma</caption>
+                <thead><tr><th scope="col">Plataforma y plan</th><th scope="col">Abono</th><th scope="col">Comisión</th><th scope="col">Total por mes</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="blog-calc-notes">
+              <li><strong>Es solo lo que cobra la plataforma.</strong> El medio de pago (Mercado Pago, Pago Nube u otro) cobra aparte su propia comisión por cada venta, que depende del medio y del plazo en que retires el dinero. Por ejemplo, Pago Nube informa una comisión desde 2,99% + IVA. Esa comisión existe con cualquiera de las dos plataformas.</li>
+              <li>El plan Inicial de Tiendanube solo permite cobrar con Pago Nube.</li>
+              <li>El plan más económico no siempre es el que necesitás: cada plan incluye funciones distintas (mirá la tabla de arriba).</li>
+              <li>Precios publicados a noviembre de 2026; pueden cambiar. Es una estimación orientativa: confirmá los valores en los sitios oficiales antes de contratar.</li>
+              <li>Lo que escribas acá no se guarda ni se envía: la cuenta se hace en tu navegador.</li>
+            </ul>
+          </section>
+
+          <h2>Cuándo te puede convenir Tiendanube</h2>
+          <ul>
+            <li>Si querés <strong>empezar sin pagar un abono</strong>: el plan Inicial es gratis, siempre que cobres con Pago Nube.</li>
+            <li>Si pensás <strong>vender en otros países</strong> de Latinoamérica.</li>
+            <li>Si tu negocio está creciendo y necesitás <strong>más herramientas</strong>: aplicaciones, integraciones con marketplaces, publicidad en redes o estadísticas avanzadas.</li>
+            <li>Si querés que tu tienda tenga un <strong>diseño muy personalizado</strong>, con más libertad para modificarlo.</li>
+          </ul>
+
+          <h2>Cuándo te puede convenir Empretienda</h2>
+          <ul>
+            <li>Si vendés <strong>solo en Argentina</strong> y buscás algo simple de manejar.</li>
+            <li>Si preferís <strong>pagar el mismo abono todos los meses</strong> y saber exactamente cuánto te cuesta la plataforma, sin comisiones por venta.</li>
+            <li>Si querés <strong>elegir libremente cómo cobrar</strong>: Mercado Pago, transferencia, efectivo u otros medios.</li>
+            <li>Si vendés <strong>por mayor y por menor</strong> y querés manejar todo desde una misma tienda.</li>
+          </ul>
+
+          <h2>Entonces, ¿cuál elijo?</h2>
+          <p>No hay una plataforma mejor que la otra: hay una que se ajusta mejor a tu momento. Para decidir, pensá en estas tres cosas:</p>
+          <ol>
+            <li><strong>Dónde vendés:</strong> si es solo en Argentina, las dos te sirven. Si es también afuera, Tiendanube.</li>
+            <li><strong>Cómo preferís pagar:</strong> el mismo abono fijo todos los meses (Empretienda) o un plan que puede empezar gratis y crecer con tu tienda (Tiendanube). En las dos, el abono es mensual: no es un pago único.</li>
+            <li><strong>Qué herramientas vas a usar de verdad:</strong> si hoy necesitás lo básico, no hace falta pagar por funciones que no vas a aprovechar.</li>
+          </ol>
+
+          <div class="blog-quiz" data-blog-quiz>
+            <p class="blog-quiz-label">Probalo con tu caso</p>
+            <div class="blog-quiz-step" data-step="pais">
+              <p class="blog-quiz-question" id="blog-quiz-q1">¿Dónde vendés o querés vender?</p>
+              <div class="blog-quiz-options" role="group" aria-labelledby="blog-quiz-q1">
+                <button type="button" class="blog-quiz-option" aria-pressed="false" data-next="prioridad">Solo en Argentina</button>
+                <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="exterior">También en otros países</button>
+              </div>
+            </div>
+            <div class="blog-quiz-step" data-step="prioridad" hidden>
+              <p class="blog-quiz-question" id="blog-quiz-q2">¿Qué es lo más importante para vos hoy?</p>
+              <div class="blog-quiz-options" role="group" aria-labelledby="blog-quiz-q2">
+                <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="fijo">Pagar un abono fijo por mes, sin comisiones</button>
+                <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="gratis">Empezar sin pagar abono</button>
+                <button type="button" class="blog-quiz-option" aria-pressed="false" data-answer="crecer">Tener muchas herramientas para crecer</button>
+              </div>
+            </div>
+            <div class="blog-quiz-result" aria-live="polite">
+              <div class="blog-quiz-answer" data-result="exterior" hidden>
+                <p class="blog-quiz-pick">Te conviene <strong>Tiendanube</strong></p>
+                <p>Empretienda funciona solo en Argentina, así que para vender en otros países Tiendanube es la opción.</p>
+              </div>
+              <div class="blog-quiz-answer" data-result="fijo" hidden>
+                <p class="blog-quiz-pick">Te puede convenir <strong>Empretienda</strong></p>
+                <p>Cobra un abono fijo de $10.490 por mes y no cobra comisión por venta, así que sabés de antemano cuánto te cuesta la plataforma cada mes.</p>
+              </div>
+              <div class="blog-quiz-answer" data-result="gratis" hidden>
+                <p class="blog-quiz-pick">Te puede convenir <strong>Tiendanube</strong>, con su plan Inicial</p>
+                <p>Es gratis mientras cobres con Pago Nube. Tené en cuenta que Pago Nube cobra su propia comisión por cada venta.</p>
+              </div>
+              <div class="blog-quiz-answer" data-result="crecer" hidden>
+                <p class="blog-quiz-pick">Te puede convenir <strong>Tiendanube</strong></p>
+                <p>Suma aplicaciones, integraciones y estadísticas a medida que subís de plan. Si por ahora necesitás lo básico, Empretienda también te sirve.</p>
+              </div>
+              <p class="blog-quiz-foot">Es una orientación general: cada negocio tiene sus particularidades. <a class="text-link" href="/planes/#emprendedor">Ver mi plan para tiendas online →</a></p>
+            </div>
+          </div>
+
+          <p>Y si más adelante tu negocio cambia, no pasa nada: es posible pasar de una plataforma a otra. Lo importante es empezar con la que hoy te resulte cómoda y te permita vender.</p>
+        </div>
+        <aside class="blog-author" aria-label="Sobre la autora">
+          <img class="blog-author-photo" src="../../assets/images/jimena-bernadaz.jpg" width="480" height="480" alt="Foto de Jimena Bernadaz" loading="lazy">
+          <div>
+            <p class="blog-author-name">Jimena Bernadaz</p>
+            <p>Diseñadora y desarrolladora web. En JNB Creative Studio creo landing pages y webs a medida, y diseño tiendas online en Tiendanube y Empretienda, para profesionales independientes y emprendedores de Argentina y Latinoamérica.</p>
+            <p><a class="text-link" href="/#sobre-mi">Conocé más sobre mí</a></p>
+          </div>
+        </aside>
+        <aside class="blog-cta">
+          <h2>¿Querés tu tienda en Tiendanube o Empretienda?</h2>
+          <p>Diseño y configuro tiendas en las dos plataformas: identidad de marca, carga de productos, medios de pago y envíos. Si todavía no sabés cuál elegir, te ayudo a decidir según tu negocio.</p>
+          <p class="blog-cta-links"><a class="button button-primary" href="/presupuesto/">Pedir presupuesto</a><a class="text-link" href="/planes/#emprendedor">Ver el Plan Emprendedor</a></p>
+        </aside>
+        <p><a class="text-link" href="/blog/">← Volver al blog</a></p>
+      </article>
+    </section>
+  </main>
+
+  <a class="whatsapp-float" href="https://wa.me/5491127663667?text=Hola%20Jimena,%20le%C3%AD%20tu%20blog%20y%20tengo%20una%20consulta%20sobre%20Tiendanube%20y%20Empretienda."
+    target="_blank" rel="noopener noreferrer" aria-label="Escribime por WhatsApp al +54 9 11 2766 3667"><svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a>
+  <a class="top-float is-hidden" href="#inicio" aria-label="Volver al inicio">↑ <span>Inicio</span></a>
+
+  <footer class="site-footer"><span>© <span id="year"></span> JNB Creative Studio </span><span>Espacios digitales únicos para vos.</span><span class="footer-links"><span class="footer-group"><a class="footer-social"
+        href="https://www.instagram.com/jnbcreativestudio/" target="_blank" rel="noopener noreferrer"
+        aria-label="Seguime en Instagram, arroba jnbcreativestudio"><svg class="social-icon" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="5" />
+          <circle cx="12" cy="12" r="4.2" />
+          <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor" stroke="none" />
+        </svg><span>@jnbcreativestudio</span></a><a class="footer-social" href="https://jnbcreativestudio.mitiendanube.com/" target="_blank"
+        rel="noopener noreferrer"><svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4h17L22 9a2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0Z" /><path d="M4 12v8h16v-8" /><path d="M10 20v-5h4v5" /></svg><span>Mi tienda en Tiendanube</span></a></span><span class="footer-group"><a href="/blog/">Blog</a><a href="/terminos/">Términos y condiciones</a><a href="/privacidad/">Privacidad</a><a href="/dominio/">Cómo conseguir tu dominio</a></span><a class="footer-top"
+        href="#inicio">Volver arriba ↑</a></span></footer>
+</body>
+
+</html>
