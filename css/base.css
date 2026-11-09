@@ -176,13 +176,13 @@ body {
    Arriba y abajo se funde con la sección vecina, y del lado del texto se borra.
    Para sumarla a otra sección (por ejemplo el blog), agregar la clase a la lista de abajo. */
 :root {
-    --band-photo-opacity: .07;
+    --band-photo-opacity: .09;
     --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) blur(1px);
     --band-photo-blend: multiply;
 }
 
 :root[data-theme="dark"] {
-    --band-photo-opacity: .06;
+    --band-photo-opacity: .08;
     --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(1.6) blur(1px);
     --band-photo-blend: screen;
 }
@@ -191,12 +191,12 @@ body {
    para cubrir la sección y las líneas quedan detrás del texto: ahí va todavía más suave */
 @media (max-width: 1100px) {
     :root {
-        --band-photo-opacity: .05;
+        --band-photo-opacity: .06;
         --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) blur(1.5px);
     }
 
     :root[data-theme="dark"] {
-        --band-photo-opacity: .045;
+        --band-photo-opacity: .055;
         --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(1.6) blur(1.5px);
     }
 }
