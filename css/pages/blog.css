@@ -217,3 +217,38 @@
 .blog-cta .blog-cta-closing {
     font-weight: 800;
 }
+
+/* Autora del artículo */
+.blog-author-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: .15em;
+}
+
+.blog-author {
+    align-items: flex-start;
+    border-top: .08rem solid var(--rule);
+    display: flex;
+    gap: 1.25rem;
+    padding-top: 2rem;
+}
+
+.blog-author-photo {
+    border-radius: 50%;
+    flex: none;
+    height: 4.5rem;
+    object-fit: cover;
+    width: 4.5rem;
+}
+
+.blog-author p {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0 0 .5rem;
+}
+
+.blog-author .blog-author-name {
+    color: var(--text);
+    font-weight: 800;
+    margin-bottom: .25rem;
+}
