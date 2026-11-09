@@ -81,11 +81,13 @@
 }
 
 /* Recorrido: al pasar el mouse por un paso se encienden ese paso y todos los anteriores,
-   cada uno con su color, como un camino que avanza del 1 al 8 */
+   cada uno con su color, como un camino que avanza del 1 al 8.
+   En el celular, .is-reached lo pone process-steps.js a medida que se baja por la página */
 .process-step:hover,
 .process-step:focus-within,
 .process-step:has(~ .process-step:hover),
-.process-step:has(~ .process-step:focus-within) {
+.process-step:has(~ .process-step:focus-within),
+.process-step.is-reached {
     background: color-mix(in srgb, var(--step-color) 16%, var(--surface));
     border-color: var(--step-color);
 }
@@ -93,7 +95,8 @@
 .process-step:hover .process-num,
 .process-step:focus-within .process-num,
 .process-step:has(~ .process-step:hover) .process-num,
-.process-step:has(~ .process-step:focus-within) .process-num {
+.process-step:has(~ .process-step:focus-within) .process-num,
+.process-step.is-reached .process-num {
     background: var(--step-color);
     color: var(--ink);
 }
@@ -101,7 +104,8 @@
 :root[data-theme="dark"] .process-step:hover .process-num,
 :root[data-theme="dark"] .process-step:focus-within .process-num,
 :root[data-theme="dark"] .process-step:has(~ .process-step:hover) .process-num,
-:root[data-theme="dark"] .process-step:has(~ .process-step:focus-within) .process-num {
+:root[data-theme="dark"] .process-step:has(~ .process-step:focus-within) .process-num,
+:root[data-theme="dark"] .process-step.is-reached .process-num {
     color: #100b1d;
 }
 
@@ -111,7 +115,9 @@
 .process-step:has(~ .process-step:hover)::before,
 .process-step:has(~ .process-step:focus-within)::before,
 .process-step:has(~ .process-step:hover)::after,
-.process-step:has(~ .process-step:focus-within)::after {
+.process-step:has(~ .process-step:focus-within)::after,
+.process-step.is-reached::before,
+.process-step:has(+ .process-step.is-reached)::after {
     background: var(--step-color);
 }
 
