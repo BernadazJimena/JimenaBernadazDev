@@ -188,3 +188,32 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Subtítulos, ventajas destacadas y la pregunta clave dentro del artículo */
+.blog-body h3 {
+    font-size: 1.15rem;
+    line-height: 1.3;
+    margin: 1.75rem 0 .5rem;
+}
+
+.blog-highlight {
+    background: var(--surface);
+    border-left: .25rem solid var(--blue);
+    border-radius: 0 .75rem .75rem 0;
+    padding: .9rem 1.1rem;
+}
+
+.blog-question {
+    color: var(--blue);
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.blog-cta p + p {
+    margin-top: .75rem;
+}
+
+.blog-cta .blog-cta-closing {
+    font-weight: 800;
+}
