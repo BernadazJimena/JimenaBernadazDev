@@ -173,7 +173,7 @@ body {
    (Unsplash, uso libre). Va muy suave y teñida de lila para que el texto se lea siempre:
    - Claro: en blanco y negro, pasada a lila y multiplicada sobre la franja.
    - Oscuro: también pasada a lila y aclarada sobre la franja, apenas visible.
-   Arriba y abajo se funde con la sección vecina para que no haya cortes.
+   Arriba y abajo se funde con la sección vecina, y del lado del texto se borra.
    Para sumarla a otra sección (por ejemplo el blog), agregar la clase a la lista de abajo. */
 :root {
     --band-photo-opacity: .07;
@@ -218,8 +218,16 @@ main {
     content: "";
     filter: var(--band-photo-filter);
     inset: 0 calc(50% - 50vw);
-    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%);
-    mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+    /* Dos máscaras juntas: se funde arriba y abajo, y se borra del lado izquierdo,
+       donde van el título y el texto; la foto solo se ve hacia el borde derecho */
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-image:
+        linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%),
+        linear-gradient(90deg, transparent 0, transparent 45%, #000 85%);
+    mask-image:
+        linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%),
+        linear-gradient(90deg, transparent 0, transparent 45%, #000 85%);
     mix-blend-mode: var(--band-photo-blend);
     opacity: var(--band-photo-opacity);
     pointer-events: none;
