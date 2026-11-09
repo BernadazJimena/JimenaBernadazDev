@@ -22,10 +22,6 @@ h2 {
     max-width: 11ch;
 }
 
-.about-body {
-    align-self: center;
-}
-
 /* Foto y firma de Jimena, debajo de la frase de "Sobre mí" */
 .about-author {
     align-items: center;
@@ -138,5 +134,45 @@ h2 {
         font-size: 1.5rem;
         letter-spacing: -.04em;
         line-height: 1.25;
+    }
+}
+
+/* Texto de "Sobre mí": frase de entrada, párrafo y bloque destacado en violeta */
+.about-body {
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    padding-top: clamp(0rem, 3vw, 2.6rem);
+}
+
+.about-more,
+.about-highlight {
+    color: var(--muted);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 35rem;
+    text-wrap: pretty;
+}
+
+.about-highlight {
+    border-left: .2rem solid var(--blue);
+    padding-left: 1.1rem;
+}
+
+.about-highlight strong {
+    color: var(--blue);
+    display: block;
+    font-family: "Manrope", sans-serif;
+    font-size: 1.2rem;
+    line-height: 1.35;
+    margin-bottom: .35rem;
+}
+
+/* Tablet y celular: el texto va debajo de la foto, sin espacio extra arriba */
+@media (max-width: 52rem) {
+    .about-body {
+        padding-top: 0;
     }
 }
