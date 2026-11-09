@@ -168,3 +168,47 @@ body {
     clip-path: inset(0 -100vmax);
     background: var(--band);
 }
+
+/* Foto de fondo en las franjas: bocetos de pantallas de una web dibujados a mano
+   (Unsplash, uso libre). Va muy suave y teñida de lila para que el texto se lea siempre:
+   - Claro: en blanco y negro, pasada a lila y multiplicada sobre la franja.
+   - Oscuro: con sus colores, apenas visible sobre el fondo.
+   Arriba y abajo se funde con la sección vecina para que no haya cortes.
+   Para sumarla a otra sección (por ejemplo el blog), agregar la clase a la lista de abajo. */
+:root {
+    --band-photo-opacity: .13;
+    --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) contrast(1.1);
+    --band-photo-blend: multiply;
+}
+
+:root[data-theme="dark"] {
+    --band-photo-opacity: .17;
+    --band-photo-filter: saturate(.8) brightness(.9);
+    --band-photo-blend: screen;
+}
+
+/* La foto ocupa todo el ancho de la pantalla; esto evita que aparezca una barra de desplazamiento horizontal */
+main {
+    overflow-x: clip;
+}
+
+.why.section-shell,
+.samples.section-shell {
+    isolation: isolate;
+    position: relative;
+}
+
+.why.section-shell::before,
+.samples.section-shell::before {
+    background: url("../assets/images/fondo-bocetos.webp") center / cover no-repeat;
+    content: "";
+    filter: var(--band-photo-filter);
+    inset: 0 calc(50% - 50vw);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+    mix-blend-mode: var(--band-photo-blend);
+    opacity: var(--band-photo-opacity);
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+}
