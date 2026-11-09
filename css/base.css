@@ -172,7 +172,7 @@ body {
 /* Foto de fondo en las franjas: bocetos de pantallas de una web dibujados a mano
    (Unsplash, uso libre). Va muy suave y teñida de lila para que el texto se lea siempre:
    - Claro: en blanco y negro, pasada a lila y multiplicada sobre la franja.
-   - Oscuro: con sus colores, apenas visible sobre el fondo.
+   - Oscuro: también pasada a lila y aclarada sobre la franja, apenas visible.
    Arriba y abajo se funde con la sección vecina para que no haya cortes.
    Para sumarla a otra sección (por ejemplo el blog), agregar la clase a la lista de abajo. */
 :root {
@@ -182,8 +182,8 @@ body {
 }
 
 :root[data-theme="dark"] {
-    --band-photo-opacity: .17;
-    --band-photo-filter: saturate(.8) brightness(.9);
+    --band-photo-opacity: .06;
+    --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(1.6) blur(1px);
     --band-photo-blend: screen;
 }
 
@@ -196,8 +196,8 @@ body {
     }
 
     :root[data-theme="dark"] {
-        --band-photo-opacity: .08;
-        --band-photo-filter: saturate(.8) brightness(.9) blur(1.5px);
+        --band-photo-opacity: .045;
+        --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(1.6) blur(1.5px);
     }
 }
 
