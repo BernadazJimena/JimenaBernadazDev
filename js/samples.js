@@ -1,10 +1,8 @@
-// Inicio: fila deslizable de proyectos de muestra (tablet y celular) con puntos y flechas. Sin avance automático.
-(() => {
-    const section = document.querySelector('.samples');
-    if (!section) return;
-
-    const row = section.querySelector('.portfolio-grid');
-    const cards = [...row.querySelectorAll('.portfolio-card')];
+// Inicio: filas deslizables (tablet y celular) con puntos y flechas, en el portfolio y en el blog. Sin avance automático.
+(() => document.querySelectorAll('.samples').forEach((section) => {
+    const row = section.querySelector('.portfolio-grid, .blog-list');
+    if (!row) return;
+    const cards = [...row.children];
     const controls = section.querySelector('.samples-controls');
     if (!controls || !cards.length) return;
 
@@ -55,4 +53,4 @@
     // Sin JavaScript los controles quedan ocultos y la fila se desliza igual
     controls.hidden = false;
     update();
-})();
+}))();
