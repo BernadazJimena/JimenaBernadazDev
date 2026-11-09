@@ -176,8 +176,8 @@ body {
    Arriba y abajo se funde con la sección vecina para que no haya cortes.
    Para sumarla a otra sección (por ejemplo el blog), agregar la clase a la lista de abajo. */
 :root {
-    --band-photo-opacity: .13;
-    --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) contrast(1.1);
+    --band-photo-opacity: .07;
+    --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) blur(1px);
     --band-photo-blend: multiply;
 }
 
@@ -187,9 +187,9 @@ body {
     --band-photo-blend: screen;
 }
 
-/* En celular y tablet la foto se agranda mucho para cubrir la sección y las líneas
-   de los bocetos quedan detrás del texto: ahí va mucho más suave y un poco desenfocada */
-@media (max-width: 768px) {
+/* En celular y tablet (también tablets grandes, hasta 1100 px) la foto se agranda mucho
+   para cubrir la sección y las líneas quedan detrás del texto: ahí va todavía más suave */
+@media (max-width: 1100px) {
     :root {
         --band-photo-opacity: .05;
         --band-photo-filter: grayscale(1) sepia(1) hue-rotate(225deg) saturate(2.2) blur(1.5px);
