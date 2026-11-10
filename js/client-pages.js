@@ -23,7 +23,8 @@
             headline: { waiting: 'Tu proyecto empieza acá.', ready: 'Tu presupuesto está listo.' },
             hello: 'Hola, {name}. ¡Gracias por confiar en JNB Creative Studio! 💜',
             waiting: 'Recibí tu solicitud y estoy preparando una propuesta para tu proyecto.',
-            ready: 'Acá tenés mi propuesta. Si tenés dudas, escribime y lo vemos juntos.',
+            ready: 'Preparé esta propuesta teniendo en cuenta lo que necesitás para tu proyecto. Acá podés consultar todos los detalles.',
+            readyHelp: 'Si tenés alguna duda o querés conversar sobre algún punto, escribime. ¡Estoy para ayudarte!',
             codeTitle: 'Número de solicitud',
             requestedOn: 'Pedido realizado el {date}',
             stepsTitle: 'Estado de tu solicitud',
@@ -119,7 +120,8 @@
             headline: { waiting: 'Your project starts here.', ready: 'Your quote is ready.' },
             hello: 'Hi, {name}. Thank you for trusting JNB Creative Studio! 💜',
             waiting: 'I received your request and I am preparing a proposal for your project.',
-            ready: 'Here is my proposal. If you have any questions, write to me and we can go over it together.',
+            ready: 'I prepared this proposal based on what your project needs. Here you can see all the details.',
+            readyHelp: 'If you have any questions or want to talk about anything, write to me. I am here to help!',
             codeTitle: 'Request number',
             requestedOn: 'Requested on {date}',
             stepsTitle: 'Status of your request',
@@ -210,7 +212,8 @@
             headline: { waiting: 'Seu projeto começa aqui.', ready: 'Seu orçamento está pronto.' },
             hello: 'Olá, {name}. Obrigada por confiar na JNB Creative Studio! 💜',
             waiting: 'Recebi seu pedido e estou preparando uma proposta para o seu projeto.',
-            ready: 'Aqui está minha proposta. Se tiver dúvidas, escreva para mim e vemos juntos.',
+            ready: 'Preparei esta proposta pensando no que o seu projeto precisa. Aqui você pode ver todos os detalhes.',
+            readyHelp: 'Se tiver alguma dúvida ou quiser conversar sobre algum ponto, escreva para mim. Estou aqui para ajudar!',
             codeTitle: 'Número do pedido',
             requestedOn: 'Pedido feito em {date}',
             stepsTitle: 'Status do seu pedido',
@@ -383,6 +386,7 @@
             el('p', 'client-lead', fill(T.hello, { name: quote.firstName })),
             el('p', 'client-date', proposal ? T.ready : T.waiting),
         );
+        if (proposal) intro.append(el('p', 'client-date', T.readyHelp));
         card.append(intro);
 
         card.append(infoBox('client-code-box', T.codeTitle, ['client-code', quote.code], ['client-date', fill(T.requestedOn, { date: longDate(quote.created) })]));
