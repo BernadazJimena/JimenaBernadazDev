@@ -137,6 +137,11 @@ export class StudioData extends DurableObject {
     if (!briefColumns.includes('edited')) this.sql.exec("ALTER TABLE briefs ADD COLUMN edited TEXT NOT NULL DEFAULT ''");
     if (!briefColumns.includes('edit_seen')) this.sql.exec('ALTER TABLE briefs ADD COLUMN edit_seen INTEGER NOT NULL DEFAULT 1');
     if (!briefColumns.includes('prev_summary')) this.sql.exec("ALTER TABLE briefs ADD COLUMN prev_summary TEXT NOT NULL DEFAULT '[]'");
+    // Ajustes del sitio que Jimena cambia desde el panel (por ejemplo, el cartel de disponibilidad del inicio)
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS brief_files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token TEXT NOT NULL,
@@ -268,6 +273,20 @@ export class StudioData extends DurableObject {
     this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
       changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
     return true;
+  }
+
+  // ---- Cartel de disponibilidad del inicio ('abierto', 'agenda' o 'cerrado'; mes desde el que se reserva, 1 a 12 o vacío)
+  availability() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'availability'").toArray()[0];
+    const saved = row ? JSON.parse(row.value) : {};
+    return { estado: saved.estado || 'abierto', reservaDesde: saved.reservaDesde || '', updated: saved.updated || '' };
+  }
+
+  setAvailability(estado, reservaDesde) {
+    const value = JSON.stringify({ estado, reservaDesde, updated: new Date().toISOString() });
+    this.sql.exec(`INSERT INTO settings (key, value) VALUES ('availability', ?)
+      ON CONFLICT (key) DO UPDATE SET value = excluded.value`, value);
+    return this.availability();
   }
 
   quoteContact(token) {
@@ -531,6 +550,14 @@ export async function handleStudio(request, env, ctx) {
     }
   }
 
+  // ---- Cartel de disponibilidad (lo lee js/intake.js en el inicio)
+  if (path === '/api/disponibilidad' && request.method === 'GET') {
+    const { estado, reservaDesde } = await store.availability();
+    return new Response(JSON.stringify({ estado, reservaDesde }), {
+      headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+    });
+  }
+
   // ---- Brief del cliente (se abre con su link: el del presupuesto aceptado o el del proyecto)
   if ((match = path.match(/^\/api\/brief\/([^/]+)(?:\/archivo(?:\/(\d+))?)?$/))) {
     const token = match[1];
@@ -635,8 +662,17 @@ export async function handleStudio(request, env, ctx) {
       return json({ ok: mailed });
     }
 
+    if (path === '/api/admin/disponibilidad' && request.method === 'POST') {
+      const body = (await readJson(request)) || {};
+      if (!['abierto', 'agenda', 'cerrado'].includes(body.estado)) return badRequest();
+      const month = String(body.reservaDesde || '');
+      if (month && !/^([1-9]|1[0-2])$/.test(month)) return badRequest();
+      return json(await store.setAvailability(body.estado, month));
+    }
+
     if (path === '/api/admin/datos' && request.method === 'GET') {
       const data = await store.everything();
+      data.availability = await store.availability();
       data.mailReady = Boolean(env.RESEND_API_KEY && env.MAIL_FROM);
       return json(data);
     }

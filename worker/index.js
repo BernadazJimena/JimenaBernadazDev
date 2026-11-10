@@ -232,7 +232,7 @@ export default {
       if (!isAdmin(request, env)) return json({ error: 'clave' }, 401);
       return json(await env.FAQ_FEEDBACK.get(env.FAQ_FEEDBACK.idFromName('faq')).summary());
     }
-    if (/^\/api\/(consultas|presupuestos|resenas|proyectos|brief|admin)(\/|$)/.test(pathname)) return handleStudio(request, env);
+    if (/^\/api\/(consultas|presupuestos|resenas|proyectos|brief|disponibilidad|admin)(\/|$)/.test(pathname)) return handleStudio(request, env);
     return env.ASSETS.fetch(request);
   },
 };

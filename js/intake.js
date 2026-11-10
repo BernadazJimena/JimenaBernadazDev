@@ -1,20 +1,26 @@
 // Portada: etiqueta que dice si estoy tomando proyectos nuevos.
 //
-// CÓMO CAMBIARLA: editar solo ESTADO (y, si querés, RESERVA_DESDE). Vale para los tres idiomas.
+// CÓMO CAMBIARLA: desde el panel (/api/admin → Disponibilidad) y "Guardar". La página la pide a /api/disponibilidad.
+// ESTADO y RESERVA_DESDE de acá abajo solo se usan si el sitio no responde. Vale para los tres idiomas.
 //   'abierto' → "Disponible para nuevos proyectos" (punto verde)
 //   'agenda'  → "Agenda completa este mes · Reservá tu lugar para {mes}" (punto amarillo, abre la agenda de Google;
 //               en inglés y portugués lleva al contacto, porque las llamadas son solo en español)
 //   'cerrado' → "Por ahora no tomo proyectos nuevos · Escribime y te aviso cuando haya lugar" (punto rojo, lleva al contacto)
 (() => {
-    const ESTADO = 'abierto';
+    // Respaldo si /api/disponibilidad no responde
+    const ESTADO_RESPALDO = 'abierto';
 
     // Mes desde el que se puede reservar (en 'agenda'), con número del 1 al 12. Vacío = el mes que viene.
-    const RESERVA_DESDE = '';
+    const RESERVA_DESDE_RESPALDO = '';
 
     // Página de reservas de Google Calendar ("Llamada de 20 min para hablar de tu web")
     const AGENDA_URL = 'https://calendar.app.google/3VxVXCLe7QQncUkg6';
 
     const lang = document.documentElement.lang.slice(0, 2);
+    const badge = document.querySelector('.intake-status');
+    if (!badge) return;
+
+    const show = (ESTADO, RESERVA_DESDE) => {
     const monthNumber = RESERVA_DESDE
         ? Number(RESERVA_DESDE)
         : ((new Date().getMonth() + 1) % 12) + 1;
@@ -39,9 +45,8 @@
         },
     };
 
-    const badge = document.querySelector('.intake-status');
     const copy = (TEXTOS[lang] || TEXTOS.es)[ESTADO];
-    if (!badge || !copy) return;
+    if (!copy) return;
 
     const dot = document.createElement('span');
     dot.className = 'intake-dot';
@@ -68,4 +73,21 @@
 
     badge.dataset.state = ESTADO;
     badge.classList.add('is-ready');
+    };
+
+    // El estado lo elige Jimena desde el panel; si el sitio tarda o no responde, se usa el respaldo
+    let shown = false;
+    const fallback = setTimeout(() => { shown = true; show(ESTADO_RESPALDO, RESERVA_DESDE_RESPALDO); }, 2500);
+    fetch('/api/disponibilidad', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+        .then(({ estado, reservaDesde }) => {
+            clearTimeout(fallback);
+            if (!['abierto', 'agenda', 'cerrado'].includes(estado)) throw new Error('estado');
+            shown = true;
+            show(estado, reservaDesde || '');
+        })
+        .catch(() => {
+            clearTimeout(fallback);
+            if (!shown) show(ESTADO_RESPALDO, RESERVA_DESDE_RESPALDO);
+        });
 })();

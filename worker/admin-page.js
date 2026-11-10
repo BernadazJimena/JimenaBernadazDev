@@ -71,6 +71,12 @@ export const adminPage = () => `<!doctype html>
   .brief-view-a.is-changed { background: color-mix(in srgb, #f2b45c 22%, transparent); border-radius: .4rem; padding: .2rem .4rem; }
   .brief-view-prev { color: var(--muted); font-size: .85rem; margin: .2rem 0 0; text-decoration: line-through; white-space: pre-line; }
   .tag-edit { background: #f2b45c; border-radius: 999px; color: #3a2400; font-size: .7rem; font-weight: 800; margin-left: .35rem; padding: .05rem .45rem; vertical-align: .1em; }
+  .avail-options { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: .75rem 0; }
+  .avail-option { align-items: flex-start; background: var(--bg); border: 1px solid var(--line); border-radius: .8rem; cursor: pointer; display: flex; font-weight: 700; gap: .55rem; padding: .7rem .8rem; }
+  .avail-option:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .avail-option input { accent-color: var(--accent); margin-top: .2rem; width: auto; }
+  .avail-dot { border-radius: 50%; display: inline-block; flex-shrink: 0; height: .65rem; margin-top: .4rem; width: .65rem; }
+  .avail-preview { background: var(--bg); border: 1px dashed var(--line); border-radius: .8rem; margin: .5rem 0 .75rem; padding: .6rem .8rem; }
   [hidden] { display: none !important; }
 </style></head>
 <body><div class="wrap">
@@ -86,6 +92,7 @@ export const adminPage = () => `<!doctype html>
       <div class="brand"><span class="mark">JNB</span><h1>Panel</h1></div>
       <div class="row"><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
     </header>
+    <section id="availability"></section>
     <nav id="tabs">
       <button data-tab="consultas" aria-pressed="true">Consultas <span class="badge" id="n-consultas"></span></button>
       <button data-tab="resenas" aria-pressed="false">Reseñas <span class="badge" id="n-resenas"></span></button>
@@ -328,7 +335,41 @@ export const adminPage = () => `<!doctype html>
     w.print();
   });
 
-  const render = () => { renderInquiries(); renderReviews(); renderProjects(); renderFaq(); };
+  // ---- Cartel "Disponible para nuevos proyectos" del inicio
+  const AVAIL = [
+    ['abierto', '#2fa36b', 'Disponible para nuevos proyectos', 'Punto verde.'],
+    ['agenda', '#e0a12b', 'Agenda completa este mes', 'Punto amarillo y "Reservá tu lugar para {mes}", que abre tu agenda de Google.'],
+    ['cerrado', '#d0453f', 'Por ahora no tomo proyectos nuevos', 'Punto rojo y "Escribime y te aviso cuando haya lugar", que lleva al contacto.'],
+  ];
+  const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const nextMonth = () => MONTHS[(new Date().getMonth() + 1) % 12];
+  const availPreview = (estado, month) => {
+    const m = month ? MONTHS[Number(month) - 1] : nextMonth();
+    if (estado === 'agenda') return 'Agenda completa este mes · Reservá tu lugar para ' + m;
+    if (estado === 'cerrado') return 'Por ahora no tomo proyectos nuevos · Escribime y te aviso cuando haya lugar';
+    return 'Disponible para nuevos proyectos';
+  };
+  const renderAvailability = () => {
+    const a = data.availability || { estado: 'abierto', reservaDesde: '' };
+    $('availability').innerHTML = '<form class="card" id="availability-form"><div class="row space"><h2 style="margin:0">Cartel del inicio</h2>'
+      + (a.updated ? '<span class="small muted">Guardado ' + date(a.updated) + '</span>' : '') + '</div>'
+      + '<p class="small muted" style="margin:.4rem 0 0">Lo que se ve arriba en el inicio, en los tres idiomas. Elegí una opción y tocá Guardar.</p>'
+      + '<div class="avail-options">' + AVAIL.map(([v, color, title, hint]) => '<label class="avail-option"><input type="radio" name="estado" value="' + v + '"' + (a.estado === v ? ' checked' : '') + '>'
+        + '<span class="avail-dot" style="background:' + color + '"></span><span>' + title + '<br><span class="small muted" style="font-weight:500">' + esc(hint.replace('{mes}', 'el mes que elijas')) + '</span></span></label>').join('') + '</div>'
+      + '<label id="avail-month"' + (a.estado === 'agenda' ? '' : ' hidden') + '>Reservas desde<select name="reservaDesde"><option value="">El mes que viene (' + nextMonth() + ')</option>'
+        + MONTHS.map((m, i) => '<option value="' + (i + 1) + '"' + (String(a.reservaDesde) === String(i + 1) ? ' selected' : '') + '>' + m.charAt(0).toUpperCase() + m.slice(1) + '</option>').join('') + '</select></label>'
+      + '<p class="avail-preview"><span class="small muted">Así se ve en el inicio:</span><br><strong id="avail-preview">' + esc(availPreview(a.estado, a.reservaDesde)) + '</strong></p>'
+      + '<div class="row"><button class="primary">Guardar</button><a class="btn" href="/" target="_blank">Ver el inicio ↗</a></div></form>';
+  };
+  document.addEventListener('change', (e) => {
+    const form = e.target.closest('#availability-form');
+    if (!form) return;
+    const values = Object.fromEntries(new FormData(form));
+    $('avail-month').hidden = values.estado !== 'agenda';
+    $('avail-preview').textContent = availPreview(values.estado, values.reservaDesde);
+  });
+
+  const render = () => { renderAvailability(); renderInquiries(); renderReviews(); renderProjects(); renderFaq(); };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
@@ -430,6 +471,12 @@ export const adminPage = () => `<!doctype html>
       $('invite-result').innerHTML = '<div class="linkbox">' + esc(link) + '</div><div class="row"><button type="button" data-copy="' + esc(link) + '">Copiar link</button><a class="btn" target="_blank" href="' + esc(wa) + '">Mandar por WhatsApp ↗</a></div>';
       form.reset();
       const fresh = await api('datos'); data.invitations = fresh.invitations;
+    } else if (form.id === 'availability-form') {
+      e.preventDefault();
+      const values = Object.fromEntries(new FormData(form));
+      data.availability = await api('disponibilidad', { estado: values.estado, reservaDesde: values.estado === 'agenda' ? values.reservaDesde : '' });
+      renderAvailability();
+      toast('Guardado: el inicio ya muestra "' + availPreview(data.availability.estado, data.availability.reservaDesde) + '"');
     } else if (form.id === 'new-project') {
       e.preventDefault();
       await api('proyectos', values);
