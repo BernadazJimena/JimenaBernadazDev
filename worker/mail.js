@@ -191,8 +191,8 @@ export function briefInviteMail({ lang, name, link }) {
 }
 
 // A Jimena, cuando un cliente envía su brief: resumen de las respuestas y link al panel
-export function briefReceivedMail({ client, code, planText, summary, panel }) {
-  const subject = `Brief recibido · ${client}${code ? ` · ${code}` : ''}`;
+export function briefReceivedMail({ client, code, planText, summary, panel, edited }) {
+  const subject = `${edited ? 'Brief editado' : 'Brief recibido'} · ${client}${code ? ` · ${code}` : ''}`;
   let section = '';
   const rows = (summary || []).map((row) => {
     const head = row.s && row.s !== section ? `<p style="margin:18px 0 6px;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7543d6;">${esc(row.s)}</p>` : '';
@@ -202,7 +202,7 @@ export function briefReceivedMail({ client, code, planText, summary, panel }) {
   }).join('');
   const inner = `
     <tr><td style="padding:16px 28px 0;font-size:16px;line-height:1.6;">
-      <p style="margin:0 0 6px;font-weight:800;">${esc(client)} envió su brief.</p>
+      <p style="margin:0 0 6px;font-weight:800;">${esc(client)} ${edited ? 'editó su brief y te mandó los cambios.' : 'envió su brief.'}</p>
       <p style="margin:0 0 16px;color:#625970;">${esc(planText || '')}</p>
       <a href="${esc(panel)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:12px 22px;">Ver el brief y los archivos en el panel →</a>
     </td></tr>

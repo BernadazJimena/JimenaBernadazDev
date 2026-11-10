@@ -132,6 +132,11 @@ export class StudioData extends DurableObject {
       updated TEXT NOT NULL,
       sent TEXT NOT NULL DEFAULT ''
     )`);
+    // Ediciones después de enviado: cuándo editó, si Jimena ya lo vio y cómo estaba antes (para marcar los cambios)
+    const briefColumns = this.sql.exec('PRAGMA table_info(briefs)').toArray().map((c) => c.name);
+    if (!briefColumns.includes('edited')) this.sql.exec("ALTER TABLE briefs ADD COLUMN edited TEXT NOT NULL DEFAULT ''");
+    if (!briefColumns.includes('edit_seen')) this.sql.exec('ALTER TABLE briefs ADD COLUMN edit_seen INTEGER NOT NULL DEFAULT 1');
+    if (!briefColumns.includes('prev_summary')) this.sql.exec("ALTER TABLE briefs ADD COLUMN prev_summary TEXT NOT NULL DEFAULT '[]'");
     this.sql.exec(`CREATE TABLE IF NOT EXISTS brief_files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token TEXT NOT NULL,
@@ -288,8 +293,9 @@ export class StudioData extends DurableObject {
   brief(token) {
     const target = this.briefTarget(token);
     if (!target) return null;
-    const row = this.sql.exec('SELECT answers, status, sent, updated FROM briefs WHERE token = ?', token).toArray()[0];
+    const row = this.sql.exec('SELECT answers, status, sent, updated, edited FROM briefs WHERE token = ?', token).toArray()[0];
     return {
+      edited: row ? row.edited : '',
       plan: planKey(target.planText),
       // Lo que pidió en el presupuesto: el brief suma preguntas solo para los adicionales que eligió
       request: target.request || '',
@@ -306,14 +312,25 @@ export class StudioData extends DurableObject {
     const target = this.briefTarget(token);
     if (!target) return null;
     const now = new Date().toISOString();
-    const before = this.sql.exec('SELECT status, sent FROM briefs WHERE token = ?', token).toArray()[0];
-    const status = data.send ? 'enviado' : (before ? before.status : 'borrador');
-    const sent = data.send ? now : (before ? before.sent : '');
-    this.sql.exec(`INSERT INTO briefs (token, lang, answers, summary, status, updated, sent) VALUES (?, ?, ?, ?, ?, ?, ?)
+    const before = this.sql.exec('SELECT status, sent, answers, summary, edited, edit_seen, prev_summary FROM briefs WHERE token = ?', token).toArray()[0];
+    const wasSent = Boolean(before && before.status === 'enviado');
+    const answers = JSON.stringify(data.answers);
+    const summary = JSON.stringify(data.summary);
+    const changed = wasSent && (before.answers !== answers || before.summary !== summary);
+    // La fecha de envío es la del primer envío; las ediciones posteriores se registran aparte
+    const status = data.send || wasSent ? 'enviado' : (before ? before.status : 'borrador');
+    const sent = wasSent ? before.sent : (data.send ? now : (before ? before.sent : ''));
+    const edited = changed ? now : (before ? before.edited : '');
+    const editSeen = changed ? 0 : (before ? before.edit_seen : 1);
+    // "Antes" = lo último que vio Jimena: si ya había visto la edición anterior, la base pasa a ser lo que había
+    const prevSummary = changed ? (before.edit_seen ? before.summary : before.prev_summary) : (before ? before.prev_summary : '[]');
+    this.sql.exec(`INSERT INTO briefs (token, lang, answers, summary, status, updated, sent, edited, edit_seen, prev_summary)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (token) DO UPDATE SET lang = excluded.lang, answers = excluded.answers, summary = excluded.summary,
-      status = excluded.status, updated = excluded.updated, sent = excluded.sent`,
-    token, data.lang, JSON.stringify(data.answers), JSON.stringify(data.summary), status, now, sent);
-    return { status, sent, client: target.client, code: target.code, planText: target.planText };
+      status = excluded.status, updated = excluded.updated, sent = excluded.sent, edited = excluded.edited,
+      edit_seen = excluded.edit_seen, prev_summary = excluded.prev_summary`,
+    token, data.lang, answers, summary, status, now, sent, edited, editSeen, prevSummary);
+    return { status, sent, edited, wasSent, client: target.client, code: target.code, planText: target.planText };
   }
 
   addFile(token, field, name, type, bytes) {
@@ -324,6 +341,7 @@ export class StudioData extends DurableObject {
     this.sql.exec('INSERT INTO brief_files (token, field, name, type, size, created) VALUES (?, ?, ?, ?, ?, ?)',
       token, field, name, type, bytes.byteLength, new Date().toISOString());
     const id = this.sql.exec('SELECT last_insert_rowid() AS id').one().id;
+    this.markEdited(token);
     // Se guarda en pedazos de 1 MB (la base no acepta valores más grandes)
     const data = new Uint8Array(bytes);
     for (let start = 0, idx = 0; start < data.length; start += CHUNK, idx += 1) {
@@ -332,11 +350,20 @@ export class StudioData extends DurableObject {
     return { id, name, size: bytes.byteLength, type, field };
   }
 
+  markEdited(token) {
+    const row = this.sql.exec('SELECT status, edit_seen, summary FROM briefs WHERE token = ?', token).toArray()[0];
+    if (!row || row.status !== 'enviado') return;
+    const now = new Date().toISOString();
+    if (row.edit_seen) this.sql.exec('UPDATE briefs SET edited = ?, edit_seen = 0, prev_summary = summary WHERE token = ?', now, token);
+    else this.sql.exec('UPDATE briefs SET edited = ? WHERE token = ?', now, token);
+  }
+
   removeFile(token, id) {
     const found = this.sql.exec('SELECT 1 FROM brief_files WHERE id = ? AND token = ?', id, token).toArray().length;
     if (!found) return false;
     this.sql.exec('DELETE FROM brief_chunks WHERE file = ?', id);
     this.sql.exec('DELETE FROM brief_files WHERE id = ?', id);
+    this.markEdited(token);
     return true;
   }
 
@@ -355,9 +382,13 @@ export class StudioData extends DurableObject {
 
   briefForAdmin(token) {
     const target = this.briefTarget(token);
-    const row = this.sql.exec('SELECT lang, summary, status, sent, updated FROM briefs WHERE token = ?', token).toArray()[0];
+    const row = this.sql.exec('SELECT lang, summary, status, sent, updated, edited, edit_seen, prev_summary FROM briefs WHERE token = ?', token).toArray()[0];
     if (!target && !row) return null;
+    if (row && !row.edit_seen) this.sql.exec('UPDATE briefs SET edit_seen = 1 WHERE token = ?', token);
     return {
+      edited: row ? row.edited : '',
+      editUnseen: Boolean(row && !row.edit_seen),
+      prevSummary: row && row.edited ? JSON.parse(row.prev_summary) : [],
       client: target ? target.client : '',
       code: target ? target.code : '',
       planText: target ? target.planText : '',
@@ -380,6 +411,7 @@ export class StudioData extends DurableObject {
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
+        b.edited AS briefEdited, CASE WHEN b.edit_seen = 0 THEN 1 ELSE 0 END AS briefEditUnseen,
         (SELECT COUNT(*) FROM brief_files f WHERE f.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)) AS briefFiles
         FROM projects p
         LEFT JOIN inquiries i ON i.token = p.quote AND p.quote != ''
@@ -526,9 +558,9 @@ export async function handleStudio(request, env, ctx) {
       // Aviso a Jimena cuando el cliente lo envía
       if (body.send === true && env.MAIL_REPLY_TO) {
         const panel = `${SITE}/api/admin`;
-        try { await sendAnyMail(env, env.MAIL_REPLY_TO, briefReceivedMail({ ...saved, summary, panel })); } catch { /* el brief quedó guardado igual */ }
+        try { await sendAnyMail(env, env.MAIL_REPLY_TO, briefReceivedMail({ ...saved, summary, panel, edited: saved.wasSent })); } catch { /* el brief quedó guardado igual */ }
       }
-      return json({ ok: true, status: saved.status, sent: saved.sent });
+      return json({ ok: true, status: saved.status, sent: saved.sent, edited: saved.edited });
     }
 
     if (isFiles && !match[2] && request.method === 'POST') {

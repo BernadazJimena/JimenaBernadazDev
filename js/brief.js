@@ -40,7 +40,14 @@
             sentTitle: '¡Gracias! Recibí tu brief.',
             sentText: 'Con esto ya puedo empezar a trabajar en tu proyecto. Si te olvidaste de algo, podés editar tus respuestas y volver a enviarlas.',
             sentOn: 'Enviado el {date}.',
-            edit: 'Ver o editar mis respuestas',
+            view: 'Ver mis respuestas',
+            edit: 'Editar mis respuestas',
+            backToSent: '← Volver',
+            answersTitle: 'Tus respuestas',
+            filesTitle: 'Archivos que subiste',
+            editingNote: 'Estás editando un brief que ya me enviaste. Los cambios se guardan solos; al terminar, tocá "Enviar cambios" así me entero.',
+            sendChanges: 'Enviar cambios',
+            editedOn: 'Última edición: {date}.',
             sendError: 'No se pudo enviar. Probá de nuevo en un rato.',
             missing: 'Falta completar algo en este paso.',
             yes: 'Sí',
@@ -75,7 +82,14 @@
             sentTitle: 'Thank you! I received your brief.',
             sentText: 'With this I can start working on your project. If you forgot something, you can edit your answers and send them again.',
             sentOn: 'Sent on {date}.',
-            edit: 'View or edit my answers',
+            view: 'See my answers',
+            edit: 'Edit my answers',
+            backToSent: '← Back',
+            answersTitle: 'Your answers',
+            filesTitle: 'Files you uploaded',
+            editingNote: 'You are editing a brief you already sent me. Changes save automatically; when you finish, tap "Send changes" so I know.',
+            sendChanges: 'Send changes',
+            editedOn: 'Last edited: {date}.',
             sendError: 'It could not be sent. Please try again in a little while.',
             missing: 'Something is missing in this step.',
             yes: 'Yes',
@@ -110,7 +124,14 @@
             sentTitle: 'Obrigada! Recebi o seu briefing.',
             sentText: 'Com isso já posso começar a trabalhar no seu projeto. Se você esqueceu algo, pode editar as respostas e enviar de novo.',
             sentOn: 'Enviado em {date}.',
-            edit: 'Ver ou editar minhas respostas',
+            view: 'Ver minhas respostas',
+            edit: 'Editar minhas respostas',
+            backToSent: '← Voltar',
+            answersTitle: 'Suas respostas',
+            filesTitle: 'Arquivos que você enviou',
+            editingNote: 'Você está editando um briefing que já me enviou. As alterações ficam salvas sozinhas; ao terminar, toque em "Enviar alterações" para eu saber.',
+            sendChanges: 'Enviar alterações',
+            editedOn: 'Última edição: {date}.',
             sendError: 'Não foi possível enviar. Tente de novo daqui a pouco.',
             missing: 'Falta preencher algo nesta etapa.',
             yes: 'Sim',
@@ -327,14 +348,14 @@
                 { id: 'domainInfo', type: 'text', when: (c) => c.a.hasDomain === 'yes', es: ['¿Cuál es y dónde lo registraste (NIC Argentina, GoDaddy, otro)?'], en: ['What is it and where did you register it (GoDaddy, Namecheap, other)?'], pt: ['Qual é e onde você registrou (Registro.br, GoDaddy, outro)?'] },
                 { id: 'domainIdeas', type: 'textarea', when: (c) => c.a.hasDomain === 'no', es: ['¿Qué nombre te gustaría? Escribí dos o tres opciones.'], en: ['Which name would you like? Write two or three options.'], pt: ['Que nome você gostaria? Escreva duas ou três opções.'] },
                 { id: 'hours', type: 'textarea', req: true, when: (c) => isWeb(c) || c.x.hours,
-                    es: ['Horario de atención, día por día, y zona horaria de tu negocio, para el indicador "abierto / cerrado".', 'Por ejemplo: lunes a viernes de 9 a 17 h, sábados de 9 a 13 h, domingos cerrado. Hora de Argentina (GMT-3).'],
-                    en: ['Opening hours, day by day, and your business time zone, for the "open / closed" indicator.', 'For example: Monday to Friday 9 am to 5 pm, Saturday 9 am to 1 pm, closed on Sunday. Eastern Time (GMT-5).'],
-                    pt: ['Horário de atendimento, dia a dia, e fuso horário do seu negócio, para o indicador "aberto / fechado".', 'Por exemplo: segunda a sexta das 9h às 17h, sábados das 9h às 13h, domingos fechado. Horário de Brasília (GMT-3).'] },
+                    es: ['Horario de atención, día por día, y zona horaria de tu negocio, para el indicador "abierto / cerrado".', (c) => `${isWeb(c) ? 'Tu plan incluye la sección de disponibilidad con el cartel "abierto / cerrado", que cambia solo según la hora.' : 'Pediste el cartel "abierto / cerrado", que cambia solo según la hora.'} Por ejemplo: lunes a viernes de 9 a 17 h, sábados de 9 a 13 h, domingos cerrado. Hora de Argentina (GMT-3).`],
+                    en: ['Opening hours, day by day, and your business time zone, for the "open / closed" indicator.', (c) => `${isWeb(c) ? 'Your plan includes the availability section with the "open / closed" sign, which changes automatically with the time.' : 'You asked for the "open / closed" sign, which changes automatically with the time.'} For example: Monday to Friday 9 am to 5 pm, Saturday 9 am to 1 pm, closed on Sunday. Eastern Time (GMT-5).`],
+                    pt: ['Horário de atendimento, dia a dia, e fuso horário do seu negócio, para o indicador "aberto / fechado".', (c) => `${isWeb(c) ? 'O seu plano inclui a seção de disponibilidade com o aviso "aberto / fechado", que muda sozinho conforme o horário.' : 'Você pediu o aviso "aberto / fechado", que muda sozinho conforme o horário.'} Por exemplo: segunda a sexta das 9h às 17h, sábados das 9h às 13h, domingos fechado. Horário de Brasília (GMT-3).`] },
                 { id: 'holidays', type: 'text', when: (c) => isWeb(c) || c.x.hours, es: ['¿Atendés feriados? ¿Tenés algún horario especial?'], en: ['Do you work on holidays? Do you have any special hours?'], pt: ['Você atende em feriados? Tem algum horário especial?'] },
                 { id: 'mode', type: 'radio', req: true, when: (c) => isWeb(c) || c.x.mode, keys: ['light', 'dark', 'auto'],
-                    es: ['Modo claro y modo oscuro: ¿cuál preferís que se vea primero?', '', ['Claro', 'Oscuro', 'El que tenga configurado cada visitante']],
-                    en: ['Light and dark mode: which one should show first?', '', ['Light', 'Dark', 'Whatever each visitor has set']],
-                    pt: ['Modo claro e modo escuro: qual você prefere que apareça primeiro?', '', ['Claro', 'Escuro', 'O que cada visitante tiver configurado']] },
+                    es: ['Modo claro y modo oscuro: ¿cuál preferís que se vea primero?', (c) => (isWeb(c) ? 'Tu plan incluye el botón de modo claro / oscuro.' : 'Pediste el botón de modo claro / oscuro.'), ['Claro', 'Oscuro', 'El que tenga configurado cada visitante']],
+                    en: ['Light and dark mode: which one should show first?', (c) => (isWeb(c) ? 'Your plan includes the light / dark mode button.' : 'You asked for the light / dark mode button.'), ['Light', 'Dark', 'Whatever each visitor has set']],
+                    pt: ['Modo claro e modo escuro: qual você prefere que apareça primeiro?', (c) => (isWeb(c) ? 'O seu plano inclui o botão de modo claro / escuro.' : 'Você pediu o botão de modo claro / escuro.'), ['Claro', 'Escuro', 'O que cada visitante tiver configurado']] },
                 { id: 'seo', type: 'textarea', es: ['Texto para Google.', 'Describí tu negocio en una oración y sumá las palabras con las que te gustaría que te encuentren.'], en: ['Text for Google.', 'Describe your business in one sentence and add the words you would like people to find you with.'], pt: ['Texto para o Google.', 'Descreva o seu negócio em uma frase e acrescente as palavras com que gostaria de ser encontrado.'] },
             ],
         },
@@ -382,6 +403,9 @@
         let sent = data.sent;
         let step = 0;
         let editing = status !== 'enviado';
+        let reading = false;
+        let edited = data.edited || '';
+        const longDate = (iso) => new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
 
         const extras = extrasFrom(data.request);
         const ctx = () => ({ a, lang: L, knownPlan: Boolean(data.plan), plan: data.plan || a.plan || '', x: extras });
@@ -389,7 +413,7 @@
         const maxOf = (q) => (typeof q.max === 'function' ? q.max(ctx()) : q.max);
         const text = (q) => {
             const t = q[L] || q.es;
-            return typeof t[0] === 'function' ? [t[0](ctx()), ...t.slice(1)] : t;
+            return t.map((part, index) => (index < 2 && typeof part === 'function' ? part(ctx()) : part));
         };
         const keysOf = (q) => (typeof q.keys === 'function' ? q.keys(ctx()) : q.keys) || [];
         const visibleSections = () => SECTIONS.filter((s) => !s.when || s.when(ctx()))
@@ -434,6 +458,7 @@
             const result = await response.json();
             status = result.status;
             sent = result.sent;
+            if (result.edited) edited = result.edited;
             return result;
         };
         const queueSave = () => {
@@ -606,17 +631,46 @@
             const box = el('div', 'brief-done');
             box.append(el('p', 'brief-done-mark', '✓'), el('h2', 'client-headline', U.sentTitle), el('p', 'client-lead', U.sentText));
             if (sent) box.append(el('p', 'client-date', fill(U.sentOn, { date: new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sent)) })));
+            if (edited) box.append(el('p', 'client-date', fill(U.editedOn, { date: longDate(edited) })));
+            const actions = el('div', 'client-actions');
+            const view = el('button', 'button button-primary', U.view);
+            view.type = 'button';
+            view.addEventListener('click', () => { reading = true; render(); container.scrollIntoView({ block: 'start' }); });
             const edit = el('button', 'button button-ghost', U.edit);
             edit.type = 'button';
-            edit.addEventListener('click', () => { editing = true; step = 0; render(); });
-            box.append(edit);
+            edit.addEventListener('click', () => { editing = true; step = 0; render(); container.scrollIntoView({ block: 'start' }); });
+            actions.append(view, edit);
+            box.append(actions);
+            return box;
+        };
+
+        // Respuestas enviadas, solo para leer (con los archivos que subió)
+        const renderAnswers = () => {
+            const box = el('div', 'brief-answers');
+            const back = el('button', 'button button-ghost brief-back', U.backToSent);
+            back.type = 'button';
+            back.addEventListener('click', () => { reading = false; render(); });
+            box.append(back, el('h2', 'client-headline', U.answersTitle));
+            let section = '';
+            const list = el('div', 'brief-answer-list');
+            summary().forEach((row) => {
+                if (row.s !== section) { list.append(el('p', 'client-small-title brief-answer-section', row.s)); section = row.s; }
+                list.append(el('p', 'brief-answer-q', row.q), el('p', 'brief-answer-a', row.a));
+            });
+            box.append(list);
+            const edit = el('button', 'button button-ghost', U.edit);
+            edit.type = 'button';
+            edit.addEventListener('click', () => { reading = false; editing = true; step = 0; render(); container.scrollIntoView({ block: 'start' }); });
+            const actions = el('div', 'client-actions');
+            actions.append(edit);
+            box.append(actions);
             return box;
         };
 
         const render = () => {
             const card = el('article', 'client-card brief');
             if (!editing) {
-                card.append(renderSent());
+                card.append(reading ? renderAnswers() : renderSent());
                 container.replaceChildren(card);
                 return;
             }
@@ -626,7 +680,8 @@
 
             const head = el('div', 'brief-head');
             head.append(el('p', 'client-kicker', U.title));
-            if (step === 0) head.append(el('p', 'client-lead', U.intro), el('p', 'client-date', U.intro2), el('p', 'client-date', U.time));
+            if (status === 'enviado') head.append(el('p', 'brief-editing-note', U.editingNote));
+            else if (step === 0) head.append(el('p', 'client-lead', U.intro), el('p', 'client-date', U.intro2), el('p', 'client-date', U.time));
             const progress = el('div', 'client-progress');
             const label = el('p', 'client-progress-label', fill(U.step, { n: step + 1, total: sections.length }));
             const bar = el('div', 'client-progress-bar');
@@ -650,7 +705,8 @@
                 nav.append(back);
             }
             const last = step === sections.length - 1;
-            const next = el('button', 'button button-primary', last ? U.send : `${U.next} →`);
+            const sendLabel = status === 'enviado' ? U.sendChanges : U.send;
+            const next = el('button', 'button button-primary', last ? sendLabel : `${U.next} →`);
             next.type = 'submit';
             nav.append(next);
             statusLine = el('p', 'brief-save', '');
@@ -696,7 +752,7 @@
                 } catch (sendError) {
                     statusLine.textContent = U.sendError;
                     next.disabled = false;
-                    next.textContent = U.send;
+                    next.textContent = sendLabel;
                 }
             });
             card.append(form);

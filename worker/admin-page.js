@@ -65,6 +65,12 @@ export const adminPage = () => `<!doctype html>
   .brief-files-list { display: grid; gap: .4rem; list-style: none; margin: .5rem 0 0; padding: 0; }
   .brief-files-list li { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: .6rem; display: flex; gap: .6rem; padding: .45rem .7rem; }
   .brief-files-list span { flex: 1; overflow-wrap: anywhere; }
+  .alert { background: #fff1d6; border: 1px solid #f2b45c; border-radius: .8rem; color: #5c3a00; font-weight: 700; margin-bottom: .9rem; padding: .7rem .9rem; }
+  @media (prefers-color-scheme: dark) { .alert { background: #3a2a10; border-color: #9a6a1f; color: #ffd99a; } }
+  .chip.alert-chip { background: #f2b45c; color: #3a2400; }
+  .brief-view-a.is-changed { background: color-mix(in srgb, #f2b45c 22%, transparent); border-radius: .4rem; padding: .2rem .4rem; }
+  .brief-view-prev { color: var(--muted); font-size: .85rem; margin: .2rem 0 0; text-decoration: line-through; white-space: pre-line; }
+  .tag-edit { background: #f2b45c; border-radius: 999px; color: #3a2400; font-size: .7rem; font-weight: 800; margin-left: .35rem; padding: .05rem .45rem; vertical-align: .1em; }
   [hidden] { display: none !important; }
 </style></head>
 <body><div class="wrap">
@@ -233,8 +239,10 @@ export const adminPage = () => `<!doctype html>
 
   // ---- Proyectos
   const renderProjects = () => {
-    $('n-proyectos').textContent = data.projects.filter((p) => p.stage < STAGES.length - 1).length || '';
+    const editedBriefs = data.projects.filter((p) => p.briefEditUnseen);
+    $('n-proyectos').textContent = editedBriefs.length ? '⚠ ' + editedBriefs.length : (data.projects.filter((p) => p.stage < STAGES.length - 1).length || '');
     $('tab-proyectos').innerHTML = '<h2>Seguimiento de proyectos</h2>'
+      + (editedBriefs.length ? '<div class="alert">⚠ ' + (editedBriefs.length === 1 ? esc(editedBriefs[0].client) + ' editó su brief después de enviarlo.' : editedBriefs.length + ' clientes editaron su brief después de enviarlo: ' + editedBriefs.map((p) => esc(p.client)).join(', ') + '.') + ' Abrilo con "Ver brief" para ver qué cambió.</div>' : '')
       + '<p class="muted">Los proyectos de presupuestos aceptados se crean solos. Acá podés crear uno a mano para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp).</p>'
       + '<form class="card" id="new-project"><h3>Nuevo proyecto</h3><div class="grid">'
       + '<label>Nombre del cliente (lo ve el cliente)<input name="client" required placeholder="Ej.: Ana"></label>'
@@ -247,6 +255,7 @@ export const adminPage = () => `<!doctype html>
         + linkBox(projectLink(p), p.lang, p.client)
         + '<div class="row" style="margin-top:.6rem"><span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">'
         + (p.briefStatus === 'enviado' ? 'Brief enviado ✓ ' + date(p.briefSent) : p.briefStatus === 'borrador' ? 'Brief en curso' : 'Brief sin empezar') + '</span>'
+        + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief · ' + date(p.briefEdited) + '</span>' : '')
         + (p.briefStatus ? '<button type="button" data-brief="' + esc(p.quote || p.token) + '">Ver brief' + (p.briefFiles ? ' y archivos (' + p.briefFiles + ')' : '') + '</button>' : '')
         + '<button type="button" data-copy="' + esc(projectLink(p) + '#brief') + '">Copiar link del brief</button>'
         + (p.quote ? '<button type="button" data-brief-mail="' + esc(p.quote) + '">Mandar link del brief por mail</button>' : '')
@@ -285,17 +294,30 @@ export const adminPage = () => `<!doctype html>
     const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
     $('brief-view-title').textContent = 'Brief · ' + (b.client || '') + (b.code ? ' · ' + b.code : '');
     let section = '';
+    // Cambios de la última edición: comparando con lo que había antes
+    const prev = new Map((b.prevSummary || []).map((r) => [r.s + '|' + r.q, r.a]));
+    const hasPrev = Boolean(b.edited && prev.size);
     const rows = (b.summary || []).map((r) => {
       const head = r.s && r.s !== section ? '<p class="brief-view-section">' + esc(r.s) + '</p>' : '';
       section = r.s || section;
-      return head + '<p class="brief-view-q">' + esc(r.q) + '</p><p class="brief-view-a">' + esc(r.a) + '</p>';
+      const before = prev.get(r.s + '|' + r.q);
+      const changed = hasPrev && before !== r.a;
+      return head + '<p class="brief-view-q">' + esc(r.q) + (changed ? '<span class="tag-edit">' + (before === undefined ? 'Nuevo' : 'Editado') + '</span>' : '') + '</p>'
+        + '<p class="brief-view-a' + (changed ? ' is-changed' : '') + '">' + esc(r.a) + '</p>'
+        + (changed && before !== undefined ? '<p class="brief-view-prev">Antes: ' + esc(before) + '</p>' : '');
     }).join('');
+    const current = new Set((b.summary || []).map((r) => r.s + '|' + r.q));
+    const removed = hasPrev ? (b.prevSummary || []).filter((r) => !current.has(r.s + '|' + r.q)) : [];
+    const removedHtml = removed.length ? '<p class="brief-view-section">Respuestas que quitó</p>' + removed.map((r) => '<p class="brief-view-q">' + esc(r.q) + '</p><p class="brief-view-prev">' + esc(r.a) + '</p>').join('') : '';
+    const editNote = b.edited ? '<div class="alert">' + (b.editUnseen ? '⚠ ' : '') + 'El cliente editó el brief después de enviarlo (última edición: ' + date(b.edited) + '). Lo que cambió está marcado.</div>' : '';
     const files = (b.files || []).length
       ? '<p class="brief-view-section">Archivos</p><ul class="brief-files-list">' + b.files.map((f) => '<li><span>📎 ' + esc(f.name) + ' <small class="muted">' + size(f.size) + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">Descargar</button></li>').join('') + '</ul>'
       : '';
     const state = b.status === 'enviado' ? 'Enviado el ' + date(b.sent) : b.status === 'borrador' ? 'Todavía no lo envió (en curso, actualizado ' + date(b.updated) + ')' : 'Todavía no empezó';
-    $('brief-view-body').innerHTML = '<p class="muted small">' + esc(b.planText || '') + ' · ' + LANG[b.lang] + ' · ' + state + '</p>' + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>');
+    $('brief-view-body').innerHTML = editNote + '<p class="muted small">' + esc(b.planText || '') + ' · ' + LANG[b.lang] + ' · ' + state + '</p>' + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>') + removedHtml;
     $('brief-view').showModal();
+    // Abrirlo cuenta como "visto": se va la alerta
+    if (b.editUnseen) { const fresh = await api('datos'); data.projects = fresh.projects; renderProjects(); }
   };
   $('brief-view-close').addEventListener('click', () => $('brief-view').close());
   $('brief-view-print').addEventListener('click', () => {
