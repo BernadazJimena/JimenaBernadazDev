@@ -246,3 +246,84 @@ export function briefUpdatedMail({ lang, name, changes, link }) {
   const plain = [t.hello(first), '', t.intro, '', ...(changes || []).map((c) => `${c.q}\n${c.before ? `- ${c.before}\n` : ''}+ ${c.after || t.removed}\n`), `${t.button}: ${link}`, '', t.sign].join('\n');
   return { subject: t.subject, html: frame(lang, t.subject, inner, t.footer), text: plain };
 }
+
+// ---- Al publicar el proyecto: gracias, reseña (opcional) y cupón para la próxima actualización
+const LAUNCH = {
+  es: {
+    subject: '¡Tu web ya está online! 🎉',
+    subjectStore: '¡Tu tienda ya está online! 🎉',
+    hello: (n) => `Hola ${n}:`,
+    intro: '¡Tu proyecto ya está publicado! Gracias por confiar en mí durante todo el proceso.',
+    reviewTitle: '¿Me dejás tu opinión?',
+    reviewText: 'Es opcional y te lleva un minuto. Me ayuda muchísimo a que otras personas conozcan mi trabajo.',
+    reviewButton: 'Dejar mi opinión',
+    couponTitle: 'Un regalo para vos',
+    couponText: (p, d) => `${p} % de descuento en la próxima actualización de tu web. Lo podés usar una sola vez, al pedir el presupuesto, hasta el ${d}.`,
+    couponButton: 'Pedir una actualización con mi cupón',
+    page: 'Ver mi proyecto',
+    sign: 'Jimena Bernadaz',
+    footer: 'Recibiste este mail porque tu proyecto con jnbcreativestudio.com.ar se publicó.',
+  },
+  en: {
+    subject: 'Your website is live! 🎉',
+    subjectStore: 'Your store is live! 🎉',
+    hello: (n) => `Hi ${n},`,
+    intro: 'Your project is now published! Thank you for trusting me throughout the whole process.',
+    reviewTitle: 'Would you leave me a review?',
+    reviewText: 'It is optional and takes a minute. It helps me a lot so other people can get to know my work.',
+    reviewButton: 'Leave my review',
+    couponTitle: 'A gift for you',
+    couponText: (p, d) => `${p}% off your next website update. You can use it once, when you request the quote, until ${d}.`,
+    couponButton: 'Request an update with my coupon',
+    page: 'See my project',
+    sign: 'Jimena Bernadaz',
+    footer: 'You received this email because your project with jnbcreativestudio.com.ar was published.',
+  },
+  pt: {
+    subject: 'Seu site já está no ar! 🎉',
+    subjectStore: 'Sua loja já está no ar! 🎉',
+    hello: (n) => `Olá, ${n}!`,
+    intro: 'Seu projeto já está publicado! Obrigada por confiar em mim durante todo o processo.',
+    reviewTitle: 'Você me deixa a sua opinião?',
+    reviewText: 'É opcional e leva um minuto. Me ajuda muito para que outras pessoas conheçam o meu trabalho.',
+    reviewButton: 'Deixar minha opinião',
+    couponTitle: 'Um presente para você',
+    couponText: (p, d) => `${p}% de desconto na próxima atualização do seu site. Você pode usar uma única vez, ao pedir o orçamento, até ${d}.`,
+    couponButton: 'Pedir uma atualização com meu cupom',
+    page: 'Ver meu projeto',
+    sign: 'Jimena Bernadaz',
+    footer: 'Você recebeu este e-mail porque o seu projeto com jnbcreativestudio.com.ar foi publicado.',
+  },
+};
+
+export function launchMail({ lang, name, page, reviewLink, coupon, percent, budgetLink, store, expires }) {
+  const t = LAUNCH[lang] || LAUNCH.es;
+  const until = expires ? new Intl.DateTimeFormat({ es: 'es-AR', en: 'en-US', pt: 'pt-BR' }[lang] || 'es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${expires}T12:00:00Z`)) : '';
+  const first = String(name || '').split(' ')[0];
+  const subject = store ? t.subjectStore : t.subject;
+  const inner = `
+    <tr><td style="padding:16px 28px 0;font-size:16px;line-height:1.6;">
+      <p style="margin:0 0 12px;font-weight:700;">${esc(t.hello(first))}</p>
+      <p style="margin:0 0 18px;">${esc(t.intro)}</p>
+    </td></tr>
+    <tr><td style="padding:0 28px;">
+      <div style="background:#e2d0f0;border-radius:14px;padding:16px 18px;margin:0 0 14px;">
+        <p style="margin:0 0 6px;font-size:16px;font-weight:800;">⭐ ${esc(t.reviewTitle)}</p>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#46385f;">${esc(t.reviewText)}</p>
+        <a href="${esc(reviewLink)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:12px 22px;">${esc(t.reviewButton)} →</a>
+      </div>
+      <div style="border:2px dashed #7543d6;border-radius:14px;padding:16px 18px;margin:0 0 14px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:13px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7543d6;">🎁 ${esc(t.couponTitle)}</p>
+        <p style="margin:0 0 8px;font-size:26px;font-weight:800;letter-spacing:2px;color:#24185a;">${esc(coupon)}</p>
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.5;color:#46385f;">${esc(t.couponText(percent, until))}</p>
+        <a href="${esc(budgetLink)}" style="color:#5d31b8;font-weight:800;font-size:14px;">${esc(t.couponButton)} →</a>
+      </div>
+      <p style="margin:0;font-size:14px;"><a href="${esc(page)}" style="color:#5d31b8;">${esc(t.page)}</a></p>
+    </td></tr>
+    <tr><td style="padding:24px 28px 28px;font-size:15px;line-height:1.6;">
+      <p style="margin:0;font-weight:800;">${esc(t.sign)}</p>
+      <p style="margin:0;"><a href="https://jnbcreativestudio.com.ar" style="color:#5d31b8;text-decoration:none;">JNB Creative Studio</a></p>
+    </td></tr>`;
+  const plain = [t.hello(first), '', t.intro, '', `${t.reviewTitle} ${t.reviewText}`, `${t.reviewButton}: ${reviewLink}`, '', `${t.couponTitle}: ${coupon}`, t.couponText(percent, until), `${t.couponButton}: ${budgetLink}`, '', `${t.page}: ${page}`, '', t.sign].join('\n');
+  return { subject, html: frame(lang, subject, inner, t.footer), text: plain };
+}

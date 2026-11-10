@@ -44,6 +44,15 @@
             saveText: 'Podés volver a esta página cuando quieras para consultar tu presupuesto y, cuando empecemos, seguir el avance de tu proyecto.',
             tabProject: 'Estado del proyecto',
             tabBrief: 'Tu brief',
+            thanksTitle: '¡Gracias por confiar en mí! 💜',
+            reviewAsk: '¿Me dejás tu opinión? Es opcional y te lleva un minuto, pero me ayuda muchísimo.',
+            reviewBtn: 'Dejar mi opinión',
+            reviewDone: '¡Gracias por tu opinión! ⭐',
+            couponTitle: 'Tu cupón de descuento',
+            couponText: '{p} % de descuento en la próxima actualización de tu web. Se usa una sola vez, al pedir el presupuesto, hasta el {date}.',
+            couponUsed: 'Ya usaste este cupón. ¡Gracias!',
+            couponExpired: 'Este cupón venció el {date}.',
+            couponBtn: 'Pedir una actualización con mi cupón',
             briefCta: 'Completar el brief',
             briefNext: 'Contame sobre tu negocio y subí tu logo, tus fotos y tus textos en el brief. Con eso empiezo a trabajar.',
             briefDone: 'Brief recibido ✓',
@@ -190,6 +199,15 @@
             saveText: 'You can come back to this page anytime to see your quote and, once we start, follow your project.',
             tabProject: 'Project status',
             tabBrief: 'Your brief',
+            thanksTitle: 'Thank you for trusting me! 💜',
+            reviewAsk: 'Would you leave me a review? It is optional and takes a minute, but it helps me a lot.',
+            reviewBtn: 'Leave my review',
+            reviewDone: 'Thank you for your review! ⭐',
+            couponTitle: 'Your discount coupon',
+            couponText: '{p}% off your next website update. It can be used once, when you request the quote, until {date}.',
+            couponUsed: 'You already used this coupon. Thank you!',
+            couponExpired: 'This coupon expired on {date}.',
+            couponBtn: 'Request an update with my coupon',
             briefCta: 'Fill in the brief',
             briefNext: 'Tell me about your business and upload your logo, photos and texts in the brief. With that, I start working.',
             briefDone: 'Brief received ✓',
@@ -332,6 +350,15 @@
             saveText: 'Você pode voltar a esta página quando quiser para ver seu orçamento e, quando começarmos, acompanhar o seu projeto.',
             tabProject: 'Status do projeto',
             tabBrief: 'Seu briefing',
+            thanksTitle: 'Obrigada por confiar em mim! 💜',
+            reviewAsk: 'Você me deixa a sua opinião? É opcional e leva um minuto, mas me ajuda muito.',
+            reviewBtn: 'Deixar minha opinião',
+            reviewDone: 'Obrigada pela sua opinião! ⭐',
+            couponTitle: 'Seu cupom de desconto',
+            couponText: '{p}% de desconto na próxima atualização do seu site. Pode ser usado uma única vez, ao pedir o orçamento, até {date}.',
+            couponUsed: 'Você já usou este cupom. Obrigada!',
+            couponExpired: 'Este cupom venceu em {date}.',
+            couponBtn: 'Pedir uma atualização com meu cupom',
             briefCta: 'Preencher o briefing',
             briefNext: 'Me conte sobre o seu negócio e envie seu logo, suas fotos e seus textos no briefing. Com isso eu começo a trabalhar.',
             briefDone: 'Briefing recebido ✓',
@@ -1018,6 +1045,34 @@
             highlights.append(due);
         }
         card.append(highlights);
+
+        // Publicada: gracias, reseña (opcional) y cupón para la próxima actualización
+        if (isLive && (project.reviewToken || project.reviewDone || project.coupon)) {
+            const thanks = el('section', 'client-launch');
+            thanks.append(el('h2', 'client-subtitle', P.thanksTitle));
+            const path = lang === 'es' ? '' : lang;
+            if (project.reviewToken) {
+                const review = el('div', 'client-launch-review');
+                review.append(el('p', '', `⭐ ${P.reviewAsk}`), button(`/resena/${path}?c=${project.reviewToken}`, P.reviewBtn, true, false));
+                thanks.append(review);
+            } else if (project.reviewDone) {
+                thanks.append(el('p', 'client-launch-done', P.reviewDone));
+            }
+            if (project.coupon) {
+                const c = project.coupon;
+                const box = el('div', `client-coupon${c.used || c.expired ? ' is-off' : ''}`);
+                box.append(el('p', 'client-small-title', `🎁 ${P.couponTitle}`), el('p', 'client-coupon-code', c.code));
+                const until = c.expires ? longDate(c.expires) : '';
+                if (c.used) box.append(el('p', 'client-date', P.couponUsed));
+                else if (c.expired) box.append(el('p', 'client-date', fill(P.couponExpired, { date: until })));
+                else {
+                    box.append(el('p', 'client-date', fill(P.couponText, { p: c.percent, date: until })));
+                    box.append(button(`/presupuesto/${path}?plan=update&cupon=${encodeURIComponent(c.code)}`, P.couponBtn, false, false));
+                }
+                thanks.append(box);
+            }
+            card.append(thanks);
+        }
 
         // Etapas
         const status = section('client-status-list', P.statusTitle);

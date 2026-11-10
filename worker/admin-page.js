@@ -111,11 +111,13 @@ export const adminPage = () => `<!doctype html>
       <button data-tab="consultas" aria-pressed="true">Consultas <span class="badge" id="n-consultas"></span></button>
       <button data-tab="resenas" aria-pressed="false">Reseñas <span class="badge" id="n-resenas"></span></button>
       <button data-tab="proyectos" aria-pressed="false">Proyectos <span class="badge" id="n-proyectos"></span></button>
+      <button data-tab="cupones" aria-pressed="false">Cupones <span class="badge" id="n-cupones"></span></button>
       <button data-tab="faq" aria-pressed="false">Preguntas frecuentes</button>
     </nav>
     <section id="tab-consultas"></section>
     <section id="tab-resenas" hidden></section>
     <section id="tab-proyectos" hidden></section>
+    <section id="tab-cupones" hidden></section>
     <section id="tab-faq" hidden></section>
   </div>
   <dialog class="brief-view" id="brief-view"><div class="brief-view-head"><strong id="brief-view-title">Brief</strong><div class="row"><button type="button" id="brief-view-print">Imprimir</button><button type="button" id="brief-view-close">Cerrar</button></div></div><div class="brief-view-body" id="brief-view-body"></div></dialog>
@@ -216,6 +218,7 @@ export const adminPage = () => `<!doctype html>
         + '<div class="row small"><span class="muted">' + (q.mailed ? 'Mail de confirmación enviado ✓' : 'Sin mail de confirmación') + '</span>'
         + '<a class="btn" href="#" data-mail="' + esc(q.code) + '">Ver el mail</a>'
         + '</div>'
+        + (q.coupon ? '<div class="alert" style="margin-top:.6rem">🎁 Usa el cupón <strong>' + esc(q.coupon) + '</strong>: aplicá 20 % de descuento en la propuesta. Queda usado cuando lo pases a "Aceptado".</div>' : '')
         + (isQuote ? linkBox(clientLink('mi-presupuesto', q.lang, q.token), q.lang, q.name.split(' ')[0])
           + (q.status === 'aceptado' ? '<p class="small" style="margin-top:.5rem">✓ Ya tiene seguimiento en <strong>Proyectos</strong>. El cliente lo ve en este mismo link, en la pestaña "Estado del proyecto".</p>' : '') : '')
         + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
@@ -279,6 +282,8 @@ export const adminPage = () => `<!doctype html>
         + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief · ' + date(p.briefEdited) + '</span>' : '')
         // Mismo criterio que el servidor: enviado y en Diseño o Publicación = el cliente no puede cambiarlo
         + (p.briefStatus === 'enviado' && (p.stage === 2 || p.stage === 4) ? '<span class="chip">🔒 Brief cerrado para cambios</span>' : (p.briefStatus === 'enviado' ? '<span class="chip">🔓 El cliente puede editarlo</span>' : ''))
+        + (p.coupon ? '<span class="chip">🎁 Cupón ' + esc(p.coupon) + (p.couponUsedBy ? ' · usado' : '') + '</span>' : '')
+        + (p.reviewToken ? '<span class="chip ' + (p.reviewDone ? 'ok' : '') + '">' + (p.reviewDone ? '⭐ Dejó su reseña' : '⭐ Reseña pedida') + '</span>' : '')
         + (p.briefStatus ? '<button type="button" data-brief="' + esc(p.quote || p.token) + '">Ver brief' + (p.briefFiles ? ' y archivos (' + p.briefFiles + ')' : '') + '</button>' : '')
         + '<button type="button" data-copy="' + esc(projectLink(p) + '#brief') + '">Copiar link del brief</button>'
         + (p.quote ? '<button type="button" data-brief-mail="' + esc(p.quote) + '">Mandar link del brief por mail</button>' : '')
@@ -408,7 +413,27 @@ export const adminPage = () => `<!doctype html>
     $('avail-preview').textContent = availPreview(values.estado, values.reservaDesde);
   });
 
-  const render = () => { renderAvailability(); renderInquiries(); renderReviews(); renderProjects(); renderFaq(); };
+  // ---- Cupones: 20 % para la próxima actualización, se entregan al publicar un proyecto
+  const couponState = (c) => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (c.usedBy) return ['ok', '✓ Usado en ' + c.usedBy + (c.usedAt ? ' · ' + date(c.usedAt) : '')];
+    if (c.expires && c.expires < today) return ['', 'Vencido'];
+    return ['warn', 'Vigente'];
+  };
+  const renderCoupons = () => {
+    const list = data.coupons || [];
+    const active = list.filter((c) => couponState(c)[1] === 'Vigente').length;
+    $('n-cupones').textContent = active || '';
+    $('tab-cupones').innerHTML = '<h2>Cupones de descuento</h2>'
+      + '<p class="muted">Se entregan solos al pasar un proyecto a "Publicación y entrega": 20 % en la próxima actualización, un solo uso, válido por 3 meses. El cliente lo usa en el pedido de presupuesto ("Actualizar una web o tienda").</p>'
+      + (list.length ? '<table><thead><tr><th>Cupón</th><th>Cliente</th><th>Entregado</th><th>Vence</th><th>Estado</th></tr></thead><tbody>'
+        + list.map((c) => { const [cls, label] = couponState(c); return '<tr><td><strong class="code">' + esc(c.code) + '</strong><br><span class="small muted">' + c.percent + ' %</span></td>'
+          + '<td>' + esc(c.client) + (c.email ? '<br><span class="small muted">' + esc(c.email) + '</span>' : '') + '</td>'
+          + '<td>' + date(c.created) + '</td><td>' + day(c.expires) + '</td><td><span class="chip ' + cls + '">' + esc(label) + '</span></td></tr>'; }).join('')
+        + '</tbody></table>' : '<p class="empty">Todavía no hay cupones. Se crea uno cuando publicás un proyecto.</p>');
+  };
+
+  const render = () => { renderAvailability(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
@@ -422,7 +447,7 @@ export const adminPage = () => `<!doctype html>
   $('tabs').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-tab]'); if (!b) return;
     document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    ['consultas', 'resenas', 'proyectos', 'faq'].forEach((t) => { $('tab-' + t).hidden = t !== b.dataset.tab; });
+    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq'].forEach((t) => { $('tab-' + t).hidden = t !== b.dataset.tab; });
   });
 
   document.addEventListener('click', async (e) => {
@@ -476,8 +501,10 @@ export const adminPage = () => `<!doctype html>
       form.elements.stage.value = step.dataset.stage;
       const values = Object.fromEntries(new FormData(form));
       try {
-        await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview });
-        toast('Etapa: ' + STAGES[Number(values.stage)] + '. El cliente ya la ve.');
+        const r = await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview });
+        toast(r.launched
+          ? (r.launchMailed ? '¡Publicado! Le mandé el mail con la reseña y su cupón ' + r.coupon : '¡Publicado! Se creó el cupón ' + r.coupon + ' y el pedido de reseña (el mail no salió: revisá que tenga mail)')
+          : 'Etapa: ' + STAGES[Number(values.stage)] + '. El cliente ya la ve.');
         load();
       } catch (err) {
         form.querySelectorAll('.step').forEach((b) => { b.disabled = false; });

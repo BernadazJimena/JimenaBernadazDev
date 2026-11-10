@@ -103,6 +103,7 @@
                     email: value('email'),
                     plan: plan ? (plan.closest('label')?.querySelector('span')?.textContent.trim() || plan.value) : '',
                     message: value('message'),
+                    coupon: form.querySelector('[name="cupon"]:not(:disabled)')?.value || '',
                     botcheck: form.querySelector('[name="botcheck"]')?.checked || false,
                 }),
             });

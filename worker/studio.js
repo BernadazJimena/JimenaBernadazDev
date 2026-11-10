@@ -23,7 +23,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
-import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail } from './mail.js';
+import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail } from './mail.js';
 
 const SITE = 'https://jnbcreativestudio.com.ar';
 const LANGS = new Set(['es', 'en', 'pt']);
@@ -50,6 +50,10 @@ const planKey = (text) => {
   return '';
 };
 const SHOWN_STATUSES = ['enviado', 'aceptado'];
+const LAUNCH_STAGE = 4;          // "Publicación y entrega" (contando desde 0)
+const COUPON_PERCENT = 20;       // descuento para la próxima actualización
+const COUPON_MONTHS = 3;         // vence a los 3 meses de entregado; se usa una sola vez
+const newCouponCode = () => `GRACIAS-${randomFrom(SAFE_LETTERS, 5)}`;
 const BRIEF_LOCKED_STAGES = [2, 4]; // Diseño y desarrollo, Publicación (contando desde 0)
 // Cambios entre dos versiones del brief (por pregunta)
 const diffSummary = (before, after) => {
@@ -152,6 +156,25 @@ export class StudioData extends DurableObject {
     if (!briefColumns.includes('sent_summary')) this.sql.exec("ALTER TABLE briefs ADD COLUMN sent_summary TEXT NOT NULL DEFAULT '[]'");
     if (!briefColumns.includes('last_changes')) this.sql.exec("ALTER TABLE briefs ADD COLUMN last_changes TEXT NOT NULL DEFAULT '[]'");
     if (!briefColumns.includes('resent')) this.sql.exec("ALTER TABLE briefs ADD COLUMN resent TEXT NOT NULL DEFAULT ''");
+    // Cupones de descuento: se crean al publicar un proyecto (20 % en la próxima actualización, un solo uso)
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS coupons (
+      code TEXT PRIMARY KEY,
+      project TEXT NOT NULL,
+      client TEXT NOT NULL,
+      email TEXT NOT NULL DEFAULT '',
+      lang TEXT NOT NULL,
+      percent INTEGER NOT NULL,
+      created TEXT NOT NULL,
+      used_inquiry TEXT NOT NULL DEFAULT '',
+      used_at TEXT NOT NULL DEFAULT ''
+    )`);
+    const couponColumns = this.sql.exec('PRAGMA table_info(coupons)').toArray().map((c) => c.name);
+    if (!couponColumns.includes('expires')) this.sql.exec("ALTER TABLE coupons ADD COLUMN expires TEXT NOT NULL DEFAULT ''");
+    const projectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
+    if (!projectColumns.includes('review_token')) this.sql.exec("ALTER TABLE projects ADD COLUMN review_token TEXT NOT NULL DEFAULT ''");
+    if (!projectColumns.includes('coupon')) this.sql.exec("ALTER TABLE projects ADD COLUMN coupon TEXT NOT NULL DEFAULT ''");
+    const inquiryColumns = this.sql.exec('PRAGMA table_info(inquiries)').toArray().map((c) => c.name);
+    if (!inquiryColumns.includes('coupon')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN coupon TEXT NOT NULL DEFAULT ''");
     // Ajustes del sitio que Jimena cambia desde el panel (por ejemplo, el cartel de disponibilidad del inicio)
     this.sql.exec(`CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
@@ -184,9 +207,20 @@ export class StudioData extends DurableObject {
     let code = newCode(now);
     while (this.sql.exec('SELECT 1 FROM inquiries WHERE code = ?', code).toArray().length) code = newCode(now);
     const token = newToken();
-    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message);
-    return { code, token, created: now.toISOString() };
+    // El cupón se guarda solo si es válido en este momento
+    const coupon = data.coupon && this.couponState(data.coupon).valid ? data.coupon : '';
+    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon);
+    return { code, token, created: now.toISOString(), coupon };
+  }
+
+  // ---- Cupones
+  couponState(code) {
+    const row = this.sql.exec('SELECT percent, used_inquiry, expires FROM coupons WHERE code = ?', String(code || '').toUpperCase()).toArray()[0];
+    if (!row) return { valid: false, reason: 'unknown' };
+    if (row.used_inquiry) return { valid: false, reason: 'used' };
+    if (row.expires && row.expires < new Date().toISOString().slice(0, 10)) return { valid: false, reason: 'expired', expires: row.expires };
+    return { valid: true, percent: row.percent, expires: row.expires };
   }
 
   markMailed(code) {
@@ -212,7 +246,7 @@ export class StudioData extends DurableObject {
       status: row.status,
       proposal,
       // Cuando el presupuesto se acepta, el mismo link muestra también el avance del proyecto
-      project: this.withBrief(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE quote = ?', token).toArray()[0] || null, token),
+      project: this.withBrief(this.withLaunch(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon FROM projects WHERE quote = ?', token).toArray()[0] || null), token),
     };
   }
 
@@ -220,6 +254,10 @@ export class StudioData extends DurableObject {
     const row = this.sql.exec("SELECT proposal, name, plan, lang FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     if (!row) return false;
     // Al aceptarlo se crea solo el seguimiento del proyecto, vinculado a este presupuesto (una sola vez)
+    if (status === 'aceptado') {
+      const used = this.sql.exec("SELECT code, coupon FROM inquiries WHERE token = ? AND coupon != ''", token).toArray()[0];
+      if (used && this.couponState(used.coupon).valid) this.sql.exec("UPDATE coupons SET used_inquiry = ?, used_at = ? WHERE code = ? AND used_inquiry = ''", used.code, new Date().toISOString(), used.coupon);
+    }
     let created = false;
     if (status === 'aceptado' && !this.sql.exec('SELECT 1 FROM projects WHERE quote = ?', token).toArray().length) {
       this.addProject({ client: row.name.split(' ')[0], project: row.plan || '—', lang: row.lang, due: '', quote: token });
@@ -274,8 +312,8 @@ export class StudioData extends DurableObject {
   }
 
   project(token) {
-    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE token = ?', token).toArray()[0];
-    return this.withBrief(row || null, token);
+    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon FROM projects WHERE token = ?', token).toArray()[0];
+    return this.withBrief(this.withLaunch(row || null), token);
   }
 
   setProject(token, changes) {
@@ -283,11 +321,29 @@ export class StudioData extends DurableObject {
       this.sql.exec('DELETE FROM projects WHERE token = ?', token);
       return true;
     }
-    const found = this.sql.exec('SELECT 1 FROM projects WHERE token = ?', token).toArray().length;
-    if (!found) return false;
+    const project = this.sql.exec('SELECT stage, client, lang, quote, coupon, project FROM projects WHERE token = ?', token).toArray()[0];
+    if (!project) return false;
     this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
       changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
-    return true;
+    if (changes.stage !== LAUNCH_STAGE || project.coupon) return true;
+    // Recién publicado: cupón de descuento y link para la reseña, y los datos para mandarle el mail
+    const now = new Date();
+    let code = newCouponCode();
+    while (this.sql.exec('SELECT 1 FROM coupons WHERE code = ?', code).toArray().length) code = newCouponCode();
+    const linkToken = project.quote || token;
+    const fromQuote = project.quote ? this.sql.exec('SELECT email, name FROM inquiries WHERE token = ?', project.quote).toArray()[0] : null;
+    const brief = this.sql.exec('SELECT answers FROM briefs WHERE token = ?', linkToken).toArray()[0];
+    const briefEmail = brief ? (JSON.parse(brief.answers).email || '') : '';
+    const email = (fromQuote && fromQuote.email) || (typeof briefEmail === 'string' ? briefEmail.trim() : '');
+    const name = (fromQuote && fromQuote.name) || project.client;
+    const expiry = new Date(now);
+    expiry.setMonth(expiry.getMonth() + COUPON_MONTHS);
+    const expires = expiry.toISOString().slice(0, 10);
+    this.sql.exec('INSERT INTO coupons (code, project, client, email, lang, percent, created, expires) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      code, token, name, email, project.lang, COUPON_PERCENT, now.toISOString(), expires);
+    const reviewToken = this.invite(name);
+    this.sql.exec('UPDATE projects SET coupon = ?, review_token = ? WHERE token = ?', code, reviewToken, token);
+    return { launched: true, coupon: code, expires, reviewToken, email, name, lang: project.lang, linkToken, fromQuote: Boolean(project.quote), store: planKey(project.project) === 'emprendedor' };
   }
 
   // ---- Cartel de disponibilidad del inicio ('abierto', 'agenda' o 'cerrado'; mes desde el que se reserva, 1 a 12 o vacío)
@@ -325,6 +381,23 @@ export class StudioData extends DurableObject {
     if (fromQuote) return { planText: fromQuote.plan, lang: fromQuote.lang, client: fromQuote.name, code: fromQuote.code, request: fromQuote.message };
     const project = this.sql.exec("SELECT project, lang, client FROM projects WHERE token = ? AND quote = ''", token).toArray()[0];
     return project ? { planText: project.project, lang: project.lang, client: project.client, code: '', request: '' } : null;
+  }
+
+  // Al publicar: link de la reseña (si todavía no la dejó) y el cupón (con su estado)
+  withLaunch(project) {
+    if (!project) return null;
+    const { review_token: reviewToken, coupon, ...rest } = project;
+    const invitation = reviewToken ? this.invitation(reviewToken) : null;
+    const couponRow = coupon ? this.sql.exec('SELECT percent, used_inquiry, expires FROM coupons WHERE code = ?', coupon).toArray()[0] : null;
+    return {
+      ...rest,
+      reviewToken: invitation && !invitation.used ? reviewToken : '',
+      reviewDone: Boolean(invitation && invitation.used),
+      coupon: couponRow ? {
+        code: coupon, percent: couponRow.percent, used: Boolean(couponRow.used_inquiry), expires: couponRow.expires,
+        expired: Boolean(couponRow.expires && couponRow.expires < new Date().toISOString().slice(0, 10)),
+      } : null,
+    };
   }
 
   withBrief(project, token) {
@@ -470,12 +543,14 @@ export class StudioData extends DurableObject {
   // ---- Panel
   everything() {
     return {
-      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed
+      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon
         FROM inquiries ORDER BY created DESC LIMIT 300`).toArray()
         .map((row) => ({ ...row, proposal: row.proposal ? JSON.parse(row.proposal) : null })),
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
+        p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
+        p.review_token AS reviewToken, (SELECT used FROM invitations v WHERE v.token = p.review_token) AS reviewDone,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
         b.edited AS briefEdited, CASE WHEN b.edit_seen = 0 THEN 1 ELSE 0 END AS briefEditUnseen,
         (SELECT COUNT(*) FROM brief_files f WHERE f.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)) AS briefFiles
@@ -483,6 +558,8 @@ export class StudioData extends DurableObject {
         LEFT JOIN inquiries i ON i.token = p.quote AND p.quote != ''
         LEFT JOIN briefs b ON b.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)
         ORDER BY p.updated DESC`).toArray(),
+      coupons: this.sql.exec(`SELECT c.code, c.client, c.email, c.lang, c.percent, c.created, c.expires, c.used_inquiry AS usedBy, c.used_at AS usedAt
+        FROM coupons c ORDER BY c.created DESC`).toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
     };
   }
@@ -553,6 +630,7 @@ export async function handleStudio(request, env, ctx) {
       email: oneLine(body.email, 160).toLowerCase(),
       plan: oneLine(body.plan, 100),
       message: text(body.message, 5000),
+      coupon: typeof body.coupon === 'string' ? body.coupon.trim().toUpperCase().slice(0, 30) : '',
     };
     if (!data.name || !EMAIL.test(data.email) || !data.message) return badRequest();
     const saved = await store.addInquiry(data);
@@ -563,7 +641,7 @@ export async function handleStudio(request, env, ctx) {
       mailed = await sendMail(env, { ...data, code: saved.code, created: saved.created }, link);
       if (mailed) await store.markMailed(saved.code);
     } catch { /* si el mail falla, la consulta igual quedó guardada */ }
-    return json({ code: saved.code, link: link && new URL(link).pathname + new URL(link).search, mailed });
+    return json({ code: saved.code, link: link && new URL(link).pathname + new URL(link).search, mailed, coupon: saved.coupon });
   }
 
   if ((match = path.match(/^\/api\/presupuestos\/([^/]+)$/)) && request.method === 'GET') {
@@ -595,6 +673,11 @@ export async function handleStudio(request, env, ctx) {
       if (!review.name || !review.business || review.body.length < 20) return badRequest();
       return (await store.addReview(match[1], review)) ? json({ ok: true }) : json({ error: 'used' }, 409);
     }
+  }
+
+  // ---- Cupón (lo valida el formulario de presupuesto mientras se escribe)
+  if ((match = path.match(/^\/api\/cupon\/([A-Za-z0-9-]{4,30})$/)) && request.method === 'GET') {
+    return json(await store.couponState(match[1]));
   }
 
   // ---- Cartel de disponibilidad (lo lee js/intake.js en el inicio)
@@ -805,7 +888,23 @@ export async function handleStudio(request, env, ctx) {
         // Vista previa: solo links https (por ejemplo la demo en Vercel)
         preview: typeof body.preview === 'string' && /^https:\/\/[^\s"<>]+$/.test(body.preview.trim()) ? body.preview.trim().slice(0, 300) : '',
       };
-      return (await store.setProject(match[1], changes)) ? json({ ok: true }) : notFound();
+      const result = await store.setProject(match[1], changes);
+      if (!result) return notFound();
+      // Recién publicado: mail al cliente con la reseña (opcional) y su cupón
+      let launchMailed = false;
+      if (result.launched && result.email) {
+        const lang = result.lang;
+        const page = result.fromQuote ? quoteLink(lang, result.linkToken) : projectLink(lang, result.linkToken);
+        try {
+          launchMailed = await sendAnyMail(env, result.email, launchMail({
+            lang, name: result.name, page,
+            reviewLink: `${SITE}/resena/${lang === 'es' ? '' : lang}?c=${result.reviewToken}`,
+            coupon: result.coupon, percent: COUPON_PERCENT, store: result.store, expires: result.expires,
+            budgetLink: `${SITE}/presupuesto/${lang === 'es' ? '' : lang}?plan=update&cupon=${result.coupon}`,
+          }));
+        } catch { /* el cupón y la reseña quedaron creados igual */ }
+      }
+      return json({ ok: true, launched: Boolean(result.launched), launchMailed, coupon: result.coupon || '' });
     }
   }
 

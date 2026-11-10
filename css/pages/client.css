@@ -845,6 +845,70 @@
     white-space: pre-line;
 }
 
+/* Proyecto publicado: gracias, reseña y cupón */
+.client-launch {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--blue) 16%, var(--sky)), var(--sky));
+    border: .08rem solid var(--line);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.2rem 1.25rem;
+}
+
+.client-launch .client-subtitle {
+    margin: 0;
+}
+
+.client-launch-review {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+}
+
+.client-launch-review p,
+.client-launch-done {
+    color: var(--text);
+    margin: 0;
+}
+
+.client-launch-done {
+    font-weight: 800;
+}
+
+.client-coupon {
+    align-items: center;
+    background: var(--surface);
+    border: .14rem dashed var(--blue);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.client-coupon > p {
+    margin: 0;
+}
+
+.client-coupon-code {
+    color: var(--text);
+    font-size: clamp(1.4rem, 5vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.client-coupon.is-off {
+    border-color: var(--line);
+    opacity: .75;
+}
+
+.client-coupon.is-off .client-coupon-code {
+    text-decoration: line-through;
+}
+
 /* Reseña */
 .client-review .contact-field textarea {
     min-height: 8rem;

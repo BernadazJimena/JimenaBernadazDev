@@ -10,6 +10,11 @@
     const status = form.querySelector('.contact-form-status');
     const whatsappButton = form.querySelector('.budget-whatsapp');
     const t = form.dataset;
+    // Cupón de descuento (se entrega al publicar un proyecto; sirve para pedir una actualización)
+    const couponBox = form.querySelector('.budget-coupon');
+    const couponInput = couponBox?.querySelector('input');
+    const couponStatus = couponBox?.querySelector('.budget-coupon-status');
+    let couponValid = false;
 
     const topicInput = () => form.querySelector('input[name="plan"]:checked');
     const activeGroup = () => groups.find((g) => !g.disabled);
@@ -25,6 +30,11 @@
             group.hidden = !active;
             group.disabled = !active;
         });
+        // El cupón aparece solo al pedir una actualización (oculto, no se envía)
+        if (couponBox) {
+            couponBox.hidden = topic !== 'update';
+            couponInput.disabled = couponBox.hidden;
+        }
         // Campos extra que dependen de una opción (cantidad de productos o de páginas)
         form.querySelectorAll('[data-reveal]').forEach((option) => {
             const extra = form.querySelector(`#${option.dataset.reveal}`);
@@ -54,6 +64,7 @@
         const items = chosenItems();
         if (items.length) lines.push(`${t.lItems}: ${items.join('; ')}`);
         if (details.value.trim()) lines.push(`${t.lDetails}: ${details.value.trim()}`);
+        if (couponBox && !couponBox.hidden && couponValid) lines.push(`${couponInput.dataset.label}: ${couponInput.value.trim().toUpperCase()}`);
         const name = form.querySelector('input[name="name"]').value.trim();
         if (withName && name) lines.push(`${t.lName}: ${name}`);
         return lines.join('\n');
@@ -150,6 +161,36 @@
     const wanted = new URLSearchParams(location.search).get('plan')?.toLowerCase();
     const preset = wanted && [...form.querySelectorAll('input[name="plan"]')].find((input) => input.value === wanted);
     if (preset) preset.checked = true;
+
+    // Valida el cupón mientras se escribe (sin cupón válido, el pedido se manda igual, sin descuento)
+    if (couponInput) {
+        let couponTimer;
+        const checkCoupon = () => {
+            const code = couponInput.value.trim().toUpperCase();
+            couponValid = false;
+            couponStatus.className = 'budget-coupon-status';
+            couponStatus.textContent = '';
+            if (code.length < 6) { update(); return; }
+            fetch(`/api/cupon/${encodeURIComponent(code)}`, { cache: 'no-store' })
+                .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+                .then((state) => {
+                    if (couponInput.value.trim().toUpperCase() !== code) return;
+                    couponValid = Boolean(state.valid);
+                    const lang = document.documentElement.lang;
+                    const date = state.expires ? new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${state.expires}T12:00:00Z`)) : '';
+                    const d = couponInput.dataset;
+                    couponStatus.classList.add(state.valid ? 'is-ok' : 'is-error');
+                    couponStatus.textContent = state.valid ? d.ok.replace('{p}', state.percent)
+                        : (state.reason === 'used' ? d.used : state.reason === 'expired' ? d.expired.replace('{date}', date) : d.unknown);
+                    update();
+                })
+                .catch(() => { /* sin conexión: se manda igual y lo reviso a mano */ });
+        };
+        couponInput.addEventListener('input', () => { clearTimeout(couponTimer); couponTimer = setTimeout(checkCoupon, 500); });
+        const presetCoupon = new URLSearchParams(location.search).get('cupon');
+        if (presetCoupon && /^[A-Za-z0-9-]{4,30}$/.test(presetCoupon)) { couponInput.value = presetCoupon.toUpperCase(); }
+        setTimeout(checkCoupon, 0);
+    }
 
     update();
 

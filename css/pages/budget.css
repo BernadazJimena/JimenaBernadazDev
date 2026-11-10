@@ -195,3 +195,45 @@
 .budget-form .form-privacy {
     margin-top: -.75rem;
 }
+
+/* Cupón de descuento (solo al pedir una actualización; lo valida js/budget-form.js) */
+.budget-coupon {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.budget-coupon[hidden] {
+    display: none;
+}
+
+.budget-coupon input {
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.budget-coupon-status {
+    font-size: .9375rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.budget-coupon-status:empty {
+    display: none;
+}
+
+.budget-coupon-status.is-ok {
+    color: #157a42;
+}
+
+.budget-coupon-status.is-error {
+    color: #b93232;
+}
+
+:root[data-theme="dark"] .budget-coupon-status.is-ok {
+    color: #55d87c;
+}
+
+:root[data-theme="dark"] .budget-coupon-status.is-error {
+    color: #ff8a8a;
+}
