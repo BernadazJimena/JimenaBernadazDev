@@ -11,7 +11,11 @@
     (function () {
       try {
         var stored = localStorage.getItem('jnb-theme');
-        var theme = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        // Samsung Internet con modo oscuro oscurece el modo claro por su cuenta (el lila queda azul):
+        // ahí se usa siempre el modo oscuro propio del sitio, que se ve como está diseñado.
+        var forcedDark = /SamsungBrowser/i.test(navigator.userAgent) && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (forcedDark) document.documentElement.classList.add('theme-forced-dark');
+        var theme = forcedDark ? 'dark' : (stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
         document.documentElement.setAttribute('data-theme', theme);
         // Avisa al navegador qué tema usa la página, para que no la oscurezca por su cuenta (Samsung Internet invertía los colores)
         var scheme = document.getElementById('jnb-color-scheme');

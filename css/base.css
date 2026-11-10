@@ -248,3 +248,9 @@ main {
 :root {
     forced-color-adjust: none;
 }
+
+/* Samsung Internet con modo oscuro: el sitio queda en su modo oscuro y no se ofrece el claro
+   (el navegador lo alteraría). La clase la pone el script del <head> de cada página. */
+.theme-forced-dark .theme-toggle {
+    display: none;
+}
