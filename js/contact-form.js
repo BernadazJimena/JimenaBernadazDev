@@ -79,6 +79,53 @@
         if (field.hasAttribute('aria-invalid') && field.checkValidity()) clearFieldError(field);
     });
 
+    // ---- Copia en el sitio (/api/consultas): número de consulta, mail de confirmación y, en presupuestos, el link al pedido.
+    // Si no responde, el envío igual salió por Web3Forms y se muestra el mensaje de siempre.
+    const lang = document.documentElement.lang.slice(0, 2);
+    const AFTER = {
+        es: { code: 'Tu número de consulta es {code}.', mailed: 'Te mandé una copia a tu mail.', link: 'Ver tu pedido' },
+        en: { code: 'Your reference number is {code}.', mailed: 'I sent a copy to your email.', link: 'View your request' },
+        pt: { code: 'Seu número de referência é {code}.', mailed: 'Enviei uma cópia para o seu e-mail.', link: 'Ver seu pedido' },
+    }[lang] || null;
+
+    const saveCopy = async (form) => {
+        if (!AFTER) return null;
+        const value = (name) => form.querySelector(`[name="${name}"]`)?.value || '';
+        const plan = form.querySelector('input[name="plan"]:checked');
+        try {
+            const response = await fetch('/api/consultas', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    kind: form.classList.contains('budget-form') ? 'presupuesto' : 'consulta',
+                    lang,
+                    name: value('name'),
+                    email: value('email'),
+                    plan: plan ? (plan.closest('label')?.querySelector('span')?.textContent.trim() || plan.value) : '',
+                    message: value('message'),
+                    botcheck: form.querySelector('[name="botcheck"]')?.checked || false,
+                }),
+            });
+            return response.ok ? await response.json() : null;
+        } catch (copyError) {
+            return null;
+        }
+    };
+
+    const showSuccess = (status, success, saved) => {
+        status.textContent = success;
+        if (!saved?.code) return;
+        status.append(` ${AFTER.code.replace('{code}', saved.code)}`);
+        if (saved.mailed) status.append(` ${AFTER.mailed}`);
+        if (saved.link) {
+            const link = document.createElement('a');
+            link.className = 'text-link contact-form-link';
+            link.href = saved.link;
+            link.textContent = `${AFTER.link} →`;
+            status.append(' ', link);
+        }
+    };
+
     contactForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
@@ -106,10 +153,12 @@
             const result = await response.json();
             if (!response.ok || !result.success) throw new Error(result.message);
 
-            // Solo con la confirmación de Web3Forms se muestra el éxito y se vacía el formulario
+            // Solo con la confirmación de Web3Forms se muestra el éxito y se vacía el formulario.
+            // Antes de vaciarlo se guarda una copia en el sitio, que da el número de consulta (y el link del presupuesto).
+            const saved = await saveCopy(contactForm);
             contactForm.reset();
             status.classList.add('is-success');
-            status.textContent = success;
+            showSuccess(status, success, saved);
         } catch (submitError) {
             // Si falla, lo escrito queda en el formulario para poder reintentar
             status.classList.add('is-error');

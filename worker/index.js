@@ -1,5 +1,6 @@
 // Worker del sitio: sirve las páginas tal cual y agrega dos cosas chicas que se guardan:
 // los "me gusta" del blog y las respuestas de las preguntas frecuentes (más abajo, "Preguntas frecuentes").
+// Consultas, presupuestos, reseñas, proyectos y el panel privado están en studio.js.
 //
 //   GET  /api/likes?slugs=landing-web-o-tienda,otro   → { "landing-web-o-tienda": 3, "otro": 0 }
 //   POST /api/likes/landing-web-o-tienda  { "visitor": "<id>", "liked": true|false } → { "count": 4 }
@@ -9,6 +10,9 @@
 // así un mismo navegador no suma dos veces el mismo artículo. No se guarda la IP ni nada personal.
 
 import { DurableObject } from 'cloudflare:workers';
+import { handleStudio, isAdmin } from './studio.js';
+
+export { StudioData } from './studio.js';
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VISITOR = /^[a-zA-Z0-9-]{16,64}$/;
@@ -222,6 +226,13 @@ export default {
     const { pathname } = new URL(request.url);
     if (pathname === '/api/likes' || pathname.startsWith('/api/likes/')) return handleLikes(request, env);
     if (pathname === '/api/faq' || pathname.startsWith('/api/faq/')) return handleFaq(request, env);
+    // Números de las preguntas frecuentes para el panel privado
+    if (pathname === '/api/admin/faq' && request.method === 'GET') {
+      if (!env.ADMIN_CLAVE) return json({ error: 'not found' }, 404);
+      if (!isAdmin(request, env)) return json({ error: 'clave' }, 401);
+      return json(await env.FAQ_FEEDBACK.get(env.FAQ_FEEDBACK.idFromName('faq')).summary());
+    }
+    if (/^\/api\/(consultas|presupuestos|resenas|proyectos|admin)(\/|$)/.test(pathname)) return handleStudio(request, env);
     return env.ASSETS.fetch(request);
   },
 };

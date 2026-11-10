@@ -1,0 +1,369 @@
+/* Páginas privadas para clientes (mi-presupuesto, resena, mi-proyecto; las arma js/client-pages.js)
+   y sección de reseñas del inicio (js/reviews.js). Fondos siempre en lilas de la paleta, nunca blanco. */
+
+.client-view {
+    max-width: 46rem;
+}
+
+.client-loading,
+.client-message {
+    color: var(--text);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.client-card {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.client-head {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.client-kicker,
+.client-small-title {
+    color: var(--blue);
+    font-size: var(--text-sm);
+    font-weight: 800;
+    letter-spacing: .08em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.client-code {
+    color: var(--text);
+    font-size: clamp(1.35rem, 4vw, 1.75rem);
+    font-weight: 800;
+    letter-spacing: .02em;
+    margin: .2rem 0 0;
+}
+
+.client-date,
+.client-foot,
+.client-due {
+    color: var(--muted);
+    font-size: .9375rem;
+    margin: .2rem 0 0;
+}
+
+.client-due {
+    font-weight: 700;
+}
+
+.client-status {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+    font-weight: 800;
+    padding: .35rem .8rem;
+}
+
+.client-status.is-enviado {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: var(--mist);
+}
+
+.client-lead {
+    color: var(--text);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.client-subtitle {
+    font-size: 1.15rem;
+    margin: 0 0 .75rem;
+}
+
+.client-proposal {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-left: .25rem solid var(--blue);
+    border-radius: 1rem;
+    padding: 1.25rem 1.25rem 1.4rem;
+}
+
+.client-price {
+    color: var(--blue);
+    font-size: clamp(1.6rem, 5vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+}
+
+.client-list {
+    margin: .5rem 0 1rem;
+    padding-left: 1.2rem;
+}
+
+.client-list li {
+    margin-bottom: .35rem;
+}
+
+.client-note {
+    border-left: .2rem solid var(--rule);
+    margin: 0 0 1rem;
+    padding-left: .9rem;
+}
+
+.client-note p:last-child {
+    margin: .25rem 0 0;
+    white-space: pre-line;
+}
+
+.client-valid {
+    color: var(--muted);
+    font-size: .9375rem;
+    margin: 0 0 1rem;
+}
+
+.client-valid.is-expired {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.client-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.client-summary {
+    display: grid;
+    gap: .6rem;
+    margin: 0;
+}
+
+.client-summary dt {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+.client-summary dd {
+    margin: 0;
+    white-space: pre-line;
+}
+
+/* Reseña */
+.client-review .contact-field textarea {
+    min-height: 8rem;
+}
+
+.client-consent {
+    align-items: flex-start;
+    color: var(--text);
+    display: flex;
+    font-size: .9375rem;
+    gap: .6rem;
+    line-height: 1.5;
+}
+
+.client-consent input {
+    accent-color: var(--blue);
+    flex-shrink: 0;
+    height: 1.15rem;
+    margin-top: .15rem;
+    width: 1.15rem;
+}
+
+.client-consent input[aria-invalid="true"] {
+    outline: .15rem solid #b93232;
+    outline-offset: .15rem;
+}
+
+.client-review .button {
+    align-self: flex-start;
+}
+
+/* Seguimiento del proyecto */
+.client-live {
+    color: var(--blue);
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.client-steps {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.client-step {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 2.25rem 1fr;
+    padding-bottom: 1.1rem;
+    position: relative;
+}
+
+/* Línea que une las etapas */
+.client-step:not(:last-child)::before {
+    background: var(--line);
+    bottom: 0;
+    content: "";
+    left: calc(1.125rem - .06rem);
+    position: absolute;
+    top: 2.4rem;
+    width: .12rem;
+}
+
+.client-step.is-done:not(:last-child)::before {
+    background: var(--blue);
+}
+
+.client-step-mark {
+    align-items: center;
+    background: var(--sky);
+    border: .12rem solid var(--line);
+    border-radius: 50%;
+    color: var(--muted);
+    display: flex;
+    font-size: .9rem;
+    font-weight: 800;
+    height: 2.25rem;
+    justify-content: center;
+    width: 2.25rem;
+}
+
+.client-step.is-done .client-step-mark {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: var(--mist);
+}
+
+.client-step.is-current .client-step-mark {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .3rem color-mix(in srgb, var(--blue) 22%, transparent);
+    color: var(--blue);
+}
+
+.client-step-title {
+    color: var(--text);
+    font-weight: 800;
+    margin: .35rem 0 .15rem;
+}
+
+.client-step.is-pending .client-step-title {
+    color: var(--muted);
+}
+
+.client-step-tag {
+    background: var(--sky);
+    border-radius: 999px;
+    color: var(--blue);
+    font-size: .75rem;
+    font-weight: 800;
+    margin-left: .3rem;
+    padding: .1rem .55rem;
+    vertical-align: .1em;
+}
+
+.client-step-text {
+    color: var(--muted);
+    font-size: .9375rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+@media (max-width: 560px) {
+    .client-head {
+        flex-direction: column;
+        gap: .6rem;
+    }
+
+    .client-actions .button {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* ---- Reseñas en el inicio: la sección aparece solo cuando hay al menos 3 aprobadas */
+.reviews[hidden] {
+    display: none;
+}
+
+.reviews-head {
+    margin-bottom: 2.5rem;
+}
+
+.reviews-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.review-card {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+.review-card blockquote {
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.65;
+    margin: 0;
+    position: relative;
+}
+
+.review-card blockquote::before {
+    color: var(--decoration);
+    content: "“";
+    display: block;
+    font-size: 2.6rem;
+    font-weight: 800;
+    height: 1.6rem;
+    line-height: 1;
+}
+
+.review-card figcaption {
+    border-top: .08rem solid var(--line);
+    margin-top: auto;
+    padding-top: .9rem;
+}
+
+.review-name {
+    color: var(--text);
+    display: block;
+    font-weight: 800;
+}
+
+.review-business {
+    color: var(--muted);
+    display: block;
+    font-size: .9375rem;
+}
+
+@media (max-width: 960px) {
+    .reviews-grid {
+        grid-template-columns: 1fr;
+        margin: 0 auto;
+        max-width: 36rem;
+    }
+}

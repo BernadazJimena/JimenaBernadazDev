@@ -10,17 +10,19 @@
     "directory": ".",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    // Los "me gusta" del blog y las respuestas de las preguntas frecuentes los responde el Worker; todo lo demás son archivos del sitio.
+    // Todo lo que está bajo /api/ (me gusta, preguntas frecuentes, consultas, presupuestos, reseñas, proyectos y el panel) lo responde el Worker.
     "run_worker_first": ["/api/*"]
   },
   "durable_objects": {
     "bindings": [
       { "name": "BLOG_LIKES", "class_name": "BlogLikes" },
-      { "name": "FAQ_FEEDBACK", "class_name": "FaqFeedback" }
+      { "name": "FAQ_FEEDBACK", "class_name": "FaqFeedback" },
+      { "name": "STUDIO", "class_name": "StudioData" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["BlogLikes"] },
-    { "tag": "v2", "new_sqlite_classes": ["FaqFeedback"] }
+    { "tag": "v2", "new_sqlite_classes": ["FaqFeedback"] },
+    { "tag": "v3", "new_sqlite_classes": ["StudioData"] }
   ]
 }
