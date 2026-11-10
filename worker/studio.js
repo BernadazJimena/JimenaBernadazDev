@@ -391,6 +391,16 @@ export class StudioData extends DurableObject {
     return { launched: true, coupon: code, expires, reviewToken, email, name, lang: project.lang, linkToken, fromQuote: Boolean(project.quote), store: planKey(project.project) === 'emprendedor' };
   }
 
+  // ---- Último error al mandar un mail (para el panel)
+  setMailError(value) {
+    this.sql.exec(`INSERT INTO settings (key, value) VALUES ('mailError', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value`, JSON.stringify(value));
+  }
+
+  mailError() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'mailError'").toArray()[0];
+    return row ? JSON.parse(row.value) : null;
+  }
+
   // ---- Cartel de disponibilidad del inicio ('abierto', 'agenda' o 'cerrado'; mes desde el que se reserva, 1 a 12 o vacío)
   availability() {
     const row = this.sql.exec("SELECT value FROM settings WHERE key = 'availability'").toArray()[0];
@@ -617,23 +627,44 @@ export class StudioData extends DurableObject {
   }
 }
 
-// ---- Envío del mail de confirmación (Resend). Sin claves cargadas, no se manda y no pasa nada.
+// ---- Envío de mails (Resend). Sin claves cargadas, no se manda nada.
+// Cada envío fallido queda guardado (lo ve Jimena en el panel, en "Probar envío de mail") con la respuesta de Resend.
+let mailStore = null; // se completa en cada pedido, para poder guardar el último error
+
+// Los valores cargados en Cloudflare se limpian: espacios y comillas de más son un error común al pegarlos
+const cleanEnv = (value) => String(value || '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
+
+async function resendSend(env, to, mail) {
+  const key = cleanEnv(env.RESEND_API_KEY);
+  const from = cleanEnv(env.MAIL_FROM);
+  const replyTo = cleanEnv(env.MAIL_REPLY_TO);
+  if (!key || !from) return { ok: false, status: 0, error: 'Faltan RESEND_API_KEY o MAIL_FROM en Cloudflare.' };
+  if (!to) return { ok: false, status: 0, error: 'El cliente no tiene mail cargado.' };
+  let res;
+  try {
+    res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ from, to: [to], reply_to: replyTo || undefined, subject: mail.subject, html: mail.html, text: mail.text }),
+    });
+  } catch (networkError) {
+    return remember({ ok: false, status: 0, error: `No se pudo conectar con Resend: ${networkError.message}` }, to, mail);
+  }
+  if (res.ok) return { ok: true, status: res.status };
+  const detail = await res.text().catch(() => '');
+  let message = detail;
+  try { message = JSON.parse(detail).message || detail; } catch { /* no era JSON */ }
+  console.error('Resend rechazó el mail', res.status, message);
+  return remember({ ok: false, status: res.status, error: String(message).slice(0, 500) }, to, mail);
+}
+
+async function remember(result, to, mail) {
+  try { if (mailStore) await mailStore.setMailError({ at: new Date().toISOString(), status: result.status, error: result.error, to, subject: mail.subject }); } catch { /* sin registro */ }
+  return result;
+}
+
 async function sendMail(env, inquiry, link) {
-  if (!env.RESEND_API_KEY || !env.MAIL_FROM) return false;
-  const mail = confirmationMail(inquiry, link);
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      from: env.MAIL_FROM,
-      to: [inquiry.email],
-      reply_to: env.MAIL_REPLY_TO || undefined,
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text,
-    }),
-  });
-  return res.ok;
+  return (await resendSend(env, inquiry.email, confirmationMail(inquiry, link))).ok;
 }
 
 const quoteLink = (lang, token) => `${SITE}/mi-presupuesto/${lang === 'es' ? '' : lang}?c=${token}`;
@@ -641,13 +672,7 @@ const projectLink = (lang, token) => `${SITE}/mi-proyecto/${lang === 'es' ? '' :
 
 // Mail cualquiera por Resend (sin claves cargadas, no hace nada)
 async function sendAnyMail(env, to, mail) {
-  if (!env.RESEND_API_KEY || !env.MAIL_FROM || !to) return false;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: env.MAIL_FROM, to: [to], reply_to: env.MAIL_REPLY_TO || undefined, subject: mail.subject, html: mail.html, text: mail.text }),
-  });
-  return res.ok;
+  return (await resendSend(env, to, mail)).ok;
 }
 
 // La clave del panel se compara sin dar pistas por el tiempo de respuesta.
@@ -669,6 +694,7 @@ export async function handleStudio(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
   const store = env.STUDIO.get(env.STUDIO.idFromName('studio'));
+  mailStore = store;
   let match;
 
   // ---- Consultas (formulario del inicio) y pedidos de presupuesto
@@ -855,6 +881,24 @@ export async function handleStudio(request, env, ctx) {
       return json({ ok: mailed });
     }
 
+    if (path === '/api/admin/probar-mail' && request.method === 'POST') {
+      const body = (await readJson(request)) || {};
+      const to = oneLine(body.to, 160).toLowerCase();
+      if (!EMAIL.test(to)) return badRequest();
+      const result = await resendSend(env, to, {
+        subject: 'Prueba de envío · JNB Creative Studio',
+        html: '<p style="font-family:Arial,sans-serif">Si te llegó este mail, los envíos del sitio funcionan. ✓</p>',
+        text: 'Si te llegó este mail, los envíos del sitio funcionan.',
+      });
+      return json({
+        ...result,
+        from: cleanEnv(env.MAIL_FROM),
+        replyTo: cleanEnv(env.MAIL_REPLY_TO),
+        hasKey: Boolean(cleanEnv(env.RESEND_API_KEY)),
+        keyStart: cleanEnv(env.RESEND_API_KEY).slice(0, 3),
+      });
+    }
+
     if (path === '/api/admin/disponibilidad' && request.method === 'POST') {
       const body = (await readJson(request)) || {};
       if (!['abierto', 'agenda', 'cerrado'].includes(body.estado)) return badRequest();
@@ -866,7 +910,8 @@ export async function handleStudio(request, env, ctx) {
     if (path === '/api/admin/datos' && request.method === 'GET') {
       const data = await store.everything();
       data.availability = await store.availability();
-      data.mailReady = Boolean(env.RESEND_API_KEY && env.MAIL_FROM);
+      data.mailReady = Boolean(cleanEnv(env.RESEND_API_KEY) && cleanEnv(env.MAIL_FROM));
+      data.mailError = await store.mailError();
       return json(data);
     }
 

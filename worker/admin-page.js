@@ -128,6 +128,7 @@ export const adminPage = () => `<!doctype html>
       <div class="row"><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
     </header>
     <section id="availability"></section>
+    <section id="mail-check"></section>
     <nav id="tabs">
       <button data-tab="consultas" aria-pressed="true">Consultas <span class="badge" id="n-consultas"></span></button>
       <button data-tab="resenas" aria-pressed="false">Reseñas <span class="badge" id="n-resenas"></span></button>
@@ -601,7 +602,28 @@ export const adminPage = () => `<!doctype html>
         + '</tbody></table>' : '<p class="empty">Todavía no hay cupones. Se crea uno cuando publicás un proyecto.</p>');
   };
 
-  const render = () => { renderAvailability(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); };
+  // ---- Mails: estado, último error y prueba de envío (con lo que significa cada respuesta de Resend)
+  const explainMail = (r) => {
+    const e = String(r.error || '').toLowerCase();
+    if (!r.status && /faltan/.test(e)) return 'Faltan claves en Cloudflare: cargá RESEND_API_KEY y MAIL_FROM como Secret (Workers → jimenabernadazdev → Settings → Variables and Secrets).';
+    if (r.status === 401 || /api key is invalid|invalid api key|missing api key/.test(e)) return 'La clave de Resend no sirve: creá una nueva en Resend (API keys → Create API key, permiso Sending access) y reemplazá RESEND_API_KEY en Cloudflare.';
+    if (/only send testing emails|testing emails to your own/.test(e)) return 'MAIL_FROM está usando la dirección de prueba de Resend. Cambiala por: JNB Creative Studio <hola@jnbcreativestudio.com.ar>';
+    if (/not verified|verify a domain|domain is not/.test(e)) return 'El dominio de MAIL_FROM no está verificado en Resend. Revisá que MAIL_FROM termine en @jnbcreativestudio.com.ar y que en Resend → Domains diga Verified.';
+    if (r.status === 403 && /restricted|permission|not allowed/.test(e)) return 'La clave de Resend no tiene permiso para este dominio: creá una con permiso Sending access para jnbcreativestudio.com.ar (o Full access) y reemplazala.';
+    if (r.status === 422 || /from/.test(e)) return 'MAIL_FROM está mal escrito. Tiene que quedar exactamente así, sin comillas: JNB Creative Studio <hola@jnbcreativestudio.com.ar>';
+    if (r.status === 429) return 'Se mandaron muchos mails seguidos. Esperá un minuto y probá de nuevo.';
+    return 'Resend no aceptó el envío. Copiame el mensaje de arriba y lo reviso.';
+  };
+  const renderMailCheck = () => {
+    const err = data.mailError;
+    $('mail-check').innerHTML = '<details class="card"' + (data.mailReady && !err ? '' : ' open') + '><summary>📧 Mails al cliente: '
+      + (data.mailReady ? '<span class="chip ok">claves cargadas</span>' : '<span class="chip warn">faltan claves</span>') + (err ? ' <span class="chip alert-chip">hubo un error</span>' : '') + '</summary>'
+      + (err ? '<div class="alert" style="margin-top:.75rem">Último error (' + date(err.at) + ', a ' + esc(err.to || '') + '): <strong>' + esc(err.error) + '</strong><br>' + esc(explainMail(err)) + '</div>' : '')
+      + '<form id="mail-test" class="row" style="margin-top:.75rem"><input type="email" name="to" required placeholder="Tu mail, por ejemplo jnb.creativestudio@gmail.com" style="flex:1;min-width:14rem"><button class="primary">Probar envío de mail</button></form>'
+      + '<div id="mail-test-result"></div></details>';
+  };
+
+  const render = () => { renderAvailability(); renderMailCheck(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
@@ -735,6 +757,18 @@ export const adminPage = () => `<!doctype html>
       $('invite-result').innerHTML = '<div class="linkbox">' + esc(link) + '</div><div class="row"><button type="button" data-copy="' + esc(link) + '">Copiar link</button><a class="btn" target="_blank" href="' + esc(wa) + '">Mandar por WhatsApp ↗</a></div>';
       form.reset();
       const fresh = await api('datos'); data.invitations = fresh.invitations;
+    } else if (form.id === 'mail-test') {
+      e.preventDefault();
+      const btn = form.querySelector('button');
+      btn.disabled = true; btn.textContent = 'Enviando...';
+      const to = new FormData(form).get('to');
+      const r = await api('probar-mail', { to }).catch(() => ({ ok: false, status: 0, error: 'No se pudo conectar con el sitio.' }));
+      $('mail-test-result').innerHTML = r.ok
+        ? '<div class="alert" style="margin-top:.75rem;background:color-mix(in srgb,#2fa36b 15%,var(--card));border-color:#2fa36b;color:inherit">✓ Resend aceptó el mail. Revisá ' + esc(to) + ' (y la carpeta de spam). Si llegó, los avisos a los clientes ya funcionan.</div>'
+        : '<div class="alert" style="margin-top:.75rem">✗ No salió. Respuesta de Resend' + (r.status ? ' (' + r.status + ')' : '') + ': <strong>' + esc(r.error || '') + '</strong><br><br>👉 ' + esc(explainMail(r))
+          + '<br><br><span class="small">Lo que tiene cargado el sitio: MAIL_FROM = <code>' + esc(r.from || '(vacío)') + '</code> · MAIL_REPLY_TO = <code>' + esc(r.replyTo || '(vacío)') + '</code> · RESEND_API_KEY ' + (r.hasKey ? 'cargada (empieza con ' + esc(r.keyStart) + '…)' : 'vacía') + '</span></div>';
+      btn.disabled = false; btn.textContent = 'Probar envío de mail';
+      if (!r.ok) { const fresh = await api('datos'); data.mailError = fresh.mailError; }
     } else if (form.id === 'availability-form') {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(form));
