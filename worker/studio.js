@@ -23,7 +23,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
-import { confirmationMail } from './mail.js';
+import { confirmationMail, briefInviteMail, briefReceivedMail } from './mail.js';
 
 const SITE = 'https://jnbcreativestudio.com.ar';
 const LANGS = new Set(['es', 'en', 'pt']);
@@ -35,6 +35,20 @@ const DAY = 24 * 60 * 60 * 1000;
 const KEEP_INQUIRIES_DAYS = 365;     // las consultas se borran solas al año
 const MIN_PUBLIC_REVIEWS = 3;        // la sección de reseñas no aparece con menos de esto
 const STAGES = 5;                    // etapas del seguimiento (los nombres están en js/client-pages.js)
+const MAX_BRIEF_FILES = 30;                 // archivos por brief
+const MAX_FILE_BYTES = 8 * 1024 * 1024;     // 8 MB por archivo
+const MAX_BRIEF_BYTES = 60 * 1024 * 1024;   // 60 MB por brief
+const CHUNK = 1024 * 1024;
+// Archivos que se pueden subir al brief: imágenes, PDF, documentos, planillas y comprimidos (se mira la extensión)
+const FILE_EXT = /\.(png|jpe?g|webp|gif|svg|heic|heif|pdf|docx?|xlsx?|pptx|odt|ods|txt|csv|zip)$/i;
+// Plan del cliente según el texto del presupuesto o del proyecto (el brief cambia según el plan)
+const planKey = (text) => {
+  const t = String(text || '');
+  if (/emprendedor|empreendedor|tienda|loja|store/i.test(t)) return 'emprendedor';
+  if (/premium|a medida|custom|sob medida/i.test(t)) return 'premium';
+  if (/b[aá]sico|basic|landing/i.test(t)) return 'basico';
+  return '';
+};
 const SHOWN_STATUSES = ['enviado', 'aceptado']; // estados del presupuesto en los que el cliente ve la propuesta
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -108,6 +122,31 @@ export class StudioData extends DurableObject {
     if (!columns.includes('preview')) this.sql.exec("ALTER TABLE projects ADD COLUMN preview TEXT NOT NULL DEFAULT ''");
     // Presupuesto del que salió el proyecto: así el cliente sigue todo con un solo link (el del presupuesto)
     if (!columns.includes('quote')) this.sql.exec("ALTER TABLE projects ADD COLUMN quote TEXT NOT NULL DEFAULT ''");
+    // Brief del cliente: respuestas (y un resumen ya armado en su idioma) y archivos que sube, partidos en pedazos
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS briefs (
+      token TEXT PRIMARY KEY,
+      lang TEXT NOT NULL DEFAULT 'es',
+      answers TEXT NOT NULL DEFAULT '{}',
+      summary TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'borrador',
+      updated TEXT NOT NULL,
+      sent TEXT NOT NULL DEFAULT ''
+    )`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS brief_files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT NOT NULL,
+      field TEXT NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      created TEXT NOT NULL
+    )`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS brief_chunks (
+      file INTEGER NOT NULL,
+      idx INTEGER NOT NULL,
+      data BLOB NOT NULL,
+      PRIMARY KEY (file, idx)
+    )`);
   }
 
   // ---- Consultas y pedidos de presupuesto
@@ -148,7 +187,7 @@ export class StudioData extends DurableObject {
       status: row.status,
       proposal,
       // Cuando el presupuesto se acepta, el mismo link muestra también el avance del proyecto
-      project: this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE quote = ?', token).toArray()[0] || null,
+      project: this.withBrief(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE quote = ?', token).toArray()[0] || null, token),
     };
   }
 
@@ -156,13 +195,18 @@ export class StudioData extends DurableObject {
     const row = this.sql.exec("SELECT proposal, name, plan, lang FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     if (!row) return false;
     // Al aceptarlo se crea solo el seguimiento del proyecto, vinculado a este presupuesto (una sola vez)
+    let created = false;
     if (status === 'aceptado' && !this.sql.exec('SELECT 1 FROM projects WHERE quote = ?', token).toArray().length) {
       this.addProject({ client: row.name.split(' ')[0], project: row.plan || '—', lang: row.lang, due: '', quote: token });
+      created = true;
     }
     // La fecha de emisión se fija la primera vez que se envía y no cambia al corregir la propuesta
     if (proposal) proposal.issued = (row.proposal && JSON.parse(row.proposal).issued) || new Date().toISOString();
     this.sql.exec('UPDATE inquiries SET status = ?, proposal = ? WHERE token = ?', status, proposal ? JSON.stringify(proposal) : null, token);
-    return true;
+    // Si recién se aceptó, se devuelven los datos para mandarle al cliente el mail con el link del brief
+    if (!created) return true;
+    const email = this.sql.exec('SELECT email FROM inquiries WHERE token = ?', token).one().email;
+    return { created, name: row.name, email, lang: row.lang, plan: row.plan };
   }
 
   // ---- Reseñas
@@ -206,7 +250,7 @@ export class StudioData extends DurableObject {
 
   project(token) {
     const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE token = ?', token).toArray()[0];
-    return row || null;
+    return this.withBrief(row || null, token);
   }
 
   setProject(token, changes) {
@@ -221,6 +265,111 @@ export class StudioData extends DurableObject {
     return true;
   }
 
+  quoteContact(token) {
+    return this.sql.exec("SELECT name, email, lang FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0] || null;
+  }
+
+  // ---- Brief
+  // El brief se abre con el link del cliente: el del presupuesto (si ya tiene proyecto) o el del proyecto creado a mano
+  briefTarget(token) {
+    const fromQuote = this.sql.exec(`SELECT i.plan, i.lang, i.name, i.code, i.message FROM inquiries i JOIN projects p ON p.quote = i.token
+      WHERE i.token = ? AND i.kind = 'presupuesto'`, token).toArray()[0];
+    if (fromQuote) return { planText: fromQuote.plan, lang: fromQuote.lang, client: fromQuote.name, code: fromQuote.code, request: fromQuote.message };
+    const project = this.sql.exec("SELECT project, lang, client FROM projects WHERE token = ? AND quote = ''", token).toArray()[0];
+    return project ? { planText: project.project, lang: project.lang, client: project.client, code: '', request: '' } : null;
+  }
+
+  withBrief(project, token) {
+    if (!project) return null;
+    const brief = this.sql.exec('SELECT status, sent FROM briefs WHERE token = ?', token).toArray()[0];
+    return { ...project, briefStatus: brief ? brief.status : '', briefSent: brief ? brief.sent : '' };
+  }
+
+  brief(token) {
+    const target = this.briefTarget(token);
+    if (!target) return null;
+    const row = this.sql.exec('SELECT answers, status, sent, updated FROM briefs WHERE token = ?', token).toArray()[0];
+    return {
+      plan: planKey(target.planText),
+      // Lo que pidió en el presupuesto: el brief suma preguntas solo para los adicionales que eligió
+      request: target.request || '',
+      planText: target.planText,
+      status: row ? row.status : '',
+      sent: row ? row.sent : '',
+      updated: row ? row.updated : '',
+      answers: row ? JSON.parse(row.answers) : {},
+      files: this.sql.exec('SELECT id, field, name, type, size FROM brief_files WHERE token = ? ORDER BY id', token).toArray(),
+    };
+  }
+
+  saveBrief(token, data) {
+    const target = this.briefTarget(token);
+    if (!target) return null;
+    const now = new Date().toISOString();
+    const before = this.sql.exec('SELECT status, sent FROM briefs WHERE token = ?', token).toArray()[0];
+    const status = data.send ? 'enviado' : (before ? before.status : 'borrador');
+    const sent = data.send ? now : (before ? before.sent : '');
+    this.sql.exec(`INSERT INTO briefs (token, lang, answers, summary, status, updated, sent) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (token) DO UPDATE SET lang = excluded.lang, answers = excluded.answers, summary = excluded.summary,
+      status = excluded.status, updated = excluded.updated, sent = excluded.sent`,
+    token, data.lang, JSON.stringify(data.answers), JSON.stringify(data.summary), status, now, sent);
+    return { status, sent, client: target.client, code: target.code, planText: target.planText };
+  }
+
+  addFile(token, field, name, type, bytes) {
+    if (!this.briefTarget(token)) return { error: 'not found' };
+    const totals = this.sql.exec('SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS total FROM brief_files WHERE token = ?', token).one();
+    if (totals.n >= MAX_BRIEF_FILES) return { error: 'too many' };
+    if (totals.total + bytes.byteLength > MAX_BRIEF_BYTES) return { error: 'too big' };
+    this.sql.exec('INSERT INTO brief_files (token, field, name, type, size, created) VALUES (?, ?, ?, ?, ?, ?)',
+      token, field, name, type, bytes.byteLength, new Date().toISOString());
+    const id = this.sql.exec('SELECT last_insert_rowid() AS id').one().id;
+    // Se guarda en pedazos de 1 MB (la base no acepta valores más grandes)
+    const data = new Uint8Array(bytes);
+    for (let start = 0, idx = 0; start < data.length; start += CHUNK, idx += 1) {
+      this.sql.exec('INSERT INTO brief_chunks (file, idx, data) VALUES (?, ?, ?)', id, idx, data.slice(start, start + CHUNK));
+    }
+    return { id, name, size: bytes.byteLength, type, field };
+  }
+
+  removeFile(token, id) {
+    const found = this.sql.exec('SELECT 1 FROM brief_files WHERE id = ? AND token = ?', id, token).toArray().length;
+    if (!found) return false;
+    this.sql.exec('DELETE FROM brief_chunks WHERE file = ?', id);
+    this.sql.exec('DELETE FROM brief_files WHERE id = ?', id);
+    return true;
+  }
+
+  readFile(id) {
+    const file = this.sql.exec('SELECT name, type, size FROM brief_files WHERE id = ?', id).toArray()[0];
+    if (!file) return null;
+    const out = new Uint8Array(file.size);
+    let offset = 0;
+    for (const chunk of this.sql.exec('SELECT data FROM brief_chunks WHERE file = ? ORDER BY idx', id)) {
+      const part = new Uint8Array(chunk.data);
+      out.set(part, offset);
+      offset += part.length;
+    }
+    return { ...file, data: out };
+  }
+
+  briefForAdmin(token) {
+    const target = this.briefTarget(token);
+    const row = this.sql.exec('SELECT lang, summary, status, sent, updated FROM briefs WHERE token = ?', token).toArray()[0];
+    if (!target && !row) return null;
+    return {
+      client: target ? target.client : '',
+      code: target ? target.code : '',
+      planText: target ? target.planText : '',
+      lang: row ? row.lang : (target ? target.lang : 'es'),
+      status: row ? row.status : '',
+      sent: row ? row.sent : '',
+      updated: row ? row.updated : '',
+      summary: row ? JSON.parse(row.summary) : [],
+      files: this.sql.exec('SELECT id, field, name, type, size FROM brief_files WHERE token = ? ORDER BY id', token).toArray(),
+    };
+  }
+
   // ---- Panel
   everything() {
     return {
@@ -230,7 +379,12 @@ export class StudioData extends DurableObject {
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
-        p.quote, i.code AS quoteCode FROM projects p LEFT JOIN inquiries i ON i.token = p.quote AND p.quote != '' ORDER BY p.updated DESC`).toArray(),
+        p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
+        (SELECT COUNT(*) FROM brief_files f WHERE f.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)) AS briefFiles
+        FROM projects p
+        LEFT JOIN inquiries i ON i.token = p.quote AND p.quote != ''
+        LEFT JOIN briefs b ON b.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)
+        ORDER BY p.updated DESC`).toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
     };
   }
@@ -256,6 +410,18 @@ async function sendMail(env, inquiry, link) {
 }
 
 const quoteLink = (lang, token) => `${SITE}/mi-presupuesto/${lang === 'es' ? '' : lang}?c=${token}`;
+const projectLink = (lang, token) => `${SITE}/mi-proyecto/${lang === 'es' ? '' : lang}?c=${token}`;
+
+// Mail cualquiera por Resend (sin claves cargadas, no hace nada)
+async function sendAnyMail(env, to, mail) {
+  if (!env.RESEND_API_KEY || !env.MAIL_FROM || !to) return false;
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ from: env.MAIL_FROM, to: [to], reply_to: env.MAIL_REPLY_TO || undefined, subject: mail.subject, html: mail.html, text: mail.text }),
+  });
+  return res.ok;
+}
 
 // La clave del panel se compara sin dar pistas por el tiempo de respuesta.
 export function isAdmin(request, env) {
@@ -333,6 +499,59 @@ export async function handleStudio(request, env, ctx) {
     }
   }
 
+  // ---- Brief del cliente (se abre con su link: el del presupuesto aceptado o el del proyecto)
+  if ((match = path.match(/^\/api\/brief\/([^/]+)(?:\/archivo(?:\/(\d+))?)?$/))) {
+    const token = match[1];
+    if (!TOKEN.test(token)) return notFound();
+    const isFiles = path.includes('/archivo');
+
+    if (!isFiles && request.method === 'GET') {
+      const brief = await store.brief(token);
+      return brief ? json(brief) : notFound();
+    }
+
+    if (!isFiles && request.method === 'POST') {
+      const raw = await request.text();
+      if (raw.length > 300000) return json({ error: 'too big' }, 413);
+      let body;
+      try { body = JSON.parse(raw); } catch { return badRequest(); }
+      if (!body || typeof body.answers !== 'object' || Array.isArray(body.answers) || !Array.isArray(body.summary)) return badRequest();
+      const summary = body.summary.slice(0, 200).map((row) => ({
+        s: oneLine(row && row.s, 120), q: text(row && row.q, 400), a: text(row && row.a, 6000),
+      }));
+      const saved = await store.saveBrief(token, {
+        lang: LANGS.has(body.lang) ? body.lang : 'es', answers: body.answers, summary, send: body.send === true,
+      });
+      if (!saved) return notFound();
+      // Aviso a Jimena cuando el cliente lo envía
+      if (body.send === true && env.MAIL_REPLY_TO) {
+        const panel = `${SITE}/api/admin`;
+        try { await sendAnyMail(env, env.MAIL_REPLY_TO, briefReceivedMail({ ...saved, summary, panel })); } catch { /* el brief quedó guardado igual */ }
+      }
+      return json({ ok: true, status: saved.status, sent: saved.sent });
+    }
+
+    if (isFiles && !match[2] && request.method === 'POST') {
+      const name = oneLine(url.searchParams.get('nombre'), 140).replace(/[\\/:*?"<>|]/g, '_');
+      const field = oneLine(url.searchParams.get('campo'), 40);
+      const type = (request.headers.get('content-type') || 'application/octet-stream').split(';')[0].trim().toLowerCase();
+      if (!name || !FILE_EXT.test(name) || !/^[a-zA-Z]+$/.test(field)) return json({ error: 'type' }, 415);
+      const length = Number(request.headers.get('content-length') || 0);
+      if (length > MAX_FILE_BYTES) return json({ error: 'too big' }, 413);
+      const bytes = await request.arrayBuffer();
+      if (!bytes.byteLength || bytes.byteLength > MAX_FILE_BYTES) return json({ error: 'too big' }, 413);
+      const saved = await store.addFile(token, field, name, type, bytes);
+      if (saved.error === 'not found') return notFound();
+      if (saved.error) return json(saved, 413);
+      return json(saved);
+    }
+
+    if (isFiles && match[2] && request.method === 'DELETE') {
+      return (await store.removeFile(token, Number(match[2]))) ? json({ ok: true }) : notFound();
+    }
+    return notFound();
+  }
+
   // ---- Seguimiento de proyectos
   if ((match = path.match(/^\/api\/proyectos\/([^/]+)$/)) && request.method === 'GET') {
     if (!TOKEN.test(match[1])) return notFound();
@@ -356,6 +575,33 @@ export async function handleStudio(request, env, ctx) {
   if (path.startsWith('/api/admin/')) {
     if (!env.ADMIN_CLAVE) return notFound();
     if (!isAdmin(request, env)) return json({ error: 'clave' }, 401);
+
+    if ((match = path.match(/^\/api\/admin\/brief\/([^/]+)$/)) && request.method === 'GET') {
+      if (!TOKEN.test(match[1])) return notFound();
+      const brief = await store.briefForAdmin(match[1]);
+      return brief ? json(brief) : notFound();
+    }
+
+    if ((match = path.match(/^\/api\/admin\/archivo\/(\d+)$/)) && request.method === 'GET') {
+      const file = await store.readFile(Number(match[1]));
+      if (!file) return notFound();
+      return new Response(file.data, {
+        headers: {
+          'content-type': file.type || 'application/octet-stream',
+          'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff',
+        },
+      });
+    }
+
+    if ((match = path.match(/^\/api\/admin\/brief-mail\/([^/]+)$/)) && request.method === 'POST') {
+      if (!TOKEN.test(match[1])) return notFound();
+      const inquiry = await store.quoteContact(match[1]);
+      if (!inquiry) return notFound();
+      const mailed = await sendAnyMail(env, inquiry.email, briefInviteMail({ lang: inquiry.lang, name: inquiry.name, link: `${quoteLink(inquiry.lang, match[1])}#brief` }));
+      return json({ ok: mailed });
+    }
 
     if (path === '/api/admin/datos' && request.method === 'GET') {
       const data = await store.everything();
@@ -387,7 +633,16 @@ export async function handleStudio(request, env, ctx) {
         storeLink: typeof body.storeLink === 'string' && STORE_LINK.test(body.storeLink.trim()) ? body.storeLink.trim() : '',
       } : null;
       if (proposal && !proposal.price) return badRequest();
-      return (await store.setQuote(match[1], status, proposal)) ? json({ ok: true }) : notFound();
+      const result = await store.setQuote(match[1], status, proposal);
+      if (!result) return notFound();
+      // Recién aceptado: se crea el proyecto y le llega al cliente el link para completar su brief
+      let briefMailed = false;
+      if (result.created) {
+        try {
+          briefMailed = await sendAnyMail(env, result.email, briefInviteMail({ lang: result.lang, name: result.name, link: `${quoteLink(result.lang, match[1])}#brief` }));
+        } catch { /* el proyecto quedó creado igual */ }
+      }
+      return json({ ok: true, created: Boolean(result.created), briefMailed });
     }
 
     if (path === '/api/admin/resenas/invitar') {

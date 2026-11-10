@@ -43,6 +43,10 @@
             saveTitle: 'Guardá este enlace',
             saveText: 'Podés volver a esta página cuando quieras para consultar tu presupuesto y, cuando empecemos, seguir el avance de tu proyecto.',
             tabProject: 'Estado del proyecto',
+            tabBrief: 'Tu brief',
+            briefCta: 'Completar el brief',
+            briefNext: 'Contame sobre tu negocio y subí tu logo, tus fotos y tus textos en el brief. Con eso empiezo a trabajar.',
+            briefDone: 'Brief recibido ✓',
             tabQuote: 'Tu presupuesto',
             signature: 'JNB Creative Studio · Diseño y desarrollo web',
             proposalKicker: 'Propuesta comercial',
@@ -185,6 +189,10 @@
             saveTitle: 'Save this link',
             saveText: 'You can come back to this page anytime to see your quote and, once we start, follow your project.',
             tabProject: 'Project status',
+            tabBrief: 'Your brief',
+            briefCta: 'Fill in the brief',
+            briefNext: 'Tell me about your business and upload your logo, photos and texts in the brief. With that, I start working.',
+            briefDone: 'Brief received ✓',
             tabQuote: 'Your quote',
             signature: 'JNB Creative Studio · Web design and development',
             proposalKicker: 'Business proposal',
@@ -323,6 +331,10 @@
             saveTitle: 'Guarde este link',
             saveText: 'Você pode voltar a esta página quando quiser para ver seu orçamento e, quando começarmos, acompanhar o seu projeto.',
             tabProject: 'Status do projeto',
+            tabBrief: 'Seu briefing',
+            briefCta: 'Preencher o briefing',
+            briefNext: 'Me conte sobre o seu negócio e envie seu logo, suas fotos e seus textos no briefing. Com isso eu começo a trabalhar.',
+            briefDone: 'Briefing recebido ✓',
             tabQuote: 'Seu orçamento',
             signature: 'JNB Creative Studio · Design e desenvolvimento web',
             proposalKicker: 'Proposta comercial',
@@ -812,34 +824,66 @@
         return card;
     };
 
-    // Un solo link por cliente: si el presupuesto ya se aceptó, muestra dos pestañas, el avance del proyecto (primero) y el presupuesto
-    let quoteTab = 'project';
-    const renderQuote = (quote) => {
-        const quoteCard = quote.proposal ? renderProposal(quote) : renderRequest(quote);
-        if (!quote.project) return quoteCard;
+    // Un solo link por cliente. Con proyecto en marcha muestra pestañas: el avance del proyecto (primero), el brief
+    // y el presupuesto (si salió de uno). Si el link termina en #brief (el del mail), se abre directo el brief.
+    let activeTab = location.hash === '#brief' ? 'brief' : 'project';
+    let briefBox = null;
+    const briefPanel = () => {
+        // El brief se arma una sola vez y se conserva al volver a dibujar las pestañas (no se pierde lo que se escribe)
+        if (briefBox) return briefBox;
+        briefBox = el('div', 'client-brief-panel');
+        briefBox.append(el('p', 'client-loading', '...'));
+        if (window.JNBBrief) {
+            window.JNBBrief.mount(briefBox, { token, lang, onChange: (info) => { if (info && info.sent) refresh(); } })
+                .catch(() => briefBox.replaceChildren(el('p', 'client-message', T.error)));
+        }
+        return briefBox;
+    };
+
+    const renderTabs = (entries) => {
         const wrap = el('div', 'client-tabs-wrap');
         const tabs = el('div', 'client-tabs');
         tabs.setAttribute('role', 'tablist');
-        const panels = { project: renderProject(quote.project), quote: quoteCard };
-        [['project', T.tabProject], ['quote', T.tabQuote]].forEach(([id, label]) => {
+        const ids = entries.map(([id]) => id);
+        if (!ids.includes(activeTab)) activeTab = ids[0];
+        const panels = {};
+        const select = (id) => {
+            activeTab = id;
+            tabs.querySelectorAll('.client-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+            Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== id; });
+            if (id === 'brief') panels.brief.append(briefPanel());
+        };
+        entries.forEach(([id, label, panel]) => {
             const tabButton = el('button', 'client-tab', label);
             tabButton.type = 'button';
+            tabButton.dataset.tab = id;
             tabButton.setAttribute('role', 'tab');
-            tabButton.setAttribute('aria-selected', String(id === quoteTab));
-            tabButton.addEventListener('click', () => {
-                quoteTab = id;
-                tabs.querySelectorAll('.client-tab').forEach((b) => b.setAttribute('aria-selected', String(b === tabButton)));
-                Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== id; });
-            });
+            tabButton.addEventListener('click', () => select(id));
             tabs.append(tabButton);
-        });
-        Object.entries(panels).forEach(([key, panel]) => {
             panel.setAttribute('role', 'tabpanel');
-            panel.hidden = key !== quoteTab;
+            panels[id] = panel;
         });
-        wrap.append(tabs, panels.project, panels.quote);
+        wrap.append(tabs, ...entries.map(([, , panel]) => panel));
+        // El botón "Completar el brief" del seguimiento lleva a esta pestaña
+        wrap.addEventListener('jnb-open-brief', () => { select('brief'); wrap.scrollIntoView({ block: 'start' }); });
+        select(activeTab);
         return wrap;
     };
+
+    const renderQuote = (quote) => {
+        const quoteCard = quote.proposal ? renderProposal(quote) : renderRequest(quote);
+        if (!quote.project) return quoteCard;
+        return renderTabs([
+            ['project', T.tabProject, renderProject(quote.project)],
+            ['brief', T.tabBrief, el('div')],
+            ['quote', T.tabQuote, quoteCard],
+        ]);
+    };
+
+    const renderProjectPage = (project) => renderTabs([
+        ['project', T.tabProject, renderProject(project)],
+        ['brief', T.tabBrief, el('div')],
+    ]);
 
     // ---- Reseña
     const field = (labelText, control, hint) => {
@@ -953,7 +997,16 @@
         // Próximo paso y fecha estimada, lado a lado en pantallas anchas
         const highlights = el('div', 'client-highlights');
         const next = section('client-next', P.nextTitle);
-        next.append(el('p', '', project.next || P.nextByStage[Math.min(project.stage, last)]));
+        const briefPending = project.briefStatus !== 'enviado' && project.stage <= 1;
+        next.append(el('p', '', project.next || (briefPending ? P.briefNext : P.nextByStage[Math.min(project.stage, last)])));
+        if (briefPending) {
+            const briefButton = el('button', 'button button-primary', `${P.briefCta} →`);
+            briefButton.type = 'button';
+            briefButton.addEventListener('click', () => briefButton.dispatchEvent(new CustomEvent('jnb-open-brief', { bubbles: true })));
+            next.append(briefButton);
+        } else if (project.briefStatus === 'enviado') {
+            next.append(el('p', 'client-date', P.briefDone));
+        }
         if (project.preview) {
             const previewButton = button(project.preview, isLive ? P.visit : P.preview, project.stage === 3 || isLive, true);
             next.append(previewButton);
@@ -1010,18 +1063,20 @@
             else if (data.used) message(T.used);
             else renderReviewForm();
         }),
-        project: () => getJson(`/api/proyectos/${token}`).then((data) => (data ? view.replaceChildren(renderProject(data)) : notFound())),
+        project: () => getJson(`/api/proyectos/${token}`).then((data) => (data ? view.replaceChildren(renderProjectPage(data)) : notFound())),
     }[kind];
     load?.().catch(() => message(T.error));
 
-    // Si el cliente vuelve a esta pestaña del navegador, se trae lo último (Jimena cambia etapas y propuestas desde su panel)
+    // Vuelve a traer lo último: al volver a esta pestaña del navegador (Jimena cambia etapas y propuestas desde su panel)
+    // o al enviar el brief. El brief no se vuelve a armar, así no se pierde nada de lo escrito.
+    function refresh() {
+        if (document.querySelector('.client-pdf:disabled')) return;
+        const path = kind === 'project' ? `/api/proyectos/${token}` : `/api/presupuestos/${token}`;
+        getJson(path).then((data) => {
+            if (data) view.replaceChildren(kind === 'project' ? renderProjectPage(data) : renderQuote(data));
+        }).catch(() => { /* queda lo que ya se ve */ });
+    }
     if (kind === 'project' || kind === 'quote') {
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState !== 'visible' || document.querySelector('.client-pdf:disabled')) return;
-            const path = kind === 'project' ? `/api/proyectos/${token}` : `/api/presupuestos/${token}`;
-            getJson(path).then((data) => {
-                if (data) view.replaceChildren(kind === 'project' ? renderProject(data) : renderQuote(data));
-            }).catch(() => { /* queda lo que ya se ve */ });
-        });
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
     }
 })();

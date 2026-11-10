@@ -55,6 +55,16 @@ export const adminPage = () => `<!doctype html>
   @media (max-width: 560px) { .stepper { grid-template-columns: 1fr; } .step { flex-direction: row; justify-content: flex-start; padding: .45rem .7rem; text-align: left; } .step-name { font-size: .85rem; } }
   .toast { background: var(--accent); border-radius: 999px; bottom: 1.25rem; color: var(--on-accent); font-weight: 800; left: 50%;
     padding: .55rem 1.1rem; position: fixed; transform: translateX(-50%); }
+  dialog.brief-view { background: var(--bg); border: 1px solid var(--line); border-radius: 1rem; color: var(--text); max-height: 90vh; max-width: 46rem; padding: 0; width: calc(100% - 2rem); }
+  dialog.brief-view::backdrop { background: rgba(16, 11, 29, .55); }
+  .brief-view-head { align-items: center; background: var(--card); border-bottom: 1px solid var(--line); display: flex; gap: .75rem; justify-content: space-between; padding: .9rem 1.1rem; position: sticky; top: 0; }
+  .brief-view-body { padding: 1rem 1.1rem 1.5rem; }
+  .brief-view-section { color: var(--accent-ink); font-size: .75rem; font-weight: 800; letter-spacing: .08em; margin: 1.4rem 0 .5rem; text-transform: uppercase; }
+  .brief-view-q { font-size: .85rem; font-weight: 800; margin: .8rem 0 .15rem; }
+  .brief-view-a { margin: 0; white-space: pre-line; }
+  .brief-files-list { display: grid; gap: .4rem; list-style: none; margin: .5rem 0 0; padding: 0; }
+  .brief-files-list li { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: .6rem; display: flex; gap: .6rem; padding: .45rem .7rem; }
+  .brief-files-list span { flex: 1; overflow-wrap: anywhere; }
   [hidden] { display: none !important; }
 </style></head>
 <body><div class="wrap">
@@ -81,6 +91,7 @@ export const adminPage = () => `<!doctype html>
     <section id="tab-proyectos" hidden></section>
     <section id="tab-faq" hidden></section>
   </div>
+  <dialog class="brief-view" id="brief-view"><div class="brief-view-head"><strong id="brief-view-title">Brief</strong><div class="row"><button type="button" id="brief-view-print">Imprimir</button><button type="button" id="brief-view-close">Cerrar</button></div></div><div class="brief-view-body" id="brief-view-body"></div></dialog>
   <div class="toast" id="toast" role="status" hidden></div>
 </div>
 <script>
@@ -234,6 +245,12 @@ export const adminPage = () => `<!doctype html>
         + '<div class="row space"><div class="row"><strong>' + esc(p.client) + '</strong><span class="muted">' + esc(p.project) + '</span></div>'
         + '<div class="row">' + (p.quoteCode ? '<span class="chip">Presupuesto ' + esc(p.quoteCode) + '</span>' : '') + '<span class="chip">' + STAGES[p.stage] + '</span></div></div>'
         + linkBox(projectLink(p), p.lang, p.client)
+        + '<div class="row" style="margin-top:.6rem"><span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">'
+        + (p.briefStatus === 'enviado' ? 'Brief enviado ✓ ' + date(p.briefSent) : p.briefStatus === 'borrador' ? 'Brief en curso' : 'Brief sin empezar') + '</span>'
+        + (p.briefStatus ? '<button type="button" data-brief="' + esc(p.quote || p.token) + '">Ver brief' + (p.briefFiles ? ' y archivos (' + p.briefFiles + ')' : '') + '</button>' : '')
+        + '<button type="button" data-copy="' + esc(projectLink(p) + '#brief') + '">Copiar link del brief</button>'
+        + (p.quote ? '<button type="button" data-brief-mail="' + esc(p.quote) + '">Mandar link del brief por mail</button>' : '')
+        + '</div>'
         + '<form class="project-form">'
         // Etapas como botones: tocar una la guarda al instante y el cliente la ve al recargar su página
         + '<p class="small muted" style="margin:.75rem 0 .4rem">Etapa actual (tocá la que corresponda; se guarda sola)</p>'
@@ -262,6 +279,33 @@ export const adminPage = () => `<!doctype html>
       + '</tbody></table>';
   };
 
+  // ---- Ver un brief: respuestas por sección y archivos para descargar
+  const openBrief = async (token) => {
+    const b = await api('brief/' + token);
+    const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
+    $('brief-view-title').textContent = 'Brief · ' + (b.client || '') + (b.code ? ' · ' + b.code : '');
+    let section = '';
+    const rows = (b.summary || []).map((r) => {
+      const head = r.s && r.s !== section ? '<p class="brief-view-section">' + esc(r.s) + '</p>' : '';
+      section = r.s || section;
+      return head + '<p class="brief-view-q">' + esc(r.q) + '</p><p class="brief-view-a">' + esc(r.a) + '</p>';
+    }).join('');
+    const files = (b.files || []).length
+      ? '<p class="brief-view-section">Archivos</p><ul class="brief-files-list">' + b.files.map((f) => '<li><span>📎 ' + esc(f.name) + ' <small class="muted">' + size(f.size) + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">Descargar</button></li>').join('') + '</ul>'
+      : '';
+    const state = b.status === 'enviado' ? 'Enviado el ' + date(b.sent) : b.status === 'borrador' ? 'Todavía no lo envió (en curso, actualizado ' + date(b.updated) + ')' : 'Todavía no empezó';
+    $('brief-view-body').innerHTML = '<p class="muted small">' + esc(b.planText || '') + ' · ' + LANG[b.lang] + ' · ' + state + '</p>' + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>');
+    $('brief-view').showModal();
+  };
+  $('brief-view-close').addEventListener('click', () => $('brief-view').close());
+  $('brief-view-print').addEventListener('click', () => {
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write('<!doctype html><meta charset="utf-8"><title>' + esc($('brief-view-title').textContent) + '</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:44rem;margin:2rem auto;padding:0 1rem;color:#211632}.brief-view-section{color:#5d31b8;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:1.4rem 0 .4rem}.brief-view-q{font-weight:800;margin:.8rem 0 .1rem}.brief-view-a{margin:0;white-space:pre-line}button{display:none}ul{padding-left:1rem}</style><h1>' + esc($('brief-view-title').textContent) + '</h1>' + $('brief-view-body').innerHTML);
+    w.document.close();
+    w.print();
+  });
+
   const render = () => { renderInquiries(); renderReviews(); renderProjects(); renderFaq(); };
 
   // ---- Acciones
@@ -287,6 +331,31 @@ export const adminPage = () => `<!doctype html>
       e.preventDefault();
       const html = await api('mail/' + mail.dataset.mail);
       const w = window.open('', '_blank'); if (w) { w.document.write(html); w.document.close(); }
+      return;
+    }
+    const briefBtn = e.target.closest('[data-brief]');
+    if (briefBtn) { openBrief(briefBtn.dataset.brief); return; }
+    const briefMail = e.target.closest('[data-brief-mail]');
+    if (briefMail) {
+      if (!confirm('¿Mandarle al cliente el link del brief por mail?')) return;
+      const r = await api('brief-mail/' + briefMail.dataset.briefMail, {});
+      toast(r.ok ? 'Mail enviado' : 'No se pudo enviar el mail');
+      return;
+    }
+    const fileBtn = e.target.closest('[data-file]');
+    if (fileBtn) {
+      fileBtn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/archivo/' + fileBtn.dataset.file, { headers: { 'x-clave': key } });
+        if (!res.ok) throw new Error(res.status);
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileBtn.dataset.name;
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      } catch (err) { toast('No se pudo descargar'); }
+      fileBtn.disabled = false;
       return;
     }
     const set = e.target.closest('[data-set]');
@@ -328,8 +397,9 @@ export const adminPage = () => `<!doctype html>
     if (form.classList.contains('quote-form')) {
       e.preventDefault();
       if (SENT.includes(values.status) && !values.price.trim()) { toast('Falta el precio'); return; }
-      await api('presupuestos/' + form.closest('[data-token]').dataset.token, values);
-      toast('Propuesta guardada'); load();
+      const saved = await api('presupuestos/' + form.closest('[data-token]').dataset.token, values);
+      toast(saved.created ? (saved.briefMailed ? 'Aceptado: se creó el proyecto y le mandé el link del brief por mail' : 'Aceptado: se creó el proyecto (copiá el link del brief en Proyectos)') : 'Propuesta guardada');
+      load();
     } else if (form.id === 'invite') {
       e.preventDefault();
       const { token } = await api('resenas/invitar', { client: values.client });

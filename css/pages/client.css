@@ -455,6 +455,285 @@
     }
 }
 
+/* Brief del cliente (lo arma js/brief.js dentro de la pestaña "Tu brief") */
+.brief {
+    gap: 1.5rem;
+}
+
+.brief-head {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+
+.brief-head .client-lead,
+.brief-head .client-date {
+    margin: 0;
+}
+
+.brief-step {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.brief-section-title {
+    border-bottom: .08rem solid var(--line);
+    margin: 0;
+    padding-bottom: .6rem;
+}
+
+.brief-field {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+}
+
+.brief-label {
+    color: var(--text);
+    font-weight: 800;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.brief-optional {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.brief-hint {
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.brief-field input[type="text"],
+.brief-field input[type="email"],
+.brief-field input[type="tel"],
+.brief-field input[type="url"],
+.brief-field textarea {
+    background: var(--sky);
+    border: .08rem solid var(--field-border);
+    border-radius: .75rem;
+    color: var(--text);
+    font: inherit;
+    padding: .75rem .9rem;
+    width: 100%;
+}
+
+.brief-field textarea {
+    min-height: 6.5rem;
+    resize: vertical;
+}
+
+.brief-field input:focus,
+.brief-field textarea:focus {
+    border-color: var(--blue);
+    outline: .15rem solid color-mix(in srgb, var(--blue) 30%, transparent);
+    outline-offset: .05rem;
+}
+
+.brief-options {
+    display: grid;
+    gap: .45rem;
+}
+
+.brief-option,
+.brief-check {
+    align-items: flex-start;
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: .75rem;
+    cursor: pointer;
+    display: flex;
+    gap: .65rem;
+    line-height: 1.45;
+    padding: .65rem .85rem;
+    transition: border-color .2s ease;
+}
+
+.brief-option:hover,
+.brief-check:hover {
+    border-color: var(--blue);
+}
+
+.brief-option:has(input:checked),
+.brief-check:has(input:checked) {
+    border-color: var(--blue);
+    box-shadow: inset 0 0 0 .06rem var(--blue);
+}
+
+.brief-option input,
+.brief-check input {
+    accent-color: var(--blue);
+    flex-shrink: 0;
+    height: 1.1rem;
+    margin-top: .15rem;
+    width: 1.1rem;
+}
+
+.brief-check span {
+    font-weight: 700;
+}
+
+.brief-other[hidden] {
+    display: none;
+}
+
+.brief-file-input {
+    height: 1px;
+    opacity: 0;
+    position: absolute;
+    width: 1px;
+}
+
+.brief-upload {
+    align-self: flex-start;
+    cursor: pointer;
+}
+
+.brief-file-input:focus-visible + .brief-upload {
+    outline: .15rem solid var(--blue);
+    outline-offset: .15rem;
+}
+
+.brief-files {
+    display: grid;
+    gap: .4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.brief-files:empty {
+    display: none;
+}
+
+.brief-file {
+    align-items: center;
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: .65rem;
+    display: flex;
+    gap: .6rem;
+    padding: .5rem .75rem;
+}
+
+.brief-file-name {
+    color: var(--text);
+    flex: 1;
+    font-size: .9375rem;
+    overflow-wrap: anywhere;
+}
+
+.brief-file-size {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+}
+
+.brief-file-remove {
+    background: none;
+    border: 0;
+    color: var(--blue);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 800;
+}
+
+.brief-file-note {
+    color: var(--text);
+    font-size: .9rem;
+    margin: 0;
+}
+
+.brief-file-note:empty {
+    display: none;
+}
+
+.brief-field.has-error input,
+.brief-field.has-error textarea,
+.brief-field.has-error .brief-option,
+.brief-field.has-error .brief-check {
+    border-color: #b93232;
+}
+
+.brief-error {
+    color: #b93232;
+    font-size: .9rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+:root[data-theme="dark"] .brief-error {
+    color: #ff8a8a;
+}
+
+:root[data-theme="dark"] .brief-field.has-error input,
+:root[data-theme="dark"] .brief-field.has-error textarea,
+:root[data-theme="dark"] .brief-field.has-error .brief-option,
+:root[data-theme="dark"] .brief-field.has-error .brief-check {
+    border-color: #ff8a8a;
+}
+
+.brief-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    justify-content: space-between;
+}
+
+.brief-nav .button-primary {
+    margin-left: auto;
+}
+
+.brief-save {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    margin: 0;
+    min-height: 1.2em;
+    text-align: right;
+}
+
+.brief-done {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+
+.brief-done > p {
+    margin: 0;
+}
+
+.brief-done-mark {
+    align-items: center;
+    background: var(--blue);
+    border-radius: 50%;
+    color: var(--mist);
+    display: flex;
+    font-size: 1.3rem;
+    font-weight: 800;
+    height: 2.6rem;
+    justify-content: center;
+    width: 2.6rem;
+}
+
+@media (max-width: 560px) {
+    .brief-nav .button {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .brief-nav .button-primary {
+        margin-left: 0;
+        order: -1;
+    }
+}
+
 /* Reseña */
 .client-review .contact-field textarea {
     min-height: 8rem;
