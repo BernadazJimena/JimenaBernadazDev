@@ -19,7 +19,7 @@
             error: 'No se pudo cargar. Probá de nuevo en un rato.',
             // Presupuesto
             quoteTitle: 'Solicitud de presupuesto',
-            status: { recibido: 'Recibido', preparando: 'En preparación', enviado: 'Listo' },
+            status: { recibido: 'Recibido', preparando: 'En preparación', enviado: 'Presupuesto listo', aceptado: 'Aceptado' },
             headline: { waiting: 'Tu proyecto empieza acá.', ready: 'Tu presupuesto está listo.' },
             hello: 'Hola, {name}. ¡Gracias por confiar en JNB Creative Studio! 💜',
             waiting: 'Recibí tu solicitud y estoy preparando una propuesta para tu proyecto.',
@@ -43,17 +43,40 @@
             saveTitle: 'Guardá este enlace',
             saveText: 'Podés volver a esta página cuando quieras para consultar el estado de tu solicitud y acceder a tu presupuesto.',
             signature: 'JNB Creative Studio · Diseño y desarrollo web',
-            proposal: 'Mi propuesta',
-            includes: 'Incluye',
-            validUntil: 'Válido hasta el {date}.',
+            proposalKicker: 'Propuesta comercial',
+            proposalTitle: '¡Tu propuesta está lista, {name}!',
+            acceptedTitle: '¡Gracias por confirmar, {name}!',
+            acceptedText: 'Ya tengo tu confirmación. Te escribo para coordinar los próximos pasos.',
+            proposalThanks: '¡Gracias por confiar en JNB Creative Studio! 💜',
+            quoteNumber: 'Presupuesto {code}',
+            issuedOn: 'Emitido el {date}',
+            pdf: 'Descargar en PDF',
+            investment: 'Inversión total',
+            finalPrice: 'Precio final de la propuesta',
+            includesTitle: 'Tu web incluye',
+            includesTitleStore: 'Tu tienda incluye',
+            payChoose: 'Elegí cómo querés pagar',
+            payOption1: 'Opción 1 · Directamente conmigo',
+            payOption1Tag: '2 pagos',
+            payDeposit: 'Anticipo para comenzar',
+            payBalance: 'Contra entrega',
+            payDirectHint: '50 % al iniciar y 50 % al finalizar el proyecto.',
+            payOption2: 'Opción 2 · Mi tienda online',
+            payOption2Tag: 'Cuotas',
+            payStoreText: 'Pagá con tarjeta de crédito a través de mi tienda de Tiendanube.',
+            payStoreHint: 'Hasta 12 cuotas, según las condiciones disponibles en el checkout. El importe y las condiciones definitivas se muestran al momento de pagar.',
+            conditionsTitle: 'Condiciones de contratación',
+            validityTitle: 'Vigencia de la propuesta',
+            validityText: 'Hasta el {date} inclusive.',
+            ctaTitle: '¿Querés avanzar con tu proyecto?',
+            acceptButton: 'Aceptar presupuesto por WhatsApp',
+            ctaQuestion: 'También podés {link} antes de decidir.',
+            ctaQuestionLink: 'consultarme una duda',
+            originalRequest: 'Tu solicitud original',
+            originalLabels: ['Plan solicitado', 'Funcionalidades adicionales', 'Detalles del pedido'],
             expired: 'Este presupuesto venció el {date}. Escribime y te lo actualizo.',
             note: 'Nota',
-            payTitle: 'Cómo pagar',
-            payDirect: 'Directamente conmigo: 50 % de anticipo para empezar y 50 % en la entrega.',
-            payStore: 'En mi tienda de Tiendanube: con tarjeta de crédito, en hasta 12 cuotas.',
             payStoreButton: 'Pagar en cuotas en mi tienda',
-            accept: 'Aceptar por WhatsApp',
-            question: 'Tengo una consulta',
             acceptText: 'Hola Jimena, quiero avanzar con el presupuesto {code}.',
             questionText: 'Hola Jimena, tengo una consulta sobre el presupuesto {code}.',
             yourRequest: 'Lo que me pediste',
@@ -116,7 +139,7 @@
             contact: 'write to me and I will help you',
             error: 'It could not load. Please try again in a little while.',
             quoteTitle: 'Quote request',
-            status: { recibido: 'Received', preparando: 'In progress', enviado: 'Ready' },
+            status: { recibido: 'Received', preparando: 'In progress', enviado: 'Quote ready', aceptado: 'Accepted' },
             headline: { waiting: 'Your project starts here.', ready: 'Your quote is ready.' },
             hello: 'Hi, {name}. Thank you for trusting JNB Creative Studio! 💜',
             waiting: 'I received your request and I am preparing a proposal for your project.',
@@ -138,17 +161,40 @@
             saveTitle: 'Save this link',
             saveText: 'You can come back to this page anytime to check the status of your request and see your quote.',
             signature: 'JNB Creative Studio · Web design and development',
-            proposal: 'My proposal',
-            includes: 'Includes',
-            validUntil: 'Valid until {date}.',
+            proposalKicker: 'Business proposal',
+            proposalTitle: 'Your proposal is ready, {name}!',
+            acceptedTitle: 'Thank you for confirming, {name}!',
+            acceptedText: 'I have your confirmation. I will write to you to arrange the next steps.',
+            proposalThanks: 'Thank you for trusting JNB Creative Studio! 💜',
+            quoteNumber: 'Quote {code}',
+            issuedOn: 'Issued on {date}',
+            pdf: 'Download as PDF',
+            investment: 'Total investment',
+            finalPrice: 'Final price of the proposal',
+            includesTitle: 'Your website includes',
+            includesTitleStore: 'Your store includes',
+            payChoose: 'Choose how you want to pay',
+            payOption1: 'Option 1 · Directly with me',
+            payOption1Tag: '2 payments',
+            payDeposit: 'Deposit to get started',
+            payBalance: 'On delivery',
+            payDirectHint: '50% at the start and 50% when the project is finished.',
+            payOption2: 'Option 2 · My online store',
+            payOption2Tag: 'Installments',
+            payStoreText: 'Pay by credit card through my Tiendanube store.',
+            payStoreHint: 'Up to 12 installments, depending on the options available at checkout. The final amount and terms are shown when you pay.',
+            conditionsTitle: 'Terms',
+            validityTitle: 'Proposal validity',
+            validityText: 'Until {date}, inclusive.',
+            ctaTitle: 'Would you like to move forward with your project?',
+            acceptButton: 'Accept quote on WhatsApp',
+            ctaQuestion: 'You can also {link} before deciding.',
+            ctaQuestionLink: 'ask me a question',
+            originalRequest: 'Your original request',
+            originalLabels: ['Requested plan', 'Additional features', 'Request details'],
             expired: 'This quote expired on {date}. Write to me and I will update it.',
             note: 'Note',
-            payTitle: 'How to pay',
-            payDirect: 'Directly with me: a 50% deposit to get started and the remaining 50% on delivery.',
-            payStore: 'In my online store (Tiendanube): by credit card, in up to 12 installments.',
             payStoreButton: 'Pay in installments in my store',
-            accept: 'Accept on WhatsApp',
-            question: 'I have a question',
             acceptText: 'Hi Jimena, I would like to go ahead with quote {code}.',
             questionText: 'Hi Jimena, I have a question about quote {code}.',
             yourRequest: 'What you asked for',
@@ -208,7 +254,7 @@
             contact: 'escreva para mim e eu ajudo você',
             error: 'Não foi possível carregar. Tente de novo daqui a pouco.',
             quoteTitle: 'Pedido de orçamento',
-            status: { recibido: 'Recebido', preparando: 'Em preparação', enviado: 'Pronto' },
+            status: { recibido: 'Recebido', preparando: 'Em preparação', enviado: 'Orçamento pronto', aceptado: 'Aceito' },
             headline: { waiting: 'Seu projeto começa aqui.', ready: 'Seu orçamento está pronto.' },
             hello: 'Olá, {name}. Obrigada por confiar na JNB Creative Studio! 💜',
             waiting: 'Recebi seu pedido e estou preparando uma proposta para o seu projeto.',
@@ -230,17 +276,40 @@
             saveTitle: 'Guarde este link',
             saveText: 'Você pode voltar a esta página quando quiser para ver o status do seu pedido e acessar seu orçamento.',
             signature: 'JNB Creative Studio · Design e desenvolvimento web',
-            proposal: 'Minha proposta',
-            includes: 'Inclui',
-            validUntil: 'Válido até {date}.',
+            proposalKicker: 'Proposta comercial',
+            proposalTitle: 'Sua proposta está pronta, {name}!',
+            acceptedTitle: 'Obrigada por confirmar, {name}!',
+            acceptedText: 'Já tenho sua confirmação. Vou escrever para combinarmos os próximos passos.',
+            proposalThanks: 'Obrigada por confiar na JNB Creative Studio! 💜',
+            quoteNumber: 'Orçamento {code}',
+            issuedOn: 'Emitido em {date}',
+            pdf: 'Baixar em PDF',
+            investment: 'Investimento total',
+            finalPrice: 'Preço final da proposta',
+            includesTitle: 'Seu site inclui',
+            includesTitleStore: 'Sua loja inclui',
+            payChoose: 'Escolha como quer pagar',
+            payOption1: 'Opção 1 · Diretamente comigo',
+            payOption1Tag: '2 pagamentos',
+            payDeposit: 'Sinal para começar',
+            payBalance: 'Na entrega',
+            payDirectHint: '50% no início e 50% ao finalizar o projeto.',
+            payOption2: 'Opção 2 · Minha loja virtual',
+            payOption2Tag: 'Parcelado',
+            payStoreText: 'Pague com cartão de crédito pela minha loja da Tiendanube.',
+            payStoreHint: 'Em até 12 vezes, conforme as condições disponíveis no checkout. O valor e as condições finais aparecem no momento do pagamento.',
+            conditionsTitle: 'Condições de contratação',
+            validityTitle: 'Validade da proposta',
+            validityText: 'Até {date}, inclusive.',
+            ctaTitle: 'Quer seguir com o seu projeto?',
+            acceptButton: 'Aceitar orçamento pelo WhatsApp',
+            ctaQuestion: 'Você também pode {link} antes de decidir.',
+            ctaQuestionLink: 'tirar uma dúvida comigo',
+            originalRequest: 'Seu pedido original',
+            originalLabels: ['Plano solicitado', 'Funcionalidades adicionais', 'Detalhes do pedido'],
             expired: 'Este orçamento venceu em {date}. Escreva para mim e eu atualizo.',
             note: 'Observação',
-            payTitle: 'Como pagar',
-            payDirect: 'Diretamente comigo: sinal de 50% para começar e os 50% restantes na entrega.',
-            payStore: 'Na minha loja virtual (Tiendanube): no cartão de crédito, em até 12 parcelas.',
             payStoreButton: 'Pagar parcelado na minha loja',
-            accept: 'Aceitar pelo WhatsApp',
-            question: 'Tenho uma dúvida',
             acceptText: 'Olá Jimena, quero seguir com o orçamento {code}.',
             questionText: 'Olá Jimena, tenho uma dúvida sobre o orçamento {code}.',
             yourRequest: 'O que você me pediu',
@@ -371,84 +440,39 @@
         return box;
     };
 
-    const renderQuote = (quote) => {
-        const proposal = quote.proposal;
-        const card = el('article', 'client-card client-quote');
+    // Mitad del precio en el mismo formato ("ARS 420.000" → "ARS 210.000"). Si no se puede leer el número, no se muestra.
+    const halfPrice = (price) => {
+        const match = String(price).match(/^(\D*?)\s*(\d[\d.,]*)\s*(\D*)$/);
+        if (!match) return '';
+        const raw = match[2];
+        let number;
+        if (/,\d{1,2}$/.test(raw)) number = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+        else if (/\.\d{1,2}$/.test(raw)) number = parseFloat(raw.replace(/,/g, ''));
+        else number = parseFloat(raw.replace(/[.,]/g, ''));
+        if (!number) return '';
+        const half = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(number / 2);
+        return [match[1].trim(), half, match[3].trim()].filter(Boolean).join(' ');
+    };
 
-        // Encabezado: tipo de página y estado
-        const head = el('div', 'client-head');
-        head.append(el('p', 'client-kicker', T.quoteTitle), el('span', `client-status is-${quote.status}`, T.status[quote.status] || quote.status));
-        card.append(head);
+    // "Galería de tortas — Fotos ampliables" → título y descripción
+    const splitItem = (line) => {
+        const cut = line.match(/\s+[—–-]\s+/);
+        return cut ? [line.slice(0, cut.index), line.slice(cut.index + cut[0].length)] : [line, ''];
+    };
 
-        const intro = el('div', 'client-intro');
-        intro.append(
-            el('h2', 'client-headline', proposal ? T.headline.ready : T.headline.waiting),
-            el('p', 'client-lead', fill(T.hello, { name: quote.firstName })),
-            el('p', 'client-date', proposal ? T.ready : T.waiting),
-        );
-        if (proposal) intro.append(el('p', 'client-date', T.readyHelp));
-        card.append(intro);
+    const tag = (text, extra = '') => el('span', `client-tag ${extra}`.trim(), text);
 
-        card.append(infoBox('client-code-box', T.codeTitle, ['client-code', quote.code], ['client-date', fill(T.requestedOn, { date: longDate(quote.created) })]));
+    // Guardar en PDF: la ventana de imprimir del navegador, siempre en modo claro
+    const printProposal = () => {
+        const root = document.documentElement;
+        const theme = root.getAttribute('data-theme');
+        root.setAttribute('data-theme', 'light');
+        const restore = () => { if (theme) root.setAttribute('data-theme', theme); window.removeEventListener('afterprint', restore); };
+        window.addEventListener('afterprint', restore);
+        window.print();
+    };
 
-        if (proposal) {
-            const box = el('section', 'client-proposal');
-            box.append(el('h2', 'client-subtitle', T.proposal), el('p', 'client-price', proposal.price));
-            const items = (proposal.includes || '').split('\n').map((line) => line.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
-            if (items.length) {
-                box.append(el('h3', 'client-small-title', T.includes));
-                const list = el('ul', 'client-list');
-                items.forEach((item) => list.append(el('li', '', item)));
-                box.append(list);
-            }
-            // Cómo pagar: directo (50 % y 50 %) o, si Jimena dejó el link, en cuotas desde la tienda
-            const pay = el('div', 'client-pay');
-            const payList = el('ul', 'client-list');
-            payList.append(el('li', '', T.payDirect));
-            if (proposal.storeLink) payList.append(el('li', '', T.payStore));
-            pay.append(el('h3', 'client-small-title', T.payTitle), payList);
-            box.append(pay);
-            if (proposal.note) {
-                const note = el('div', 'client-note');
-                note.append(el('p', 'client-small-title', T.note), el('p', '', proposal.note));
-                box.append(note);
-            }
-            const today = new Date().toISOString().slice(0, 10);
-            const expired = proposal.validUntil && proposal.validUntil < today;
-            if (proposal.validUntil) box.append(el('p', `client-valid${expired ? ' is-expired' : ''}`, fill(expired ? T.expired : T.validUntil, { date: longDate(proposal.validUntil) })));
-            const actions = el('div', 'client-actions');
-            if (!expired) actions.append(button(WHATSAPP + encodeURIComponent(fill(T.acceptText, { code: quote.code })), T.accept, true, true));
-            if (!expired && proposal.storeLink) actions.append(button(proposal.storeLink, T.payStoreButton, false, true));
-            actions.append(button(WHATSAPP + encodeURIComponent(fill(T.questionText, { code: quote.code })), T.question, expired, true));
-            box.append(actions);
-            card.append(box);
-        }
-
-        // Estado de la solicitud: recibida (siempre lista), preparación y envío
-        const status = el('section', 'client-status-list');
-        status.append(el('h2', 'client-small-title', T.stepsTitle));
-        const steps = el('ol', 'client-steps');
-        T.quoteSteps.forEach(([title, todoText, doneText], index) => {
-            const state = proposal || index === 0 ? 'done' : index === 1 ? 'current' : 'pending';
-            const step = el('li', `client-step is-${state}`);
-            if (state === 'current') step.setAttribute('aria-current', 'step');
-            const mark = el('span', 'client-step-mark', state === 'done' ? '✓' : String(index + 1));
-            mark.setAttribute('aria-hidden', 'true');
-            const body = el('div', 'client-step-body');
-            const titleRow = el('p', 'client-step-title', title);
-            titleRow.append(' ', el('span', `client-step-tag is-${state}`, T.stateTag[state]));
-            body.append(titleRow, el('p', 'client-step-text', state === 'done' ? doneText : todoText));
-            step.append(mark, body);
-            steps.append(step);
-        });
-        status.append(steps);
-        card.append(status);
-
-        if (!proposal) card.append(infoBox('client-when', T.whenTitle, ['client-due-date', T.whenText], ['client-date', T.whenHint]));
-
-        // Lo que pidió, con etiquetas más claras que las del formulario
-        const request = el('section', 'client-request');
-        request.append(el('h2', 'client-subtitle', T.yourRequest));
+    const requestList = (quote, labels) => {
         const list = el('dl', 'client-summary');
         quote.summary.split('\n').filter(Boolean).forEach((line) => {
             const cut = line.indexOf(': ');
@@ -457,7 +481,7 @@
                 const label = line.slice(0, cut);
                 const value = line.slice(cut + 2);
                 const known = T.formLabels.indexOf(label);
-                row.append(el('dt', '', known >= 0 ? T.requestLabels[known] : label));
+                row.append(el('dt', '', known >= 0 ? labels[known] : label));
                 if (known === 1) {
                     const dd = el('dd');
                     const items = el('ul', 'client-list');
@@ -472,12 +496,196 @@
             }
             list.append(row);
         });
-        request.append(list);
-        card.append(request);
+        return list;
+    };
 
+    // Solicitud todavía sin propuesta: estado en 3 etapas y cuándo llega la respuesta
+    const renderRequest = (quote) => {
+        const card = el('article', 'client-card client-quote');
+        const head = el('div', 'client-head');
+        head.append(el('p', 'client-kicker', T.quoteTitle), el('span', `client-status is-${quote.status}`, T.status[quote.status] || quote.status));
+        card.append(head);
+
+        const intro = el('div', 'client-intro');
+        intro.append(
+            el('h2', 'client-headline', T.headline.waiting),
+            el('p', 'client-lead', fill(T.hello, { name: quote.firstName })),
+            el('p', 'client-date', T.waiting),
+        );
+        card.append(intro);
+        card.append(infoBox('client-code-box', T.codeTitle, ['client-code', quote.code], ['client-date', fill(T.requestedOn, { date: longDate(quote.created) })]));
+
+        const status = el('section', 'client-status-list');
+        status.append(el('h2', 'client-small-title', T.stepsTitle));
+        const steps = el('ol', 'client-steps');
+        T.quoteSteps.forEach(([title, todoText, doneText], index) => {
+            const state = index === 0 ? 'done' : index === 1 ? 'current' : 'pending';
+            const step = el('li', `client-step is-${state}`);
+            if (state === 'current') step.setAttribute('aria-current', 'step');
+            const mark = el('span', 'client-step-mark', state === 'done' ? '✓' : String(index + 1));
+            mark.setAttribute('aria-hidden', 'true');
+            const body = el('div', 'client-step-body');
+            const titleRow = el('p', 'client-step-title', title);
+            titleRow.append(' ', el('span', `client-step-tag is-${state}`, T.stateTag[state]));
+            body.append(titleRow, el('p', 'client-step-text', state === 'done' ? doneText : todoText));
+            step.append(mark, body);
+            steps.append(step);
+        });
+        status.append(steps);
+        card.append(status);
+        card.append(infoBox('client-when', T.whenTitle, ['client-due-date', T.whenText], ['client-date', T.whenHint]));
+
+        const request = el('section', 'client-request');
+        request.append(el('h2', 'client-subtitle', T.yourRequest), requestList(quote, T.requestLabels));
+        card.append(request);
         card.append(infoBox('client-save', T.saveTitle, ['', T.saveText]), el('p', 'client-foot client-signature', T.signature));
         view.replaceChildren(card);
     };
+
+    // Propuesta comercial: precio, qué incluye, cómo pagar, condiciones, vigencia y aceptación
+    const renderProposal = (quote) => {
+        const proposal = quote.proposal;
+        const accepted = quote.status === 'aceptado';
+        const today = new Date().toISOString().slice(0, 10);
+        const expired = !accepted && proposal.validUntil && proposal.validUntil < today;
+        const card = el('article', 'client-card client-quote client-proposal-page');
+
+        const head = el('div', 'client-head');
+        head.append(el('p', 'client-kicker', T.proposalKicker), el('span', `client-status is-${accepted ? 'aceptado' : 'enviado'}`, T.status[accepted ? 'aceptado' : 'enviado']));
+        card.append(head);
+
+        const intro = el('div', 'client-intro');
+        intro.append(el('h2', 'client-headline', fill(accepted ? T.acceptedTitle : T.proposalTitle, { name: quote.firstName })), el('p', 'client-lead', T.proposalThanks));
+        if (accepted) intro.append(el('p', 'client-date', T.acceptedText));
+        else intro.append(el('p', 'client-date', T.ready), el('p', 'client-date', T.readyHelp));
+        card.append(intro);
+
+        // Número, fecha de emisión y PDF
+        const meta = el('section', 'client-info client-meta');
+        const metaText = el('div');
+        metaText.append(el('p', 'client-small-title', fill(T.quoteNumber, { code: quote.code })), el('p', 'client-date', fill(T.issuedOn, { date: longDate(proposal.issued || quote.created) })));
+        const pdf = el('button', 'button button-ghost client-pdf', T.pdf);
+        pdf.type = 'button';
+        pdf.addEventListener('click', printProposal);
+        meta.append(metaText, pdf);
+        card.append(meta);
+
+        // Inversión total
+        const price = el('section', 'client-investment');
+        price.append(el('h2', 'client-small-title', T.investment), el('p', 'client-price', proposal.price), el('p', 'client-date', T.finalPrice));
+        card.append(price);
+
+        // Qué incluye
+        const items = (proposal.includes || '').split('\n').map((line) => line.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+        if (items.length) {
+            const box = el('section', 'client-includes');
+            const isStore = /emprendedor|empreendedor/i.test(quote.plan);
+            box.append(el('h2', 'client-subtitle', isStore ? T.includesTitleStore : T.includesTitle));
+            const list = el('ul', 'client-include-list');
+            items.forEach((line) => {
+                const [title, text] = splitItem(line);
+                const item = el('li', 'client-include');
+                const mark = el('span', 'client-include-mark', '✓');
+                mark.setAttribute('aria-hidden', 'true');
+                const body = el('div');
+                body.append(el('p', 'client-include-title', title));
+                if (text) body.append(el('p', 'client-include-text', text));
+                item.append(mark, body);
+                list.append(item);
+            });
+            box.append(list);
+            card.append(box);
+        }
+
+        // Cómo pagar
+        const pay = el('section', 'client-pay');
+        pay.append(el('h2', 'client-subtitle', T.payChoose));
+        const option1 = el('div', 'client-option');
+        const head1 = el('div', 'client-option-head');
+        head1.append(el('p', 'client-option-title', T.payOption1), tag(T.payOption1Tag));
+        option1.append(head1);
+        const half = halfPrice(proposal.price);
+        if (half) {
+            const amounts = el('div', 'client-option-amounts');
+            [[half, T.payDeposit], [half, T.payBalance]].forEach(([amount, label]) => {
+                const cell = el('div');
+                cell.append(el('p', 'client-option-amount', amount), el('p', 'client-date', label));
+                amounts.append(cell);
+            });
+            option1.append(amounts);
+        }
+        option1.append(el('p', 'client-date', T.payDirectHint));
+        pay.append(option1);
+        if (proposal.storeLink) {
+            const option2 = el('div', 'client-option');
+            const head2 = el('div', 'client-option-head');
+            head2.append(el('p', 'client-option-title', T.payOption2), tag(T.payOption2Tag, 'is-soft'));
+            option2.append(head2, el('p', '', T.payStoreText), el('p', 'client-date', T.payStoreHint));
+            if (!expired) {
+                const actions = el('div', 'client-actions');
+                actions.append(button(proposal.storeLink, T.payStoreButton, false, true));
+                option2.append(actions);
+            }
+            pay.append(option2);
+        }
+        card.append(pay);
+
+        if (proposal.note) {
+            const note = el('div', 'client-note');
+            note.append(el('p', 'client-small-title', T.note), el('p', '', proposal.note));
+            card.append(note);
+        }
+
+        // Condiciones de contratación
+        const conditions = (proposal.conditions || '').split('\n').map((line) => line.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+        if (conditions.length) {
+            const box = el('section', 'client-conditions');
+            box.append(el('h2', 'client-subtitle', T.conditionsTitle));
+            const list = el('ul', 'client-list');
+            conditions.forEach((line) => list.append(el('li', '', line)));
+            box.append(list);
+            card.append(box);
+        }
+
+        // Vigencia
+        if (proposal.validUntil && !accepted) {
+            card.append(infoBox(`client-validity${expired ? ' is-expired' : ''}`, T.validityTitle,
+                ['client-due-date', fill(expired ? T.expired : T.validityText, { date: longDate(proposal.validUntil) })]));
+        }
+
+        // Aceptación (abre WhatsApp; Jimena la confirma a mano en su panel)
+        if (!accepted) {
+            const cta = el('section', 'client-cta');
+            const questionLink = el('a', 'text-link', T.ctaQuestionLink);
+            questionLink.href = WHATSAPP + encodeURIComponent(fill(T.questionText, { code: quote.code }));
+            questionLink.target = '_blank';
+            questionLink.rel = 'noopener noreferrer';
+            if (!expired) {
+                cta.append(el('h2', 'client-subtitle', T.ctaTitle));
+                const accept = button(WHATSAPP + encodeURIComponent(fill(T.acceptText, { code: quote.code })), T.acceptButton, true, true);
+                accept.classList.add('client-accept');
+                cta.append(accept);
+                const [before, after] = T.ctaQuestion.split('{link}');
+                const small = el('p', 'client-date client-cta-hint');
+                small.append(before, questionLink, after);
+                cta.append(small);
+            } else {
+                const actions = el('div', 'client-actions');
+                actions.append(button(questionLink.href, T.ctaQuestionLink.charAt(0).toUpperCase() + T.ctaQuestionLink.slice(1), true, true));
+                cta.append(actions);
+            }
+            card.append(cta);
+        }
+
+        // Solicitud original
+        const request = el('section', 'client-request');
+        request.append(el('h2', 'client-subtitle', T.originalRequest), requestList(quote, T.originalLabels));
+        card.append(request);
+        card.append(infoBox('client-save', T.saveTitle, ['', T.saveText]), el('p', 'client-foot client-signature', T.signature));
+        view.replaceChildren(card);
+    };
+
+    const renderQuote = (quote) => (quote.proposal ? renderProposal(quote) : renderRequest(quote));
 
     // ---- Reseña
     const field = (labelText, control, hint) => {

@@ -35,6 +35,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const KEEP_INQUIRIES_DAYS = 365;     // las consultas se borran solas al año
 const MIN_PUBLIC_REVIEWS = 3;        // la sección de reseñas no aparece con menos de esto
 const STAGES = 5;                    // etapas del seguimiento (los nombres están en js/client-pages.js)
+const SHOWN_STATUSES = ['enviado', 'aceptado']; // estados del presupuesto en los que el cliente ve la propuesta
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -133,7 +134,8 @@ export class StudioData extends DurableObject {
   quote(token) {
     const row = this.sql.exec("SELECT * FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     if (!row) return null;
-    const proposal = row.status === 'enviado' && row.proposal ? JSON.parse(row.proposal) : null;
+    // La propuesta se ve cuando está enviada o ya aceptada
+    const proposal = SHOWN_STATUSES.includes(row.status) && row.proposal ? JSON.parse(row.proposal) : null;
     return {
       code: row.code,
       created: row.created,
@@ -147,8 +149,10 @@ export class StudioData extends DurableObject {
   }
 
   setQuote(token, status, proposal) {
-    const found = this.sql.exec("SELECT 1 FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray().length;
-    if (!found) return false;
+    const row = this.sql.exec("SELECT proposal FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
+    if (!row) return false;
+    // La fecha de emisión se fija la primera vez que se envía y no cambia al corregir la propuesta
+    if (proposal) proposal.issued = (row.proposal && JSON.parse(row.proposal).issued) || new Date().toISOString();
     this.sql.exec('UPDATE inquiries SET status = ?, proposal = ? WHERE token = ?', status, proposal ? JSON.stringify(proposal) : null, token);
     return true;
   }
@@ -363,12 +367,13 @@ export async function handleStudio(request, env, ctx) {
 
     if ((match = path.match(/^\/api\/admin\/presupuestos\/([^/]+)$/))) {
       if (!TOKEN.test(match[1])) return notFound();
-      const status = ['recibido', 'preparando', 'enviado'].includes(body.status) ? body.status : 'recibido';
-      const proposal = status === 'enviado' ? {
+      const status = ['recibido', 'preparando', 'enviado', 'aceptado'].includes(body.status) ? body.status : 'recibido';
+      const proposal = SHOWN_STATUSES.includes(status) ? {
         price: oneLine(body.price, 80),
         includes: text(body.includes, 2000),
         validUntil: isoDate(body.validUntil),
         note: text(body.note, 1500),
+        conditions: text(body.conditions, 2000),
         // Link del plan en la tienda de Tiendanube (para pagar en cuotas). Solo se aceptan links de la tienda.
         storeLink: typeof body.storeLink === 'string' && STORE_LINK.test(body.storeLink.trim()) ? body.storeLink.trim() : '',
       } : null;

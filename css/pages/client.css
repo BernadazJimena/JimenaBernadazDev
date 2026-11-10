@@ -200,6 +200,213 @@
     text-align: center;
 }
 
+/* Propuesta comercial (presupuesto listo) */
+.client-meta {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.client-meta .client-small-title {
+    margin: 0 0 .2rem;
+}
+
+.client-pdf {
+    flex-shrink: 0;
+}
+
+.client-investment {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-left: .25rem solid var(--blue);
+    border-radius: 1rem;
+    padding: 1.2rem 1.25rem;
+}
+
+.client-investment .client-price {
+    margin: .3rem 0 .1rem;
+}
+
+.client-investment .client-date {
+    margin: 0;
+}
+
+.client-include-list {
+    display: grid;
+    gap: .9rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.client-include {
+    align-items: flex-start;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: 1.6rem 1fr;
+}
+
+.client-include-mark {
+    align-items: center;
+    background: var(--blue);
+    border-radius: 50%;
+    color: var(--mist);
+    display: flex;
+    font-size: .8rem;
+    font-weight: 800;
+    height: 1.6rem;
+    justify-content: center;
+    width: 1.6rem;
+}
+
+.client-include-title {
+    color: var(--text);
+    font-weight: 800;
+    margin: .1rem 0 0;
+}
+
+.client-include-text {
+    color: var(--muted);
+    font-size: .9375rem;
+    margin: .1rem 0 0;
+}
+
+.client-pay {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.client-pay .client-subtitle {
+    margin: 0;
+}
+
+.client-option {
+    border: .08rem solid var(--line);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 1.1rem 1.2rem;
+}
+
+.client-option > p {
+    margin: 0;
+}
+
+.client-option-head {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    justify-content: space-between;
+}
+
+.client-option-title {
+    color: var(--text);
+    font-weight: 800;
+    margin: 0;
+}
+
+.client-tag {
+    background: var(--blue);
+    border-radius: 999px;
+    color: var(--mist);
+    font-size: .75rem;
+    font-weight: 800;
+    padding: .15rem .6rem;
+}
+
+.client-tag.is-soft {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    color: var(--blue);
+}
+
+.client-option-amounts {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+.client-option-amounts > div:last-child {
+    text-align: right;
+}
+
+.client-option-amount {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.client-option-amounts .client-date {
+    margin: 0;
+}
+
+.client-conditions .client-list {
+    margin-bottom: 0;
+}
+
+.client-validity.is-expired .client-due-date {
+    font-size: 1.05rem;
+}
+
+.client-cta {
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+}
+
+.client-cta .client-subtitle {
+    margin: 0;
+}
+
+.client-accept {
+    justify-content: center;
+    width: 100%;
+}
+
+.client-cta-hint {
+    margin: 0;
+    text-align: center;
+}
+
+/* Guardar en PDF / imprimir: solo la propuesta, sin menú, botones ni fondos */
+@media print {
+    .site-header,
+    .site-footer,
+    .whatsapp-float,
+    .top-float,
+    .skip-link,
+    .legal-hero,
+    .client-pdf,
+    .client-cta,
+    .client-option .client-actions,
+    .client-save {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+    }
+
+    .legal.section-shell {
+        padding: 0 !important;
+    }
+
+    .client-card {
+        background: none;
+        border: 0;
+        padding: 0;
+    }
+
+    .client-card > * {
+        break-inside: avoid;
+    }
+}
+
 /* Reseña */
 .client-review .contact-field textarea {
     min-height: 8rem;

@@ -75,7 +75,37 @@ export const adminPage = () => `<!doctype html>
 <script>
 (() => {
   const STAGES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
-  const STATUS = { recibido: 'Recibido', preparando: 'Preparando', enviado: 'Enviado' };
+  const STATUS = { recibido: 'Recibido', preparando: 'Preparando', enviado: 'Enviado', aceptado: 'Aceptado' };
+  const SENT = ['enviado', 'aceptado'];
+  // Condiciones sugeridas para cada presupuesto, sacadas de lo que ya dicen Términos y Preguntas frecuentes.
+  // Se completan solas según el plan y el idioma del cliente; se pueden editar en cada presupuesto.
+  const defaultConditions = (plan, lang) => {
+    const isStore = /emprendedor|empreendedor/i.test(plan);
+    const isPlan = /b[aá]sico|basic|premium|emprendedor|empreendedor/i.test(plan);
+    const rounds = /premium/i.test(plan) ? 3 : 1;
+    const T = {
+      es: [
+        'El trabajo empieza cuando se confirma el anticipo o la compra en mi tienda.',
+        'El plazo de entrega se cuenta desde que recibo todo el material: textos, fotos, logo, colores y datos de contacto.',
+        isPlan ? (rounds === 1 ? 'Incluye 1 ronda de ajustes mientras armo tu web.' : 'Incluye 3 rondas de ajustes mientras armo tu web.') + ' Los cambios que amplían lo acordado se cotizan aparte.' : '',
+        isStore ? 'El dominio se gestiona desde tu plan de Tiendanube o Empretienda.' : 'El dominio se registra a tu nombre y su costo está a tu cargo. La publicación en mi cuenta de Cloudflare no tiene costo para vos.',
+      ],
+      en: [
+        'Work starts once the deposit or the purchase in my store is confirmed.',
+        'The delivery time starts once I receive all the content: texts, photos, logo, colors and contact details.',
+        isPlan ? (rounds === 1 ? 'Includes 1 round of adjustments while I build your website.' : 'Includes 3 rounds of adjustments while I build your website.') + ' Changes that go beyond what we agreed are quoted separately.' : '',
+        isStore ? 'The domain is managed from your Tiendanube or Empretienda plan.' : 'The domain is registered in your name and its cost is on you. Publishing on my Cloudflare account has no cost for you.',
+      ],
+      pt: [
+        'O trabalho começa quando o sinal ou a compra na minha loja é confirmado.',
+        'O prazo de entrega é contado a partir do recebimento de todo o material: textos, fotos, logo, cores e dados de contato.',
+        isPlan ? (rounds === 1 ? 'Inclui 1 rodada de ajustes enquanto monto o seu site.' : 'Inclui 3 rodadas de ajustes enquanto monto o seu site.') + ' Mudanças que ampliam o combinado são orçadas à parte.' : '',
+        isStore ? 'O domínio é gerenciado pelo seu plano da Tiendanube (Nuvemshop) ou Empretienda.' : 'O domínio é registrado no seu nome e o custo é seu. A publicação na minha conta da Cloudflare não tem custo para você.',
+      ],
+    }[lang] || [];
+    return T.filter(Boolean).join('
+');
+  };
   const LANG = { es: 'Español', en: 'Inglés', pt: 'Portugués' };
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const date = (iso) => iso ? new Date(iso).toLocaleString('es-AR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
@@ -111,7 +141,7 @@ export const adminPage = () => `<!doctype html>
   // ---- Consultas y presupuestos
   const renderInquiries = () => {
     const list = data.inquiries;
-    $('n-consultas').textContent = list.filter((q) => q.kind === 'presupuesto' && q.status !== 'enviado').length || '';
+    $('n-consultas').textContent = list.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length || '';
     const mailNote = data.mailReady ? '' : '<p class="small muted">El mail de confirmación todavía no se envía: faltan cargar RESEND_API_KEY y MAIL_FROM en Cloudflare. Las consultas se guardan igual.</p>';
     $('tab-consultas').innerHTML = '<h2>Consultas y pedidos de presupuesto</h2>' + mailNote + (list.length ? list.map((q) => {
       const isQuote = q.kind === 'presupuesto';
@@ -119,7 +149,7 @@ export const adminPage = () => `<!doctype html>
       return '<article class="card" data-token="' + esc(q.token) + '">'
         + '<div class="row space"><div class="row"><span class="code">' + esc(q.code) + '</span>'
         + '<span class="chip">' + (isQuote ? 'Presupuesto' : 'Consulta') + '</span>'
-        + (isQuote ? '<span class="chip ' + (q.status === 'enviado' ? 'ok' : 'warn') + '">' + STATUS[q.status] + '</span>' : '')
+        + (isQuote ? '<span class="chip ' + (SENT.includes(q.status) ? 'ok' : 'warn') + '">' + STATUS[q.status] + '</span>' : '')
         + '</div><span class="small muted">' + date(q.created) + ' · ' + LANG[q.lang] + '</span></div>'
         + '<p style="margin-top:.5rem"><strong>' + esc(q.name) + '</strong> · <a href="mailto:' + esc(q.email) + '?subject=' + encodeURIComponent(q.code) + '">' + esc(q.email) + '</a>'
         + (q.plan ? ' · ' + esc(q.plan) : '') + '</p>'
@@ -128,15 +158,16 @@ export const adminPage = () => `<!doctype html>
         + '<a class="btn" href="#" data-mail="' + esc(q.code) + '">Ver el mail</a>'
         + (isQuote ? '<button data-copy="' + esc(clientLink('mi-presupuesto', q.lang, q.token)) + '">Copiar link del cliente</button>'
           + '<a class="btn" target="_blank" href="' + esc(clientLink('mi-presupuesto', q.lang, q.token)) + '">Abrir ↗</a>' : '') + '</div>'
-        + (isQuote ? '<details' + (q.status !== 'enviado' ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
+        + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
           + '<div class="grid"><label>Estado<select name="status">' + Object.entries(STATUS).map(([v, l]) => '<option value="' + v + '"' + (q.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
           + '<label>Precio<input name="price" placeholder="Ej.: ARS 450.000 o USD 380" value="' + esc(p.price) + '"></label>'
           + '<label>Válido hasta<input type="date" name="validUntil" value="' + esc(p.validUntil) + '"></label></div>'
-          + '<label>Qué incluye (uno por renglón)<textarea name="includes">' + esc(p.includes) + '</textarea></label>'
+          + '<label>Qué incluye (uno por renglón; para sumar una descripción, separala con un guion largo: Galería de tortas — Fotos ampliables)<textarea name="includes" rows="6">' + esc(p.includes) + '</textarea></label>'
+          + '<label style="margin-top:.75rem">Condiciones de contratación (una por renglón; vienen sugeridas según el plan, podés editarlas)<textarea name="conditions" rows="5">' + esc(q.proposal ? p.conditions : defaultConditions(q.plan, q.lang)) + '</textarea></label>'
           + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note">' + esc(p.note) + '</textarea></label>'
           + '<label style="margin-top:.75rem">Link para pagar en cuotas en tu tienda (dejalo vacío si este presupuesto no se puede pagar ahí)'
           + '<input name="storeLink" placeholder="https://jnbcreativestudio.mitiendanube.com/productos/..." value="' + esc(q.proposal ? p.storeLink : 'https://jnbcreativestudio.mitiendanube.com/') + '"></label>'
-          + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta solo cuando el estado es "Enviado".</p>'
+          + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta cuando el estado es "Enviado". Cuando te confirme por WhatsApp, pasalo a "Aceptado".</p>'
           + '<button class="primary">Guardar</button></form></details>' : '')
         + '</article>';
     }).join('') : '<p class="empty">Todavía no hay consultas.</p>');
@@ -252,7 +283,7 @@ export const adminPage = () => `<!doctype html>
     const values = Object.fromEntries(new FormData(form));
     if (form.classList.contains('quote-form')) {
       e.preventDefault();
-      if (values.status === 'enviado' && !values.price.trim()) { toast('Falta el precio'); return; }
+      if (SENT.includes(values.status) && !values.price.trim()) { toast('Falta el precio'); return; }
       await api('presupuestos/' + form.closest('[data-token]').dataset.token, values);
       toast('Propuesta guardada'); load();
     } else if (form.id === 'invite') {
