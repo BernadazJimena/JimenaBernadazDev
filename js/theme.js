@@ -12,6 +12,8 @@
 
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
+        const scheme = document.getElementById('jnb-color-scheme');
+        if (scheme) scheme.content = theme === 'light' ? 'only light' : 'dark';
 
         // Barra del navegador en el celular: el mismo color que la barra del sitio en el tema activo
         const themeColor = document.querySelector('meta[name="theme-color"]');
