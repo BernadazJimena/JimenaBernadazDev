@@ -58,21 +58,39 @@
             thanks: '¡Muchas gracias! Recibí tu opinión. La reviso y la sumo a la web en los próximos días.',
             used: 'Ya recibí tu opinión. ¡Muchas gracias!',
             // Proyecto
-            projectHello: 'Hola, {name}. Acá podés ver cómo va tu web.',
-            due: 'Entrega estimada: {date}',
-            published: '¡Tu web ya está publicada!',
+            projectKicker: 'Proyecto web',
+            projectStatus: { going: 'En curso', live: 'Publicada' },
+            projectHello: 'Hola, {name}. ¡Tu proyecto está en marcha!',
+            projectHelloLive: 'Hola, {name}. ¡Tu web ya está publicada!',
+            projectIntro: 'Desde acá podés seguir cada etapa de tu web y ver qué viene después.',
+            progress: 'Paso {n} de {total}',
+            dueTitle: 'Entrega estimada',
+            dueHint: 'La fecha puede ajustarse si quedan materiales o revisiones pendientes.',
+            nextTitle: 'Tu próximo paso',
+            nextByStage: [
+                'Para reservar tu lugar en mi agenda, confirmá el plan y aboná el anticipo.',
+                'Enviame los textos, las imágenes y el logo. Con todo listo, empiezo a diseñar.',
+                'No necesitás hacer nada por ahora: estoy trabajando en tu web.',
+                'Tu web está lista para revisar. Mirá la vista previa y enviame tus comentarios.',
+                '¡Tu web ya está online! Compartila con tus clientes.',
+            ],
+            preview: 'Ver la vista previa',
+            visit: 'Ver tu web',
+            statusTitle: 'Estado del proyecto',
+            stateTag: { done: 'Listo', current: 'En curso', pending: 'Pendiente' },
             noteFrom: 'Nota de Jimena',
+            helpTitle: '¿Tenés alguna consulta?',
+            helpText: 'Si necesitás comunicarte conmigo durante el proyecto, escribime directamente.',
             updated: 'Última actualización: {date}.',
-            current: 'En curso',
-            done: 'Listo',
             write: 'Escribime por WhatsApp',
             writeText: 'Hola Jimena, te escribo por mi proyecto.',
+            // Cada etapa: título, texto cuando está lista, en curso y pendiente
             stages: [
-                ['Confirmación y pago', 'Confirmás el plan y abonás. Tu lugar en mi agenda queda reservado.'],
-                ['Material', 'Me enviás los textos, las fotos y el logo. Con todo listo, empiezo a diseñar.'],
-                ['Diseño', 'Diseño y armo tu web.'],
-                ['Revisión', 'Te muestro la web, la revisamos juntos y hago los ajustes.'],
-                ['Publicación', 'Tu web queda publicada y lista para compartir.'],
+                ['Reserva y confirmación', 'Plan confirmado y pago recibido. Tu lugar en mi agenda está reservado.', 'Confirmás el plan y abonás el anticipo para reservar tu lugar en mi agenda.', 'Confirmás el plan y abonás el anticipo para reservar tu lugar en mi agenda.'],
+                ['Recepción de materiales', 'Textos, imágenes y logo recibidos. ¡Todo listo para empezar!', 'Estoy esperando tus textos, imágenes y logo para empezar a diseñar.', 'Me enviás los textos, las imágenes y el logo.'],
+                ['Diseño y desarrollo', 'Diseño y desarrollo terminados.', 'Estoy trabajando en el diseño y la construcción de tu web.', 'Diseño y armo tu web.'],
+                ['Revisión y ajustes', 'Revisamos la web juntos y hice los ajustes.', 'Revisá el resultado y pedime los ajustes incluidos en tu plan.', 'Vas a poder revisar el resultado y pedirme los ajustes incluidos en tu plan.'],
+                ['Publicación y entrega', 'Tu web está online y lista para compartir con tus clientes.', 'Estoy publicando tu web en tu dominio.', 'Tu web va a estar online y lista para compartir con tus clientes.'],
             ],
         },
         en: {
@@ -117,21 +135,38 @@
             errSend: 'It could not be sent. Please try again in a little while.',
             thanks: 'Thank you so much! I received your feedback. I will review it and add it to the website in the next few days.',
             used: 'I already received your feedback. Thank you so much!',
-            projectHello: 'Hi, {name}. Here you can see how your website is going.',
-            due: 'Estimated delivery: {date}',
-            published: 'Your website is live!',
+            projectKicker: 'Website project',
+            projectStatus: { going: 'In progress', live: 'Live' },
+            projectHello: 'Hi, {name}. Your project is underway!',
+            projectHelloLive: 'Hi, {name}. Your website is live!',
+            projectIntro: 'Here you can follow each stage of your website and see what comes next.',
+            progress: 'Step {n} of {total}',
+            dueTitle: 'Estimated delivery',
+            dueHint: 'The date may change if content or reviews are still pending.',
+            nextTitle: 'Your next step',
+            nextByStage: [
+                'To book your spot in my schedule, confirm the plan and pay the deposit.',
+                'Send me the texts, images and logo. Once everything is ready, I start designing.',
+                'You do not need to do anything for now: I am working on your website.',
+                'Your website is ready for review. Check the preview and send me your comments.',
+                'Your website is live! Share it with your clients.',
+            ],
+            preview: 'View the preview',
+            visit: 'Visit your website',
+            statusTitle: 'Project status',
+            stateTag: { done: 'Done', current: 'In progress', pending: 'Pending' },
             noteFrom: 'Note from Jimena',
+            helpTitle: 'Any questions?',
+            helpText: 'If you need to reach me during the project, write to me directly.',
             updated: 'Last updated: {date}.',
-            current: 'In progress',
-            done: 'Done',
             write: 'Message me on WhatsApp',
             writeText: 'Hi Jimena, I am writing about my project.',
             stages: [
-                ['Confirmation and payment', 'You confirm the plan and pay. Your spot in my schedule is booked.'],
-                ['Content', 'You send me the texts, photos and logo. Once everything is ready, I start designing.'],
-                ['Design', 'I design and build your website.'],
-                ['Review', 'I show you the website, we review it together and I make the adjustments.'],
-                ['Launch', 'Your website is live and ready to share.'],
+                ['Booking and confirmation', 'Plan confirmed and payment received. Your spot in my schedule is booked.', 'You confirm the plan and pay the deposit to book your spot in my schedule.', 'You confirm the plan and pay the deposit to book your spot in my schedule.'],
+                ['Content', 'Texts, images and logo received. Everything is ready to start!', 'I am waiting for your texts, images and logo to start designing.', 'You send me the texts, images and logo.'],
+                ['Design and build', 'Design and build finished.', 'I am working on the design and build of your website.', 'I design and build your website.'],
+                ['Review and adjustments', 'We reviewed the website together and I made the adjustments.', 'Review the result and ask me for the adjustments included in your plan.', 'You will be able to review the result and ask me for the adjustments included in your plan.'],
+                ['Launch and delivery', 'Your website is live and ready to share with your clients.', 'I am publishing your website on your domain.', 'Your website will be live and ready to share with your clients.'],
             ],
         },
         pt: {
@@ -176,21 +211,38 @@
             errSend: 'Não foi possível enviar. Tente de novo daqui a pouco.',
             thanks: 'Muito obrigada! Recebi sua opinião. Vou revisar e colocar no site nos próximos dias.',
             used: 'Já recebi sua opinião. Muito obrigada!',
-            projectHello: 'Olá, {name}. Aqui você pode ver como está o seu site.',
-            due: 'Entrega prevista: {date}',
-            published: 'Seu site já está no ar!',
+            projectKicker: 'Projeto de site',
+            projectStatus: { going: 'Em andamento', live: 'No ar' },
+            projectHello: 'Olá, {name}. Seu projeto está em andamento!',
+            projectHelloLive: 'Olá, {name}. Seu site já está no ar!',
+            projectIntro: 'Aqui você pode acompanhar cada etapa do seu site e ver o que vem depois.',
+            progress: 'Etapa {n} de {total}',
+            dueTitle: 'Entrega prevista',
+            dueHint: 'A data pode mudar se ainda faltarem materiais ou revisões.',
+            nextTitle: 'Seu próximo passo',
+            nextByStage: [
+                'Para reservar seu lugar na minha agenda, confirme o plano e pague o sinal.',
+                'Me envie os textos, as imagens e o logo. Com tudo pronto, começo a criar.',
+                'Você não precisa fazer nada por enquanto: estou trabalhando no seu site.',
+                'Seu site está pronto para revisão. Veja a prévia e me envie seus comentários.',
+                'Seu site já está no ar! Compartilhe com seus clientes.',
+            ],
+            preview: 'Ver a prévia',
+            visit: 'Ver seu site',
+            statusTitle: 'Status do projeto',
+            stateTag: { done: 'Pronto', current: 'Em andamento', pending: 'Pendente' },
             noteFrom: 'Recado da Jimena',
+            helpTitle: 'Alguma dúvida?',
+            helpText: 'Se precisar falar comigo durante o projeto, escreva diretamente para mim.',
             updated: 'Última atualização: {date}.',
-            current: 'Em andamento',
-            done: 'Pronto',
             write: 'Fale comigo no WhatsApp',
             writeText: 'Olá Jimena, estou escrevendo sobre o meu projeto.',
             stages: [
-                ['Confirmação e pagamento', 'Você confirma o plano e faz o pagamento. Seu lugar na minha agenda fica reservado.'],
-                ['Material', 'Você me envia os textos, as fotos e o logo. Com tudo pronto, começo a criar.'],
-                ['Design', 'Crio e monto o seu site.'],
-                ['Revisão', 'Mostro o site, revisamos juntos e faço os ajustes.'],
-                ['Publicação', 'Seu site fica publicado e pronto para compartilhar.'],
+                ['Reserva e confirmação', 'Plano confirmado e pagamento recebido. Seu lugar na minha agenda está reservado.', 'Você confirma o plano e paga o sinal para reservar seu lugar na minha agenda.', 'Você confirma o plano e paga o sinal para reservar seu lugar na minha agenda.'],
+                ['Recebimento de materiais', 'Textos, imagens e logo recebidos. Tudo pronto para começar!', 'Estou esperando seus textos, imagens e logo para começar a criar.', 'Você me envia os textos, as imagens e o logo.'],
+                ['Design e desenvolvimento', 'Design e desenvolvimento concluídos.', 'Estou trabalhando no design e na construção do seu site.', 'Crio e monto o seu site.'],
+                ['Revisão e ajustes', 'Revisamos o site juntos e fiz os ajustes.', 'Revise o resultado e me peça os ajustes incluídos no seu plano.', 'Você vai poder revisar o resultado e me pedir os ajustes incluídos no seu plano.'],
+                ['Publicação e entrega', 'Seu site está no ar e pronto para compartilhar com seus clientes.', 'Estou publicando seu site no seu domínio.', 'Seu site vai estar no ar e pronto para compartilhar com seus clientes.'],
             ],
         },
     }[lang];
@@ -373,38 +425,93 @@
     };
 
     // ---- Proyecto
-    const renderProject = (project) => {
-        const card = el('article', 'client-card');
-        const last = T.stages.length - 1;
-        const isLive = project.stage >= last;
-        card.append(el('p', 'client-kicker', project.project), el('p', 'client-lead', fill(T.projectHello, { name: project.client })));
-        if (isLive) card.append(el('p', 'client-live', T.published));
-        else if (project.due) card.append(el('p', 'client-due', fill(T.due, { date: longDate(project.due) })));
+    const section = (className, title) => {
+        const box = el('section', className);
+        if (title) box.append(el('h2', 'client-small-title', title));
+        return box;
+    };
 
+    const renderProject = (project) => {
+        const total = T.stages.length;
+        const last = total - 1;
+        const isLive = project.stage >= last;
+        const card = el('article', 'client-card client-project');
+
+        // Encabezado: tipo de proyecto, estado y saludo
+        const head = el('div', 'client-head');
+        const titles = el('div');
+        titles.append(el('p', 'client-kicker', T.projectKicker), el('p', 'client-code', project.project));
+        head.append(titles, el('span', `client-status${isLive ? ' is-enviado' : ''}`, isLive ? T.projectStatus.live : T.projectStatus.going));
+        card.append(head);
+        const intro = el('div');
+        intro.append(el('p', 'client-lead', fill(isLive ? T.projectHelloLive : T.projectHello, { name: project.client })));
+        if (!isLive) intro.append(el('p', 'client-date', T.projectIntro));
+        card.append(intro);
+
+        // Barra de avance
+        const percent = isLive ? 100 : Math.round((project.stage / last) * 100);
+        const progress = el('div', 'client-progress');
+        const label = el('p', 'client-progress-label', fill(T.progress, { n: Math.min(project.stage + 1, total), total }));
+        const bar = el('div', 'client-progress-bar');
+        bar.setAttribute('role', 'progressbar');
+        bar.setAttribute('aria-valuemin', '0');
+        bar.setAttribute('aria-valuemax', '100');
+        bar.setAttribute('aria-valuenow', String(percent));
+        bar.setAttribute('aria-label', label.textContent);
+        const fillBar = el('span', 'client-progress-fill');
+        fillBar.style.width = `${Math.max(percent, 4)}%`;
+        bar.append(fillBar);
+        progress.append(label, bar);
+        card.append(progress);
+
+        // Próximo paso y fecha estimada, lado a lado en pantallas anchas
+        const highlights = el('div', 'client-highlights');
+        const next = section('client-next', T.nextTitle);
+        next.append(el('p', '', project.next || T.nextByStage[Math.min(project.stage, last)]));
+        if (project.preview) {
+            const previewButton = button(project.preview, isLive ? T.visit : T.preview, project.stage === 3 || isLive, true);
+            next.append(previewButton);
+        }
+        highlights.append(next);
+        if (!isLive && project.due) {
+            const due = section('client-due-box', T.dueTitle);
+            due.append(el('p', 'client-due-date', longDate(project.due)), el('p', 'client-date', T.dueHint));
+            highlights.append(due);
+        }
+        card.append(highlights);
+
+        // Etapas
+        const status = section('client-status-list', T.statusTitle);
         const steps = el('ol', 'client-steps');
-        T.stages.forEach(([title, text], index) => {
+        T.stages.forEach(([title, doneText, currentText, pendingText], index) => {
             const state = index < project.stage || (isLive && index === last) ? 'done' : index === project.stage ? 'current' : 'pending';
             const step = el('li', `client-step is-${state}`);
             if (state === 'current') step.setAttribute('aria-current', 'step');
             const mark = el('span', 'client-step-mark', state === 'done' ? '✓' : String(index + 1));
             mark.setAttribute('aria-hidden', 'true');
             const body = el('div', 'client-step-body');
-            const titleRow = el('p', 'client-step-title', title);
-            if (state !== 'pending') titleRow.append(' ', el('span', 'client-step-tag', state === 'done' ? T.done : T.current));
-            body.append(titleRow, el('p', 'client-step-text', text));
+            const titleRow = el('p', 'client-step-title', `${index + 1}. ${title}`);
+            titleRow.append(' ', el('span', `client-step-tag is-${state}`, T.stateTag[state]));
+            body.append(titleRow, el('p', 'client-step-text', { done: doneText, current: currentText, pending: pendingText }[state]));
             step.append(mark, body);
             steps.append(step);
         });
-        card.append(steps);
+        status.append(steps);
+        card.append(status);
 
         if (project.note) {
             const note = el('div', 'client-note');
             note.append(el('p', 'client-small-title', T.noteFrom), el('p', '', project.note));
             card.append(note);
         }
+
+        // Contacto
+        const help = section('client-help', T.helpTitle);
+        help.append(el('p', '', T.helpText));
         const actions = el('div', 'client-actions');
         actions.append(button(WHATSAPP + encodeURIComponent(T.writeText), T.write, false, true));
-        card.append(actions, el('p', 'client-foot', fill(T.updated, { date: longDate(project.updated) })));
+        help.append(actions);
+        card.append(help, el('p', 'client-foot', fill(T.updated, { date: longDate(project.updated) })));
         view.replaceChildren(card);
     };
 

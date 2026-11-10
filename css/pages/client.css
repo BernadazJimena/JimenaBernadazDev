@@ -191,6 +191,101 @@
 }
 
 /* Seguimiento del proyecto */
+.client-project {
+    gap: 1.5rem;
+}
+
+.client-progress-label {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 800;
+    margin: 0 0 .45rem;
+}
+
+.client-progress-bar {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: 999px;
+    display: block;
+    height: .7rem;
+    overflow: hidden;
+}
+
+.client-progress-fill {
+    background: var(--blue);
+    border-radius: 999px;
+    display: block;
+    height: 100%;
+    transition: width .6s ease;
+}
+
+.client-highlights {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.client-next,
+.client-due-box {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: 1.1rem 1.2rem;
+}
+
+.client-next {
+    border-left: .25rem solid var(--blue);
+}
+
+.client-next > p {
+    color: var(--text);
+    font-weight: 700;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.client-next .button {
+    align-self: flex-start;
+    margin-top: .35rem;
+}
+
+.client-due-date {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.client-due-box .client-date {
+    font-size: var(--text-sm);
+    margin: 0;
+}
+
+.client-status-list .client-small-title,
+.client-help .client-small-title {
+    margin-bottom: .9rem;
+}
+
+.client-help {
+    border-top: .08rem solid var(--line);
+    padding-top: 1.25rem;
+}
+
+.client-help > p {
+    margin: 0 0 1rem;
+}
+
+.client-step-tag.is-pending {
+    color: var(--muted);
+}
+
+.client-step-tag.is-done {
+    background: var(--blue);
+    color: var(--mist);
+}
 .client-live {
     color: var(--blue);
     font-size: 1.15rem;

@@ -74,7 +74,7 @@ export const adminPage = () => `<!doctype html>
 </div>
 <script>
 (() => {
-  const STAGES = ['Confirmación y pago', 'Material recibido', 'Diseño', 'Revisión', 'Publicación'];
+  const STAGES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
   const STATUS = { recibido: 'Recibido', preparando: 'Preparando', enviado: 'Enviado' };
   const LANG = { es: 'Español', en: 'Inglés', pt: 'Portugués' };
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -181,7 +181,9 @@ export const adminPage = () => `<!doctype html>
         + '<span class="chip">' + STAGES[p.stage] + '</span></div>'
         + '<form class="project-form"><div class="grid"><label>Etapa<select name="stage">' + STAGES.map((s, i) => '<option value="' + i + '"' + (p.stage === i ? ' selected' : '') + '>' + (i + 1) + '. ' + s + '</option>').join('') + '</select></label>'
         + '<label>Entrega estimada<input type="date" name="due" value="' + esc(p.due) + '"></label></div>'
-        + '<label>Nota para el cliente (opcional)<textarea name="note" placeholder="Ej.: Ya tengo tus fotos. Esta semana te mando la primera versión.">' + esc(p.note) + '</textarea></label>'
+        + '<label>Tu próximo paso (opcional: si lo dejás vacío, se muestra el texto de la etapa)<input name="next" maxlength="400" placeholder="Ej.: Todavía necesito tu logo y los textos de la sección Servicios." value="' + esc(p.next) + '"></label>'
+        + '<label style="margin-top:.75rem">Link de vista previa (opcional)<input name="preview" placeholder="https://..." value="' + esc(p.preview) + '"></label>'
+        + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note" placeholder="Ej.: Ya tengo tus fotos. Esta semana te mando la primera versión.">' + esc(p.note) + '</textarea></label>'
         + '<div class="row" style="margin-top:.75rem"><button class="primary">Guardar</button>'
         + '<button type="button" data-copy="' + esc(clientLink('mi-proyecto', p.lang, p.token)) + '">Copiar link del cliente</button>'
         + '<a class="btn" target="_blank" href="' + esc(clientLink('mi-proyecto', p.lang, p.token)) + '">Abrir ↗</a>'
@@ -267,7 +269,7 @@ export const adminPage = () => `<!doctype html>
       toast('Proyecto creado'); load();
     } else if (form.classList.contains('project-form')) {
       e.preventDefault();
-      await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note });
+      await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview });
       toast('Guardado'); load();
     }
   });

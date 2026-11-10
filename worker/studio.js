@@ -96,9 +96,15 @@ export class StudioData extends DurableObject {
       stage INTEGER NOT NULL DEFAULT 0,
       due TEXT NOT NULL DEFAULT '',
       note TEXT NOT NULL DEFAULT '',
+      next TEXT NOT NULL DEFAULT '',
+      preview TEXT NOT NULL DEFAULT '',
       created TEXT NOT NULL,
       updated TEXT NOT NULL
     )`);
+    // Columnas sumadas después: próximo paso del cliente y link de vista previa
+    const columns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
+    if (!columns.includes('next')) this.sql.exec("ALTER TABLE projects ADD COLUMN next TEXT NOT NULL DEFAULT ''");
+    if (!columns.includes('preview')) this.sql.exec("ALTER TABLE projects ADD COLUMN preview TEXT NOT NULL DEFAULT ''");
   }
 
   // ---- Consultas y pedidos de presupuesto
@@ -187,7 +193,7 @@ export class StudioData extends DurableObject {
   }
 
   project(token) {
-    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, updated FROM projects WHERE token = ?', token).toArray()[0];
+    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE token = ?', token).toArray()[0];
     return row || null;
   }
 
@@ -198,8 +204,8 @@ export class StudioData extends DurableObject {
     }
     const found = this.sql.exec('SELECT 1 FROM projects WHERE token = ?', token).toArray().length;
     if (!found) return false;
-    this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, updated = ? WHERE token = ?',
-      changes.stage, changes.due, changes.note, new Date().toISOString(), token);
+    this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
+      changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
     return true;
   }
 
@@ -211,7 +217,7 @@ export class StudioData extends DurableObject {
         .map((row) => ({ ...row, proposal: row.proposal ? JSON.parse(row.proposal) : null })),
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
-      projects: this.sql.exec('SELECT token, client, project, lang, stage, due, note, created, updated FROM projects ORDER BY updated DESC').toArray(),
+      projects: this.sql.exec('SELECT token, client, project, lang, stage, due, note, next, preview, created, updated FROM projects ORDER BY updated DESC').toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
     };
   }
@@ -401,6 +407,9 @@ export async function handleStudio(request, env, ctx) {
         stage: Number.isInteger(stage) && stage >= 0 && stage < STAGES ? stage : 0,
         due: isoDate(body.due),
         note: text(body.note, 1000),
+        next: text(body.next, 400),
+        // Vista previa: solo links https (por ejemplo la demo en Vercel)
+        preview: typeof body.preview === 'string' && /^https:\/\/[^\s"<>]+$/.test(body.preview.trim()) ? body.preview.trim().slice(0, 300) : '',
       };
       return (await store.setProject(match[1], changes)) ? json({ ok: true }) : notFound();
     }
