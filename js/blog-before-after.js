@@ -5,7 +5,7 @@
         const range = box.querySelector('input[type="range"]');
         const set = () => {
             box.style.setProperty('--pos', `${range.value}%`);
-            range.setAttribute('aria-valuetext', `${range.value}% de la versión antes`);
+            range.setAttribute('aria-valuetext', `${range.value} % de la versión anterior`);
         };
         range.addEventListener('input', set);
         set();
