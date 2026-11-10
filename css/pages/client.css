@@ -373,6 +373,54 @@
     text-align: center;
 }
 
+/* Versión documento para la descarga en PDF (la pone js/client-pages.js mientras arma el archivo) */
+.client-pdf-brand {
+    display: none;
+}
+
+.client-card.is-pdf {
+    background: var(--mist);
+    border: 0;
+    border-radius: 0;
+    max-width: 46rem;
+    padding: 0;
+}
+
+.client-card.is-pdf .client-pdf-brand {
+    align-items: center;
+    border-bottom: .08rem solid var(--line);
+    display: flex;
+    gap: .55rem;
+    padding-bottom: 1rem;
+}
+
+.client-pdf-mark {
+    background: #24185a;
+    border-radius: .5rem;
+    color: #f3ebf6;
+    font-size: .8rem;
+    font-weight: 800;
+    padding: .35rem .45rem;
+}
+
+.client-pdf-name {
+    color: var(--text);
+    font-weight: 800;
+}
+
+.client-pdf-site {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    margin-left: auto;
+}
+
+.client-card.is-pdf .client-pdf,
+.client-card.is-pdf .client-cta,
+.client-card.is-pdf .client-option .client-actions,
+.client-card.is-pdf .client-save {
+    display: none;
+}
+
 /* Guardar en PDF / imprimir: solo la propuesta, sin menú, botones ni fondos */
 @media print {
     .site-header,

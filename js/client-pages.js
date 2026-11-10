@@ -51,6 +51,7 @@
             quoteNumber: 'Presupuesto {code}',
             issuedOn: 'Emitido el {date}',
             pdf: 'Descargar en PDF',
+            pdfLoading: 'Preparando el PDF...',
             investment: 'Inversión total',
             finalPrice: 'Precio final de la propuesta',
             includesTitle: 'Tu web incluye',
@@ -169,6 +170,7 @@
             quoteNumber: 'Quote {code}',
             issuedOn: 'Issued on {date}',
             pdf: 'Download as PDF',
+            pdfLoading: 'Preparing the PDF...',
             investment: 'Total investment',
             finalPrice: 'Final price of the proposal',
             includesTitle: 'Your website includes',
@@ -284,6 +286,7 @@
             quoteNumber: 'Orçamento {code}',
             issuedOn: 'Emitido em {date}',
             pdf: 'Baixar em PDF',
+            pdfLoading: 'Preparando o PDF...',
             investment: 'Investimento total',
             finalPrice: 'Preço final da proposta',
             includesTitle: 'Seu site inclui',
@@ -462,7 +465,7 @@
 
     const tag = (text, extra = '') => el('span', `client-tag ${extra}`.trim(), text);
 
-    // Guardar en PDF: la ventana de imprimir del navegador, siempre en modo claro
+    // Plan B si no se puede generar el PDF: la ventana de imprimir del navegador, siempre en modo claro
     const printProposal = () => {
         const root = document.documentElement;
         const theme = root.getAttribute('data-theme');
@@ -470,6 +473,57 @@
         const restore = () => { if (theme) root.setAttribute('data-theme', theme); window.removeEventListener('afterprint', restore); };
         window.addEventListener('afterprint', restore);
         window.print();
+    };
+
+    // Descarga directa del PDF. La herramienta (html2pdf, desde cdnjs) se carga recién al tocar el botón,
+    // con su huella de seguridad: si el archivo no coincide, el navegador no lo usa y se abre la ventana de imprimir.
+    const PDF_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    const PDF_LIB_HASH = 'sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==';
+    let pdfLib;
+    const loadPdfLib = () => {
+        if (window.html2pdf) return Promise.resolve();
+        pdfLib = pdfLib || new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = PDF_LIB;
+            script.integrity = PDF_LIB_HASH;
+            script.crossOrigin = 'anonymous';
+            script.referrerPolicy = 'no-referrer';
+            script.onload = resolve;
+            script.onerror = () => { pdfLib = null; reject(new Error('pdf')); };
+            document.head.append(script);
+        });
+        return pdfLib;
+    };
+
+    const downloadPdf = async (card, code, pdfButton) => {
+        const root = document.documentElement;
+        const theme = root.getAttribute('data-theme');
+        const label = pdfButton.textContent;
+        pdfButton.disabled = true;
+        pdfButton.textContent = T.pdfLoading;
+        try {
+            await loadPdfLib();
+            // Se arma en modo claro y con la versión "documento" de la tarjeta (sin botones, con la marca arriba)
+            root.setAttribute('data-theme', 'light');
+            card.classList.add('is-pdf');
+            await window.html2pdf().set({
+                margin: [12, 12, 14, 12],
+                filename: `presupuesto-${code}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#f3ebf6' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'], avoid: ['.client-head', '.client-intro', '.client-meta', '.client-investment', '.client-include', '.client-option', '.client-note', '.client-conditions li', '.client-validity', '.client-summary > div'] },
+            }).from(card).save();
+        } catch (pdfError) {
+            card.classList.remove('is-pdf');
+            if (theme) root.setAttribute('data-theme', theme);
+            printProposal();
+        } finally {
+            card.classList.remove('is-pdf');
+            if (theme) root.setAttribute('data-theme', theme);
+            pdfButton.disabled = false;
+            pdfButton.textContent = label;
+        }
     };
 
     const requestList = (quote, labels) => {
@@ -550,6 +604,12 @@
         const expired = !accepted && proposal.validUntil && proposal.validUntil < today;
         const card = el('article', 'client-card client-quote client-proposal-page');
 
+        // Marca del estudio: solo se ve en el PDF
+        const brand = el('div', 'client-pdf-brand');
+        const mark = el('span', 'client-pdf-mark', 'JNB');
+        brand.append(mark, el('span', 'client-pdf-name', 'Creative Studio'), el('span', 'client-pdf-site', 'jnbcreativestudio.com.ar'));
+        card.append(brand);
+
         const head = el('div', 'client-head');
         head.append(el('p', 'client-kicker', T.proposalKicker), el('span', `client-status is-${accepted ? 'aceptado' : 'enviado'}`, T.status[accepted ? 'aceptado' : 'enviado']));
         card.append(head);
@@ -566,7 +626,7 @@
         metaText.append(el('p', 'client-small-title', fill(T.quoteNumber, { code: quote.code })), el('p', 'client-date', fill(T.issuedOn, { date: longDate(proposal.issued || quote.created) })));
         const pdf = el('button', 'button button-ghost client-pdf', T.pdf);
         pdf.type = 'button';
-        pdf.addEventListener('click', printProposal);
+        pdf.addEventListener('click', () => downloadPdf(card, quote.code, pdf));
         meta.append(metaText, pdf);
         card.append(meta);
 
