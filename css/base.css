@@ -161,9 +161,12 @@ body {
     background: linear-gradient(180deg, var(--mist) 0%, var(--page-end) 100%);
 }
 
-/* La franja ocupa todo el ancho de la pantalla aunque la sección tenga ancho máximo */
+/* La franja ocupa todo el ancho de la pantalla aunque la sección tenga ancho máximo.
+   Reseñas lleva franja solo cuando va justo después de la garantía (lisa); si arriba tiene
+   el blog del inicio (con franja), queda lisa. Así las secciones siempre se alternan. */
 .why.section-shell,
-.samples.section-shell {
+.samples.section-shell,
+.guarantee.section-shell + .reviews.section-shell {
     box-shadow: 0 0 0 100vmax var(--band);
     clip-path: inset(0 -100vmax);
     background: var(--band);
@@ -207,13 +210,15 @@ main {
 }
 
 .why.section-shell,
-.samples.section-shell {
+.samples.section-shell,
+.guarantee.section-shell + .reviews.section-shell {
     isolation: isolate;
     position: relative;
 }
 
 .why.section-shell::before,
-.samples.section-shell::before {
+.samples.section-shell::before,
+.guarantee.section-shell + .reviews.section-shell::before {
     background: url("../assets/images/fondo-bocetos.webp") center / cover no-repeat;
     content: "";
     filter: var(--band-photo-filter);
