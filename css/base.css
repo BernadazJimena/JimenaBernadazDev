@@ -242,3 +242,9 @@ main {
         color-scheme: dark;
     }
 }
+
+/* Alto contraste del navegador (Samsung Internet, Windows): mantener los colores del diseño
+   en vez de que el navegador los reemplace (links amarillos, fondos negros) */
+:root {
+    forced-color-adjust: none;
+}
