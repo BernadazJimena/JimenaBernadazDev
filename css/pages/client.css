@@ -159,6 +159,47 @@
     white-space: pre-line;
 }
 
+/* Presupuesto: título, número de solicitud, cuándo llega la respuesta y "Guardá este enlace" */
+.client-quote {
+    gap: 1.5rem;
+}
+
+.client-headline {
+    font-size: clamp(1.5rem, 4.5vw, 2.1rem);
+    line-height: 1.2;
+    margin: 0 0 .6rem;
+}
+
+.client-intro .client-date {
+    margin-top: .4rem;
+}
+
+.client-info > p {
+    margin: 0;
+}
+
+.client-info .client-small-title {
+    margin: 0;
+}
+
+.client-code-box .client-code {
+    margin: 0;
+}
+
+.client-save {
+    background: transparent;
+}
+
+.client-summary .client-list {
+    margin: .15rem 0 0;
+}
+
+.client-signature {
+    border-top: .08rem solid var(--line);
+    padding-top: 1rem;
+    text-align: center;
+}
+
 /* Reseña */
 .client-review .contact-field textarea {
     min-height: 8rem;
@@ -226,7 +267,8 @@
 }
 
 .client-next,
-.client-due-box {
+.client-due-box,
+.client-info {
     background: var(--sky);
     border: .08rem solid var(--line);
     border-radius: 1rem;
@@ -259,7 +301,8 @@
     margin: 0;
 }
 
-.client-due-box .client-date {
+.client-due-box .client-date,
+.client-info .client-date {
     font-size: var(--text-sm);
     margin: 0;
 }

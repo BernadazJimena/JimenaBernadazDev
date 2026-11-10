@@ -18,12 +18,30 @@
             contact: 'escribime y te ayudo',
             error: 'No se pudo cargar. Probá de nuevo en un rato.',
             // Presupuesto
-            quoteTitle: 'Pedido de presupuesto',
-            requestedOn: 'Pedido del {date}',
+            quoteTitle: 'Solicitud de presupuesto',
             status: { recibido: 'Recibido', preparando: 'En preparación', enviado: 'Listo' },
-            hello: 'Hola, {name}.',
-            waiting: 'Estoy preparando tu presupuesto. Te lo mando dentro de las 24 horas hábiles y también lo vas a ver acá, en este mismo link.',
-            ready: 'Tu presupuesto está listo. Si tenés dudas, escribime y lo vemos juntos.',
+            headline: { waiting: 'Tu proyecto empieza acá.', ready: 'Tu presupuesto está listo.' },
+            hello: 'Hola, {name}. ¡Gracias por confiar en JNB Creative Studio! 💜',
+            waiting: 'Recibí tu solicitud y estoy preparando una propuesta para tu proyecto.',
+            ready: 'Acá tenés mi propuesta. Si tenés dudas, escribime y lo vemos juntos.',
+            codeTitle: 'Número de solicitud',
+            requestedOn: 'Pedido realizado el {date}',
+            stepsTitle: 'Estado de tu solicitud',
+            // Etapas de la solicitud: título, texto mientras no está lista y texto cuando ya está lista
+            quoteSteps: [
+                ['Solicitud recibida', 'Tu pedido llegó correctamente.', 'Tu pedido llegó correctamente.'],
+                ['Preparación del presupuesto', 'Estoy evaluando los requerimientos de tu proyecto.', 'Evalué los requerimientos de tu proyecto.'],
+                ['Presupuesto enviado', 'Vas a recibir mi propuesta con los detalles y valores.', 'Tu propuesta está lista, con los detalles y valores.'],
+            ],
+            whenTitle: '¿Cuándo recibirás mi respuesta?',
+            whenText: 'Dentro de las próximas 24 horas hábiles.',
+            whenHint: 'Cuando el presupuesto esté listo, vas a poder consultarlo desde este mismo enlace.',
+            // Las etiquetas del resumen que arma el formulario de presupuesto, y cómo se muestran acá
+            formLabels: ['Pedido', 'Quiero sumar o actualizar', 'Detalles'],
+            requestLabels: ['Servicio', 'Funcionalidades solicitadas', 'Sobre tu proyecto'],
+            saveTitle: 'Guardá este enlace',
+            saveText: 'Podés volver a esta página cuando quieras para consultar el estado de tu solicitud y acceder a tu presupuesto.',
+            signature: 'JNB Creative Studio · Diseño y desarrollo web',
             proposal: 'Mi propuesta',
             includes: 'Incluye',
             validUntil: 'Válido hasta el {date}.',
@@ -38,7 +56,6 @@
             acceptText: 'Hola Jimena, quiero avanzar con el presupuesto {code}.',
             questionText: 'Hola Jimena, tengo una consulta sobre el presupuesto {code}.',
             yourRequest: 'Lo que me pediste',
-            save: 'Guardá este link para volver cuando quieras.',
             // Reseña
             reviewIntro: 'Me encantaría saber cómo fue trabajar juntos. Tu opinión ayuda a otras personas a decidirse y a mí a seguir mejorando.',
             name: 'Tu nombre',
@@ -98,11 +115,27 @@
             contact: 'write to me and I will help you',
             error: 'It could not load. Please try again in a little while.',
             quoteTitle: 'Quote request',
-            requestedOn: 'Requested on {date}',
             status: { recibido: 'Received', preparando: 'In progress', enviado: 'Ready' },
-            hello: 'Hi, {name}.',
-            waiting: 'I am preparing your quote. I will send it within 24 business hours, and you will also see it here, at this same link.',
-            ready: 'Your quote is ready. If you have any questions, write to me and we can go over it together.',
+            headline: { waiting: 'Your project starts here.', ready: 'Your quote is ready.' },
+            hello: 'Hi, {name}. Thank you for trusting JNB Creative Studio! 💜',
+            waiting: 'I received your request and I am preparing a proposal for your project.',
+            ready: 'Here is my proposal. If you have any questions, write to me and we can go over it together.',
+            codeTitle: 'Request number',
+            requestedOn: 'Requested on {date}',
+            stepsTitle: 'Status of your request',
+            quoteSteps: [
+                ['Request received', 'Your request arrived successfully.', 'Your request arrived successfully.'],
+                ['Preparing your quote', 'I am reviewing what your project needs.', 'I reviewed what your project needs.'],
+                ['Quote sent', 'You will receive my proposal with the details and prices.', 'Your proposal is ready, with the details and prices.'],
+            ],
+            whenTitle: 'When will you hear from me?',
+            whenText: 'Within the next 24 business hours.',
+            whenHint: 'When your quote is ready, you will find it at this same link.',
+            formLabels: ['Request', 'I want to add or update', 'Details'],
+            requestLabels: ['Service', 'Requested features', 'About your project'],
+            saveTitle: 'Save this link',
+            saveText: 'You can come back to this page anytime to check the status of your request and see your quote.',
+            signature: 'JNB Creative Studio · Web design and development',
             proposal: 'My proposal',
             includes: 'Includes',
             validUntil: 'Valid until {date}.',
@@ -117,7 +150,6 @@
             acceptText: 'Hi Jimena, I would like to go ahead with quote {code}.',
             questionText: 'Hi Jimena, I have a question about quote {code}.',
             yourRequest: 'What you asked for',
-            save: 'Save this link to come back anytime.',
             reviewIntro: 'I would love to know how it was to work together. Your feedback helps other people decide, and helps me keep improving.',
             name: 'Your name',
             namePh: 'For example: Anna Smith',
@@ -174,11 +206,27 @@
             contact: 'escreva para mim e eu ajudo você',
             error: 'Não foi possível carregar. Tente de novo daqui a pouco.',
             quoteTitle: 'Pedido de orçamento',
-            requestedOn: 'Pedido de {date}',
             status: { recibido: 'Recebido', preparando: 'Em preparação', enviado: 'Pronto' },
-            hello: 'Olá, {name}.',
-            waiting: 'Estou preparando seu orçamento. Envio em até 24 horas úteis e você também vai vê-lo aqui, neste mesmo link.',
-            ready: 'Seu orçamento está pronto. Se tiver dúvidas, escreva para mim e vemos juntos.',
+            headline: { waiting: 'Seu projeto começa aqui.', ready: 'Seu orçamento está pronto.' },
+            hello: 'Olá, {name}. Obrigada por confiar na JNB Creative Studio! 💜',
+            waiting: 'Recebi seu pedido e estou preparando uma proposta para o seu projeto.',
+            ready: 'Aqui está minha proposta. Se tiver dúvidas, escreva para mim e vemos juntos.',
+            codeTitle: 'Número do pedido',
+            requestedOn: 'Pedido feito em {date}',
+            stepsTitle: 'Status do seu pedido',
+            quoteSteps: [
+                ['Pedido recebido', 'Seu pedido chegou corretamente.', 'Seu pedido chegou corretamente.'],
+                ['Preparação do orçamento', 'Estou avaliando o que o seu projeto precisa.', 'Avaliei o que o seu projeto precisa.'],
+                ['Orçamento enviado', 'Você vai receber minha proposta com os detalhes e valores.', 'Sua proposta está pronta, com os detalhes e valores.'],
+            ],
+            whenTitle: 'Quando você recebe minha resposta?',
+            whenText: 'Nas próximas 24 horas úteis.',
+            whenHint: 'Quando o orçamento estiver pronto, você poderá vê-lo neste mesmo link.',
+            formLabels: ['Pedido', 'Quero adicionar ou atualizar', 'Detalhes'],
+            requestLabels: ['Serviço', 'Funcionalidades solicitadas', 'Sobre o seu projeto'],
+            saveTitle: 'Guarde este link',
+            saveText: 'Você pode voltar a esta página quando quiser para ver o status do seu pedido e acessar seu orçamento.',
+            signature: 'JNB Creative Studio · Design e desenvolvimento web',
             proposal: 'Minha proposta',
             includes: 'Inclui',
             validUntil: 'Válido até {date}.',
@@ -193,7 +241,6 @@
             acceptText: 'Olá Jimena, quero seguir com o orçamento {code}.',
             questionText: 'Olá Jimena, tenho uma dúvida sobre o orçamento {code}.',
             yourRequest: 'O que você me pediu',
-            save: 'Guarde este link para voltar quando quiser.',
             reviewIntro: 'Eu adoraria saber como foi trabalharmos juntos. Sua opinião ajuda outras pessoas a decidir e me ajuda a continuar melhorando.',
             name: 'Seu nome',
             namePh: 'Por exemplo: Ana Souza',
@@ -299,16 +346,46 @@
     });
 
     // ---- Presupuesto
+    // Separa los adicionales ("A; B (Secciones: 4 a 5; Páginas: 1)") sin cortar lo que va entre paréntesis
+    const splitItems = (text) => {
+        const items = [];
+        let depth = 0;
+        let current = '';
+        for (const char of text) {
+            if (char === '(') depth += 1;
+            if (char === ')') depth = Math.max(0, depth - 1);
+            if (char === ';' && depth === 0) { items.push(current.trim()); current = ''; continue; }
+            current += char;
+        }
+        if (current.trim()) items.push(current.trim());
+        return items.filter(Boolean);
+    };
+
+    const infoBox = (className, title, ...texts) => {
+        const box = el('section', `client-info ${className}`);
+        box.append(el('h2', 'client-small-title', title));
+        texts.forEach(([cls, text]) => box.append(el('p', cls, text)));
+        return box;
+    };
+
     const renderQuote = (quote) => {
-        const card = el('article', 'client-card');
+        const proposal = quote.proposal;
+        const card = el('article', 'client-card client-quote');
+
+        // Encabezado: tipo de página y estado
         const head = el('div', 'client-head');
-        const titles = el('div');
-        titles.append(el('p', 'client-kicker', T.quoteTitle), el('p', 'client-code', quote.code), el('p', 'client-date', fill(T.requestedOn, { date: longDate(quote.created) })));
-        head.append(titles, el('span', `client-status is-${quote.status}`, T.status[quote.status] || quote.status));
+        head.append(el('p', 'client-kicker', T.quoteTitle), el('span', `client-status is-${quote.status}`, T.status[quote.status] || quote.status));
         card.append(head);
 
-        const proposal = quote.proposal;
-        card.append(el('p', 'client-lead', `${fill(T.hello, { name: quote.firstName })} ${proposal ? T.ready : T.waiting}`));
+        const intro = el('div', 'client-intro');
+        intro.append(
+            el('h2', 'client-headline', proposal ? T.headline.ready : T.headline.waiting),
+            el('p', 'client-lead', fill(T.hello, { name: quote.firstName })),
+            el('p', 'client-date', proposal ? T.ready : T.waiting),
+        );
+        card.append(intro);
+
+        card.append(infoBox('client-code-box', T.codeTitle, ['client-code', quote.code], ['client-date', fill(T.requestedOn, { date: longDate(quote.created) })]));
 
         if (proposal) {
             const box = el('section', 'client-proposal');
@@ -343,18 +420,58 @@
             card.append(box);
         }
 
+        // Estado de la solicitud: recibida (siempre lista), preparación y envío
+        const status = el('section', 'client-status-list');
+        status.append(el('h2', 'client-small-title', T.stepsTitle));
+        const steps = el('ol', 'client-steps');
+        T.quoteSteps.forEach(([title, todoText, doneText], index) => {
+            const state = proposal || index === 0 ? 'done' : index === 1 ? 'current' : 'pending';
+            const step = el('li', `client-step is-${state}`);
+            if (state === 'current') step.setAttribute('aria-current', 'step');
+            const mark = el('span', 'client-step-mark', state === 'done' ? '✓' : String(index + 1));
+            mark.setAttribute('aria-hidden', 'true');
+            const body = el('div', 'client-step-body');
+            const titleRow = el('p', 'client-step-title', title);
+            titleRow.append(' ', el('span', `client-step-tag is-${state}`, T.stateTag[state]));
+            body.append(titleRow, el('p', 'client-step-text', state === 'done' ? doneText : todoText));
+            step.append(mark, body);
+            steps.append(step);
+        });
+        status.append(steps);
+        card.append(status);
+
+        if (!proposal) card.append(infoBox('client-when', T.whenTitle, ['client-due-date', T.whenText], ['client-date', T.whenHint]));
+
+        // Lo que pidió, con etiquetas más claras que las del formulario
         const request = el('section', 'client-request');
         request.append(el('h2', 'client-subtitle', T.yourRequest));
         const list = el('dl', 'client-summary');
         quote.summary.split('\n').filter(Boolean).forEach((line) => {
             const cut = line.indexOf(': ');
             const row = el('div');
-            if (cut > 0) row.append(el('dt', '', line.slice(0, cut)), el('dd', '', line.slice(cut + 2)));
-            else row.append(el('dd', '', line));
+            if (cut > 0) {
+                const label = line.slice(0, cut);
+                const value = line.slice(cut + 2);
+                const known = T.formLabels.indexOf(label);
+                row.append(el('dt', '', known >= 0 ? T.requestLabels[known] : label));
+                if (known === 1) {
+                    const dd = el('dd');
+                    const items = el('ul', 'client-list');
+                    splitItems(value).forEach((item) => items.append(el('li', '', item)));
+                    dd.append(items);
+                    row.append(dd);
+                } else {
+                    row.append(el('dd', '', value));
+                }
+            } else {
+                row.append(el('dd', '', line));
+            }
             list.append(row);
         });
         request.append(list);
-        card.append(request, el('p', 'client-foot', T.save));
+        card.append(request);
+
+        card.append(infoBox('client-save', T.saveTitle, ['', T.saveText]), el('p', 'client-foot client-signature', T.signature));
         view.replaceChildren(card);
     };
 
