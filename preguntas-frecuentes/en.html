@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="light dark" id="jnb-color-scheme">
   <script>
     (function () {
       try {
@@ -10,11 +11,8 @@
         var theme = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.setAttribute('data-theme', theme);
         // Avisa al navegador qué tema usa la página, para que no la oscurezca por su cuenta (Samsung Internet invertía los colores)
-        var scheme = document.createElement('meta');
-        scheme.name = 'color-scheme';
-        scheme.id = 'jnb-color-scheme';
-        scheme.content = theme === 'light' ? 'only light' : 'dark';
-        document.head.appendChild(scheme);
+        var scheme = document.getElementById('jnb-color-scheme');
+        if (scheme) scheme.content = theme === 'light' ? 'only light' : 'dark';
       } catch (e) {}
     })();
   </script>

@@ -234,3 +234,11 @@ main {
     position: absolute;
     z-index: -1;
 }
+
+/* Señal para los navegadores con modo oscuro propio (Samsung Internet lo busca así):
+   el sitio tiene su propio modo oscuro, así que no hace falta que lo invente invirtiendo colores */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        color-scheme: dark;
+    }
+}
