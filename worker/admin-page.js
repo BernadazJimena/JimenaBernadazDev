@@ -103,8 +103,7 @@ export const adminPage = () => `<!doctype html>
         isStore ? 'O domínio é gerenciado pelo seu plano da Tiendanube (Nuvemshop) ou Empretienda.' : 'O domínio é registrado no seu nome e o custo é seu. A publicação na minha conta da Cloudflare não tem custo para você.',
       ],
     }[lang] || [];
-    return T.filter(Boolean).join('
-');
+    return T.filter(Boolean).join('\\n'); // doble barra: esta página se arma dentro de un texto del Worker
   };
   const LANG = { es: 'Español', en: 'Inglés', pt: 'Portugués' };
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
