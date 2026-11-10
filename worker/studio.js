@@ -635,7 +635,9 @@ let mailStore = null; // se completa en cada pedido, para poder guardar el últi
 const cleanEnv = (value) => String(value || '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
 
 async function resendSend(env, to, mail) {
-  const key = cleanEnv(env.RESEND_API_KEY);
+  // Si la clave quedó pegada con otro texto (por ejemplo "RESEND_API_KEY=re_..."), se usa solo la parte "re_..."
+  const rawKey = cleanEnv(env.RESEND_API_KEY);
+  const key = (rawKey.match(/re_[A-Za-z0-9_]+/) || [rawKey])[0];
   const from = cleanEnv(env.MAIL_FROM);
   const replyTo = cleanEnv(env.MAIL_REPLY_TO);
   if (!key || !from) return { ok: false, status: 0, error: 'Faltan RESEND_API_KEY o MAIL_FROM en Cloudflare.' };
@@ -896,6 +898,7 @@ export async function handleStudio(request, env, ctx) {
         replyTo: cleanEnv(env.MAIL_REPLY_TO),
         hasKey: Boolean(cleanEnv(env.RESEND_API_KEY)),
         keyStart: cleanEnv(env.RESEND_API_KEY).slice(0, 3),
+        keyLooksRight: /re_[A-Za-z0-9_]{10,}/.test(cleanEnv(env.RESEND_API_KEY)),
       });
     }
 

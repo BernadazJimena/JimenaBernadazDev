@@ -766,7 +766,8 @@ export const adminPage = () => `<!doctype html>
       $('mail-test-result').innerHTML = r.ok
         ? '<div class="alert" style="margin-top:.75rem;background:color-mix(in srgb,#2fa36b 15%,var(--card));border-color:#2fa36b;color:inherit">✓ Resend aceptó el mail. Revisá ' + esc(to) + ' (y la carpeta de spam). Si llegó, los avisos a los clientes ya funcionan.</div>'
         : '<div class="alert" style="margin-top:.75rem">✗ No salió. Respuesta de Resend' + (r.status ? ' (' + r.status + ')' : '') + ': <strong>' + esc(r.error || '') + '</strong><br><br>👉 ' + esc(explainMail(r))
-          + '<br><br><span class="small">Lo que tiene cargado el sitio: MAIL_FROM = <code>' + esc(r.from || '(vacío)') + '</code> · MAIL_REPLY_TO = <code>' + esc(r.replyTo || '(vacío)') + '</code> · RESEND_API_KEY ' + (r.hasKey ? 'cargada (empieza con ' + esc(r.keyStart) + '…)' : 'vacía') + '</span></div>';
+          + '<br><br><span class="small">Lo que tiene cargado el sitio: MAIL_FROM = <code>' + esc(r.from || '(vacío)') + '</code> · MAIL_REPLY_TO = <code>' + esc(r.replyTo || '(vacío)') + '</code> · RESEND_API_KEY ' + (r.hasKey ? 'cargada (empieza con ' + esc(r.keyStart) + '…)' : 'vacía') + '</span>'
+          + (r.hasKey && !r.keyLooksRight ? '<br><br>⚠ La clave cargada no empieza con <code>re_</code>: las claves de Resend siempre empiezan así. Copiá de nuevo la clave desde Resend y pegá solo eso en RESEND_API_KEY.' : '') + '</div>';
       btn.disabled = false; btn.textContent = 'Probar envío de mail';
       if (!r.ok) { const fresh = await api('datos'); data.mailError = fresh.mailError; }
     } else if (form.id === 'availability-form') {
