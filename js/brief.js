@@ -48,6 +48,15 @@
             editingNote: 'Estás editando un brief que ya me enviaste. Los cambios se guardan solos; al terminar, tocá "Enviar cambios" así me entero.',
             sendChanges: 'Enviar cambios',
             editedOn: 'Última edición: {date}.',
+            confirmTitle: '¿Enviar los cambios?',
+            confirmText: 'Vas a actualizar el brief que ya me enviaste. Te llega una copia de los cambios a tu mail y yo me entero al instante.',
+            confirmYes: 'Sí, enviar los cambios',
+            confirmNo: 'Seguir editando',
+            updatedOne: 'Actualizado ✓ el {date}. Cambiaste 1 respuesta: la vas a ver marcada en tus respuestas.',
+            updatedMany: 'Actualizado ✓ el {date}. Cambiaste {n} respuestas: las vas a ver marcadas en tus respuestas.',
+            updatedTag: 'Actualizado',
+            removedTitle: 'Respuestas que quitaste',
+            locked: 'Ahora estoy trabajando en tu proyecto, así que el brief está cerrado para cambios. Se vuelve a abrir en la etapa de Revisión. Si necesitás cambiar algo urgente, escribime.',
             sendError: 'No se pudo enviar. Probá de nuevo en un rato.',
             missing: 'Falta completar algo en este paso.',
             yes: 'Sí',
@@ -90,6 +99,15 @@
             editingNote: 'You are editing a brief you already sent me. Changes save automatically; when you finish, tap "Send changes" so I know.',
             sendChanges: 'Send changes',
             editedOn: 'Last edited: {date}.',
+            confirmTitle: 'Send the changes?',
+            confirmText: 'You are about to update the brief you already sent me. You will get a copy of the changes by email and I will be notified right away.',
+            confirmYes: 'Yes, send the changes',
+            confirmNo: 'Keep editing',
+            updatedOne: 'Updated ✓ on {date}. You changed 1 answer: you will see it marked in your answers.',
+            updatedMany: 'Updated ✓ on {date}. You changed {n} answers: you will see them marked in your answers.',
+            updatedTag: 'Updated',
+            removedTitle: 'Answers you removed',
+            locked: 'I am working on your project now, so the brief is closed for changes. It opens again at the Review stage. If you need to change something urgent, message me.',
             sendError: 'It could not be sent. Please try again in a little while.',
             missing: 'Something is missing in this step.',
             yes: 'Yes',
@@ -132,6 +150,15 @@
             editingNote: 'Você está editando um briefing que já me enviou. As alterações ficam salvas sozinhas; ao terminar, toque em "Enviar alterações" para eu saber.',
             sendChanges: 'Enviar alterações',
             editedOn: 'Última edição: {date}.',
+            confirmTitle: 'Enviar as alterações?',
+            confirmText: 'Você vai atualizar o briefing que já me enviou. Você recebe uma cópia das alterações no seu e-mail e eu fico sabendo na hora.',
+            confirmYes: 'Sim, enviar as alterações',
+            confirmNo: 'Continuar editando',
+            updatedOne: 'Atualizado ✓ em {date}. Você alterou 1 resposta: ela aparece marcada nas suas respostas.',
+            updatedMany: 'Atualizado ✓ em {date}. Você alterou {n} respostas: elas aparecem marcadas nas suas respostas.',
+            updatedTag: 'Atualizado',
+            removedTitle: 'Respostas que você removeu',
+            locked: 'Agora estou trabalhando no seu projeto, então o briefing está fechado para alterações. Ele abre de novo na etapa de Revisão. Se precisar mudar algo urgente, me escreva.',
             sendError: 'Não foi possível enviar. Tente de novo daqui a pouco.',
             missing: 'Falta preencher algo nesta etapa.',
             yes: 'Sim',
@@ -405,6 +432,9 @@
         let editing = status !== 'enviado';
         let reading = false;
         let edited = data.edited || '';
+        let locked = Boolean(data.locked);
+        let resent = data.resent || '';
+        let lastChanges = data.lastChanges || [];
         const longDate = (iso) => new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
 
         const extras = extrasFrom(data.request);
@@ -454,11 +484,19 @@
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ lang: L, answers: a, summary: summary(), send }),
             });
+            if (response.status === 423) {
+                locked = true;
+                editing = false;
+                reading = false;
+                render();
+                throw new Error('locked');
+            }
             if (!response.ok) throw new Error(response.status);
             const result = await response.json();
             status = result.status;
             sent = result.sent;
             if (result.edited) edited = result.edited;
+            if (send && result.resent) { resent = result.resent; lastChanges = result.lastChanges || []; }
             return result;
         };
         const queueSave = () => {
@@ -631,7 +669,10 @@
             const box = el('div', 'brief-done');
             box.append(el('p', 'brief-done-mark', '✓'), el('h2', 'client-headline', U.sentTitle), el('p', 'client-lead', U.sentText));
             if (sent) box.append(el('p', 'client-date', fill(U.sentOn, { date: new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sent)) })));
-            if (edited) box.append(el('p', 'client-date', fill(U.editedOn, { date: longDate(edited) })));
+            if (resent && lastChanges.length) {
+                box.append(el('p', 'brief-updated-note', fill(lastChanges.length === 1 ? U.updatedOne : U.updatedMany, { date: longDate(resent), n: lastChanges.length })));
+            }
+            if (locked) box.append(el('p', 'brief-locked-note', `🔒 ${U.locked}`));
             const actions = el('div', 'client-actions');
             const view = el('button', 'button button-primary', U.view);
             view.type = 'button';
@@ -639,7 +680,8 @@
             const edit = el('button', 'button button-ghost', U.edit);
             edit.type = 'button';
             edit.addEventListener('click', () => { editing = true; step = 0; render(); container.scrollIntoView({ block: 'start' }); });
-            actions.append(view, edit);
+            actions.append(view);
+            if (!locked) actions.append(edit);
             box.append(actions);
             return box;
         };
@@ -653,16 +695,27 @@
             box.append(back, el('h2', 'client-headline', U.answersTitle));
             let section = '';
             const list = el('div', 'brief-answer-list');
+            const changed = new Map(lastChanges.map((c) => [`${c.s}|${c.q}`, c]));
             summary().forEach((row) => {
                 if (row.s !== section) { list.append(el('p', 'client-small-title brief-answer-section', row.s)); section = row.s; }
-                list.append(el('p', 'brief-answer-q', row.q), el('p', 'brief-answer-a', row.a));
+                const change = changed.get(`${row.s}|${row.q}`);
+                const q = el('p', 'brief-answer-q', row.q);
+                if (change) q.append(' ', el('span', 'brief-updated-tag', U.updatedTag));
+                const answer = el('p', `brief-answer-a${change ? ' is-updated' : ''}`, row.a);
+                list.append(q, answer);
+                if (change && change.before) list.append(el('p', 'brief-answer-before', change.before));
             });
+            const removed = lastChanges.filter((c) => !c.after);
+            if (removed.length) {
+                list.append(el('p', 'client-small-title brief-answer-section', U.removedTitle));
+                removed.forEach((c) => list.append(el('p', 'brief-answer-q', c.q), el('p', 'brief-answer-before', c.before)));
+            }
             box.append(list);
             const edit = el('button', 'button button-ghost', U.edit);
             edit.type = 'button';
             edit.addEventListener('click', () => { reading = false; editing = true; step = 0; render(); container.scrollIntoView({ block: 'start' }); });
             const actions = el('div', 'client-actions');
-            actions.append(edit);
+            if (!locked) actions.append(edit);
             box.append(actions);
             return box;
         };
@@ -741,6 +794,25 @@
                     queueSave();
                     return;
                 }
+                if (status === 'enviado' && !form.dataset.confirmed) {
+                    // Primero se pregunta si está seguro de actualizar lo que ya envió
+                    nav.hidden = true;
+                    const ask = el('div', 'brief-confirm');
+                    ask.setAttribute('role', 'alertdialog');
+                    ask.append(el('p', 'brief-confirm-title', U.confirmTitle), el('p', 'client-date', U.confirmText));
+                    const row = el('div', 'client-actions');
+                    const yes = el('button', 'button button-primary', U.confirmYes);
+                    yes.type = 'button';
+                    const no = el('button', 'button button-ghost', U.confirmNo);
+                    no.type = 'button';
+                    no.addEventListener('click', () => { ask.remove(); nav.hidden = false; });
+                    yes.addEventListener('click', () => { form.dataset.confirmed = '1'; ask.remove(); nav.hidden = false; form.requestSubmit(); });
+                    row.append(yes, no);
+                    ask.append(row);
+                    nav.before(ask);
+                    yes.focus();
+                    return;
+                }
                 next.disabled = true;
                 next.textContent = U.sending;
                 try {
@@ -750,9 +822,11 @@
                     container.scrollIntoView({ block: 'start' });
                     onChange?.({ sent: true });
                 } catch (sendError) {
+                    if (locked) return;
                     statusLine.textContent = U.sendError;
                     next.disabled = false;
                     next.textContent = sendLabel;
+                    delete form.dataset.confirmed;
                 }
             });
             card.append(form);

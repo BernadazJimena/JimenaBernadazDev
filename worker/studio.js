@@ -23,7 +23,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
-import { confirmationMail, briefInviteMail, briefReceivedMail } from './mail.js';
+import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail } from './mail.js';
 
 const SITE = 'https://jnbcreativestudio.com.ar';
 const LANGS = new Set(['es', 'en', 'pt']);
@@ -49,7 +49,18 @@ const planKey = (text) => {
   if (/b[aá]sico|basic|landing/i.test(t)) return 'basico';
   return '';
 };
-const SHOWN_STATUSES = ['enviado', 'aceptado']; // estados del presupuesto en los que el cliente ve la propuesta
+const SHOWN_STATUSES = ['enviado', 'aceptado'];
+const BRIEF_LOCKED_STAGES = [2, 4]; // Diseño y desarrollo, Publicación (contando desde 0)
+// Cambios entre dos versiones del brief (por pregunta)
+const diffSummary = (before, after) => {
+  const key = (row) => `${row.s}|${row.q}`;
+  const old = new Map(before.map((row) => [key(row), row.a]));
+  const now = new Set(after.map(key));
+  const changes = after.filter((row) => old.get(key(row)) !== row.a)
+    .map((row) => ({ s: row.s, q: row.q, before: old.has(key(row)) ? old.get(key(row)) : '', after: row.a }));
+  before.filter((row) => !now.has(key(row))).forEach((row) => changes.push({ s: row.s, q: row.q, before: row.a, after: '' }));
+  return changes.slice(0, 100);
+}; // estados del presupuesto en los que el cliente ve la propuesta
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -137,6 +148,10 @@ export class StudioData extends DurableObject {
     if (!briefColumns.includes('edited')) this.sql.exec("ALTER TABLE briefs ADD COLUMN edited TEXT NOT NULL DEFAULT ''");
     if (!briefColumns.includes('edit_seen')) this.sql.exec('ALTER TABLE briefs ADD COLUMN edit_seen INTEGER NOT NULL DEFAULT 1');
     if (!briefColumns.includes('prev_summary')) this.sql.exec("ALTER TABLE briefs ADD COLUMN prev_summary TEXT NOT NULL DEFAULT '[]'");
+    // Versión que el cliente envió por última vez y lista de cambios de su último envío (para el mail y para marcarle lo actualizado)
+    if (!briefColumns.includes('sent_summary')) this.sql.exec("ALTER TABLE briefs ADD COLUMN sent_summary TEXT NOT NULL DEFAULT '[]'");
+    if (!briefColumns.includes('last_changes')) this.sql.exec("ALTER TABLE briefs ADD COLUMN last_changes TEXT NOT NULL DEFAULT '[]'");
+    if (!briefColumns.includes('resent')) this.sql.exec("ALTER TABLE briefs ADD COLUMN resent TEXT NOT NULL DEFAULT ''");
     // Ajustes del sitio que Jimena cambia desde el panel (por ejemplo, el cartel de disponibilidad del inicio)
     this.sql.exec(`CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
@@ -295,6 +310,15 @@ export class StudioData extends DurableObject {
 
   // ---- Brief
   // El brief se abre con el link del cliente: el del presupuesto (si ya tiene proyecto) o el del proyecto creado a mano
+  // Una vez enviado, el brief se puede editar solo antes de empezar a diseñar (etapas 1 y 2) y en la revisión (etapa 4).
+  // Mientras diseño (etapa 3) y después de publicar (etapa 5) queda cerrado, para no recibir cambios constantes.
+  briefLocked(token) {
+    const brief = this.sql.exec('SELECT status FROM briefs WHERE token = ?', token).toArray()[0];
+    if (!brief || brief.status !== 'enviado') return false;
+    const project = this.sql.exec("SELECT stage FROM projects WHERE quote = ? OR (token = ? AND quote = '')", token, token).toArray()[0];
+    return Boolean(project && BRIEF_LOCKED_STAGES.includes(project.stage));
+  }
+
   briefTarget(token) {
     const fromQuote = this.sql.exec(`SELECT i.plan, i.lang, i.name, i.code, i.message FROM inquiries i JOIN projects p ON p.quote = i.token
       WHERE i.token = ? AND i.kind = 'presupuesto'`, token).toArray()[0];
@@ -312,9 +336,12 @@ export class StudioData extends DurableObject {
   brief(token) {
     const target = this.briefTarget(token);
     if (!target) return null;
-    const row = this.sql.exec('SELECT answers, status, sent, updated, edited FROM briefs WHERE token = ?', token).toArray()[0];
+    const row = this.sql.exec('SELECT answers, status, sent, updated, edited, resent, last_changes FROM briefs WHERE token = ?', token).toArray()[0];
     return {
       edited: row ? row.edited : '',
+      resent: row ? row.resent : '',
+      lastChanges: row ? JSON.parse(row.last_changes || '[]') : [],
+      locked: this.briefLocked(token),
       plan: planKey(target.planText),
       // Lo que pidió en el presupuesto: el brief suma preguntas solo para los adicionales que eligió
       request: target.request || '',
@@ -330,8 +357,9 @@ export class StudioData extends DurableObject {
   saveBrief(token, data) {
     const target = this.briefTarget(token);
     if (!target) return null;
+    if (this.briefLocked(token)) return { locked: true };
     const now = new Date().toISOString();
-    const before = this.sql.exec('SELECT status, sent, answers, summary, edited, edit_seen, prev_summary FROM briefs WHERE token = ?', token).toArray()[0];
+    const before = this.sql.exec('SELECT status, sent, answers, summary, edited, edit_seen, prev_summary, sent_summary, last_changes, resent FROM briefs WHERE token = ?', token).toArray()[0];
     const wasSent = Boolean(before && before.status === 'enviado');
     const answers = JSON.stringify(data.answers);
     const summary = JSON.stringify(data.summary);
@@ -343,17 +371,35 @@ export class StudioData extends DurableObject {
     const editSeen = changed ? 0 : (before ? before.edit_seen : 1);
     // "Antes" = lo último que vio Jimena: si ya había visto la edición anterior, la base pasa a ser lo que había
     const prevSummary = changed ? (before.edit_seen ? before.summary : before.prev_summary) : (before ? before.prev_summary : '[]');
-    this.sql.exec(`INSERT INTO briefs (token, lang, answers, summary, status, updated, sent, edited, edit_seen, prev_summary)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    // Cada envío guarda la versión enviada; si ya había uno antes, se anotan los cambios respecto de esa versión
+    let sentSummary = before ? before.sent_summary : '[]';
+    let lastChanges = before ? before.last_changes : '[]';
+    let resent = before ? before.resent : '';
+    let changes = [];
+    if (data.send) {
+      if (wasSent) {
+        changes = diffSummary(JSON.parse(before.sent_summary || '[]'), data.summary);
+        lastChanges = JSON.stringify(changes);
+        resent = now;
+      }
+      sentSummary = summary;
+    }
+    this.sql.exec(`INSERT INTO briefs (token, lang, answers, summary, status, updated, sent, edited, edit_seen, prev_summary, sent_summary, last_changes, resent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (token) DO UPDATE SET lang = excluded.lang, answers = excluded.answers, summary = excluded.summary,
       status = excluded.status, updated = excluded.updated, sent = excluded.sent, edited = excluded.edited,
-      edit_seen = excluded.edit_seen, prev_summary = excluded.prev_summary`,
-    token, data.lang, answers, summary, status, now, sent, edited, editSeen, prevSummary);
-    return { status, sent, edited, wasSent, client: target.client, code: target.code, planText: target.planText };
+      edit_seen = excluded.edit_seen, prev_summary = excluded.prev_summary, sent_summary = excluded.sent_summary,
+      last_changes = excluded.last_changes, resent = excluded.resent`,
+    token, data.lang, answers, summary, status, now, sent, edited, editSeen, prevSummary, sentSummary, lastChanges, resent);
+    // Mail del cliente: el del presupuesto o, si el proyecto se creó a mano, el que puso en el brief
+    const contact = this.sql.exec("SELECT email, name FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
+    const clientEmail = (contact && contact.email) || (typeof data.answers.email === 'string' ? data.answers.email.trim() : '');
+    return { status, sent, edited, wasSent, changes, resent, clientEmail, client: target.client, code: target.code, planText: target.planText };
   }
 
   addFile(token, field, name, type, bytes) {
     if (!this.briefTarget(token)) return { error: 'not found' };
+    if (this.briefLocked(token)) return { error: 'locked' };
     const totals = this.sql.exec('SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS total FROM brief_files WHERE token = ?', token).one();
     if (totals.n >= MAX_BRIEF_FILES) return { error: 'too many' };
     if (totals.total + bytes.byteLength > MAX_BRIEF_BYTES) return { error: 'too big' };
@@ -378,6 +424,7 @@ export class StudioData extends DurableObject {
   }
 
   removeFile(token, id) {
+    if (this.briefLocked(token)) return 'locked';
     const found = this.sql.exec('SELECT 1 FROM brief_files WHERE id = ? AND token = ?', id, token).toArray().length;
     if (!found) return false;
     this.sql.exec('DELETE FROM brief_chunks WHERE file = ?', id);
@@ -582,12 +629,19 @@ export async function handleStudio(request, env, ctx) {
         lang: LANGS.has(body.lang) ? body.lang : 'es', answers: body.answers, summary, send: body.send === true,
       });
       if (!saved) return notFound();
+      if (saved.locked) return json({ error: 'locked' }, 423);
       // Aviso a Jimena cuando el cliente lo envía
       if (body.send === true && env.MAIL_REPLY_TO) {
         const panel = `${SITE}/api/admin`;
-        try { await sendAnyMail(env, env.MAIL_REPLY_TO, briefReceivedMail({ ...saved, summary, panel, edited: saved.wasSent })); } catch { /* el brief quedó guardado igual */ }
+        try { await sendAnyMail(env, env.MAIL_REPLY_TO, briefReceivedMail({ ...saved, summary, panel, edited: saved.wasSent, changes: saved.changes })); } catch { /* el brief quedó guardado igual */ }
       }
-      return json({ ok: true, status: saved.status, sent: saved.sent, edited: saved.edited });
+      // Al cliente: copia de lo que actualizó
+      if (body.send === true && saved.wasSent && saved.clientEmail) {
+        const target = await store.quoteContact(token);
+        const clientLink = target ? `${quoteLink(target.lang, token)}#brief` : `${projectLink(LANGS.has(body.lang) ? body.lang : 'es', token)}#brief`;
+        try { await sendAnyMail(env, saved.clientEmail, briefUpdatedMail({ lang: LANGS.has(body.lang) ? body.lang : 'es', name: saved.client, changes: saved.changes, link: clientLink })); } catch { /* quedó guardado igual */ }
+      }
+      return json({ ok: true, status: saved.status, sent: saved.sent, edited: saved.edited, resent: saved.resent, lastChanges: saved.changes });
     }
 
     if (isFiles && !match[2] && request.method === 'POST') {
@@ -601,12 +655,15 @@ export async function handleStudio(request, env, ctx) {
       if (!bytes.byteLength || bytes.byteLength > MAX_FILE_BYTES) return json({ error: 'too big' }, 413);
       const saved = await store.addFile(token, field, name, type, bytes);
       if (saved.error === 'not found') return notFound();
+      if (saved.error === 'locked') return json(saved, 423);
       if (saved.error) return json(saved, 413);
       return json(saved);
     }
 
     if (isFiles && match[2] && request.method === 'DELETE') {
-      return (await store.removeFile(token, Number(match[2]))) ? json({ ok: true }) : notFound();
+      const removed = await store.removeFile(token, Number(match[2]));
+      if (removed === 'locked') return json({ error: 'locked' }, 423);
+      return removed ? json({ ok: true }) : notFound();
     }
     return notFound();
   }

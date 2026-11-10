@@ -191,7 +191,7 @@ export function briefInviteMail({ lang, name, link }) {
 }
 
 // A Jimena, cuando un cliente envía su brief: resumen de las respuestas y link al panel
-export function briefReceivedMail({ client, code, planText, summary, panel, edited }) {
+export function briefReceivedMail({ client, code, planText, summary, panel, edited, changes }) {
   const subject = `${edited ? 'Brief editado' : 'Brief recibido'} · ${client}${code ? ` · ${code}` : ''}`;
   let section = '';
   const rows = (summary || []).map((row) => {
@@ -206,7 +206,43 @@ export function briefReceivedMail({ client, code, planText, summary, panel, edit
       <p style="margin:0 0 16px;color:#625970;">${esc(planText || '')}</p>
       <a href="${esc(panel)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:12px 22px;">Ver el brief y los archivos en el panel →</a>
     </td></tr>
+    ${edited && changes && changes.length ? `<tr><td style="padding:16px 28px 0;"><p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#9a5b00;">Lo que cambió</p>${changesHtml(changes, { removed: '(respuesta quitada)' })}</td></tr>` : ''}
     <tr><td style="padding:12px 28px 28px;">${rows}</td></tr>`;
   const plain = [`${client} envió su brief.`, planText || '', `Panel: ${panel}`, '', ...(summary || []).map((row) => `${row.q}\n${row.a}\n`)].join('\n');
   return { subject, html: frame('es', subject, inner, ''), text: plain };
+}
+
+// Lista de cambios (antes → ahora), con los colores del sitio. La usan los dos mails de brief actualizado.
+const changesHtml = (changes, t) => (changes || []).map((c) => `
+      <div style="margin:0 0 12px;padding:10px 12px;background:#e2d0f0;border-radius:12px;">
+        <p style="margin:0 0 4px;font-size:13px;font-weight:800;color:#46385f;">${esc(c.q)}</p>
+        ${c.before ? `<p style="margin:0 0 4px;font-size:14px;line-height:1.5;color:#625970;text-decoration:line-through;white-space:pre-line;">${esc(c.before)}</p>` : ''}
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#211632;white-space:pre-line;">${c.after ? esc(c.after) : `<em style="color:#625970;">${esc(t.removed)}</em>`}</p>
+      </div>`).join('');
+
+const BRIEF_UPDATED = {
+  es: { subject: 'Actualizaste tu brief', hello: (n) => `Hola ${n}:`, intro: 'Recibí los cambios de tu brief. Te dejo una copia de lo que modificaste:', removed: '(respuesta quitada)', button: 'Ver mi brief', sign: 'Jimena Bernadaz', footer: 'Recibiste este mail porque actualizaste tu brief en jnbcreativestudio.com.ar.' },
+  en: { subject: 'You updated your brief', hello: (n) => `Hi ${n},`, intro: 'I received the changes to your brief. Here is a copy of what you changed:', removed: '(answer removed)', button: 'See my brief', sign: 'Jimena Bernadaz', footer: 'You received this email because you updated your brief on jnbcreativestudio.com.ar.' },
+  pt: { subject: 'Você atualizou o seu briefing', hello: (n) => `Olá, ${n}!`, intro: 'Recebi as alterações do seu briefing. Aqui vai uma cópia do que você mudou:', removed: '(resposta removida)', button: 'Ver meu briefing', sign: 'Jimena Bernadaz', footer: 'Você recebeu este e-mail porque atualizou o seu briefing em jnbcreativestudio.com.ar.' },
+};
+
+// Al cliente, cuando reenvía su brief con cambios: copia de lo que modificó
+export function briefUpdatedMail({ lang, name, changes, link }) {
+  const t = BRIEF_UPDATED[lang] || BRIEF_UPDATED.es;
+  const first = String(name || '').split(' ')[0];
+  const inner = `
+    <tr><td style="padding:16px 28px 0;font-size:16px;line-height:1.6;">
+      <p style="margin:0 0 12px;font-weight:700;">${esc(t.hello(first))}</p>
+      <p style="margin:0 0 16px;">${esc(t.intro)}</p>
+    </td></tr>
+    <tr><td style="padding:0 28px;">${changesHtml(changes, t)}</td></tr>
+    <tr><td style="padding:8px 28px 0;">
+      <a href="${esc(link)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:13px 24px;">${esc(t.button)} →</a>
+    </td></tr>
+    <tr><td style="padding:24px 28px 28px;font-size:15px;line-height:1.6;">
+      <p style="margin:0;font-weight:800;">${esc(t.sign)}</p>
+      <p style="margin:0;"><a href="https://jnbcreativestudio.com.ar" style="color:#5d31b8;text-decoration:none;">JNB Creative Studio</a></p>
+    </td></tr>`;
+  const plain = [t.hello(first), '', t.intro, '', ...(changes || []).map((c) => `${c.q}\n${c.before ? `- ${c.before}\n` : ''}+ ${c.after || t.removed}\n`), `${t.button}: ${link}`, '', t.sign].join('\n');
+  return { subject: t.subject, html: frame(lang, t.subject, inner, t.footer), text: plain };
 }

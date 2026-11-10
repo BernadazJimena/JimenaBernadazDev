@@ -59,6 +59,20 @@ export const adminPage = () => `<!doctype html>
   dialog.brief-view::backdrop { background: rgba(16, 11, 29, .55); }
   .brief-view-head { align-items: center; background: var(--card); border-bottom: 1px solid var(--line); display: flex; gap: .75rem; justify-content: space-between; padding: .9rem 1.1rem; position: sticky; top: 0; }
   .brief-view-body { padding: 1rem 1.1rem 1.5rem; }
+  .bv-top { align-items: center; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, var(--card)), var(--card)); border: 1px solid var(--line); border-radius: .9rem; display: flex; flex-wrap: wrap; gap: .6rem; justify-content: space-between; margin-bottom: .9rem; padding: .9rem 1rem; }
+  .bv-client { font-size: 1.15rem; font-weight: 800; margin: 0; }
+  .bv-card { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--bv); border-radius: .9rem; margin: 0 0 .9rem; padding: .3rem 1rem .8rem; }
+  .bv-head { align-items: center; color: var(--bv); display: flex; font-size: .8rem; gap: .5rem; letter-spacing: .08em; margin: .6rem 0 .3rem; text-transform: uppercase; }
+  .bv-icon { align-items: center; background: color-mix(in srgb, var(--bv) 16%, transparent); border-radius: .6rem; display: inline-flex; font-size: 1rem; height: 1.9rem; justify-content: center; width: 1.9rem; }
+  .bv-row { border-top: 1px solid var(--line); padding: .55rem 0 .2rem; }
+  .bv-row:first-of-type { border-top: 0; }
+  .bv-row .brief-view-q { color: var(--muted); font-size: .8rem; margin: 0 0 .2rem; }
+  .bv-row.is-changed { background: color-mix(in srgb, #f2b45c 10%, transparent); border-radius: .5rem; margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem; }
+  .ans-chip { border-radius: 999px; display: inline-block; font-size: .8rem; font-weight: 800; padding: .15rem .6rem; }
+  .ans-yes { background: color-mix(in srgb, #2fa36b 18%, transparent); color: #1f7a4d; }
+  .ans-no { background: color-mix(in srgb, var(--muted) 18%, transparent); color: var(--muted); }
+  @media (prefers-color-scheme: dark) { .ans-yes { color: #6fd3a0; } }
+  .bv-file-icon { font-size: 1.1rem; }
   .brief-view-section { color: var(--accent-ink); font-size: .75rem; font-weight: 800; letter-spacing: .08em; margin: 1.4rem 0 .5rem; text-transform: uppercase; }
   .brief-view-q { font-size: .85rem; font-weight: 800; margin: .8rem 0 .15rem; }
   .brief-view-a { margin: 0; white-space: pre-line; }
@@ -263,6 +277,8 @@ export const adminPage = () => `<!doctype html>
         + '<div class="row" style="margin-top:.6rem"><span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">'
         + (p.briefStatus === 'enviado' ? 'Brief enviado ✓ ' + date(p.briefSent) : p.briefStatus === 'borrador' ? 'Brief en curso' : 'Brief sin empezar') + '</span>'
         + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief · ' + date(p.briefEdited) + '</span>' : '')
+        // Mismo criterio que el servidor: enviado y en Diseño o Publicación = el cliente no puede cambiarlo
+        + (p.briefStatus === 'enviado' && (p.stage === 2 || p.stage === 4) ? '<span class="chip">🔒 Brief cerrado para cambios</span>' : (p.briefStatus === 'enviado' ? '<span class="chip">🔓 El cliente puede editarlo</span>' : ''))
         + (p.briefStatus ? '<button type="button" data-brief="' + esc(p.quote || p.token) + '">Ver brief' + (p.briefFiles ? ' y archivos (' + p.briefFiles + ')' : '') + '</button>' : '')
         + '<button type="button" data-copy="' + esc(projectLink(p) + '#brief') + '">Copiar link del brief</button>'
         + (p.quote ? '<button type="button" data-brief-mail="' + esc(p.quote) + '">Mandar link del brief por mail</button>' : '')
@@ -300,28 +316,51 @@ export const adminPage = () => `<!doctype html>
     const b = await api('brief/' + token);
     const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
     $('brief-view-title').textContent = 'Brief · ' + (b.client || '') + (b.code ? ' · ' + b.code : '');
-    let section = '';
     // Cambios de la última edición: comparando con lo que había antes
     const prev = new Map((b.prevSummary || []).map((r) => [r.s + '|' + r.q, r.a]));
     const hasPrev = Boolean(b.edited && prev.size);
-    const rows = (b.summary || []).map((r) => {
-      const head = r.s && r.s !== section ? '<p class="brief-view-section">' + esc(r.s) + '</p>' : '';
-      section = r.s || section;
-      const before = prev.get(r.s + '|' + r.q);
-      const changed = hasPrev && before !== r.a;
-      return head + '<p class="brief-view-q">' + esc(r.q) + (changed ? '<span class="tag-edit">' + (before === undefined ? 'Nuevo' : 'Editado') + '</span>' : '') + '</p>'
-        + '<p class="brief-view-a' + (changed ? ' is-changed' : '') + '">' + esc(r.a) + '</p>'
-        + (changed && before !== undefined ? '<p class="brief-view-prev">Antes: ' + esc(before) + '</p>' : '');
+    // Cada sección en su tarjeta, con ícono y color (sirve en los tres idiomas)
+    const SECTION_LOOK = [
+      [/antes|before|começar/i, '📋', '#7543d6'], [/vos y|you and|você e/i, '👤', '#5b8def'], [/marca|brand/i, '🎨', '#c06bd6'],
+      [/tienda|store|loja/i, '🛍️', '#e0a12b'], [/web a medida|custom|sob medida/i, '🖥️', '#3fa58a'], [/landing/i, '📄', '#3fa58a'],
+      [/contenido|content|conteúdo/i, '✍️', '#d0659b'], [/terminar|finish/i, '✅', '#2fa36b'],
+    ];
+    const look = (title) => (SECTION_LOOK.find(([re]) => re.test(title)) || [null, '•', '#7543d6']).slice(1);
+    const YES = /^(sí|si|yes|sim)$/i;
+    const NO = /^(no|não)$/i;
+    const answer = (a, changed) => {
+      if (YES.test(a)) return '<span class="ans-chip ans-yes">✓ ' + esc(a) + '</span>';
+      if (NO.test(a)) return '<span class="ans-chip ans-no">' + esc(a) + '</span>';
+      return '<p class="brief-view-a' + (changed ? ' is-changed' : '') + '">' + esc(a) + '</p>';
+    };
+    const groups = [];
+    (b.summary || []).forEach((r) => {
+      if (!groups.length || groups[groups.length - 1].s !== r.s) groups.push({ s: r.s, rows: [] });
+      groups[groups.length - 1].rows.push(r);
+    });
+    const rows = groups.map((g) => {
+      const [icon, color] = look(g.s);
+      return '<section class="bv-card" style="--bv:' + color + '"><h3 class="bv-head"><span class="bv-icon">' + icon + '</span>' + esc(g.s) + '</h3>'
+        + g.rows.map((r) => {
+          const before = prev.get(r.s + '|' + r.q);
+          const changed = hasPrev && before !== r.a;
+          return '<div class="bv-row' + (changed ? ' is-changed' : '') + '"><p class="brief-view-q">' + esc(r.q) + (changed ? '<span class="tag-edit">' + (before === undefined ? 'Nuevo' : 'Editado') + '</span>' : '') + '</p>'
+            + answer(r.a, changed)
+            + (changed && before !== undefined ? '<p class="brief-view-prev">Antes: ' + esc(before) + '</p>' : '') + '</div>';
+        }).join('') + '</section>';
     }).join('');
     const current = new Set((b.summary || []).map((r) => r.s + '|' + r.q));
     const removed = hasPrev ? (b.prevSummary || []).filter((r) => !current.has(r.s + '|' + r.q)) : [];
-    const removedHtml = removed.length ? '<p class="brief-view-section">Respuestas que quitó</p>' + removed.map((r) => '<p class="brief-view-q">' + esc(r.q) + '</p><p class="brief-view-prev">' + esc(r.a) + '</p>').join('') : '';
-    const editNote = b.edited ? '<div class="alert">' + (b.editUnseen ? '⚠ ' : '') + 'El cliente editó el brief después de enviarlo (última edición: ' + date(b.edited) + '). Lo que cambió está marcado.</div>' : '';
+    const removedHtml = removed.length ? '<section class="bv-card" style="--bv:#d0453f"><h3 class="bv-head"><span class="bv-icon">🗑️</span>Respuestas que quitó</h3>' + removed.map((r) => '<div class="bv-row"><p class="brief-view-q">' + esc(r.q) + '</p><p class="brief-view-prev">' + esc(r.a) + '</p></div>').join('') + '</section>' : '';
+    const editNote = b.edited ? '<div class="alert">' + (b.editUnseen ? '⚠ ' : '✏️ ') + 'El cliente editó el brief después de enviarlo (última edición: ' + date(b.edited) + '). Lo que cambió está marcado en amarillo.</div>' : '';
+    // Doble barra: esta página se arma dentro de un texto del Worker
+    const fileIcon = (name) => (/\\.(png|jpe?g|webp|gif|svg|heic|heif)$/i.test(name) ? '🖼️' : /\\.pdf$/i.test(name) ? '📕' : /\\.(xlsx?|ods|csv)$/i.test(name) ? '📊' : /\\.zip$/i.test(name) ? '🗜️' : '📝');
     const files = (b.files || []).length
-      ? '<p class="brief-view-section">Archivos</p><ul class="brief-files-list">' + b.files.map((f) => '<li><span>📎 ' + esc(f.name) + ' <small class="muted">' + size(f.size) + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">Descargar</button></li>').join('') + '</ul>'
+      ? '<section class="bv-card" style="--bv:#5b8def"><h3 class="bv-head"><span class="bv-icon">📎</span>Archivos (' + b.files.length + ')</h3><ul class="brief-files-list">' + b.files.map((f) => '<li><span class="bv-file-icon">' + fileIcon(f.name) + '</span><span>' + esc(f.name) + ' <small class="muted">' + size(f.size) + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">⬇ Descargar</button></li>').join('') + '</ul></section>'
       : '';
-    const state = b.status === 'enviado' ? 'Enviado el ' + date(b.sent) : b.status === 'borrador' ? 'Todavía no lo envió (en curso, actualizado ' + date(b.updated) + ')' : 'Todavía no empezó';
-    $('brief-view-body').innerHTML = editNote + '<p class="muted small">' + esc(b.planText || '') + ' · ' + LANG[b.lang] + ' · ' + state + '</p>' + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>') + removedHtml;
+    const stateChip = b.status === 'enviado' ? '<span class="chip ok">✓ Enviado el ' + date(b.sent) + '</span>' : b.status === 'borrador' ? '<span class="chip warn">✏️ En curso · ' + date(b.updated) + '</span>' : '<span class="chip">Sin empezar</span>';
+    const summaryCard = '<div class="bv-top"><div><p class="bv-client">' + esc(b.client || '') + '</p><p class="small muted" style="margin:0">' + esc(b.planText || '') + '</p></div><div class="row">' + stateChip + '<span class="chip">🌐 ' + LANG[b.lang] + '</span></div></div>';
+    $('brief-view-body').innerHTML = summaryCard + editNote + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>') + removedHtml;
     $('brief-view').showModal();
     // Abrirlo cuenta como "visto": se va la alerta
     if (b.editUnseen) { const fresh = await api('datos'); data.projects = fresh.projects; renderProjects(); }
