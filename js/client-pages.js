@@ -102,6 +102,27 @@
             thanks: '¡Muchas gracias! Recibí tu opinión. La reviso y la sumo a la web en los próximos días.',
             used: 'Ya recibí tu opinión. ¡Muchas gracias!',
             // Proyecto
+            // Textos del seguimiento cuando el proyecto es una tienda online (Plan Emprendedor)
+            store: {
+                projectKicker: 'Tienda online',
+                projectHelloLive: 'Hola, {name}. ¡Tu tienda ya está publicada!',
+                projectIntro: 'Desde acá podés seguir cada etapa de tu tienda y ver qué viene después.',
+                nextByStage: [
+                    'Para reservar tu lugar en mi agenda, confirmá el plan y aboná el anticipo.',
+                    'Enviame los textos, las fotos y los precios de tus productos, el logo y el acceso a tu tienda. Con todo listo, empiezo a armarla.',
+                    'No necesitás hacer nada por ahora: estoy armando tu tienda.',
+                    'Tu tienda está lista para revisar. Mirá la vista previa y enviame tus comentarios.',
+                    '¡Tu tienda ya está online! Compartila con tus clientes.',
+                ],
+                visit: 'Ver tu tienda',
+                stages: [
+                    ['Reserva y confirmación', 'Plan confirmado y pago recibido. Tu lugar en mi agenda está reservado.', 'Confirmás el plan y abonás el anticipo para reservar tu lugar en mi agenda.', 'Confirmás el plan y abonás el anticipo para reservar tu lugar en mi agenda.'],
+                    ['Recepción de materiales', 'Textos, fotos, precios, logo y acceso a tu tienda recibidos. ¡Todo listo para empezar!', 'Estoy esperando los textos, las fotos y los precios de tus productos, el logo y el acceso a tu tienda.', 'Me enviás los textos, las fotos y los precios de tus productos, el logo y el acceso a tu tienda.'],
+                    ['Diseño y configuración', 'Diseño y configuración terminados.', 'Estoy diseñando y configurando tu tienda.', 'Diseño y configuro tu tienda.'],
+                    ['Revisión y ajustes', 'Revisamos la tienda juntos y hice los ajustes.', 'Revisá el resultado y pedime los ajustes incluidos en tu plan.', 'Vas a poder revisar el resultado y pedirme los ajustes incluidos en tu plan.'],
+                    ['Publicación y entrega', 'Tu tienda está online y lista para vender.', 'Estoy dejando tu tienda lista para vender.', 'Tu tienda va a estar online y lista para vender.'],
+                ],
+            },
             projectKicker: 'Proyecto web',
             projectStatus: { going: 'En curso', live: 'Publicada' },
             projectHello: 'Hola, {name}. ¡Tu proyecto está en marcha!',
@@ -221,6 +242,26 @@
             errSend: 'It could not be sent. Please try again in a little while.',
             thanks: 'Thank you so much! I received your feedback. I will review it and add it to the website in the next few days.',
             used: 'I already received your feedback. Thank you so much!',
+            store: {
+                projectKicker: 'Online store',
+                projectHelloLive: 'Hi, {name}. Your store is live!',
+                projectIntro: 'Here you can follow each stage of your store and see what comes next.',
+                nextByStage: [
+                    'To book your spot in my schedule, confirm the plan and pay the deposit.',
+                    'Send me the texts, photos and prices of your products, your logo and access to your store. Once everything is ready, I start building it.',
+                    'You do not need to do anything for now: I am building your store.',
+                    'Your store is ready for review. Check the preview and send me your comments.',
+                    'Your store is live! Share it with your clients.',
+                ],
+                visit: 'Visit your store',
+                stages: [
+                    ['Booking and confirmation', 'Plan confirmed and payment received. Your spot in my schedule is booked.', 'You confirm the plan and pay the deposit to book your spot in my schedule.', 'You confirm the plan and pay the deposit to book your spot in my schedule.'],
+                    ['Content', 'Texts, photos, prices, logo and store access received. Everything is ready to start!', 'I am waiting for the texts, photos and prices of your products, your logo and access to your store.', 'You send me the texts, photos and prices of your products, your logo and access to your store.'],
+                    ['Design and setup', 'Design and setup finished.', 'I am designing and setting up your store.', 'I design and set up your store.'],
+                    ['Review and adjustments', 'We reviewed the store together and I made the adjustments.', 'Review the result and ask me for the adjustments included in your plan.', 'You will be able to review the result and ask me for the adjustments included in your plan.'],
+                    ['Launch and delivery', 'Your store is live and ready to sell.', 'I am getting your store ready to sell.', 'Your store will be live and ready to sell.'],
+                ],
+            },
             projectKicker: 'Website project',
             projectStatus: { going: 'In progress', live: 'Live' },
             projectHello: 'Hi, {name}. Your project is underway!',
@@ -328,7 +369,7 @@
             business: 'Seu negócio ou profissão',
             businessPh: 'Por exemplo: Confeitaria da Ana',
             opinion: 'Sua opinião',
-            opinionPh: 'Como foi o processo? O que você gostou no resultado?',
+            opinionPh: 'Como foi o processo? Do que você gostou no resultado?',
             consent: 'Aceito que minha opinião seja publicada em jnbcreativestudio.com.ar com meu nome e meu negócio.',
             send: 'Enviar minha opinião',
             sending: 'Enviando...',
@@ -339,6 +380,26 @@
             errSend: 'Não foi possível enviar. Tente de novo daqui a pouco.',
             thanks: 'Muito obrigada! Recebi sua opinião. Vou revisar e colocar no site nos próximos dias.',
             used: 'Já recebi sua opinião. Muito obrigada!',
+            store: {
+                projectKicker: 'Loja virtual',
+                projectHelloLive: 'Olá, {name}. Sua loja já está no ar!',
+                projectIntro: 'Aqui você pode acompanhar cada etapa da sua loja e ver o que vem depois.',
+                nextByStage: [
+                    'Para reservar seu lugar na minha agenda, confirme o plano e pague o sinal.',
+                    'Me envie os textos, as fotos e os preços dos seus produtos, o logo e o acesso à sua loja. Com tudo pronto, começo a montar.',
+                    'Você não precisa fazer nada por enquanto: estou montando a sua loja.',
+                    'Sua loja está pronta para revisão. Veja a prévia e me envie seus comentários.',
+                    'Sua loja já está no ar! Compartilhe com seus clientes.',
+                ],
+                visit: 'Ver sua loja',
+                stages: [
+                    ['Reserva e confirmação', 'Plano confirmado e pagamento recebido. Seu lugar na minha agenda está reservado.', 'Você confirma o plano e paga o sinal para reservar seu lugar na minha agenda.', 'Você confirma o plano e paga o sinal para reservar seu lugar na minha agenda.'],
+                    ['Recebimento de materiais', 'Textos, fotos, preços, logo e acesso à loja recebidos. Tudo pronto para começar!', 'Estou esperando os textos, as fotos e os preços dos seus produtos, o logo e o acesso à sua loja.', 'Você me envia os textos, as fotos e os preços dos seus produtos, o logo e o acesso à sua loja.'],
+                    ['Design e configuração', 'Design e configuração concluídos.', 'Estou criando e configurando a sua loja.', 'Crio e configuro a sua loja.'],
+                    ['Revisão e ajustes', 'Revisamos a loja juntos e fiz os ajustes.', 'Revise o resultado e me peça os ajustes incluídos no seu plano.', 'Você vai poder revisar o resultado e me pedir os ajustes incluídos no seu plano.'],
+                    ['Publicação e entrega', 'Sua loja está no ar e pronta para vender.', 'Estou deixando sua loja pronta para vender.', 'Sua loja vai estar no ar e pronta para vender.'],
+                ],
+            },
             projectKicker: 'Projeto de site',
             projectStatus: { going: 'Em andamento', live: 'No ar' },
             projectHello: 'Olá, {name}. Seu projeto está em andamento!',
@@ -854,7 +915,10 @@
     };
 
     const renderProject = (project) => {
-        const total = T.stages.length;
+        // Si el proyecto es una tienda online, los textos hablan de "tu tienda" en vez de "tu web"
+        const isStore = /emprendedor|empreendedor|tienda|loja|store/i.test(project.project || '');
+        const P = isStore ? { ...T, ...T.store } : T;
+        const total = P.stages.length;
         const last = total - 1;
         const isLive = project.stage >= last;
         const card = el('article', 'client-card client-project');
@@ -862,18 +926,18 @@
         // Encabezado: tipo de proyecto, estado y saludo
         const head = el('div', 'client-head');
         const titles = el('div');
-        titles.append(el('p', 'client-kicker', T.projectKicker), el('p', 'client-code', project.project));
-        head.append(titles, el('span', `client-status${isLive ? ' is-enviado' : ''}`, isLive ? T.projectStatus.live : T.projectStatus.going));
+        titles.append(el('p', 'client-kicker', P.projectKicker), el('p', 'client-code', project.project));
+        head.append(titles, el('span', `client-status${isLive ? ' is-enviado' : ''}`, isLive ? P.projectStatus.live : P.projectStatus.going));
         card.append(head);
         const intro = el('div');
-        intro.append(el('p', 'client-lead', fill(isLive ? T.projectHelloLive : T.projectHello, { name: project.client })));
-        if (!isLive) intro.append(el('p', 'client-date', T.projectIntro));
+        intro.append(el('p', 'client-lead', fill(isLive ? P.projectHelloLive : P.projectHello, { name: project.client })));
+        if (!isLive) intro.append(el('p', 'client-date', P.projectIntro));
         card.append(intro);
 
         // Barra de avance
         const percent = isLive ? 100 : Math.round((project.stage / last) * 100);
         const progress = el('div', 'client-progress');
-        const label = el('p', 'client-progress-label', fill(T.progress, { n: Math.min(project.stage + 1, total), total }));
+        const label = el('p', 'client-progress-label', fill(P.progress, { n: Math.min(project.stage + 1, total), total }));
         const bar = el('div', 'client-progress-bar');
         bar.setAttribute('role', 'progressbar');
         bar.setAttribute('aria-valuemin', '0');
@@ -888,24 +952,24 @@
 
         // Próximo paso y fecha estimada, lado a lado en pantallas anchas
         const highlights = el('div', 'client-highlights');
-        const next = section('client-next', T.nextTitle);
-        next.append(el('p', '', project.next || T.nextByStage[Math.min(project.stage, last)]));
+        const next = section('client-next', P.nextTitle);
+        next.append(el('p', '', project.next || P.nextByStage[Math.min(project.stage, last)]));
         if (project.preview) {
-            const previewButton = button(project.preview, isLive ? T.visit : T.preview, project.stage === 3 || isLive, true);
+            const previewButton = button(project.preview, isLive ? P.visit : P.preview, project.stage === 3 || isLive, true);
             next.append(previewButton);
         }
         highlights.append(next);
         if (!isLive && project.due) {
-            const due = section('client-due-box', T.dueTitle);
-            due.append(el('p', 'client-due-date', longDate(project.due)), el('p', 'client-date', T.dueHint));
+            const due = section('client-due-box', P.dueTitle);
+            due.append(el('p', 'client-due-date', longDate(project.due)), el('p', 'client-date', P.dueHint));
             highlights.append(due);
         }
         card.append(highlights);
 
         // Etapas
-        const status = section('client-status-list', T.statusTitle);
+        const status = section('client-status-list', P.statusTitle);
         const steps = el('ol', 'client-steps');
-        T.stages.forEach(([title, doneText, currentText, pendingText], index) => {
+        P.stages.forEach(([title, doneText, currentText, pendingText], index) => {
             const state = index < project.stage || (isLive && index === last) ? 'done' : index === project.stage ? 'current' : 'pending';
             const step = el('li', `client-step is-${state}`);
             if (state === 'current') step.setAttribute('aria-current', 'step');
@@ -913,7 +977,7 @@
             mark.setAttribute('aria-hidden', 'true');
             const body = el('div', 'client-step-body');
             const titleRow = el('p', 'client-step-title', `${index + 1}. ${title}`);
-            titleRow.append(' ', el('span', `client-step-tag is-${state}`, T.stateTag[state]));
+            titleRow.append(' ', el('span', `client-step-tag is-${state}`, P.stateTag[state]));
             body.append(titleRow, el('p', 'client-step-text', { done: doneText, current: currentText, pending: pendingText }[state]));
             step.append(mark, body);
             steps.append(step);
@@ -923,17 +987,17 @@
 
         if (project.note) {
             const note = el('div', 'client-note');
-            note.append(el('p', 'client-small-title', T.noteFrom), el('p', '', project.note));
+            note.append(el('p', 'client-small-title', P.noteFrom), el('p', '', project.note));
             card.append(note);
         }
 
         // Contacto
-        const help = section('client-help', T.helpTitle);
-        help.append(el('p', '', T.helpText));
+        const help = section('client-help', P.helpTitle);
+        help.append(el('p', '', P.helpText));
         const actions = el('div', 'client-actions');
-        actions.append(button(WHATSAPP + encodeURIComponent(T.writeText), T.write, false, true));
+        actions.append(button(WHATSAPP + encodeURIComponent(P.writeText), P.write, false, true));
         help.append(actions);
-        card.append(help, el('p', 'client-foot', fill(T.updated, { date: longDate(project.updated) })));
+        card.append(help, el('p', 'client-foot', fill(P.updated, { date: longDate(project.updated) })));
         return card;
     };
 
