@@ -91,6 +91,24 @@ export const adminPage = () => `<!doctype html>
   .avail-option input { accent-color: var(--accent); margin-top: .2rem; width: auto; }
   .avail-dot { border-radius: 50%; display: inline-block; flex-shrink: 0; height: .65rem; margin-top: .4rem; width: .65rem; }
   .avail-preview { background: var(--bg); border: 1px dashed var(--line); border-radius: .8rem; margin: .5rem 0 .75rem; padding: .6rem .8rem; }
+  .client-group-title { color: var(--muted); font-size: .75rem; font-weight: 800; letter-spacing: .08em; margin: 1rem 0 .4rem; text-transform: uppercase; }
+  .client-list { display: grid; gap: .5rem; }
+  .client-row { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: .9rem; display: grid; gap: .5rem .9rem; grid-template-columns: minmax(10rem, 1fr) auto 1rem; padding: .75rem 1rem; text-align: left; width: 100%; }
+  .client-row:hover { border-color: var(--accent); }
+  .client-row-main { display: flex; flex-direction: column; gap: .1rem; }
+  .client-row-main strong { font-size: 1rem; }
+  .client-row-tags { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; }
+  .client-row-go { color: var(--accent-ink); font-size: 1.4rem; font-weight: 800; }
+  @media (max-width: 640px) { .client-row { grid-template-columns: 1fr 1rem; } .client-row-tags { grid-column: 1; justify-content: flex-start; grid-row: 2; } .client-row-go { grid-row: 1 / span 2; grid-column: 2; } }
+  .subtabs { border-bottom: 1px solid var(--line); display: flex; gap: .3rem; margin: .5rem 0 1rem; overflow-x: auto; padding-bottom: .5rem; }
+  .subtabs button { flex-shrink: 0; }
+  .subtabs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+  .timeline li { display: grid; gap: .75rem; grid-template-columns: 2.2rem 1fr; padding-bottom: 1rem; position: relative; }
+  .timeline li:not(:last-child)::before { background: var(--line); bottom: 0; content: ""; left: 1.05rem; position: absolute; top: 2.3rem; width: 2px; }
+  .tl-icon { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 50%; display: flex; height: 2.2rem; justify-content: center; width: 2.2rem; }
+  .tl-text { font-weight: 700; margin: .35rem 0 .1rem; }
+  .coupon-code { border: 2px dashed var(--accent); border-radius: .8rem; font-size: 1.4rem; font-weight: 800; letter-spacing: .1em; margin: .3rem 0 .6rem; padding: .5rem; text-align: center; }
   [hidden] { display: none !important; }
 </style></head>
 <body><div class="wrap">
@@ -110,7 +128,7 @@ export const adminPage = () => `<!doctype html>
     <nav id="tabs">
       <button data-tab="consultas" aria-pressed="true">Consultas <span class="badge" id="n-consultas"></span></button>
       <button data-tab="resenas" aria-pressed="false">Reseñas <span class="badge" id="n-resenas"></span></button>
-      <button data-tab="proyectos" aria-pressed="false">Proyectos <span class="badge" id="n-proyectos"></span></button>
+      <button data-tab="proyectos" aria-pressed="false">Clientes <span class="badge" id="n-proyectos"></span></button>
       <button data-tab="cupones" aria-pressed="false">Cupones <span class="badge" id="n-cupones"></span></button>
       <button data-tab="faq" aria-pressed="false">Preguntas frecuentes</button>
     </nav>
@@ -200,11 +218,8 @@ export const adminPage = () => `<!doctype html>
   };
 
   // ---- Consultas y presupuestos
-  const renderInquiries = () => {
-    const list = data.inquiries;
-    $('n-consultas').textContent = list.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length || '';
-    const mailNote = data.mailReady ? '' : '<p class="small muted">El mail de confirmación todavía no se envía: faltan cargar RESEND_API_KEY y MAIL_FROM en Cloudflare. Las consultas se guardan igual.</p>';
-    $('tab-consultas').innerHTML = '<h2>Consultas y pedidos de presupuesto</h2>' + mailNote + (list.length ? list.map((q) => {
+  // Tarjeta de un pedido (en Consultas y en la ficha del cliente, pestaña Presupuesto)
+  const inquiryCard = (q, inClient) => {
       const isQuote = q.kind === 'presupuesto';
       const p = q.proposal || {};
       return '<article class="card" data-token="' + esc(q.token) + '">'
@@ -220,7 +235,7 @@ export const adminPage = () => `<!doctype html>
         + '</div>'
         + (q.coupon ? '<div class="alert" style="margin-top:.6rem">🎁 Usa el cupón <strong>' + esc(q.coupon) + '</strong>: aplicá 20 % de descuento en la propuesta. Queda usado cuando lo pases a "Aceptado".</div>' : '')
         + (isQuote ? linkBox(clientLink('mi-presupuesto', q.lang, q.token), q.lang, q.name.split(' ')[0])
-          + (q.status === 'aceptado' ? '<p class="small" style="margin-top:.5rem">✓ Ya tiene seguimiento en <strong>Proyectos</strong>. El cliente lo ve en este mismo link, en la pestaña "Estado del proyecto".</p>' : '') : '')
+          + (q.status === 'aceptado' && inClient !== true ? '<p class="small" style="margin-top:.5rem">✓ Ya es un proyecto en marcha. <button type="button" data-open-quote="' + esc(q.token) + '">Abrir la ficha del cliente</button></p>' : '') : '')
         + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
           + '<div class="grid"><label>Estado<select name="status">' + Object.entries(STATUS).map(([v, l]) => '<option value="' + v + '"' + (q.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
           + '<label>Precio<input name="price" placeholder="Ej.: ARS 450.000 o USD 380" value="' + esc(p.price) + '"></label>'
@@ -233,7 +248,13 @@ export const adminPage = () => `<!doctype html>
           + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta cuando el estado es "Enviado". Cuando te confirme por WhatsApp, pasalo a "Aceptado": se crea solo el seguimiento del proyecto y el cliente lo ve en este mismo link.</p>'
           + '<button class="primary">Guardar</button></form></details>' : '')
         + '</article>';
-    }).join('') : '<p class="empty">Todavía no hay consultas.</p>');
+  };
+
+  const renderInquiries = () => {
+    const list = data.inquiries;
+    $('n-consultas').textContent = list.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length || '';
+    const mailNote = data.mailReady ? '' : '<p class="small muted">El mail de confirmación todavía no se envía: faltan cargar RESEND_API_KEY y MAIL_FROM en Cloudflare. Las consultas se guardan igual.</p>';
+    $('tab-consultas').innerHTML = '<h2>Consultas y pedidos de presupuesto</h2>' + mailNote + (list.length ? list.map((q) => inquiryCard(q, false)).join('') : '<p class="empty">Todavía no hay consultas.</p>');
   };
 
   // ---- Reseñas
@@ -261,46 +282,121 @@ export const adminPage = () => `<!doctype html>
         + '<td class="n">' + (i.used ? '' : '<button data-copy="' + esc(clientLink('resena', 'es', i.token)) + '">Copiar link</button>') + '</td></tr>').join('') + '</tbody></table>' : '');
   };
 
-  // ---- Proyectos
+  // ---- Clientes: lista compacta y, al tocar un nombre, su ficha con pestañas
+  let selected = '';      // proyecto abierto
+  let subTab = 'estado';  // pestaña de la ficha
+  let clientFilter = '';
+  const SUBTABS = [['estado', '📍 Estado'], ['presupuesto', '💬 Presupuesto'], ['brief', '📝 Brief'], ['resena', '⭐ Reseña y cupón'], ['historial', '🕓 Historial']];
+  const briefLabel = (p) => (p.briefStatus === 'enviado' ? '📝 Brief ✓' : p.briefStatus === 'borrador' ? '📝 Brief en curso' : '📝 Sin brief');
+
+  const clientRow = (p) => '<button type="button" class="client-row" data-open="' + esc(p.token) + '">'
+    + '<span class="client-row-main"><strong>' + esc(p.client) + '</strong><span class="small muted">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + '</span></span>'
+    + '<span class="client-row-tags">' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '')
+    + '<span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>'
+    + '<span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">' + briefLabel(p) + '</span>'
+    + (p.coupon ? '<span class="chip">🎁</span>' : '') + (p.reviewDone ? '<span class="chip ok">⭐</span>' : '') + '</span>'
+    + '<span class="client-row-go" aria-hidden="true">›</span></button>';
+
   const renderProjects = () => {
     const editedBriefs = data.projects.filter((p) => p.briefEditUnseen);
     $('n-proyectos').textContent = editedBriefs.length ? '⚠ ' + editedBriefs.length : (data.projects.filter((p) => p.stage < STAGES.length - 1).length || '');
-    $('tab-proyectos').innerHTML = '<h2>Seguimiento de proyectos</h2>'
-      + (editedBriefs.length ? '<div class="alert">⚠ ' + (editedBriefs.length === 1 ? esc(editedBriefs[0].client) + ' editó su brief después de enviarlo.' : editedBriefs.length + ' clientes editaron su brief después de enviarlo: ' + editedBriefs.map((p) => esc(p.client)).join(', ') + '.') + ' Abrilo con "Ver brief" para ver qué cambió.</div>' : '')
-      + '<p class="muted">Los proyectos de presupuestos aceptados se crean solos. Acá podés crear uno a mano para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp).</p>'
-      + '<form class="card" id="new-project"><h3>Nuevo proyecto</h3><div class="grid">'
+    const p = data.projects.find((x) => x.token === selected);
+    if (!p) { selected = ''; renderClientList(editedBriefs); } else { renderClient(p); }
+  };
+
+  const renderClientList = (editedBriefs) => {
+    const q = clientFilter.trim().toLowerCase();
+    const list = data.projects.filter((p) => !q || (p.client + ' ' + p.project + ' ' + (p.quoteCode || '')).toLowerCase().includes(q));
+    const active = list.filter((p) => p.stage < STAGES.length - 1);
+    const done = list.filter((p) => p.stage >= STAGES.length - 1);
+    $('tab-proyectos').innerHTML = '<div class="row space"><h2 style="margin:0">Clientes</h2><span class="small muted">' + data.projects.length + ' en total</span></div>'
+      + (editedBriefs.length ? '<div class="alert" style="margin-top:.75rem">⚠ ' + (editedBriefs.length === 1 ? esc(editedBriefs[0].client) + ' editó su brief después de enviarlo.' : editedBriefs.length + ' clientes editaron su brief después de enviarlo: ' + editedBriefs.map((x) => esc(x.client)).join(', ') + '.') + ' Abrí su ficha, pestaña Brief, para ver qué cambió.</div>' : '')
+      + '<input type="search" id="client-search" placeholder="Buscar cliente o código" value="' + esc(clientFilter) + '" style="margin:.75rem 0">'
+      + (active.length ? '<p class="client-group-title">En curso (' + active.length + ')</p><div class="client-list">' + active.map(clientRow).join('') + '</div>' : '')
+      + (done.length ? '<p class="client-group-title">Publicados (' + done.length + ')</p><div class="client-list">' + done.map(clientRow).join('') + '</div>' : '')
+      + (!list.length ? '<p class="empty">' + (q ? 'No hay clientes con esa búsqueda.' : 'Todavía no hay clientes. Se crean solos al aceptar un presupuesto.') + '</p>' : '')
+      + '<details class="card" style="margin-top:1rem"><summary>➕ Crear un proyecto a mano</summary>'
+      + '<p class="small muted">Para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp).</p>'
+      + '<form id="new-project"><div class="grid">'
       + '<label>Nombre del cliente (lo ve el cliente)<input name="client" required placeholder="Ej.: Ana"></label>'
       + '<label>Proyecto<input name="project" required placeholder="Ej.: Landing · Plan Básico"></label>'
       + '<label>Idioma<select name="lang"><option value="es">Español</option><option value="en">Inglés</option><option value="pt">Portugués</option></select></label>'
-      + '<label>Entrega estimada<input type="date" name="due"></label></div><button class="primary">Crear</button></form>'
-      + (data.projects.length ? data.projects.map((p) => '<article class="card" data-project="' + esc(p.token) + '">'
-        + '<div class="row space"><div class="row"><strong>' + esc(p.client) + '</strong><span class="muted">' + esc(p.project) + '</span></div>'
-        + '<div class="row">' + (p.quoteCode ? '<span class="chip">Presupuesto ' + esc(p.quoteCode) + '</span>' : '') + '<span class="chip">' + STAGES[p.stage] + '</span></div></div>'
-        + linkBox(projectLink(p), p.lang, p.client)
-        + '<div class="row" style="margin-top:.6rem"><span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">'
-        + (p.briefStatus === 'enviado' ? 'Brief enviado ✓ ' + date(p.briefSent) : p.briefStatus === 'borrador' ? 'Brief en curso' : 'Brief sin empezar') + '</span>'
-        + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief · ' + date(p.briefEdited) + '</span>' : '')
-        // Mismo criterio que el servidor: enviado y en Diseño o Publicación = el cliente no puede cambiarlo
-        + (p.briefStatus === 'enviado' && (p.stage === 2 || p.stage === 4) ? '<span class="chip">🔒 Brief cerrado para cambios</span>' : (p.briefStatus === 'enviado' ? '<span class="chip">🔓 El cliente puede editarlo</span>' : ''))
-        + (p.coupon ? '<span class="chip">🎁 Cupón ' + esc(p.coupon) + (p.couponUsedBy ? ' · usado' : '') + '</span>' : '')
-        + (p.reviewToken ? '<span class="chip ' + (p.reviewDone ? 'ok' : '') + '">' + (p.reviewDone ? '⭐ Dejó su reseña' : '⭐ Reseña pedida') + '</span>' : '')
-        + (p.briefStatus ? '<button type="button" data-brief="' + esc(p.quote || p.token) + '">Ver brief' + (p.briefFiles ? ' y archivos (' + p.briefFiles + ')' : '') + '</button>' : '')
-        + '<button type="button" data-copy="' + esc(projectLink(p) + '#brief') + '">Copiar link del brief</button>'
-        + (p.quote ? '<button type="button" data-brief-mail="' + esc(p.quote) + '">Mandar link del brief por mail</button>' : '')
-        + '</div>'
-        + '<form class="project-form">'
-        // Etapas como botones: tocar una la guarda al instante y el cliente la ve al recargar su página
-        + '<p class="small muted" style="margin:.75rem 0 .4rem">Etapa actual (tocá la que corresponda; se guarda sola)</p>'
-        + '<div class="stepper" role="group" aria-label="Etapa del proyecto">' + STAGES.map((s, i) => '<button type="button" class="step' + (i < p.stage ? ' is-done' : '') + '" data-stage="' + i + '" aria-pressed="' + (p.stage === i) + '"><span class="step-num">' + (i < p.stage ? '✓' : i + 1) + '</span><span class="step-name">' + s + '</span></button>').join('') + '</div>'
+      + '<label>Entrega estimada<input type="date" name="due"></label></div><button class="primary">Crear</button></form></details>';
+  };
+
+  // Historial: lo guardado por el sitio más el pedido y la propuesta (que son anteriores al proyecto)
+  const historyOf = (p) => {
+    const items = (data.events || []).filter((e) => e.project === p.token).map((e) => ({ at: e.at, icon: e.icon, text: e.text }));
+    const q = p.quote ? data.inquiries.find((x) => x.token === p.quote) : null;
+    if (q) {
+      items.push({ at: q.created, icon: '📩', text: 'Pidió presupuesto (' + q.code + ')' + (q.coupon ? ' con el cupón ' + q.coupon : '') });
+      if (q.mailed) items.push({ at: q.created, icon: '✉️', text: 'Le llegó el mail de confirmación con su link' });
+      if (q.proposal && q.proposal.issued) items.push({ at: q.proposal.issued, icon: '💬', text: 'Le enviaste la propuesta (' + q.proposal.price + ')' });
+    }
+    if (p.briefStatus === 'borrador' && p.briefUpdated) items.push({ at: p.briefUpdated, icon: '✏️', text: 'Está completando el brief (último guardado)' });
+    return items.sort((a, b) => (a.at < b.at ? 1 : -1));
+  };
+
+  const renderClient = (p) => {
+    const q = p.quote ? data.inquiries.find((x) => x.token === p.quote) : null;
+    const head = '<button type="button" class="btn" data-back>← Todos los clientes</button>'
+      + '<div class="bv-top" style="margin-top:.75rem"><div><p class="bv-client">' + esc(p.client) + '</p><p class="small muted" style="margin:0">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + LANG[p.lang] + '</p></div>'
+      + '<div class="row"><span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '') + '</div></div>'
+      + '<nav class="subtabs">' + SUBTABS.map(([id, label]) => '<button type="button" data-sub="' + id + '" aria-pressed="' + (subTab === id) + '">' + label + (id === 'brief' && p.briefEditUnseen ? ' ⚠' : '') + '</button>').join('') + '</nav>';
+    let body = '';
+    if (subTab === 'estado') {
+      body = linkBox(projectLink(p), p.lang, p.client)
+        + '<form class="project-form card" style="margin-top:.75rem">'
+        + '<p class="small muted" style="margin:0 0 .4rem">Etapa actual (tocá la que corresponda; se guarda sola)</p>'
+        + '<div class="stepper" role="group" aria-label="Etapa del proyecto">' + STAGES.map((st, i) => '<button type="button" class="step' + (i < p.stage ? ' is-done' : '') + '" data-stage="' + i + '" aria-pressed="' + (p.stage === i) + '"><span class="step-num">' + (i < p.stage ? '✓' : i + 1) + '</span><span class="step-name">' + st + '</span></button>').join('') + '</div>'
         + '<input type="hidden" name="stage" value="' + p.stage + '">'
         + '<div class="grid"><label>Entrega estimada<input type="date" name="due" value="' + esc(p.due) + '"></label></div>'
         + '<label>Tu próximo paso (opcional: si lo dejás vacío, se muestra el texto de la etapa)<input name="next" maxlength="400" placeholder="Ej.: Todavía necesito tu logo y los textos de la sección Servicios." value="' + esc(p.next) + '"></label>'
         + '<label style="margin-top:.75rem">Link de vista previa (opcional)<input name="preview" placeholder="https://..." value="' + esc(p.preview) + '"></label>'
         + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note" placeholder="Ej.: Ya tengo tus fotos. Esta semana te mando la primera versión.">' + esc(p.note) + '</textarea></label>'
-        + '<div class="row" style="margin-top:.75rem"><button class="primary">Guardar</button>'
-        + '<button type="button" data-remove>Borrar</button>'
-        + '<span class="small muted">Actualizado ' + date(p.updated) + '</span></div></form></article>').join('')
-        : '<p class="empty">Todavía no hay proyectos.</p>');
+        + '<div class="row" style="margin-top:.75rem"><button class="primary">Guardar</button><button type="button" data-remove>Borrar proyecto</button>'
+        + '<span class="small muted">Actualizado ' + date(p.updated) + '</span></div></form>';
+    } else if (subTab === 'presupuesto') {
+      body = q ? inquiryCard(q, true) : '<p class="empty">Este proyecto se creó a mano: no tiene un pedido de presupuesto en el sitio.</p>';
+    } else if (subTab === 'brief') {
+      const lockChip = p.briefStatus === 'enviado' && (p.stage === 2 || p.stage === 4) ? '<span class="chip">🔒 Cerrado para cambios</span>' : (p.briefStatus === 'enviado' ? '<span class="chip">🔓 El cliente puede editarlo</span>' : '');
+      body = '<div class="row" style="margin-bottom:.75rem">' + lockChip
+        + '<button type="button" data-copy="' + esc(projectLink(p) + '#brief') + '">Copiar link del brief</button>'
+        + (p.quote ? '<button type="button" data-brief-mail="' + esc(p.quote) + '">Mandar link del brief por mail</button>' : '')
+        + (p.briefStatus ? '<button type="button" id="brief-print">🖨 Imprimir</button>' : '') + '</div>'
+        + '<div id="brief-inline"><p class="muted">Cargando el brief...</p></div>';
+    } else if (subTab === 'resena') {
+      const today = new Date().toISOString().slice(0, 10);
+      const c = (data.coupons || []).find((x) => x.code === p.coupon);
+      const cState = c ? (c.usedBy ? '✓ Usado en ' + c.usedBy : (c.expires < today ? 'Vencido' : 'Vigente')) : '';
+      body = (p.coupon
+        ? '<section class="bv-card" style="--bv:#7543d6"><h3 class="bv-head"><span class="bv-icon">🎁</span>Cupón de descuento</h3>'
+          + '<p class="coupon-code">' + esc(p.coupon) + '</p><table><tbody>'
+          + '<tr><td>Descuento</td><td class="n">' + (c ? c.percent : 20) + ' % en la próxima actualización</td></tr>'
+          + '<tr><td>Entregado</td><td class="n">' + (c ? date(c.created) : '') + '</td></tr>'
+          + '<tr><td>Vence</td><td class="n">' + (c ? day(c.expires) : '') + '</td></tr>'
+          + '<tr><td>Estado</td><td class="n"><span class="chip ' + (cState === 'Vigente' ? 'warn' : 'ok') + '">' + esc(cState) + '</span></td></tr></tbody></table></section>'
+        : '<p class="empty">El cupón se crea solo cuando pasás el proyecto a "Publicación y entrega".</p>')
+        + (p.reviewToken
+          ? '<section class="bv-card" style="--bv:#e0a12b"><h3 class="bv-head"><span class="bv-icon">⭐</span>Reseña</h3>'
+            + (p.reviewDone ? '<p>✓ Dejó su reseña. La aprobás en la pestaña <strong>Reseñas</strong>.</p>' : '<p>Se la pedimos al publicar. Todavía no respondió.</p><div class="row"><button type="button" data-copy="' + esc(clientLink('resena', p.lang, p.reviewToken)) + '">Copiar link de la reseña</button></div>')
+            + '</section>'
+          : '');
+    } else if (subTab === 'historial') {
+      const items = historyOf(p);
+      body = items.length ? '<ol class="timeline">' + items.map((it) => '<li><span class="tl-icon">' + it.icon + '</span><div><p class="tl-text">' + esc(it.text) + '</p><p class="small muted">' + date(it.at) + '</p></div></li>').join('') + '</ol>'
+        : '<p class="empty">Todavía no hay movimientos.</p>';
+    }
+    $('tab-proyectos').innerHTML = '<article data-project="' + esc(p.token) + '">' + head + '<div class="client-body">' + body + '</div></article>';
+    if (subTab === 'brief') loadBriefInline(p);
+  };
+
+  const openClient = (token, tab) => {
+    selected = token; subTab = tab || 'estado';
+    document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === 'proyectos')));
+    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq'].forEach((t) => { $('tab-' + t).hidden = t !== 'proyectos'; });
+    renderProjects();
+    window.scrollTo({ top: 0 });
   };
 
   // ---- Preguntas frecuentes
@@ -316,11 +412,17 @@ export const adminPage = () => `<!doctype html>
       + '</tbody></table>';
   };
 
-  // ---- Ver un brief: respuestas por sección y archivos para descargar
-  const openBrief = async (token) => {
+  // ---- Brief de un cliente: respuestas por sección y archivos para descargar (en su ficha, pestaña Brief)
+  let briefFiles = [];
+  let briefClient = '';
+  const loadBriefInline = async (p) => {
+    const token = p.quote || p.token;
+    const box = $('brief-inline');
+    if (!p.briefStatus) { box.innerHTML = '<p class="empty">Todavía no empezó el brief. Mandale el link con los botones de arriba.</p>'; return; }
     const b = await api('brief/' + token);
+    briefFiles = b.files || [];
+    briefClient = b.client || p.client;
     const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
-    $('brief-view-title').textContent = 'Brief · ' + (b.client || '') + (b.code ? ' · ' + b.code : '');
     // Cambios de la última edición: comparando con lo que había antes
     const prev = new Map((b.prevSummary || []).map((r) => [r.s + '|' + r.q, r.a]));
     const hasPrev = Boolean(b.edited && prev.size);
@@ -361,23 +463,62 @@ export const adminPage = () => `<!doctype html>
     // Doble barra: esta página se arma dentro de un texto del Worker
     const fileIcon = (name) => (/\\.(png|jpe?g|webp|gif|svg|heic|heif)$/i.test(name) ? '🖼️' : /\\.pdf$/i.test(name) ? '📕' : /\\.(xlsx?|ods|csv)$/i.test(name) ? '📊' : /\\.zip$/i.test(name) ? '🗜️' : '📝');
     const files = (b.files || []).length
-      ? '<section class="bv-card" style="--bv:#5b8def"><h3 class="bv-head"><span class="bv-icon">📎</span>Archivos (' + b.files.length + ')</h3><ul class="brief-files-list">' + b.files.map((f) => '<li><span class="bv-file-icon">' + fileIcon(f.name) + '</span><span>' + esc(f.name) + ' <small class="muted">' + size(f.size) + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">⬇ Descargar</button></li>').join('') + '</ul></section>'
+      ? '<section class="bv-card" style="--bv:#5b8def"><h3 class="bv-head"><span class="bv-icon">📎</span>Archivos (' + b.files.length + ')</h3><p class="small muted" style="margin:0 0 .5rem">Se descargan a la carpeta Descargas de tu compu.</p><div class="row" style="margin-bottom:.5rem"><button type="button" class="primary" id="zip-all">⬇ Descargar todos (.zip)</button></div><ul class="brief-files-list">' + b.files.map((f) => '<li><span class="bv-file-icon">' + fileIcon(f.name) + '</span><span>' + esc(f.name) + ' <small class="muted">' + size(f.size) + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">⬇ Descargar</button></li>').join('') + '</ul></section>'
       : '';
     const stateChip = b.status === 'enviado' ? '<span class="chip ok">✓ Enviado el ' + date(b.sent) + '</span>' : b.status === 'borrador' ? '<span class="chip warn">✏️ En curso · ' + date(b.updated) + '</span>' : '<span class="chip">Sin empezar</span>';
     const summaryCard = '<div class="bv-top"><div><p class="bv-client">' + esc(b.client || '') + '</p><p class="small muted" style="margin:0">' + esc(b.planText || '') + '</p></div><div class="row">' + stateChip + '<span class="chip">🌐 ' + LANG[b.lang] + '</span></div></div>';
-    $('brief-view-body').innerHTML = summaryCard + editNote + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>') + removedHtml;
-    $('brief-view').showModal();
-    // Abrirlo cuenta como "visto": se va la alerta
-    if (b.editUnseen) { const fresh = await api('datos'); data.projects = fresh.projects; renderProjects(); }
+    if (!$('brief-inline')) return;
+    $('brief-inline').innerHTML = summaryCard + editNote + files + (rows || '<p class="empty">Todavía no hay respuestas.</p>') + removedHtml;
+    // Abrirlo cuenta como "visto": se va la alerta (se actualiza la lista sin volver a dibujar el brief)
+    if (b.editUnseen) { const fresh = await api('datos'); data.projects = fresh.projects; const pr = data.projects.find((x) => x.token === p.token); if (pr) { $('n-proyectos').textContent = ''; } }
   };
-  $('brief-view-close').addEventListener('click', () => $('brief-view').close());
-  $('brief-view-print').addEventListener('click', () => {
+  const printBrief = () => {
     const w = window.open('', '_blank');
     if (!w) return;
-    w.document.write('<!doctype html><meta charset="utf-8"><title>' + esc($('brief-view-title').textContent) + '</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:44rem;margin:2rem auto;padding:0 1rem;color:#211632}.brief-view-section{color:#5d31b8;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:1.4rem 0 .4rem}.brief-view-q{font-weight:800;margin:.8rem 0 .1rem}.brief-view-a{margin:0;white-space:pre-line}button{display:none}ul{padding-left:1rem}</style><h1>' + esc($('brief-view-title').textContent) + '</h1>' + $('brief-view-body').innerHTML);
+    const title = 'Brief · ' + briefClient;
+    w.document.write('<!doctype html><meta charset="utf-8"><title>' + esc(title) + '</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:44rem;margin:2rem auto;padding:0 1rem;color:#211632}.brief-view-section{color:#5d31b8;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:1.4rem 0 .4rem}.brief-view-q{font-weight:800;margin:.8rem 0 .1rem}.brief-view-a{margin:0;white-space:pre-line}button{display:none}ul{padding-left:1rem}.bv-card{border:1px solid #d9c6e8;border-radius:12px;padding:4px 14px 10px;margin:0 0 12px}.bv-head{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#5d31b8}</style><h1>' + esc(title) + '</h1>' + $('brief-inline').innerHTML);
     w.document.close();
     w.print();
-  });
+  };
+
+  // Todos los archivos del brief en un .zip (la herramienta JSZip se carga recién al tocar el botón, con su huella de seguridad)
+  const loadZip = () => (window.JSZip ? Promise.resolve() : new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    sc.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==';
+    sc.crossOrigin = 'anonymous';
+    sc.referrerPolicy = 'no-referrer';
+    sc.onload = resolve; sc.onerror = reject;
+    document.head.append(sc);
+  }));
+  const zipAll = async (btn) => {
+    btn.disabled = true;
+    const label = btn.textContent;
+    try {
+      await loadZip();
+      const zip = new window.JSZip();
+      const used = new Set();
+      for (let k = 0; k < briefFiles.length; k += 1) {
+        const f = briefFiles[k];
+        btn.textContent = 'Preparando ' + (k + 1) + ' de ' + briefFiles.length + '...';
+        const res = await fetch('/api/admin/archivo/' + f.id, { headers: { 'x-clave': key } });
+        if (!res.ok) throw new Error(res.status);
+        let name = f.name;
+        while (used.has(name)) name = (k + 1) + '-' + name;
+        used.add(name);
+        zip.file(name, await res.blob());
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'brief-' + briefClient.toLowerCase().replace(/[^a-z0-9áéíóúñü]+/gi, '-').replace(/^-|-$/g, '') + '.zip';
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('Listo: el .zip quedó en tu carpeta Descargas');
+    } catch (err) { toast('No se pudo armar el .zip. Descargalos de a uno.'); }
+    btn.disabled = false;
+    btn.textContent = label;
+  };
 
   // ---- Cartel "Disponible para nuevos proyectos" del inicio
   const AVAIL = [
@@ -444,10 +585,19 @@ export const adminPage = () => `<!doctype html>
   });
   $('logout').addEventListener('click', () => { key = ''; try { sessionStorage.removeItem('jnb-admin'); } catch (e) {} showLogin(false); });
 
+  document.addEventListener('input', (e) => {
+    if (e.target.id !== 'client-search') return;
+    clientFilter = e.target.value;
+    const pos = e.target.selectionStart;
+    renderProjects();
+    const again = $('client-search'); again.focus(); again.setSelectionRange(pos, pos);
+  });
+
   $('tabs').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-tab]'); if (!b) return;
     document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     ['consultas', 'resenas', 'proyectos', 'cupones', 'faq'].forEach((t) => { $('tab-' + t).hidden = t !== b.dataset.tab; });
+    if (b.dataset.tab === 'proyectos') { selected = ''; renderProjects(); }
   });
 
   document.addEventListener('click', async (e) => {
@@ -460,8 +610,16 @@ export const adminPage = () => `<!doctype html>
       const w = window.open('', '_blank'); if (w) { w.document.write(html); w.document.close(); }
       return;
     }
-    const briefBtn = e.target.closest('[data-brief]');
-    if (briefBtn) { openBrief(briefBtn.dataset.brief); return; }
+    const openBtn = e.target.closest('[data-open]');
+    if (openBtn) { openClient(openBtn.dataset.open); return; }
+    const openQuote = e.target.closest('[data-open-quote]');
+    if (openQuote) { const pr = data.projects.find((x) => x.quote === openQuote.dataset.openQuote); if (pr) openClient(pr.token, 'presupuesto'); return; }
+    if (e.target.closest('[data-back]')) { selected = ''; renderProjects(); return; }
+    const sub = e.target.closest('[data-sub]');
+    if (sub) { subTab = sub.dataset.sub; renderProjects(); return; }
+    if (e.target.closest('#brief-print')) { printBrief(); return; }
+    const zipBtn = e.target.closest('#zip-all');
+    if (zipBtn) { zipAll(zipBtn); return; }
     const briefMail = e.target.closest('[data-brief-mail]');
     if (briefMail) {
       if (!confirm('¿Mandarle al cliente el link del brief por mail?')) return;

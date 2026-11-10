@@ -51,6 +51,7 @@ const planKey = (text) => {
 };
 const SHOWN_STATUSES = ['enviado', 'aceptado'];
 const LAUNCH_STAGE = 4;          // "Publicación y entrega" (contando desde 0)
+const STAGE_NAMES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
 const COUPON_PERCENT = 20;       // descuento para la próxima actualización
 const COUPON_MONTHS = 3;         // vence a los 3 meses de entregado; se usa una sola vez
 const newCouponCode = () => `GRACIAS-${randomFrom(SAFE_LETTERS, 5)}`;
@@ -175,6 +176,14 @@ export class StudioData extends DurableObject {
     if (!projectColumns.includes('coupon')) this.sql.exec("ALTER TABLE projects ADD COLUMN coupon TEXT NOT NULL DEFAULT ''");
     const inquiryColumns = this.sql.exec('PRAGMA table_info(inquiries)').toArray().map((c) => c.name);
     if (!inquiryColumns.includes('coupon')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN coupon TEXT NOT NULL DEFAULT ''");
+    // Historial de cada cliente: lo que va pasando con su proyecto (lo ve Jimena en la ficha del cliente)
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS project_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project TEXT NOT NULL,
+      at TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      text TEXT NOT NULL
+    )`);
     // Ajustes del sitio que Jimena cambia desde el panel (por ejemplo, el cartel de disponibilidad del inicio)
     this.sql.exec(`CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
@@ -212,6 +221,17 @@ export class StudioData extends DurableObject {
     this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon);
     return { code, token, created: now.toISOString(), coupon };
+  }
+
+  // ---- Historial
+  logEvent(project, icon, text) {
+    if (project) this.sql.exec('INSERT INTO project_events (project, at, icon, text) VALUES (?, ?, ?, ?)', project, new Date().toISOString(), icon, text);
+  }
+
+  // Proyecto de un link de cliente (el del presupuesto o el del proyecto)
+  projectOf(token) {
+    const row = this.sql.exec("SELECT token FROM projects WHERE quote = ? OR (token = ? AND quote = '')", token, token).toArray()[0];
+    return row ? row.token : '';
   }
 
   // ---- Cupones
@@ -256,7 +276,11 @@ export class StudioData extends DurableObject {
     // Al aceptarlo se crea solo el seguimiento del proyecto, vinculado a este presupuesto (una sola vez)
     if (status === 'aceptado') {
       const used = this.sql.exec("SELECT code, coupon FROM inquiries WHERE token = ? AND coupon != ''", token).toArray()[0];
-      if (used && this.couponState(used.coupon).valid) this.sql.exec("UPDATE coupons SET used_inquiry = ?, used_at = ? WHERE code = ? AND used_inquiry = ''", used.code, new Date().toISOString(), used.coupon);
+      if (used && this.couponState(used.coupon).valid) {
+        this.sql.exec("UPDATE coupons SET used_inquiry = ?, used_at = ? WHERE code = ? AND used_inquiry = ''", used.code, new Date().toISOString(), used.coupon);
+        const owner = this.sql.exec('SELECT project FROM coupons WHERE code = ?', used.coupon).toArray()[0];
+        if (owner) this.logEvent(owner.project, '🎁', `Usó su cupón ${used.coupon} en el presupuesto ${used.code}`);
+      }
     }
     let created = false;
     if (status === 'aceptado' && !this.sql.exec('SELECT 1 FROM projects WHERE quote = ?', token).toArray().length) {
@@ -289,6 +313,8 @@ export class StudioData extends DurableObject {
     this.sql.exec(`INSERT INTO reviews (invitation, created, lang, name, business, body) VALUES (?, ?, ?, ?, ?, ?)`,
       token, new Date().toISOString(), review.lang, review.name, review.business, review.body);
     this.sql.exec('UPDATE invitations SET used = 1 WHERE token = ?', token);
+    const project = this.sql.exec('SELECT token FROM projects WHERE review_token = ?', token).toArray()[0];
+    if (project) this.logEvent(project.token, '⭐', 'Dejó su reseña');
     return true;
   }
 
@@ -308,6 +334,7 @@ export class StudioData extends DurableObject {
     const now = new Date().toISOString();
     this.sql.exec(`INSERT INTO projects (token, client, project, lang, due, quote, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       token, project.client, project.project, project.lang, project.due, project.quote || '', now, now);
+    this.logEvent(token, '🤝', project.quote ? 'Aceptó el presupuesto: se creó el proyecto y se le pidió el brief' : 'Proyecto creado a mano');
     return token;
   }
 
@@ -325,6 +352,7 @@ export class StudioData extends DurableObject {
     if (!project) return false;
     this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
       changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
+    if (changes.stage !== project.stage) this.logEvent(token, '📍', `Etapa: ${STAGE_NAMES[changes.stage] || changes.stage}`);
     if (changes.stage !== LAUNCH_STAGE || project.coupon) return true;
     // Recién publicado: cupón de descuento y link para la reseña, y los datos para mandarle el mail
     const now = new Date();
@@ -343,6 +371,7 @@ export class StudioData extends DurableObject {
       code, token, name, email, project.lang, COUPON_PERCENT, now.toISOString(), expires);
     const reviewToken = this.invite(name);
     this.sql.exec('UPDATE projects SET coupon = ?, review_token = ? WHERE token = ?', code, reviewToken, token);
+    this.logEvent(token, '🎉', `Publicado: se entregó el cupón ${code} (vence ${expires}) y se pidió la reseña`);
     return { launched: true, coupon: code, expires, reviewToken, email, name, lang: project.lang, linkToken, fromQuote: Boolean(project.quote), store: planKey(project.project) === 'emprendedor' };
   }
 
@@ -464,6 +493,7 @@ export class StudioData extends DurableObject {
       edit_seen = excluded.edit_seen, prev_summary = excluded.prev_summary, sent_summary = excluded.sent_summary,
       last_changes = excluded.last_changes, resent = excluded.resent`,
     token, data.lang, answers, summary, status, now, sent, edited, editSeen, prevSummary, sentSummary, lastChanges, resent);
+    if (data.send) this.logEvent(this.projectOf(token), wasSent ? '✏️' : '📝', wasSent ? `Actualizó el brief (${changes.length} ${changes.length === 1 ? 'cambio' : 'cambios'})` : 'Envió el brief');
     // Mail del cliente: el del presupuesto o, si el proyecto se creó a mano, el que puso en el brief
     const contact = this.sql.exec("SELECT email, name FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     const clientEmail = (contact && contact.email) || (typeof data.answers.email === 'string' ? data.answers.email.trim() : '');
@@ -560,6 +590,7 @@ export class StudioData extends DurableObject {
         ORDER BY p.updated DESC`).toArray(),
       coupons: this.sql.exec(`SELECT c.code, c.client, c.email, c.lang, c.percent, c.created, c.expires, c.used_inquiry AS usedBy, c.used_at AS usedAt
         FROM coupons c ORDER BY c.created DESC`).toArray(),
+      events: this.sql.exec('SELECT project, at, icon, text FROM project_events ORDER BY at DESC LIMIT 3000').toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
     };
   }
