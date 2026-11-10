@@ -380,7 +380,7 @@
 
 .blog-card-detail {
     background: rgba(29, 19, 64, .94);
-    height: 62.5cqw; /* la altura de la foto (proporción 16:10) */
+    min-height: 62.5cqw; /* cubre la foto (proporción 16:10); si el texto no entra, crece hacia abajo en vez de hacer scroll */
     border-top: 0;
     box-sizing: border-box;
     display: flex;
@@ -388,7 +388,7 @@
     justify-content: center;
     left: 0;
     margin: 0;
-    overflow-y: auto;
+    overflow: visible;
     padding: 1rem 1.25rem;
     position: absolute;
     right: 0;
@@ -408,4 +408,126 @@
 
 .blog-card-detail .blog-card-more {
     color: #d9c9ff;
+}
+
+/* Cards angostas: la frase un poco más chica para que entre sobre la foto */
+@container (max-width: 18rem) {
+    .blog-card-detail {
+        padding: .75rem 1rem;
+    }
+
+    .blog-card-detail .blog-card-quote {
+        font-size: .875rem;
+        margin-bottom: .4rem;
+    }
+
+    .blog-card-detail .blog-meta {
+        margin-bottom: .4rem;
+    }
+}
+
+/* "Me gusta" del blog (los agrega js/blog-likes.js; quedan ocultos hasta que el servidor responde) */
+.blog-like,
+.blog-like-box {
+    display: none;
+}
+
+.blog-likes-ready .blog-like {
+    display: inline-flex;
+}
+
+.blog-likes-ready .blog-like-box {
+    display: flex;
+}
+
+.blog-like {
+    align-items: center;
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 800;
+    gap: .4rem;
+    line-height: 1;
+    padding: .45rem .8rem .45rem .65rem;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.blog-like:hover,
+.blog-like:focus-visible {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.blog-like:disabled {
+    cursor: progress;
+}
+
+.blog-like-icon {
+    fill: none;
+    height: 1.1rem;
+    stroke: currentColor;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+    width: 1.1rem;
+}
+
+.blog-like[aria-pressed="true"] {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.blog-like[aria-pressed="true"] .blog-like-icon {
+    fill: currentColor;
+}
+
+.blog-like.is-popping .blog-like-icon {
+    animation: blog-like-pop .35s ease;
+}
+
+@keyframes blog-like-pop {
+    40% { transform: scale(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .blog-like.is-popping .blog-like-icon {
+        animation: none;
+    }
+}
+
+/* En la card: abajo a la derecha, a la altura de "Ver más" */
+.blog-card summary .blog-like {
+    bottom: .8rem;
+    padding: .3rem .7rem .3rem .55rem;
+    position: absolute;
+    right: 1.25rem;
+}
+
+/* Al final del artículo */
+.blog-like-box {
+    align-items: center;
+    border-top: .08rem solid var(--rule);
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+}
+
+.blog-like-text {
+    color: var(--text);
+    font-weight: 700;
+    margin: 0;
+}
+
+.blog-like-box .blog-like {
+    font-size: 1rem;
+    padding: .55rem 1rem .55rem .8rem;
+}
+
+.blog-like-box .blog-like-icon {
+    height: 1.3rem;
+    width: 1.3rem;
 }
