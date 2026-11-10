@@ -29,6 +29,10 @@
             validUntil: 'Válido hasta el {date}.',
             expired: 'Este presupuesto venció el {date}. Escribime y te lo actualizo.',
             note: 'Nota',
+            payTitle: 'Cómo pagar',
+            payDirect: 'Directamente conmigo: 50 % de anticipo para empezar y 50 % en la entrega.',
+            payStore: 'En mi tienda de Tiendanube: con tarjeta de crédito, en hasta 12 cuotas.',
+            payStoreButton: 'Pagar en cuotas en mi tienda',
             accept: 'Aceptar por WhatsApp',
             question: 'Tengo una consulta',
             acceptText: 'Hola Jimena, quiero avanzar con el presupuesto {code}.',
@@ -86,6 +90,10 @@
             validUntil: 'Valid until {date}.',
             expired: 'This quote expired on {date}. Write to me and I will update it.',
             note: 'Note',
+            payTitle: 'How to pay',
+            payDirect: 'Directly with me: a 50% deposit to get started and the remaining 50% on delivery.',
+            payStore: 'In my online store (Tiendanube): by credit card, in up to 12 installments.',
+            payStoreButton: 'Pay in installments in my store',
             accept: 'Accept on WhatsApp',
             question: 'I have a question',
             acceptText: 'Hi Jimena, I would like to go ahead with quote {code}.',
@@ -141,6 +149,10 @@
             validUntil: 'Válido até {date}.',
             expired: 'Este orçamento venceu em {date}. Escreva para mim e eu atualizo.',
             note: 'Observação',
+            payTitle: 'Como pagar',
+            payDirect: 'Diretamente comigo: sinal de 50% para começar e os 50% restantes na entrega.',
+            payStore: 'Na minha loja virtual (Tiendanube): no cartão de crédito, em até 12 parcelas.',
+            payStoreButton: 'Pagar parcelado na minha loja',
             accept: 'Aceitar pelo WhatsApp',
             question: 'Tenho uma dúvida',
             acceptText: 'Olá Jimena, quero seguir com o orçamento {code}.',
@@ -256,6 +268,13 @@
                 items.forEach((item) => list.append(el('li', '', item)));
                 box.append(list);
             }
+            // Cómo pagar: directo (50 % y 50 %) o, si Jimena dejó el link, en cuotas desde la tienda
+            const pay = el('div', 'client-pay');
+            const payList = el('ul', 'client-list');
+            payList.append(el('li', '', T.payDirect));
+            if (proposal.storeLink) payList.append(el('li', '', T.payStore));
+            pay.append(el('h3', 'client-small-title', T.payTitle), payList);
+            box.append(pay);
             if (proposal.note) {
                 const note = el('div', 'client-note');
                 note.append(el('p', 'client-small-title', T.note), el('p', '', proposal.note));
@@ -266,6 +285,7 @@
             if (proposal.validUntil) box.append(el('p', `client-valid${expired ? ' is-expired' : ''}`, fill(expired ? T.expired : T.validUntil, { date: longDate(proposal.validUntil) })));
             const actions = el('div', 'client-actions');
             if (!expired) actions.append(button(WHATSAPP + encodeURIComponent(fill(T.acceptText, { code: quote.code })), T.accept, true, true));
+            if (!expired && proposal.storeLink) actions.append(button(proposal.storeLink, T.payStoreButton, false, true));
             actions.append(button(WHATSAPP + encodeURIComponent(fill(T.questionText, { code: quote.code })), T.question, expired, true));
             box.append(actions);
             card.append(box);

@@ -30,6 +30,7 @@ const LANGS = new Set(['es', 'en', 'pt']);
 const TOKEN = /^[A-Za-z0-9]{20,40}$/;
 const CODE = /^JNB-\d{4}-[A-Z0-9]{4}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const STORE_LINK = /^https:\/\/jnbcreativestudio\.mitiendanube\.com(\/[^\s"<>]*)?$/;
 const DAY = 24 * 60 * 60 * 1000;
 const KEEP_INQUIRIES_DAYS = 365;     // las consultas se borran solas al año
 const MIN_PUBLIC_REVIEWS = 3;        // la sección de reseñas no aparece con menos de esto
@@ -362,6 +363,8 @@ export async function handleStudio(request, env, ctx) {
         includes: text(body.includes, 2000),
         validUntil: isoDate(body.validUntil),
         note: text(body.note, 1500),
+        // Link del plan en la tienda de Tiendanube (para pagar en cuotas). Solo se aceptan links de la tienda.
+        storeLink: typeof body.storeLink === 'string' && STORE_LINK.test(body.storeLink.trim()) ? body.storeLink.trim() : '',
       } : null;
       if (proposal && !proposal.price) return badRequest();
       return (await store.setQuote(match[1], status, proposal)) ? json({ ok: true }) : notFound();

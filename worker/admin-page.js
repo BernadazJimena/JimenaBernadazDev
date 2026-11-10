@@ -134,6 +134,8 @@ export const adminPage = () => `<!doctype html>
           + '<label>Válido hasta<input type="date" name="validUntil" value="' + esc(p.validUntil) + '"></label></div>'
           + '<label>Qué incluye (uno por renglón)<textarea name="includes">' + esc(p.includes) + '</textarea></label>'
           + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note">' + esc(p.note) + '</textarea></label>'
+          + '<label style="margin-top:.75rem">Link para pagar en cuotas en tu tienda (dejalo vacío si este presupuesto no se puede pagar ahí)'
+          + '<input name="storeLink" placeholder="https://jnbcreativestudio.mitiendanube.com/productos/..." value="' + esc(q.proposal ? p.storeLink : 'https://jnbcreativestudio.mitiendanube.com/') + '"></label>'
           + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta solo cuando el estado es "Enviado".</p>'
           + '<button class="primary">Guardar</button></form></details>' : '')
         + '</article>';

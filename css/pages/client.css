@@ -313,7 +313,13 @@
     padding: 0;
 }
 
+/* Las tarjetas de una misma fila miden lo mismo, y el nombre queda siempre abajo */
+.reviews-grid > li {
+    display: flex;
+}
+
 .review-card {
+    flex: 1;
     background: var(--surface);
     border: .08rem solid var(--line);
     border-radius: var(--radius);
