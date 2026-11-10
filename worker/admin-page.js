@@ -122,6 +122,17 @@ export const adminPage = () => `<!doctype html>
   const day = (iso) => iso ? iso.split('-').reverse().join('/') : '';
   const clientLink = (page, lang, token) => location.origin + '/' + page + '/' + (lang === 'es' ? '' : lang) + '?c=' + token;
   const $ = (id) => document.getElementById(id);
+  // Un solo link por cliente: si el proyecto salió de un presupuesto, se usa el link del presupuesto (muestra las dos cosas)
+  const projectLink = (p) => (p.quote ? clientLink('mi-presupuesto', p.lang, p.quote) : clientLink('mi-proyecto', p.lang, p.token));
+  const SHARE = {
+    es: (name, link) => '¡Hola, ' + name + '! Acá podés ver tu presupuesto y seguir el avance de tu proyecto: ' + link,
+    en: (name, link) => 'Hi, ' + name + '! Here you can see your quote and follow your project: ' + link,
+    pt: (name, link) => 'Olá, ' + name + '! Aqui você pode ver seu orçamento e acompanhar o seu projeto: ' + link,
+  };
+  const linkBox = (link, lang, name) => '<div class="linkbox"><span class="small muted">Link del cliente</span><br>' + esc(link) + '</div>'
+    + '<div class="row"><button type="button" data-copy="' + esc(link) + '">Copiar link</button>'
+    + '<a class="btn" target="_blank" href="' + esc('https://wa.me/?text=' + encodeURIComponent((SHARE[lang] || SHARE.es)(name, link))) + '">Mandar por WhatsApp ↗</a>'
+    + '<a class="btn" target="_blank" href="' + esc(link) + '">Abrir ↗</a></div>';
 
   let key = '';
   try { key = sessionStorage.getItem('jnb-admin') || ''; } catch (e) {}
@@ -166,8 +177,9 @@ export const adminPage = () => `<!doctype html>
         + '<div class="message">' + esc(q.message) + '</div>'
         + '<div class="row small"><span class="muted">' + (q.mailed ? 'Mail de confirmación enviado ✓' : 'Sin mail de confirmación') + '</span>'
         + '<a class="btn" href="#" data-mail="' + esc(q.code) + '">Ver el mail</a>'
-        + (isQuote ? '<button data-copy="' + esc(clientLink('mi-presupuesto', q.lang, q.token)) + '">Copiar link del cliente</button>'
-          + '<a class="btn" target="_blank" href="' + esc(clientLink('mi-presupuesto', q.lang, q.token)) + '">Abrir ↗</a>' : '') + '</div>'
+        + '</div>'
+        + (isQuote ? linkBox(clientLink('mi-presupuesto', q.lang, q.token), q.lang, q.name.split(' ')[0])
+          + (q.status === 'aceptado' ? '<p class="small" style="margin-top:.5rem">✓ Ya tiene seguimiento en <strong>Proyectos</strong>. El cliente lo ve en este mismo link, en la pestaña "Estado del proyecto".</p>' : '') : '')
         + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
           + '<div class="grid"><label>Estado<select name="status">' + Object.entries(STATUS).map(([v, l]) => '<option value="' + v + '"' + (q.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
           + '<label>Precio<input name="price" placeholder="Ej.: ARS 450.000 o USD 380" value="' + esc(p.price) + '"></label>'
@@ -177,7 +189,7 @@ export const adminPage = () => `<!doctype html>
           + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note">' + esc(p.note) + '</textarea></label>'
           + '<label style="margin-top:.75rem">Link para pagar en cuotas en tu tienda (dejalo vacío si este presupuesto no se puede pagar ahí)'
           + '<input name="storeLink" placeholder="https://jnbcreativestudio.mitiendanube.com/productos/..." value="' + esc(q.proposal ? p.storeLink : 'https://jnbcreativestudio.mitiendanube.com/') + '"></label>'
-          + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta cuando el estado es "Enviado". Cuando te confirme por WhatsApp, pasalo a "Aceptado".</p>'
+          + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta cuando el estado es "Enviado". Cuando te confirme por WhatsApp, pasalo a "Aceptado": se crea solo el seguimiento del proyecto y el cliente lo ve en este mismo link.</p>'
           + '<button class="primary">Guardar</button></form></details>' : '')
         + '</article>';
     }).join('') : '<p class="empty">Todavía no hay consultas.</p>');
@@ -212,6 +224,7 @@ export const adminPage = () => `<!doctype html>
   const renderProjects = () => {
     $('n-proyectos').textContent = data.projects.filter((p) => p.stage < STAGES.length - 1).length || '';
     $('tab-proyectos').innerHTML = '<h2>Seguimiento de proyectos</h2>'
+      + '<p class="muted">Los proyectos de presupuestos aceptados se crean solos. Acá podés crear uno a mano para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp).</p>'
       + '<form class="card" id="new-project"><h3>Nuevo proyecto</h3><div class="grid">'
       + '<label>Nombre del cliente (lo ve el cliente)<input name="client" required placeholder="Ej.: Ana"></label>'
       + '<label>Proyecto<input name="project" required placeholder="Ej.: Landing · Plan Básico"></label>'
@@ -219,7 +232,8 @@ export const adminPage = () => `<!doctype html>
       + '<label>Entrega estimada<input type="date" name="due"></label></div><button class="primary">Crear</button></form>'
       + (data.projects.length ? data.projects.map((p) => '<article class="card" data-project="' + esc(p.token) + '">'
         + '<div class="row space"><div class="row"><strong>' + esc(p.client) + '</strong><span class="muted">' + esc(p.project) + '</span></div>'
-        + '<span class="chip">' + STAGES[p.stage] + '</span></div>'
+        + '<div class="row">' + (p.quoteCode ? '<span class="chip">Presupuesto ' + esc(p.quoteCode) + '</span>' : '') + '<span class="chip">' + STAGES[p.stage] + '</span></div></div>'
+        + linkBox(projectLink(p), p.lang, p.client)
         + '<form class="project-form">'
         // Etapas como botones: tocar una la guarda al instante y el cliente la ve al recargar su página
         + '<p class="small muted" style="margin:.75rem 0 .4rem">Etapa actual (tocá la que corresponda; se guarda sola)</p>'
@@ -230,8 +244,6 @@ export const adminPage = () => `<!doctype html>
         + '<label style="margin-top:.75rem">Link de vista previa (opcional)<input name="preview" placeholder="https://..." value="' + esc(p.preview) + '"></label>'
         + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note" placeholder="Ej.: Ya tengo tus fotos. Esta semana te mando la primera versión.">' + esc(p.note) + '</textarea></label>'
         + '<div class="row" style="margin-top:.75rem"><button class="primary">Guardar</button>'
-        + '<button type="button" data-copy="' + esc(clientLink('mi-proyecto', p.lang, p.token)) + '">Copiar link del cliente</button>'
-        + '<a class="btn" target="_blank" href="' + esc(clientLink('mi-proyecto', p.lang, p.token)) + '">Abrir ↗</a>'
         + '<button type="button" data-remove>Borrar</button>'
         + '<span class="small muted">Actualizado ' + date(p.updated) + '</span></div></form></article>').join('')
         : '<p class="empty">Todavía no hay proyectos.</p>');

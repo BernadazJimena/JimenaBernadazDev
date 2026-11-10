@@ -486,6 +486,45 @@
     align-self: flex-start;
 }
 
+/* Un solo link por cliente: pestañas "Estado del proyecto" y "Tu presupuesto" */
+.client-tabs {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: 999px;
+    display: flex;
+    gap: .25rem;
+    margin-bottom: 1.25rem;
+    padding: .3rem;
+}
+
+.client-tab {
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    color: var(--muted);
+    cursor: pointer;
+    flex: 1;
+    font: inherit;
+    font-size: .9375rem;
+    font-weight: 800;
+    padding: .6rem 1rem;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.client-tab:hover,
+.client-tab:focus-visible {
+    color: var(--blue);
+}
+
+.client-tab[aria-selected="true"] {
+    background: var(--blue);
+    color: var(--mist);
+}
+
+.client-tabs-wrap > [hidden] {
+    display: none;
+}
+
 /* Seguimiento del proyecto */
 .client-project {
     gap: 1.5rem;

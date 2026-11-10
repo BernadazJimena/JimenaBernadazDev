@@ -41,7 +41,9 @@
             formLabels: ['Pedido', 'Quiero sumar o actualizar', 'Detalles'],
             requestLabels: ['Servicio', 'Funcionalidades solicitadas', 'Sobre tu proyecto'],
             saveTitle: 'Guardá este enlace',
-            saveText: 'Podés volver a esta página cuando quieras para consultar el estado de tu solicitud y acceder a tu presupuesto.',
+            saveText: 'Podés volver a esta página cuando quieras para consultar tu presupuesto y, cuando empecemos, seguir el avance de tu proyecto.',
+            tabProject: 'Estado del proyecto',
+            tabQuote: 'Tu presupuesto',
             signature: 'JNB Creative Studio · Diseño y desarrollo web',
             proposalKicker: 'Propuesta comercial',
             proposalTitle: '¡Tu propuesta está lista, {name}!',
@@ -160,7 +162,9 @@
             formLabels: ['Request', 'I want to add or update', 'Details'],
             requestLabels: ['Service', 'Requested features', 'About your project'],
             saveTitle: 'Save this link',
-            saveText: 'You can come back to this page anytime to check the status of your request and see your quote.',
+            saveText: 'You can come back to this page anytime to see your quote and, once we start, follow your project.',
+            tabProject: 'Project status',
+            tabQuote: 'Your quote',
             signature: 'JNB Creative Studio · Web design and development',
             proposalKicker: 'Business proposal',
             proposalTitle: 'Your proposal is ready, {name}!',
@@ -276,7 +280,9 @@
             formLabels: ['Pedido', 'Quero adicionar ou atualizar', 'Detalhes'],
             requestLabels: ['Serviço', 'Funcionalidades solicitadas', 'Sobre o seu projeto'],
             saveTitle: 'Guarde este link',
-            saveText: 'Você pode voltar a esta página quando quiser para ver o status do seu pedido e acessar seu orçamento.',
+            saveText: 'Você pode voltar a esta página quando quiser para ver seu orçamento e, quando começarmos, acompanhar o seu projeto.',
+            tabProject: 'Status do projeto',
+            tabQuote: 'Seu orçamento',
             signature: 'JNB Creative Studio · Design e desenvolvimento web',
             proposalKicker: 'Proposta comercial',
             proposalTitle: 'Sua proposta está pronta, {name}!',
@@ -593,7 +599,7 @@
         request.append(el('h2', 'client-subtitle', T.yourRequest), requestList(quote, T.requestLabels));
         card.append(request);
         card.append(infoBox('client-save', T.saveTitle, ['', T.saveText]), el('p', 'client-foot client-signature', T.signature));
-        view.replaceChildren(card);
+        return card;
     };
 
     // Propuesta comercial: precio, qué incluye, cómo pagar, condiciones, vigencia y aceptación
@@ -742,10 +748,37 @@
         request.append(el('h2', 'client-subtitle', T.originalRequest), requestList(quote, T.originalLabels));
         card.append(request);
         card.append(infoBox('client-save', T.saveTitle, ['', T.saveText]), el('p', 'client-foot client-signature', T.signature));
-        view.replaceChildren(card);
+        return card;
     };
 
-    const renderQuote = (quote) => (quote.proposal ? renderProposal(quote) : renderRequest(quote));
+    // Un solo link por cliente: si el presupuesto ya se aceptó, muestra dos pestañas, el avance del proyecto (primero) y el presupuesto
+    let quoteTab = 'project';
+    const renderQuote = (quote) => {
+        const quoteCard = quote.proposal ? renderProposal(quote) : renderRequest(quote);
+        if (!quote.project) return quoteCard;
+        const wrap = el('div', 'client-tabs-wrap');
+        const tabs = el('div', 'client-tabs');
+        tabs.setAttribute('role', 'tablist');
+        const panels = { project: renderProject(quote.project), quote: quoteCard };
+        [['project', T.tabProject], ['quote', T.tabQuote]].forEach(([id, label]) => {
+            const tabButton = el('button', 'client-tab', label);
+            tabButton.type = 'button';
+            tabButton.setAttribute('role', 'tab');
+            tabButton.setAttribute('aria-selected', String(id === quoteTab));
+            tabButton.addEventListener('click', () => {
+                quoteTab = id;
+                tabs.querySelectorAll('.client-tab').forEach((b) => b.setAttribute('aria-selected', String(b === tabButton)));
+                Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== id; });
+            });
+            tabs.append(tabButton);
+        });
+        Object.entries(panels).forEach(([key, panel]) => {
+            panel.setAttribute('role', 'tabpanel');
+            panel.hidden = key !== quoteTab;
+        });
+        wrap.append(tabs, panels.project, panels.quote);
+        return wrap;
+    };
 
     // ---- Reseña
     const field = (labelText, control, hint) => {
@@ -901,27 +934,30 @@
         actions.append(button(WHATSAPP + encodeURIComponent(T.writeText), T.write, false, true));
         help.append(actions);
         card.append(help, el('p', 'client-foot', fill(T.updated, { date: longDate(project.updated) })));
-        view.replaceChildren(card);
+        return card;
     };
 
     // ---- Carga
     const kind = view.dataset.view;
     const load = {
-        quote: () => getJson(`/api/presupuestos/${token}`).then((data) => (data ? renderQuote(data) : notFound())),
+        quote: () => getJson(`/api/presupuestos/${token}`).then((data) => (data ? view.replaceChildren(renderQuote(data)) : notFound())),
         review: () => getJson(`/api/resenas/invitacion/${token}`).then((data) => {
             if (!data) notFound();
             else if (data.used) message(T.used);
             else renderReviewForm();
         }),
-        project: () => getJson(`/api/proyectos/${token}`).then((data) => (data ? renderProject(data) : notFound())),
+        project: () => getJson(`/api/proyectos/${token}`).then((data) => (data ? view.replaceChildren(renderProject(data)) : notFound())),
     }[kind];
     load?.().catch(() => message(T.error));
 
-    // Seguimiento del proyecto: si el cliente vuelve a esta pestaña, se trae la etapa actual (Jimena la cambia desde su panel)
-    if (kind === 'project') {
+    // Si el cliente vuelve a esta pestaña del navegador, se trae lo último (Jimena cambia etapas y propuestas desde su panel)
+    if (kind === 'project' || kind === 'quote') {
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState !== 'visible') return;
-            getJson(`/api/proyectos/${token}`).then((data) => { if (data) renderProject(data); }).catch(() => { /* queda lo que ya se ve */ });
+            if (document.visibilityState !== 'visible' || document.querySelector('.client-pdf:disabled')) return;
+            const path = kind === 'project' ? `/api/proyectos/${token}` : `/api/presupuestos/${token}`;
+            getJson(path).then((data) => {
+                if (data) view.replaceChildren(kind === 'project' ? renderProject(data) : renderQuote(data));
+            }).catch(() => { /* queda lo que ya se ve */ });
         });
     }
 })();

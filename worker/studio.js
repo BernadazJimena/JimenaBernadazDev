@@ -106,6 +106,8 @@ export class StudioData extends DurableObject {
     const columns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
     if (!columns.includes('next')) this.sql.exec("ALTER TABLE projects ADD COLUMN next TEXT NOT NULL DEFAULT ''");
     if (!columns.includes('preview')) this.sql.exec("ALTER TABLE projects ADD COLUMN preview TEXT NOT NULL DEFAULT ''");
+    // Presupuesto del que salió el proyecto: así el cliente sigue todo con un solo link (el del presupuesto)
+    if (!columns.includes('quote')) this.sql.exec("ALTER TABLE projects ADD COLUMN quote TEXT NOT NULL DEFAULT ''");
   }
 
   // ---- Consultas y pedidos de presupuesto
@@ -145,12 +147,18 @@ export class StudioData extends DurableObject {
       summary: row.message,
       status: row.status,
       proposal,
+      // Cuando el presupuesto se acepta, el mismo link muestra también el avance del proyecto
+      project: this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated FROM projects WHERE quote = ?', token).toArray()[0] || null,
     };
   }
 
   setQuote(token, status, proposal) {
-    const row = this.sql.exec("SELECT proposal FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
+    const row = this.sql.exec("SELECT proposal, name, plan, lang FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     if (!row) return false;
+    // Al aceptarlo se crea solo el seguimiento del proyecto, vinculado a este presupuesto (una sola vez)
+    if (status === 'aceptado' && !this.sql.exec('SELECT 1 FROM projects WHERE quote = ?', token).toArray().length) {
+      this.addProject({ client: row.name.split(' ')[0], project: row.plan || '—', lang: row.lang, due: '', quote: token });
+    }
     // La fecha de emisión se fija la primera vez que se envía y no cambia al corregir la propuesta
     if (proposal) proposal.issued = (row.proposal && JSON.parse(row.proposal).issued) || new Date().toISOString();
     this.sql.exec('UPDATE inquiries SET status = ?, proposal = ? WHERE token = ?', status, proposal ? JSON.stringify(proposal) : null, token);
@@ -191,8 +199,8 @@ export class StudioData extends DurableObject {
   addProject(project) {
     const token = newToken();
     const now = new Date().toISOString();
-    this.sql.exec(`INSERT INTO projects (token, client, project, lang, due, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      token, project.client, project.project, project.lang, project.due, now, now);
+    this.sql.exec(`INSERT INTO projects (token, client, project, lang, due, quote, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      token, project.client, project.project, project.lang, project.due, project.quote || '', now, now);
     return token;
   }
 
@@ -221,7 +229,8 @@ export class StudioData extends DurableObject {
         .map((row) => ({ ...row, proposal: row.proposal ? JSON.parse(row.proposal) : null })),
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
-      projects: this.sql.exec('SELECT token, client, project, lang, stage, due, note, next, preview, created, updated FROM projects ORDER BY updated DESC').toArray(),
+      projects: this.sql.exec(`SELECT p.token, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
+        p.quote, i.code AS quoteCode FROM projects p LEFT JOIN inquiries i ON i.token = p.quote AND p.quote != '' ORDER BY p.updated DESC`).toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
     };
   }
