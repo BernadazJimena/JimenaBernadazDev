@@ -42,6 +42,17 @@ export const adminPage = () => `<!doctype html>
   .linkbox { background: var(--soft); border-radius: .6rem; font-size: .85rem; margin: .6rem 0; overflow-wrap: anywhere; padding: .55rem .75rem; }
   .empty { color: var(--muted); padding: 1rem 0; }
   .login { margin: 15vh auto 0; max-width: 22rem; }
+  .stepper { display: grid; gap: .4rem; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: .25rem; }
+  .step { align-items: center; border-radius: .8rem; display: flex; flex-direction: column; gap: .3rem; padding: .6rem .35rem; text-align: center; }
+  .step-num { align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 50%; display: flex; font-size: .8rem;
+    height: 1.7rem; justify-content: center; width: 1.7rem; }
+  .step-name { font-size: .75rem; line-height: 1.25; }
+  .step.is-done { color: var(--muted); }
+  .step.is-done .step-num { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .step[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .step[aria-pressed="true"] .step-num { background: var(--on-accent); border-color: var(--on-accent); color: var(--accent); }
+  .step:disabled { cursor: progress; opacity: .7; }
+  @media (max-width: 560px) { .stepper { grid-template-columns: 1fr; } .step { flex-direction: row; justify-content: flex-start; padding: .45rem .7rem; text-align: left; } .step-name { font-size: .85rem; } }
   .toast { background: var(--accent); border-radius: 999px; bottom: 1.25rem; color: var(--on-accent); font-weight: 800; left: 50%;
     padding: .55rem 1.1rem; position: fixed; transform: translateX(-50%); }
   [hidden] { display: none !important; }
@@ -209,8 +220,12 @@ export const adminPage = () => `<!doctype html>
       + (data.projects.length ? data.projects.map((p) => '<article class="card" data-project="' + esc(p.token) + '">'
         + '<div class="row space"><div class="row"><strong>' + esc(p.client) + '</strong><span class="muted">' + esc(p.project) + '</span></div>'
         + '<span class="chip">' + STAGES[p.stage] + '</span></div>'
-        + '<form class="project-form"><div class="grid"><label>Etapa<select name="stage">' + STAGES.map((s, i) => '<option value="' + i + '"' + (p.stage === i ? ' selected' : '') + '>' + (i + 1) + '. ' + s + '</option>').join('') + '</select></label>'
-        + '<label>Entrega estimada<input type="date" name="due" value="' + esc(p.due) + '"></label></div>'
+        + '<form class="project-form">'
+        // Etapas como botones: tocar una la guarda al instante y el cliente la ve al recargar su página
+        + '<p class="small muted" style="margin:.75rem 0 .4rem">Etapa actual (tocá la que corresponda; se guarda sola)</p>'
+        + '<div class="stepper" role="group" aria-label="Etapa del proyecto">' + STAGES.map((s, i) => '<button type="button" class="step' + (i < p.stage ? ' is-done' : '') + '" data-stage="' + i + '" aria-pressed="' + (p.stage === i) + '"><span class="step-num">' + (i < p.stage ? '✓' : i + 1) + '</span><span class="step-name">' + s + '</span></button>').join('') + '</div>'
+        + '<input type="hidden" name="stage" value="' + p.stage + '">'
+        + '<div class="grid"><label>Entrega estimada<input type="date" name="due" value="' + esc(p.due) + '"></label></div>'
         + '<label>Tu próximo paso (opcional: si lo dejás vacío, se muestra el texto de la etapa)<input name="next" maxlength="400" placeholder="Ej.: Todavía necesito tu logo y los textos de la sección Servicios." value="' + esc(p.next) + '"></label>'
         + '<label style="margin-top:.75rem">Link de vista previa (opcional)<input name="preview" placeholder="https://..." value="' + esc(p.preview) + '"></label>'
         + '<label style="margin-top:.75rem">Nota para el cliente (opcional)<textarea name="note" placeholder="Ej.: Ya tengo tus fotos. Esta semana te mando la primera versión.">' + esc(p.note) + '</textarea></label>'
@@ -267,6 +282,24 @@ export const adminPage = () => `<!doctype html>
       if (set.dataset.set === 'borrar' && !confirm('¿Borrar esta reseña? No se puede deshacer.')) return;
       await api('resenas/' + set.closest('[data-review]').dataset.review, { status: set.dataset.set });
       toast('Listo'); load();
+      return;
+    }
+    // Etapa del proyecto: un toque la guarda (junto con lo que esté escrito en ese proyecto)
+    const step = e.target.closest('.step[data-stage]');
+    if (step) {
+      const form = step.closest('.project-form');
+      if (step.getAttribute('aria-pressed') === 'true') return;
+      form.querySelectorAll('.step').forEach((b) => { b.disabled = true; });
+      form.elements.stage.value = step.dataset.stage;
+      const values = Object.fromEntries(new FormData(form));
+      try {
+        await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview });
+        toast('Etapa: ' + STAGES[Number(values.stage)] + '. El cliente ya la ve.');
+        load();
+      } catch (err) {
+        form.querySelectorAll('.step').forEach((b) => { b.disabled = false; });
+        toast('No se pudo guardar');
+      }
       return;
     }
     const remove = e.target.closest('[data-remove]');

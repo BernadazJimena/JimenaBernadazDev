@@ -916,4 +916,12 @@
         project: () => getJson(`/api/proyectos/${token}`).then((data) => (data ? renderProject(data) : notFound())),
     }[kind];
     load?.().catch(() => message(T.error));
+
+    // Seguimiento del proyecto: si el cliente vuelve a esta pestaña, se trae la etapa actual (Jimena la cambia desde su panel)
+    if (kind === 'project') {
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible') return;
+            getJson(`/api/proyectos/${token}`).then((data) => { if (data) renderProject(data); }).catch(() => { /* queda lo que ya se ve */ });
+        });
+    }
 })();
