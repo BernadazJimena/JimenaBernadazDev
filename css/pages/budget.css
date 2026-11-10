@@ -43,7 +43,8 @@
 }
 
 .budget-extra select,
-.budget-extra input {
+.budget-extra input,
+.budget-country select {
     background: var(--surface);
     border: .08rem solid var(--field-border);
     border-radius: .75rem;
@@ -55,7 +56,8 @@
 }
 
 .budget-extra select:focus,
-.budget-extra input:focus {
+.budget-extra input:focus,
+.budget-country select:focus {
     border-color: var(--blue);
     box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .35);
     outline: none;
@@ -236,4 +238,10 @@
 
 :root[data-theme="dark"] .budget-coupon-status.is-error {
     color: #ff8a8a;
+}
+
+/* País (define la moneda del presupuesto) */
+.budget-country select {
+    max-width: 22rem;
+    width: 100%;
 }

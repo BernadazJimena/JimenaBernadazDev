@@ -23,7 +23,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
-import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail } from './mail.js';
+import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail, proposalMail, stageMail } from './mail.js';
 
 const SITE = 'https://jnbcreativestudio.com.ar';
 const LANGS = new Set(['es', 'en', 'pt']);
@@ -176,6 +176,8 @@ export class StudioData extends DurableObject {
     if (!projectColumns.includes('coupon')) this.sql.exec("ALTER TABLE projects ADD COLUMN coupon TEXT NOT NULL DEFAULT ''");
     const inquiryColumns = this.sql.exec('PRAGMA table_info(inquiries)').toArray().map((c) => c.name);
     if (!inquiryColumns.includes('coupon')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN coupon TEXT NOT NULL DEFAULT ''");
+    // País del cliente (del formulario de presupuesto): define la moneda sugerida en el panel
+    if (!inquiryColumns.includes('country')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN country TEXT NOT NULL DEFAULT ''");
     // Historial de cada cliente: lo que va pasando con su proyecto (lo ve Jimena en la ficha del cliente)
     this.sql.exec(`CREATE TABLE IF NOT EXISTS project_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -218,9 +220,22 @@ export class StudioData extends DurableObject {
     const token = newToken();
     // El cupón se guarda solo si es válido en este momento
     const coupon = data.coupon && this.couponState(data.coupon).valid ? data.coupon : '';
-    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon);
+    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon, country)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon, data.country || '');
     return { code, token, created: now.toISOString(), coupon };
+  }
+
+  // Mail, nombre e idioma del cliente de un proyecto (del presupuesto o, si se creó a mano, del brief)
+  contactOf(project, token) {
+    const linkToken = project.quote || token;
+    const fromQuote = project.quote ? this.sql.exec('SELECT email, name FROM inquiries WHERE token = ?', project.quote).toArray()[0] : null;
+    const brief = this.sql.exec('SELECT answers FROM briefs WHERE token = ?', linkToken).toArray()[0];
+    const briefEmail = brief ? (JSON.parse(brief.answers).email || '') : '';
+    return {
+      email: (fromQuote && fromQuote.email) || (typeof briefEmail === 'string' ? briefEmail.trim() : ''),
+      name: (fromQuote && fromQuote.name) || project.client,
+      lang: project.lang, linkToken, fromQuote: Boolean(project.quote), store: planKey(project.project) === 'emprendedor',
+    };
   }
 
   // ---- Historial
@@ -352,8 +367,9 @@ export class StudioData extends DurableObject {
     if (!project) return false;
     this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
       changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
-    if (changes.stage !== project.stage) this.logEvent(token, '📍', `Etapa: ${STAGE_NAMES[changes.stage] || changes.stage}`);
-    if (changes.stage !== LAUNCH_STAGE || project.coupon) return true;
+    const stageChanged = changes.stage !== project.stage;
+    if (stageChanged) this.logEvent(token, '📍', `Etapa: ${STAGE_NAMES[changes.stage] || changes.stage}`);
+    if (changes.stage !== LAUNCH_STAGE || project.coupon) return stageChanged ? { stageChanged, stage: changes.stage, ...this.contactOf(project, token) } : true;
     // Recién publicado: cupón de descuento y link para la reseña, y los datos para mandarle el mail
     const now = new Date();
     let code = newCouponCode();
@@ -387,6 +403,11 @@ export class StudioData extends DurableObject {
     this.sql.exec(`INSERT INTO settings (key, value) VALUES ('availability', ?)
       ON CONFLICT (key) DO UPDATE SET value = excluded.value`, value);
     return this.availability();
+  }
+
+  logQuoteEvent(quoteToken, icon, text) {
+    const project = this.sql.exec('SELECT token FROM projects WHERE quote = ?', quoteToken).toArray()[0];
+    if (project) this.logEvent(project.token, icon, text);
   }
 
   quoteContact(token) {
@@ -573,7 +594,7 @@ export class StudioData extends DurableObject {
   // ---- Panel
   everything() {
     return {
-      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon
+      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon, country
         FROM inquiries ORDER BY created DESC LIMIT 300`).toArray()
         .map((row) => ({ ...row, proposal: row.proposal ? JSON.parse(row.proposal) : null })),
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
@@ -662,6 +683,7 @@ export async function handleStudio(request, env, ctx) {
       plan: oneLine(body.plan, 100),
       message: text(body.message, 5000),
       coupon: typeof body.coupon === 'string' ? body.coupon.trim().toUpperCase().slice(0, 30) : '',
+      country: oneLine(body.country, 60),
     };
     if (!data.name || !EMAIL.test(data.email) || !data.message) return badRequest();
     const saved = await store.addInquiry(data);
@@ -848,6 +870,16 @@ export async function handleStudio(request, env, ctx) {
       return json(data);
     }
 
+    if ((match = path.match(/^\/api\/admin\/reenviar\/([^/]+)$/)) && request.method === 'POST') {
+      if (!CODE.test(match[1])) return notFound();
+      const inquiry = await store.inquiryByCode(match[1]);
+      if (!inquiry) return notFound();
+      const link = inquiry.kind === 'presupuesto' ? quoteLink(inquiry.lang, inquiry.token) : null;
+      const mailed = await sendMail(env, inquiry, link);
+      if (mailed) await store.markMailed(inquiry.code);
+      return json({ ok: mailed });
+    }
+
     if ((match = path.match(/^\/api\/admin\/mail\/([^/]+)$/)) && request.method === 'GET') {
       if (!CODE.test(match[1])) return notFound();
       const inquiry = await store.inquiryByCode(match[1]);
@@ -881,7 +913,16 @@ export async function handleStudio(request, env, ctx) {
           briefMailed = await sendAnyMail(env, result.email, briefInviteMail({ lang: result.lang, name: result.name, link: `${quoteLink(result.lang, match[1])}#brief` }));
         } catch { /* el proyecto quedó creado igual */ }
       }
-      return json({ ok: true, created: Boolean(result.created), briefMailed });
+      // Propuesta lista: aviso por mail con el link (si Jimena lo dejó marcado)
+      let proposalMailed = false;
+      if (body.notify === true && status === 'enviado') {
+        const contact = await store.quoteContact(match[1]);
+        if (contact) {
+          try { proposalMailed = await sendAnyMail(env, contact.email, proposalMail({ lang: contact.lang, name: contact.name, link: quoteLink(contact.lang, match[1]) })); } catch { /* la propuesta quedó guardada */ }
+          if (proposalMailed) await store.logQuoteEvent(match[1], '📧', 'Le avisaste por mail que su propuesta está lista');
+        }
+      }
+      return json({ ok: true, created: Boolean(result.created), briefMailed, proposalMailed });
     }
 
     if (path === '/api/admin/resenas/invitar') {
@@ -935,7 +976,12 @@ export async function handleStudio(request, env, ctx) {
           }));
         } catch { /* el cupón y la reseña quedaron creados igual */ }
       }
-      return json({ ok: true, launched: Boolean(result.launched), launchMailed, coupon: result.coupon || '' });
+      let stageMailed = false;
+      if (result.stageChanged && body.notify === true && result.email) {
+        const page = result.fromQuote ? quoteLink(result.lang, result.linkToken) : projectLink(result.lang, result.linkToken);
+        try { stageMailed = await sendAnyMail(env, result.email, stageMail({ lang: result.lang, name: result.name, link: page, stage: result.stage, store: result.store })); } catch { /* la etapa quedó guardada */ }
+      }
+      return json({ ok: true, launched: Boolean(result.launched), launchMailed, stageMailed, coupon: result.coupon || '' });
     }
   }
 

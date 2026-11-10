@@ -64,6 +64,8 @@
         const items = chosenItems();
         if (items.length) lines.push(`${t.lItems}: ${items.join('; ')}`);
         if (details.value.trim()) lines.push(`${t.lDetails}: ${details.value.trim()}`);
+        const country = form.querySelector('[name="pais"]');
+        if (country && country.value) lines.push(`${country.closest('label').querySelector('span').textContent.trim()}: ${country.value}`);
         if (couponBox && !couponBox.hidden && couponValid) lines.push(`${couponInput.dataset.label}: ${couponInput.value.trim().toUpperCase()}`);
         const name = form.querySelector('input[name="name"]').value.trim();
         if (withName && name) lines.push(`${t.lName}: ${name}`);

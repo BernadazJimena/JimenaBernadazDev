@@ -327,3 +327,64 @@ export function launchMail({ lang, name, page, reviewLink, coupon, percent, budg
   const plain = [t.hello(first), '', t.intro, '', `${t.reviewTitle} ${t.reviewText}`, `${t.reviewButton}: ${reviewLink}`, '', `${t.couponTitle}: ${coupon}`, t.couponText(percent, until), `${t.couponButton}: ${budgetLink}`, '', `${t.page}: ${page}`, '', t.sign].join('\n');
   return { subject, html: frame(lang, subject, inner, t.footer), text: plain };
 }
+
+// Botón y firma comunes de los avisos
+const noticeBody = (t, first, paragraphs, link, button) => `
+    <tr><td style="padding:16px 28px 0;font-size:16px;line-height:1.6;">
+      <p style="margin:0 0 12px;font-weight:700;">${esc(t.hello(first))}</p>
+      ${paragraphs.map((p) => `<p style="margin:0 0 12px;">${p}</p>`).join('')}
+    </td></tr>
+    <tr><td style="padding:8px 28px 0;">
+      <a href="${esc(link)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:13px 24px;">${esc(button)} →</a>
+    </td></tr>
+    <tr><td style="padding:24px 28px 28px;font-size:15px;line-height:1.6;">
+      <p style="margin:0;font-weight:800;">Jimena Bernadaz</p>
+      <p style="margin:0;"><a href="https://jnbcreativestudio.com.ar" style="color:#5d31b8;text-decoration:none;">JNB Creative Studio</a></p>
+    </td></tr>`;
+
+// ---- Propuesta lista
+const PROPOSAL = {
+  es: { subject: 'Tu presupuesto está listo', hello: (n) => `Hola ${n}:`, p1: '¡Ya preparé la propuesta para tu proyecto! Ahí vas a ver el precio, qué incluye, las formas de pago y la vigencia.', p2: 'Si tenés dudas, escribime y lo vemos juntos.', button: 'Ver mi presupuesto', footer: 'Recibiste este mail porque pediste un presupuesto en jnbcreativestudio.com.ar.' },
+  en: { subject: 'Your quote is ready', hello: (n) => `Hi ${n},`, p1: 'I have prepared the proposal for your project! There you will see the price, what it includes, the payment options and how long it is valid.', p2: 'If you have any questions, write to me and we can go over it together.', button: 'See my quote', footer: 'You received this email because you requested a quote on jnbcreativestudio.com.ar.' },
+  pt: { subject: 'Seu orçamento está pronto', hello: (n) => `Olá, ${n}!`, p1: 'Já preparei a proposta para o seu projeto! Ali você vai ver o preço, o que inclui, as formas de pagamento e a validade.', p2: 'Se tiver dúvidas, escreva para mim e vemos juntos.', button: 'Ver meu orçamento', footer: 'Você recebeu este e-mail porque pediu um orçamento em jnbcreativestudio.com.ar.' },
+};
+
+export function proposalMail({ lang, name, link }) {
+  const t = PROPOSAL[lang] || PROPOSAL.es;
+  const first = String(name || '').split(' ')[0];
+  const inner = noticeBody(t, first, [esc(t.p1), esc(t.p2)], link, t.button);
+  const plain = [t.hello(first), '', t.p1, t.p2, '', `${t.button}: ${link}`, '', 'Jimena Bernadaz'].join('\n');
+  return { subject: t.subject, html: frame(lang, t.subject, inner, t.footer), text: plain };
+}
+
+// ---- Cambio de etapa del proyecto
+const STAGE_MAIL = {
+  es: {
+    subject: (s) => `Tu proyecto avanzó: ${s}`, hello: (n) => `Hola ${n}:`, intro: 'Te cuento cómo va tu proyecto:',
+    button: 'Ver cómo va mi proyecto', footer: 'Recibiste este mail porque tenés un proyecto en marcha con jnbcreativestudio.com.ar.',
+    web: [['Reserva y confirmación', 'Tu lugar en mi agenda está reservado.'], ['Recepción de materiales', 'Cuando tenga tus textos, fotos y logo, empiezo a diseñar. Si todavía no completaste el brief, lo encontrás en tu link.'], ['Diseño y desarrollo', 'Ya estoy diseñando y armando tu web. No necesitás hacer nada por ahora.'], ['Revisión y ajustes', 'Tu web está lista para revisar. Mirala y contame qué ajustes querés.'], ['Publicación y entrega', 'Tu web ya está online.']],
+    store: [['Reserva y confirmación', 'Tu lugar en mi agenda está reservado.'], ['Recepción de materiales', 'Cuando tenga las fotos, precios y datos de tus productos, empiezo a armar tu tienda.'], ['Diseño y configuración', 'Ya estoy diseñando y configurando tu tienda. No necesitás hacer nada por ahora.'], ['Revisión y ajustes', 'Tu tienda está lista para revisar. Mirala y contame qué ajustes querés.'], ['Publicación y entrega', 'Tu tienda ya está online.']],
+  },
+  en: {
+    subject: (s) => `Your project moved forward: ${s}`, hello: (n) => `Hi ${n},`, intro: 'Here is how your project is going:',
+    button: 'See how my project is going', footer: 'You received this email because you have a project in progress with jnbcreativestudio.com.ar.',
+    web: [['Booking and confirmation', 'Your spot in my schedule is booked.'], ['Content', 'Once I have your texts, photos and logo, I start designing. If you have not filled in the brief yet, you will find it at your link.'], ['Design and build', 'I am designing and building your website. You do not need to do anything for now.'], ['Review and adjustments', 'Your website is ready for review. Take a look and tell me what adjustments you want.'], ['Launch and delivery', 'Your website is live.']],
+    store: [['Booking and confirmation', 'Your spot in my schedule is booked.'], ['Content', 'Once I have your product photos, prices and details, I start building your store.'], ['Design and setup', 'I am designing and setting up your store. You do not need to do anything for now.'], ['Review and adjustments', 'Your store is ready for review. Take a look and tell me what adjustments you want.'], ['Launch and delivery', 'Your store is live.']],
+  },
+  pt: {
+    subject: (s) => `Seu projeto avançou: ${s}`, hello: (n) => `Olá, ${n}!`, intro: 'Veja como está o seu projeto:',
+    button: 'Ver como está meu projeto', footer: 'Você recebeu este e-mail porque tem um projeto em andamento com jnbcreativestudio.com.ar.',
+    web: [['Reserva e confirmação', 'Seu lugar na minha agenda está reservado.'], ['Recebimento de materiais', 'Quando eu tiver seus textos, fotos e logo, começo a criar. Se ainda não preencheu o briefing, ele está no seu link.'], ['Design e desenvolvimento', 'Já estou criando e montando o seu site. Você não precisa fazer nada por enquanto.'], ['Revisão e ajustes', 'Seu site está pronto para revisão. Dê uma olhada e me conte quais ajustes quer.'], ['Publicação e entrega', 'Seu site já está no ar.']],
+    store: [['Reserva e confirmação', 'Seu lugar na minha agenda está reservado.'], ['Recebimento de materiais', 'Quando eu tiver as fotos, preços e dados dos seus produtos, começo a montar a sua loja.'], ['Design e configuração', 'Já estou criando e configurando a sua loja. Você não precisa fazer nada por enquanto.'], ['Revisão e ajustes', 'Sua loja está pronta para revisão. Dê uma olhada e me conte quais ajustes quer.'], ['Publicação e entrega', 'Sua loja já está no ar.']],
+  },
+};
+
+export function stageMail({ lang, name, link, stage, store }) {
+  const t = STAGE_MAIL[lang] || STAGE_MAIL.es;
+  const first = String(name || '').split(' ')[0];
+  const [title, text] = (store ? t.store : t.web)[stage] || ['', ''];
+  const stepLine = `<span style="display:inline-block;background:#e2d0f0;border-radius:999px;padding:6px 14px;font-weight:800;color:#5d31b8;">${stage + 1} / 5 · ${esc(title)}</span>`;
+  const inner = noticeBody(t, first, [esc(t.intro), stepLine, esc(text)], link, t.button);
+  const plain = [t.hello(first), '', t.intro, `${stage + 1}/5 · ${title}`, text, '', `${t.button}: ${link}`, '', 'Jimena Bernadaz'].join('\n');
+  return { subject: t.subject(title), html: frame(lang, t.subject(title), inner, t.footer), text: plain };
+}

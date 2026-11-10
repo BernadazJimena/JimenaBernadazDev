@@ -109,6 +109,9 @@ export const adminPage = () => `<!doctype html>
   .tl-icon { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 50%; display: flex; height: 2.2rem; justify-content: center; width: 2.2rem; }
   .tl-text { font-weight: 700; margin: .35rem 0 .1rem; }
   .coupon-code { border: 2px dashed var(--accent); border-radius: .8rem; font-size: 1.4rem; font-weight: 800; letter-spacing: .1em; margin: .3rem 0 .6rem; padding: .5rem; text-align: center; }
+  .check-line { align-items: center; display: flex; font-size: .9rem; gap: .5rem; margin: .75rem 0; }
+  .check-line input { accent-color: var(--accent); width: auto; }
+  .price-row { display: grid; gap: .5rem; grid-template-columns: 7.5rem 1fr; }
   [hidden] { display: none !important; }
 </style></head>
 <body><div class="wrap">
@@ -217,6 +220,27 @@ export const adminPage = () => `<!doctype html>
     render();
   };
 
+  // ---- Precio de la propuesta: moneda ($ o USD) y monto con puntos de miles (200.000)
+  const priceFields = (price, q) => {
+    // Doble barra: esta página se arma dentro de un texto del Worker
+    const m = String(price || '').match(/^(USD|US\\$|ARS|\\$)\\s*(.*)$/i);
+    const fromCountry = !q.country ? (q.lang === 'es' ? '$' : 'USD') : (/argentina/i.test(q.country) ? '$' : 'USD');
+    const currency = m ? (/usd|us\\$/i.test(m[1]) ? 'USD' : '$') : fromCountry;
+    const amount = m ? m[2] : String(price || '');
+    return '<label>Precio' + (q.country ? ' <span class="small muted">(' + esc(q.country) + ')</span>' : '') + '<div class="price-row">'
+      + '<select name="currency"><option value="$"' + (currency === '$' ? ' selected' : '') + '>$ Pesos</option><option value="USD"' + (currency === 'USD' ? ' selected' : '') + '>USD Dólares</option></select>'
+      + '<input name="amount" class="amount-input" inputmode="numeric" placeholder="200.000" value="' + esc(amount) + '"></div></label>';
+  };
+  const formatAmount = (value) => {
+    const digits = String(value).replace(/[^0-9]/g, '');
+    return digits ? Number(digits).toLocaleString('es-AR') : '';
+  };
+  document.addEventListener('input', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('amount-input')) return;
+    const formatted = formatAmount(e.target.value);
+    if (formatted !== e.target.value) e.target.value = formatted;
+  });
+
   // ---- Consultas y presupuestos
   // Tarjeta de un pedido (en Consultas y en la ficha del cliente, pestaña Presupuesto)
   const inquiryCard = (q, inClient) => {
@@ -228,17 +252,18 @@ export const adminPage = () => `<!doctype html>
         + (isQuote ? '<span class="chip ' + (SENT.includes(q.status) ? 'ok' : 'warn') + '">' + STATUS[q.status] + '</span>' : '')
         + '</div><span class="small muted">' + date(q.created) + ' · ' + LANG[q.lang] + '</span></div>'
         + '<p style="margin-top:.5rem"><strong>' + esc(q.name) + '</strong> · <a href="mailto:' + esc(q.email) + '?subject=' + encodeURIComponent(q.code) + '">' + esc(q.email) + '</a>'
-        + (q.plan ? ' · ' + esc(q.plan) : '') + '</p>'
+        + (q.plan ? ' · ' + esc(q.plan) : '') + (q.country ? ' · 📍 ' + esc(q.country) : '') + '</p>'
         + '<div class="message">' + esc(q.message) + '</div>'
         + '<div class="row small"><span class="muted">' + (q.mailed ? 'Mail de confirmación enviado ✓' : 'Sin mail de confirmación') + '</span>'
         + '<a class="btn" href="#" data-mail="' + esc(q.code) + '">Ver el mail</a>'
+        + '<button type="button" data-resend="' + esc(q.code) + '">📧 ' + (q.mailed ? 'Reenviar' : 'Enviar') + ' el mail al cliente</button>'
         + '</div>'
         + (q.coupon ? '<div class="alert" style="margin-top:.6rem">🎁 Usa el cupón <strong>' + esc(q.coupon) + '</strong>: aplicá 20 % de descuento en la propuesta. Queda usado cuando lo pases a "Aceptado".</div>' : '')
         + (isQuote ? linkBox(clientLink('mi-presupuesto', q.lang, q.token), q.lang, q.name.split(' ')[0])
           + (q.status === 'aceptado' && inClient !== true ? '<p class="small" style="margin-top:.5rem">✓ Ya es un proyecto en marcha. <button type="button" data-open-quote="' + esc(q.token) + '">Abrir la ficha del cliente</button></p>' : '') : '')
         + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
           + '<div class="grid"><label>Estado<select name="status">' + Object.entries(STATUS).map(([v, l]) => '<option value="' + v + '"' + (q.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
-          + '<label>Precio<input name="price" placeholder="Ej.: ARS 450.000 o USD 380" value="' + esc(p.price) + '"></label>'
+          + priceFields(p.price, q)
           + '<label>Válido hasta<input type="date" name="validUntil" value="' + esc(p.validUntil) + '"></label></div>'
           + '<label>Qué incluye (uno por renglón; para sumar una descripción, separala con un guion largo: Galería de tortas — Fotos ampliables)<textarea name="includes" rows="6">' + esc(p.includes) + '</textarea></label>'
           + '<label style="margin-top:.75rem">Condiciones de contratación (una por renglón; vienen sugeridas según el plan, podés editarlas)<textarea name="conditions" rows="5">' + esc(q.proposal ? p.conditions : defaultConditions(q.plan, q.lang)) + '</textarea></label>'
@@ -246,6 +271,7 @@ export const adminPage = () => `<!doctype html>
           + '<label style="margin-top:.75rem">Link para pagar en cuotas en tu tienda (dejalo vacío si este presupuesto no se puede pagar ahí)'
           + '<input name="storeLink" placeholder="https://jnbcreativestudio.mitiendanube.com/productos/..." value="' + esc(q.proposal ? p.storeLink : (q.lang === 'en' ? '' : 'https://jnbcreativestudio.mitiendanube.com/')) + '"></label>'
           + '<p class="small muted" style="margin-top:.5rem">El cliente ve la propuesta cuando el estado es "Enviado". Cuando te confirme por WhatsApp, pasalo a "Aceptado": se crea solo el seguimiento del proyecto y el cliente lo ve en este mismo link.</p>'
+          + '<label class="check-line"><input type="checkbox" name="notify" checked> 📧 Avisarle por mail al cliente cuando el estado sea "Enviado"</label>'
           + '<button class="primary">Guardar</button></form></details>' : '')
         + '</article>';
   };
@@ -347,6 +373,7 @@ export const adminPage = () => `<!doctype html>
     if (subTab === 'estado') {
       body = linkBox(projectLink(p), p.lang, p.client)
         + '<form class="project-form card" style="margin-top:.75rem">'
+        + '<label class="check-line" style="margin-bottom:.5rem"><input type="checkbox" id="stage-notify" checked> 📧 Avisarle por mail al cliente cada vez que cambio la etapa</label>'
         + '<p class="small muted" style="margin:0 0 .4rem">Etapa actual (tocá la que corresponda; se guarda sola)</p>'
         + '<div class="stepper" role="group" aria-label="Etapa del proyecto">' + STAGES.map((st, i) => '<button type="button" class="step' + (i < p.stage ? ' is-done' : '') + '" data-stage="' + i + '" aria-pressed="' + (p.stage === i) + '"><span class="step-num">' + (i < p.stage ? '✓' : i + 1) + '</span><span class="step-name">' + st + '</span></button>').join('') + '</div>'
         + '<input type="hidden" name="stage" value="' + p.stage + '">'
@@ -603,6 +630,15 @@ export const adminPage = () => `<!doctype html>
   document.addEventListener('click', async (e) => {
     const copyBtn = e.target.closest('[data-copy]');
     if (copyBtn) { e.preventDefault(); copy(copyBtn.dataset.copy); return; }
+    const resend = e.target.closest('[data-resend]');
+    if (resend) {
+      if (!confirm('¿Mandarle al cliente el mail de confirmación con sus respuestas?')) return;
+      resend.disabled = true;
+      const r = await api('reenviar/' + resend.dataset.resend, {}).catch(() => ({ ok: false }));
+      toast(r.ok ? 'Mail enviado al cliente' : 'No se pudo enviar el mail');
+      if (r.ok) load(); else resend.disabled = false;
+      return;
+    }
     const mail = e.target.closest('[data-mail]');
     if (mail) {
       e.preventDefault();
@@ -659,10 +695,11 @@ export const adminPage = () => `<!doctype html>
       form.elements.stage.value = step.dataset.stage;
       const values = Object.fromEntries(new FormData(form));
       try {
-        const r = await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview });
+        const notify = Boolean($('stage-notify') && $('stage-notify').checked);
+        const r = await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview, notify });
         toast(r.launched
           ? (r.launchMailed ? '¡Publicado! Le mandé el mail con la reseña y su cupón ' + r.coupon : '¡Publicado! Se creó el cupón ' + r.coupon + ' y el pedido de reseña (el mail no salió: revisá que tenga mail)')
-          : 'Etapa: ' + STAGES[Number(values.stage)] + '. El cliente ya la ve.');
+          : 'Etapa: ' + STAGES[Number(values.stage)] + '. ' + (r.stageMailed ? 'Le avisé por mail.' : (notify ? 'El cliente la ve en su link (el mail no salió).' : 'El cliente la ve en su link.')));
         load();
       } catch (err) {
         form.querySelectorAll('.step').forEach((b) => { b.disabled = false; });
@@ -683,9 +720,12 @@ export const adminPage = () => `<!doctype html>
     const values = Object.fromEntries(new FormData(form));
     if (form.classList.contains('quote-form')) {
       e.preventDefault();
-      if (SENT.includes(values.status) && !values.price.trim()) { toast('Falta el precio'); return; }
+      values.price = values.amount && values.amount.trim() ? values.currency + ' ' + values.amount.trim() : '';
+      values.notify = values.notify === 'on';
+      if (SENT.includes(values.status) && !values.price) { toast('Falta el precio'); return; }
       const saved = await api('presupuestos/' + form.closest('[data-token]').dataset.token, values);
-      toast(saved.created ? (saved.briefMailed ? 'Aceptado: se creó el proyecto y le mandé el link del brief por mail' : 'Aceptado: se creó el proyecto (copiá el link del brief en Proyectos)') : 'Propuesta guardada');
+      toast(saved.created ? (saved.briefMailed ? 'Aceptado: se creó el proyecto y le mandé el link del brief por mail' : 'Aceptado: se creó el proyecto (copiá el link del brief en Clientes)')
+        : (saved.proposalMailed ? 'Propuesta guardada y le avisé por mail' : 'Propuesta guardada'));
       load();
     } else if (form.id === 'invite') {
       e.preventDefault();
