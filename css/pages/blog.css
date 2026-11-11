@@ -862,3 +862,113 @@
     height: 1.3rem;
     width: 1.3rem;
 }
+
+/* Newsletter: recuadro debajo de las cards del blog para dejar el mail */
+.blog-newsletter {
+    align-items: center;
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: 3rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    scroll-margin-top: 6rem;
+}
+
+.blog-newsletter-text h2 {
+    color: var(--text);
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    margin: .4rem 0 .6rem;
+}
+
+.blog-newsletter-text p:not(.eyebrow) {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.blog-newsletter-text p:not(.eyebrow) + p {
+    margin-top: .5rem;
+}
+
+.blog-newsletter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.blog-newsletter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.blog-newsletter-row input {
+    background: var(--mist);
+    border: .08rem solid var(--field-border);
+    border-radius: 999px;
+    color: var(--text);
+    flex: 1 1 14rem;
+    font: inherit;
+    min-height: 3rem;
+    min-width: 0;
+    padding: .7rem 1.2rem;
+}
+
+.blog-newsletter-row input::placeholder {
+    color: var(--muted);
+}
+
+.blog-newsletter-row input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .2rem rgba(117, 67, 214, .35);
+    outline: none;
+}
+
+.blog-newsletter-row input[aria-invalid="true"] {
+    border-color: #b93232;
+}
+
+:root[data-theme="dark"] .blog-newsletter-row input[aria-invalid="true"] {
+    border-color: #f08a8a;
+}
+
+.blog-newsletter-row .button {
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.blog-newsletter-row .button:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+.blog-newsletter-status {
+    font-size: .9375rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Darse de baja: el botón aparece solo al llegar desde el link del mail */
+.blog-newsletter-unsub {
+    align-self: flex-start;
+    cursor: pointer;
+}
+
+@media (max-width: 52rem) {
+    .blog-newsletter {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 30rem) {
+    .blog-newsletter-row .button {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+}

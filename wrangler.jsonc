@@ -10,19 +10,25 @@
     "directory": ".",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    // Todo lo que está bajo /api/ (me gusta, preguntas frecuentes, consultas, presupuestos, reseñas, proyectos y el panel) lo responde el Worker.
+    // Todo lo que está bajo /api/ (me gusta, newsletter, preguntas frecuentes, consultas, presupuestos, reseñas, proyectos y el panel) lo responde el Worker.
     "run_worker_first": ["/api/*"]
   },
   "durable_objects": {
     "bindings": [
       { "name": "BLOG_LIKES", "class_name": "BlogLikes" },
       { "name": "FAQ_FEEDBACK", "class_name": "FaqFeedback" },
-      { "name": "STUDIO", "class_name": "StudioData" }
+      { "name": "STUDIO", "class_name": "StudioData" },
+      { "name": "NEWSLETTER", "class_name": "Newsletter" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["BlogLikes"] },
     { "tag": "v2", "new_sqlite_classes": ["FaqFeedback"] },
-    { "tag": "v3", "new_sqlite_classes": ["StudioData"] }
-  ]
+    { "tag": "v3", "new_sqlite_classes": ["StudioData"] },
+    { "tag": "v4", "new_sqlite_classes": ["Newsletter"] }
+  ],
+  // Una vez por hora, a los 20 minutos: el newsletter del blog se fija si hay un artículo nuevo para avisar
+  "triggers": {
+    "crons": ["20 * * * *"]
+  }
 }

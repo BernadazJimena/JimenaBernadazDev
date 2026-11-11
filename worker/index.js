@@ -11,8 +11,10 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { handleStudio, isAdmin } from './studio.js';
+import { handleNewsletter, notifyNewArticles } from './newsletter.js';
 
 export { StudioData } from './studio.js';
+export { Newsletter } from './newsletter.js';
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VISITOR = /^[a-zA-Z0-9-]{16,64}$/;
@@ -226,6 +228,7 @@ export default {
     const { pathname } = new URL(request.url);
     if (pathname === '/api/likes' || pathname.startsWith('/api/likes/')) return handleLikes(request, env);
     if (pathname === '/api/faq' || pathname.startsWith('/api/faq/')) return handleFaq(request, env);
+    if (/^\/api\/(admin\/)?newsletter(\/|$)/.test(pathname)) return handleNewsletter(request, env);
     // Números de las preguntas frecuentes para el panel privado
     if (pathname === '/api/admin/faq' && request.method === 'GET') {
       if (!env.ADMIN_CLAVE) return json({ error: 'not found' }, 404);
@@ -234,5 +237,10 @@ export default {
     }
     if (/^\/api\/(consultas|presupuestos|resenas|proyectos|brief|disponibilidad|cupon|admin)(\/|$)/.test(pathname)) return handleStudio(request, env);
     return env.ASSETS.fetch(request);
+  },
+
+  // Una vez por hora (wrangler.jsonc → triggers): si se publicó un artículo nuevo, avisa a los suscriptores del blog
+  async scheduled(controller, env, ctx) {
+    ctx.waitUntil(notifyNewArticles(env));
   },
 };

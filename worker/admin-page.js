@@ -135,12 +135,14 @@ export const adminPage = () => `<!doctype html>
       <button data-tab="proyectos" aria-pressed="false">Clientes <span class="badge" id="n-proyectos"></span></button>
       <button data-tab="cupones" aria-pressed="false">Cupones <span class="badge" id="n-cupones"></span></button>
       <button data-tab="faq" aria-pressed="false">Preguntas frecuentes</button>
+      <button data-tab="newsletter" aria-pressed="false">Newsletter <span class="badge" id="n-newsletter"></span></button>
     </nav>
     <section id="tab-consultas"></section>
     <section id="tab-resenas" hidden></section>
     <section id="tab-proyectos" hidden></section>
     <section id="tab-cupones" hidden></section>
     <section id="tab-faq" hidden></section>
+    <section id="tab-newsletter" hidden></section>
   </div>
   <dialog class="brief-view" id="brief-view"><div class="brief-view-head"><strong id="brief-view-title">Brief</strong><div class="row"><button type="button" id="brief-view-print">Imprimir</button><button type="button" id="brief-view-close">Cerrar</button></div></div><div class="brief-view-body" id="brief-view-body"></div></dialog>
   <div class="toast" id="toast" role="status" hidden></div>
@@ -217,6 +219,7 @@ export const adminPage = () => `<!doctype html>
   const load = async () => {
     data = await api('datos');
     try { data.faq = await api('faq'); } catch (e) { data.faq = null; }
+    try { data.newsletter = await api('newsletter'); } catch (e) { data.newsletter = null; }
     $('login').hidden = true; $('app').hidden = false;
     render();
   };
@@ -422,7 +425,7 @@ export const adminPage = () => `<!doctype html>
   const openClient = (token, tab) => {
     selected = token; subTab = tab || 'estado';
     document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === 'proyectos')));
-    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq'].forEach((t) => { $('tab-' + t).hidden = t !== 'proyectos'; });
+    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq', 'newsletter'].forEach((t) => { $('tab-' + t).hidden = t !== 'proyectos'; });
     renderProjects();
     window.scrollTo({ top: 0 });
   };
@@ -623,7 +626,28 @@ export const adminPage = () => `<!doctype html>
       + '<div id="mail-test-result"></div></details>';
   };
 
-  const render = () => { renderAvailability(); renderMailCheck(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); };
+  // ---- Newsletter del blog: suscriptores y avisos de artículos nuevos
+  const renderNewsletter = () => {
+    const n = data.newsletter;
+    if (!n) { $('tab-newsletter').innerHTML = '<p class="empty">No se pudieron cargar los datos.</p>'; return; }
+    const active = n.subscribers.filter((s) => s.status === 'activo');
+    const waiting = n.subscribers.length - active.length;
+    $('n-newsletter').textContent = active.length || '';
+    $('tab-newsletter').innerHTML = '<h2>Newsletter del blog</h2>'
+      + '<p class="muted">Quien deja su mail en el blog recibe un mail para confirmar; recién ahí queda anotado. Cuando se publica un artículo, a la hora siguiente le llega a cada suscriptor un aviso con la foto, el resumen y el link. Cada aviso trae su link para darse de baja.</p>'
+      + '<p><strong>' + active.length + '</strong> ' + (active.length === 1 ? 'suscriptor confirmado' : 'suscriptores confirmados') + (waiting ? ' · <span class="muted">' + waiting + ' sin confirmar (se borran solos a los 7 días)</span>' : '') + '</p>'
+      + '<form id="newsletter-test" class="row" style="margin:.75rem 0 1.25rem"><input type="email" name="to" required placeholder="Tu mail, para ver cómo llega el aviso del último artículo" style="flex:1;min-width:14rem"><button class="primary">Mandarme una prueba</button></form>'
+      + (n.subscribers.length ? '<table><thead><tr><th>Mail</th><th>Estado</th><th>Desde</th><th></th></tr></thead><tbody>'
+        + n.subscribers.map((s) => '<tr><td>' + esc(s.email) + '</td><td><span class="chip ' + (s.status === 'activo' ? 'ok' : 'warn') + '">' + (s.status === 'activo' ? 'Confirmado' : 'Sin confirmar') + '</span></td>'
+          + '<td>' + date(s.confirmed || s.created) + '</td><td class="n"><button type="button" data-unsub="' + esc(s.email) + '">Quitar</button></td></tr>').join('')
+        + '</tbody></table>' : '<p class="empty">Todavía no hay suscriptores.</p>')
+      + '<h2 style="margin-top:1.5rem">Avisos enviados</h2>'
+      + (n.sent.filter((x) => !x.silent).length ? '<table><thead><tr><th>Artículo</th><th>Enviado</th><th class="n">Llegaron a Resend</th></tr></thead><tbody>'
+        + n.sent.filter((x) => !x.silent).map((x) => '<tr><td><a href="/blog/' + esc(x.slug) + '/" target="_blank">' + esc(x.title) + '</a>' + (x.error ? '<br><span class="small" style="color:#d0453f">' + esc(x.error) + '</span>' : '') + '</td><td>' + date(x.at) + '</td><td class="n">' + x.ok + ' de ' + x.total + '</td></tr>').join('')
+        + '</tbody></table>' : '<p class="empty">Todavía no salió ningún aviso. Los artículos que ya estaban publicados no se avisan; sale uno con cada artículo nuevo.</p>');
+  };
+
+  const render = () => { renderAvailability(); renderMailCheck(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); renderNewsletter(); };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
@@ -645,7 +669,7 @@ export const adminPage = () => `<!doctype html>
   $('tabs').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-tab]'); if (!b) return;
     document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq'].forEach((t) => { $('tab-' + t).hidden = t !== b.dataset.tab; });
+    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq', 'newsletter'].forEach((t) => { $('tab-' + t).hidden = t !== b.dataset.tab; });
     if (b.dataset.tab === 'proyectos') { selected = ''; renderProjects(); }
   });
 
@@ -729,6 +753,13 @@ export const adminPage = () => `<!doctype html>
       }
       return;
     }
+    const unsub = e.target.closest('[data-unsub]');
+    if (unsub) {
+      if (!confirm('¿Quitar ' + unsub.dataset.unsub + ' del newsletter? No le llegan más avisos.')) return;
+      await api('newsletter/borrar', { email: unsub.dataset.unsub });
+      data.newsletter = await api('newsletter'); renderNewsletter(); toast('Quitado del newsletter');
+      return;
+    }
     const remove = e.target.closest('[data-remove]');
     if (remove) {
       if (!confirm('¿Borrar este proyecto? El link del cliente deja de funcionar.')) return;
@@ -770,6 +801,13 @@ export const adminPage = () => `<!doctype html>
           + (r.hasKey && !r.keyLooksRight ? '<br><br>⚠ La clave cargada no empieza con <code>re_</code>: las claves de Resend siempre empiezan así. Copiá de nuevo la clave desde Resend y pegá solo eso en RESEND_API_KEY.' : '') + '</div>';
       btn.disabled = false; btn.textContent = 'Probar envío de mail';
       if (!r.ok) { const fresh = await api('datos'); data.mailError = fresh.mailError; }
+    } else if (form.id === 'newsletter-test') {
+      e.preventDefault();
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      const r = await api('newsletter/probar', { to: new FormData(form).get('to') }).catch(() => ({ ok: false, error: 'No se pudo conectar con el sitio.' }));
+      toast(r.ok ? 'Te mandé el aviso de "' + r.title + '"' : 'No salió: ' + (r.error || 'revisá los mails en "Mails al cliente"'));
+      btn.disabled = false;
     } else if (form.id === 'availability-form') {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(form));

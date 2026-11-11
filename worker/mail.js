@@ -388,3 +388,48 @@ export function stageMail({ lang, name, link, stage, store }) {
   const plain = [t.hello(first), '', t.intro, `${stage + 1}/5 · ${title}`, text, '', `${t.button}: ${link}`, '', 'Jimena Bernadaz'].join('\n');
   return { subject: t.subject(title), html: frame(lang, t.subject(title), inner, t.footer), text: plain };
 }
+
+// ---- Newsletter del blog (el blog está solo en español)
+
+// Para confirmar la suscripción (doble confirmación: así nadie anota un mail ajeno)
+export function newsletterConfirmMail({ link }) {
+  const subject = 'Confirmá tu suscripción al blog';
+  const inner = `
+    <tr><td style="padding:16px 28px 0;font-size:16px;line-height:1.6;">
+      <p style="margin:0 0 12px;font-weight:700;">¡Hola!</p>
+      <p style="margin:0 0 12px;">Gracias por sumarte al blog de JNB Creative Studio. Para empezar a recibir los artículos nuevos en tu mail, confirmá tu suscripción con este botón:</p>
+    </td></tr>
+    <tr><td style="padding:8px 28px 0;">
+      <a href="${esc(link)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:13px 24px;">Confirmar mi suscripción →</a>
+      <p style="margin:12px 0 0;font-size:14px;line-height:1.5;color:#625970;">Si no fuiste vos, ignorá este mail: sin confirmar, no te llega nada más.</p>
+    </td></tr>
+    <tr><td style="padding:24px 28px 28px;font-size:15px;line-height:1.6;">
+      <p style="margin:0;font-weight:800;">Jimena Bernadaz</p>
+      <p style="margin:0;"><a href="https://jnbcreativestudio.com.ar/blog/" style="color:#5d31b8;text-decoration:none;">JNB Creative Studio</a></p>
+    </td></tr>`;
+  const plain = ['¡Hola!', '', 'Gracias por sumarte al blog de JNB Creative Studio. Para empezar a recibir los artículos nuevos en tu mail, confirmá tu suscripción en este link:', link, '', 'Si no fuiste vos, ignorá este mail: sin confirmar, no te llega nada más.', '', 'Jimena Bernadaz'].join('\n');
+  return { subject, html: frame('es', subject, inner, 'Recibiste este mail porque alguien anotó esta dirección en el blog de jnbcreativestudio.com.ar.'), text: plain };
+}
+
+// Aviso de artículo nuevo, con foto, resumen y link para darse de baja
+export function newsletterArticleMail({ title, summary, image, link, unsubscribe }) {
+  const subject = `Nuevo en el blog: ${title}`;
+  const inner = `
+    ${image ? `<tr><td style="padding:12px 28px 0;"><a href="${esc(link)}"><img src="${esc(image)}" alt="" width="504" style="display:block;width:100%;max-width:504px;height:auto;border-radius:14px;border:0;"></a></td></tr>` : ''}
+    <tr><td style="padding:18px 28px 0;font-size:16px;line-height:1.6;">
+      <p style="margin:0 0 6px;font-size:13px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7543d6;">Artículo nuevo</p>
+      <p style="margin:0 0 12px;font-size:21px;line-height:1.3;font-weight:800;color:#211632;">${esc(title)}</p>
+      ${summary ? `<p style="margin:0 0 16px;color:#46385f;">${esc(summary)}</p>` : ''}
+    </td></tr>
+    <tr><td style="padding:4px 28px 0;">
+      <a href="${esc(link)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:13px 24px;">Leer el artículo →</a>
+    </td></tr>
+    <tr><td style="padding:24px 28px 28px;font-size:15px;line-height:1.6;">
+      <p style="margin:0;font-weight:800;">Jimena Bernadaz</p>
+      <p style="margin:0;"><a href="https://jnbcreativestudio.com.ar/blog/" style="color:#5d31b8;text-decoration:none;">JNB Creative Studio</a></p>
+    </td></tr>`;
+  const footer = `<p style="max-width:560px;margin:16px auto 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.5;color:#625970;">Recibís este mail porque te suscribiste al blog de jnbcreativestudio.com.ar. <a href="${esc(unsubscribe)}" style="color:#5d31b8;">Darme de baja</a></p>`;
+  const html = frame('es', subject, inner, '').replace('</td></tr>\n</table>\n</body>', `  ${footer}\n</td></tr>\n</table>\n</body>`);
+  const plain = ['Artículo nuevo en el blog de JNB Creative Studio:', '', title, ...(summary ? ['', summary] : []), '', `Leer el artículo: ${link}`, '', 'Jimena Bernadaz', '', `Para darte de baja: ${unsubscribe}`].join('\n');
+  return { subject, html, text: plain };
+}

@@ -634,7 +634,7 @@ let mailStore = null; // se completa en cada pedido, para poder guardar el últi
 // Los valores cargados en Cloudflare se limpian: espacios y comillas de más son un error común al pegarlos
 const cleanEnv = (value) => String(value || '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
 
-async function resendSend(env, to, mail) {
+export async function resendSend(env, to, mail) {
   // Si la clave quedó pegada con otro texto (por ejemplo "RESEND_API_KEY=re_..."), se usa solo la parte "re_..."
   const rawKey = cleanEnv(env.RESEND_API_KEY);
   const key = (rawKey.match(/re_[A-Za-z0-9_]+/) || [rawKey])[0];
@@ -658,6 +658,35 @@ async function resendSend(env, to, mail) {
   try { message = JSON.parse(detail).message || detail; } catch { /* no era JSON */ }
   console.error('Resend rechazó el mail', res.status, message);
   return remember({ ok: false, status: res.status, error: String(message).slice(0, 500) }, to, mail);
+}
+
+// Varios mails en un solo pedido a Resend (hasta 100 por vez). Lo usa el newsletter del blog.
+// Cada mail: { to, subject, html, text, headers? }. Devuelve cuántos aceptó Resend.
+export async function resendBatch(env, mails) {
+  const rawKey = cleanEnv(env.RESEND_API_KEY);
+  const key = (rawKey.match(/re_[A-Za-z0-9_]+/) || [rawKey])[0];
+  const from = cleanEnv(env.MAIL_FROM);
+  const replyTo = cleanEnv(env.MAIL_REPLY_TO);
+  if (!key || !from) return { ok: 0, error: 'Faltan RESEND_API_KEY o MAIL_FROM en Cloudflare.' };
+  let ok = 0;
+  let error = '';
+  for (let i = 0; i < mails.length; i += 100) {
+    const chunk = mails.slice(i, i + 100).map((m) => ({ from, to: [m.to], reply_to: replyTo || undefined, subject: m.subject, html: m.html, text: m.text, headers: m.headers }));
+    try {
+      const res = await fetch('https://api.resend.com/emails/batch', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+        body: JSON.stringify(chunk),
+      });
+      if (res.ok) ok += chunk.length;
+      else error = `${res.status} ${(await res.text().catch(() => '')).slice(0, 300)}`;
+    } catch (networkError) {
+      error = `No se pudo conectar con Resend: ${networkError.message}`;
+    }
+    if (i + 100 < mails.length) await new Promise((r) => setTimeout(r, 600)); // Resend acepta pocos pedidos por segundo
+  }
+  if (error) console.error('Resend rechazó parte del newsletter', error);
+  return { ok, error };
 }
 
 async function remember(result, to, mail) {
