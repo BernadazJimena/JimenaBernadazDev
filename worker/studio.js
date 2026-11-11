@@ -423,10 +423,11 @@ export class StudioData extends DurableObject {
     return saved && saved.modo && new Date(saved.hasta) > new Date() ? saved : { modo: '', hasta: '', desde: '' };
   }
 
-  setHours(modo, hasta) {
+  // mensaje: id del mensaje de ausencia (ver js/availability.js); regreso: true si "hasta" es la hora de regreso elegida
+  setHours(modo, hasta, mensaje = '', regreso = false) {
     if (!modo) this.sql.exec("DELETE FROM settings WHERE key = 'horario'");
     else {
-      const value = JSON.stringify({ modo, hasta, desde: new Date().toISOString() });
+      const value = JSON.stringify({ modo, hasta, desde: new Date().toISOString(), mensaje, regreso });
       this.sql.exec(`INSERT INTO settings (key, value) VALUES ('horario', ?)
         ON CONFLICT (key) DO UPDATE SET value = excluded.value`, value);
     }
@@ -811,8 +812,8 @@ export async function handleStudio(request, env, ctx) {
   // ---- Cartel de disponibilidad (lo lee js/intake.js en el inicio)
   if (path === '/api/disponibilidad' && request.method === 'GET') {
     const { estado, reservaDesde } = await store.availability();
-    const { modo, hasta } = await store.hours();
-    return new Response(JSON.stringify({ estado, reservaDesde, horario: modo ? { modo, hasta } : null }), {
+    const { modo, hasta, mensaje, regreso } = await store.hours();
+    return new Response(JSON.stringify({ estado, reservaDesde, horario: modo ? { modo, hasta, mensaje: mensaje || '', regreso: Boolean(regreso) } : null }), {
       headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     });
   }
@@ -964,7 +965,10 @@ export async function handleStudio(request, env, ctx) {
       const modo = ['abierto', 'cerrado'].includes(body.modo) ? body.modo : '';
       const hasta = new Date(body.hasta || '');
       if (modo && (Number.isNaN(hasta.getTime()) || hasta <= new Date() || hasta - new Date() > 45 * DAY)) return badRequest();
-      return json(await store.setHours(modo, modo ? hasta.toISOString() : ''));
+      // Mensaje de ausencia (solo al cerrar): mismo-1..3 y dia-1..3 llevan hora de regreso; sin-1..3 no
+      const mensaje = modo === 'cerrado' && /^(mismo|dia|sin)-[123]$/.test(body.mensaje || '') ? body.mensaje : '';
+      const regreso = Boolean(mensaje) && !mensaje.startsWith('sin-');
+      return json(await store.setHours(modo, modo ? hasta.toISOString() : '', mensaje, regreso));
     }
 
     if (path === '/api/admin/datos' && request.method === 'GET') {

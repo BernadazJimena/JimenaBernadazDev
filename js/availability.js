@@ -35,14 +35,54 @@
         return null;
     };
 
-    // Lo usa el panel para calcular hasta cuándo dura "Cerrar ahora" / "Abrir ahora"
+    // Mensajes de ausencia temporal (se eligen en el panel al cerrar durante el horario de atención).
+    // "mismo": vuelvo hoy a una hora · "dia": vuelvo el próximo día hábil a una hora · "sin": sin hora de regreso.
+    // {hora} = hora de regreso; {cuando} = "mañana" o, si el próximo día hábil no es mañana, "el lunes".
+    const AWAY = {
+        'mismo-1': { es: 'Ausente por el momento · Retomo la atención a las {hora}', en: 'Away for the moment · I’ll be back at {hora}', pt: 'Ausente no momento · Retomo o atendimento às {hora}' },
+        'mismo-2': { es: 'Salí un momento · Vuelvo a atender a las {hora}', en: 'Stepped out for a moment · Back at {hora}', pt: 'Saí por um momento · Volto a atender às {hora}' },
+        'mismo-3': { es: 'Atención pausada · Estaré de regreso a las {hora}', en: 'Paused for now · I’ll be back at {hora}', pt: 'Atendimento pausado · Estarei de volta às {hora}' },
+        'dia-1': { es: 'Ausente por hoy · Retomo la atención {cuando} a las {hora}', en: 'Away for today · I’ll be back {cuando} at {hora}', pt: 'Ausente hoje · Retomo o atendimento {cuando} às {hora}' },
+        'dia-2': { es: 'Hoy no estaré disponible · Vuelvo {cuando} desde las {hora}', en: 'Not available today · Back {cuando} from {hora}', pt: 'Hoje não estarei disponível · Volto {cuando} a partir das {hora}' },
+        'dia-3': { es: 'Atención pausada por hoy · Retomo el próximo día hábil a las {hora}', en: 'Paused for today · I’ll be back on the next business day at {hora}', pt: 'Atendimento pausado hoje · Retomo no próximo dia útil às {hora}' },
+        'sin-1': { es: 'Ausente por el momento · Gracias por tu paciencia', en: 'Away for the moment · Thanks for your patience', pt: 'Ausente no momento · Obrigada pela paciência' },
+        'sin-2': { es: 'En este momento no estoy disponible · Responderé apenas regrese', en: 'Not available right now · I’ll reply as soon as I’m back', pt: 'No momento não estou disponível · Respondo assim que voltar' },
+        'sin-3': { es: 'Atención temporalmente pausada · Gracias por esperar', en: 'Temporarily paused · Thanks for waiting', pt: 'Atendimento temporariamente pausado · Obrigada por esperar' },
+    };
+    const TOMORROW = { es: 'mañana', en: 'tomorrow', pt: 'amanhã' };
+    const ON_DAY = { es: (d) => `el ${d}`, en: (d) => `on ${d}`, pt: (d) => `na ${d}` }; // días hábiles: en portugués todos llevan "na"
+    const LOCALE = { es: 'es-AR', en: 'en-US', pt: 'pt-BR' };
+    const dayInArgentina = (moment) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(moment);
+    const addDay = (iso) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); };
+
+    const awayText = (id, until, lang = 'es', from = new Date()) => {
+        const key = ['en', 'pt'].includes(lang) ? lang : 'es';
+        let message = AWAY[id] ? id : 'sin-1';
+        // "Vuelvo el próximo día hábil": el mismo día del regreso ya no es "por hoy", pasa al mensaje de "vuelvo hoy"
+        if (until && message.startsWith('dia-') && dayInArgentina(until) === dayInArgentina(from)) message = message.replace('dia-', 'mismo-');
+        const template = AWAY[message][key];
+        if (!until) return template;
+        const parts = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' }).formatToParts(until);
+        const hora = `${Number(parts.find((p) => p.type === 'hour').value)}:${parts.find((p) => p.type === 'minute').value}`;
+        const day = dayInArgentina(until);
+        const cuando = day === addDay(dayInArgentina(from)) ? TOMORROW[key]
+            : ON_DAY[key](new Intl.DateTimeFormat(LOCALE[key], { weekday: 'long', timeZone: 'America/Argentina/Buenos_Aires' }).format(until));
+        return template.replace('{hora}', hora).replace('{cuando}', cuando);
+    };
+
+    // Lo usa el panel para calcular hasta cuándo dura "Cerrar ahora" / "Abrir ahora" y para los mensajes de ausencia
     window.JNBHours = {
         isOpenAt,
         // Cerrar ahora: hasta la próxima apertura habitual. Abrir ahora: hasta el próximo cambio del horario habitual.
         manualUntil: (mode, from = new Date()) => nextChange(from, mode === 'cerrado'),
+        // Próximo día hábil después de hoy (fecha 'AAAA-MM-DD'), para "vuelvo mañana"
+        nextBusinessDay: (from = new Date()) => (holidays ? holidays.nextBusinessDay(dayInArgentina(from)) : null),
+        today: (from = new Date()) => dayInArgentina(from),
+        AWAY,
+        awayText,
     };
 
-    // Estado manual guardado desde el panel ({ modo: 'abierto' | 'cerrado', hasta: fecha })
+    // Estado manual guardado desde el panel ({ modo: 'abierto' | 'cerrado', hasta, mensaje?, regreso? })
     let manual = null;
     const manualNow = () => (manual && new Date(manual.hasta) > new Date() ? manual.modo : '');
     const loadManual = async () => {
@@ -88,9 +128,11 @@
         const today = holidays?.now().date;
         const isHoliday = Boolean(holidays) && !isWeekend && !holidays.isBusinessDay(today);
         const isScheduledClosed = isWeekend || isHoliday || currentHour >= CLOSE_HOUR || currentHour < OPEN_HOUR;
-        // Lo que se eligió en el panel manda mientras dure; si no, el horario habitual
+        // Lo que se eligió en el panel manda mientras dure; si no, el horario habitual.
+        // Una ausencia solo se ve dentro del horario de atención: fuera de horario siempre va el mensaje habitual.
         const forced = manualNow();
-        const isOutsideHours = forced ? forced === 'cerrado' : isScheduledClosed;
+        const isAway = forced === 'cerrado' && !isScheduledClosed;
+        const isOutsideHours = forced === 'abierto' ? false : isScheduledClosed || isAway;
 
         statusDot.classList.toggle('is-closed', isOutsideHours);
 
@@ -100,6 +142,7 @@
             // Antes de las 9 de un día hábil respondo ese mismo día; después de las 17, el fin de semana o un feriado, el próximo día hábil.
             const isEarlyWeekday = !isWeekend && !isHoliday && currentHour < OPEN_HOUR;
             statusText.textContent = !isOutsideHours ? statusText.dataset.open
+                : isAway ? awayText(manual.mensaje, manual.regreso ? new Date(manual.hasta) : null, document.documentElement.lang.slice(0, 2))
                 : isEarlyWeekday && statusText.dataset.early ? statusText.dataset.early
                     : (isHoliday && holidayMessage(statusText, today)) || statusText.dataset.closed;
             statusText.closest('.availability-status')?.classList.toggle('is-closed', isOutsideHours);

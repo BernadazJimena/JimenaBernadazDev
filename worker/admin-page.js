@@ -85,6 +85,7 @@ export const adminPage = () => `<!doctype html>
   .brief-view-a.is-changed { background: color-mix(in srgb, #f2b45c 22%, transparent); border-radius: .4rem; padding: .2rem .4rem; }
   .brief-view-prev { color: var(--muted); font-size: .85rem; margin: .2rem 0 0; text-decoration: line-through; white-space: pre-line; }
   .tag-edit { background: #f2b45c; border-radius: 999px; color: #3a2400; font-size: .7rem; font-weight: 800; margin-left: .35rem; padding: .05rem .45rem; vertical-align: .1em; }
+  .away-box { margin-top: .75rem; } .away-box summary { display: inline-flex; list-style: none; } .away-box summary::-webkit-details-marker { display: none; } .away-box[open] summary { margin-bottom: .5rem; }
   .avail-options { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: .75rem 0; }
   .avail-option { align-items: flex-start; background: var(--bg); border: 1px solid var(--line); border-radius: .8rem; cursor: pointer; display: flex; font-weight: 700; gap: .55rem; padding: .7rem .8rem; }
   .avail-option:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
@@ -583,25 +584,92 @@ export const adminPage = () => `<!doctype html>
   // ---- Horario de atención: "Disponible ahora / Fuera de horario" del inicio.
   // El horario habitual (días hábiles de 9 a 17) lo calcula js/availability.js, el mismo que usa el inicio.
   const HOURS_DATE = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' });
+  const AWAY_GROUPS = [['mismo', 'Vuelvo hoy', 'Elegís la hora de regreso.'], ['dia', 'Vuelvo el próximo día hábil', 'Elegís la hora; el día lo calcula solo (saltea fines de semana y feriados).'], ['sin', 'Sin hora de regreso', 'Sigue cerrado hasta que lo reabras o hasta la próxima apertura habitual.']];
+  const pad = (n) => String(n).padStart(2, '0');
+  const defaultHour = (group) => {
+    if (group === 'dia') return '09:00';
+    const t = new Date(Date.now() + 60 * 60 * 1000);
+    const parts = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' }).formatToParts(t);
+    const h = Number(parts.find((x) => x.type === 'hour').value);
+    const m = Number(parts.find((x) => x.type === 'minute').value);
+    return m <= 30 ? pad(h) + ':30' : pad((h + 1) % 24) + ':00';
+  };
+  // Lo que se va a guardar con lo elegido en el formulario de ausencia
+  const awayPlan = (values) => {
+    const H = window.JNBHours;
+    const group = values.grupo || 'sin';
+    const mensaje = values.mensaje && values.mensaje.startsWith(group + '-') ? values.mensaje : group + '-1';
+    if (group === 'sin') return { mensaje, hasta: H.manualUntil('cerrado'), regreso: false };
+    if (!/^[0-9]{2}:[0-9]{2}$/.test(values.hora || '')) return { mensaje, error: 'Elegí la hora de regreso.' };
+    const day = group === 'mismo' ? H.today() : H.nextBusinessDay();
+    if (!day) return { mensaje, error: 'No se pudo calcular el próximo día hábil.' };
+    const hasta = new Date(day + 'T' + values.hora + ':00-03:00');
+    if (hasta <= new Date()) return { mensaje, error: 'Esa hora ya pasó: elegí una más tarde.' };
+    return { mensaje, hasta, regreso: true };
+  };
+  const awayOptions = (group) => Object.keys(window.JNBHours.AWAY).filter((id) => id.startsWith(group + '-'))
+    .map((id) => '<option value="' + id + '">' + esc(window.JNBHours.AWAY[id].es.replace('{hora}', '[hora]').replace('{cuando}', 'mañana')) + '</option>').join('');
+  const awayPreview = (form) => {
+    const values = Object.fromEntries(new FormData(form));
+    const plan = awayPlan(values);
+    $('away-hora').hidden = values.grupo === 'sin';
+    $('away-preview').textContent = window.JNBHours.awayText(plan.mensaje, plan.regreso && plan.hasta ? plan.hasta : null, 'es');
+    $('away-until').textContent = plan.error ? '⚠ ' + plan.error
+      : plan.regreso ? 'Vuelve a abrir solo el ' + HOURS_DATE.format(plan.hasta) + '.'
+        : 'Sigue cerrado hasta que lo reabras o, si no, hasta la próxima apertura habitual (' + HOURS_DATE.format(plan.hasta) + ').';
+  };
+  let hoursEditing = false;
   const renderHours = () => {
     const H = window.JNBHours;
     if (!H) { $('hours').innerHTML = ''; return; }
+    hoursEditing = false;
     const h = data.hours || {};
     const manual = h.modo && new Date(h.hasta) > new Date() ? h.modo : '';
-    const open = manual ? manual === 'abierto' : H.isOpenAt(new Date());
+    const scheduledOpen = H.isOpenAt(new Date());
+    const away = manual === 'cerrado' && scheduledOpen;
+    const open = manual === 'abierto' || (scheduledOpen && !away);
     const until = manual ? HOURS_DATE.format(new Date(h.hasta)) : '';
+    const awayNow = manual === 'cerrado' ? H.awayText(h.mensaje, h.regreso ? new Date(h.hasta) : null, 'es') : '';
+    const group = 'mismo';
+    const form = '<details class="away-box"><summary class="btn primary">Cerrar ahora (ausencia)</summary><form id="away-form">'
+      + '<div class="avail-options">' + AWAY_GROUPS.map(([v, title, hint]) => '<label class="avail-option"><input type="radio" name="grupo" value="' + v + '"' + (v === group ? ' checked' : '') + '><span>' + title + '<br><span class="small muted" style="font-weight:500">' + hint + '</span></span></label>').join('') + '</div>'
+      + '<div class="grid"><label>Mensaje<select name="mensaje">' + awayOptions(group) + '</select></label>'
+      + '<label id="away-hora">Hora de regreso<input type="time" name="hora" step="900" value="' + defaultHour(group) + '"></label></div>'
+      + '<p class="avail-preview"><span class="small muted">Así se ve en el inicio:</span><br><strong id="away-preview"></strong><br><span class="small muted" id="away-until"></span></p>'
+      + '<p class="small muted" style="margin:0 0 .75rem">El mensaje de ausencia se ve solo de 9 a 17 en días hábiles. Fuera de ese horario se ve siempre el mensaje habitual de "Fuera de horario".</p>'
+      + '<button class="primary">Activar ausencia</button></form></details>';
     $('hours').innerHTML = '<div class="card"><div class="row space"><h2 style="margin:0">Horario de atención</h2>'
-      + '<span class="chip ' + (open ? 'ok' : 'warn') + '">' + (open ? 'Disponible ahora' : 'Fuera de horario') + '</span></div>'
+      + '<span class="chip ' + (open ? 'ok' : 'warn') + '">' + (open ? 'Disponible ahora' : away ? 'Ausente' : 'Fuera de horario') + '</span></div>'
       + '<p class="small muted" style="margin:.4rem 0 .75rem">El cartel de la sección Disponibilidad del inicio, en los tres idiomas. Horario habitual: lunes a viernes de 9 a 17, sin feriados.</p>'
-      + (manual
-        ? '<div class="alert" style="margin-bottom:.75rem">' + (manual === 'cerrado' ? '🔴 Cerrado a mano' : '🟢 Abierto a mano') + ' hasta el ' + esc(until) + '. Ahí vuelve solo el horario habitual.</div>'
-        : '<p style="margin:0 0 .75rem">Funciona con el horario habitual.</p>')
-      + '<div class="row">' + (open
-        ? '<button type="button" class="primary" data-hours="cerrado">Cerrar ahora</button>'
-        : '<button type="button" class="primary" data-hours="abierto">Abrir ahora</button>')
-      + (manual ? '<button type="button" data-hours="">Volver al horario habitual</button>' : '') + '</div></div>';
+      + (manual === 'cerrado'
+        ? '<div class="alert" style="margin-bottom:.75rem">🔴 Ausencia activa: <strong>“' + esc(awayNow) + '”</strong><br>'
+          + (h.regreso ? 'Vuelve a abrir solo el ' : 'Sigue cerrado hasta que lo reabras o hasta la próxima apertura habitual: ') + esc(until) + '.'
+          + (scheduledOpen ? '' : '<br>Ahora es fuera de horario, así que el inicio muestra el mensaje habitual de "Fuera de horario".') + '</div>'
+        : manual === 'abierto'
+          ? '<div class="alert" style="margin-bottom:.75rem">🟢 Abierto a mano hasta el ' + esc(until) + '. Ahí vuelve solo el horario habitual.</div>'
+          : '<p style="margin:0 0 .75rem">Funciona con el horario habitual.</p>')
+      + '<div class="row">'
+      + (manual === 'cerrado' ? '<button type="button" class="primary" data-hours="">' + (scheduledOpen ? 'Reabrir ahora' : 'Cancelar la ausencia') + '</button>' : '')
+      + (manual === 'abierto' ? '<button type="button" data-hours="">Volver al horario habitual</button>' : '')
+      + (!manual && !scheduledOpen ? '<button type="button" class="primary" data-hours="abierto">Abrir ahora</button>' : '')
+      + '</div>'
+      + (manual !== 'cerrado' && (scheduledOpen || manual === 'abierto') ? form : '')
+      + '</div>';
+    if ($('away-form')) awayPreview($('away-form'));
   };
-  setInterval(() => { if (data) renderHours(); }, 60 * 1000);
+  document.addEventListener('input', (e) => {
+    const form = e.target.closest('#away-form');
+    if (!form) return;
+    hoursEditing = true;
+    if (e.target.name === 'grupo') {
+      form.elements.mensaje.innerHTML = awayOptions(e.target.value);
+      form.elements.hora.value = defaultHour(e.target.value);
+    }
+    awayPreview(form);
+  });
+  document.addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('away-box')) hoursEditing = e.target.open; }, true);
+  // Cada minuto se actualiza (por ejemplo, cuando termina una ausencia), salvo mientras completás el formulario
+  setInterval(() => { if (data && !hoursEditing) renderHours(); }, 60 * 1000);
 
   document.addEventListener('change', (e) => {
     const form = e.target.closest('#availability-form');
@@ -788,7 +856,7 @@ export const adminPage = () => `<!doctype html>
       try {
         data.hours = await api('horario', { modo, hasta: hasta ? hasta.toISOString() : '' });
         renderHours();
-        toast(!modo ? 'Volvió el horario habitual' : (modo === 'cerrado' ? 'Cerrado hasta el ' : 'Abierto hasta el ') + HOURS_DATE.format(hasta));
+        toast(!modo ? 'Listo: vuelve el horario habitual' : 'Abierto hasta el ' + HOURS_DATE.format(hasta));
       } catch (err) { hoursBtn.disabled = false; toast('No se pudo guardar'); }
       return;
     }
@@ -847,6 +915,17 @@ export const adminPage = () => `<!doctype html>
       const r = await api('newsletter/probar', { to: new FormData(form).get('to') }).catch(() => ({ ok: false, error: 'No se pudo conectar con el sitio.' }));
       toast(r.ok ? 'Te mandé el aviso de "' + r.title + '"' : 'No salió: ' + (r.error || 'revisá los mails en "Mails al cliente"'));
       btn.disabled = false;
+    } else if (form.id === 'away-form') {
+      e.preventDefault();
+      const plan = awayPlan(Object.fromEntries(new FormData(form)));
+      if (plan.error || !plan.hasta) { toast(plan.error || 'No se pudo calcular el horario'); return; }
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      try {
+        data.hours = await api('horario', { modo: 'cerrado', hasta: plan.hasta.toISOString(), mensaje: plan.mensaje });
+        renderHours();
+        toast('Ausencia activada');
+      } catch (err) { btn.disabled = false; toast('No se pudo guardar'); }
     } else if (form.id === 'availability-form') {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(form));
