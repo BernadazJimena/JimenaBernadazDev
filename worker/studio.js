@@ -415,6 +415,24 @@ export class StudioData extends DurableObject {
     return this.availability();
   }
 
+  // ---- "Cerrar ahora" / "Abrir ahora" del horario de atención (cartel "Disponible ahora / Fuera de horario").
+  // Dura hasta "hasta" (lo calcula el panel con el horario habitual); después vuelve solo el horario habitual.
+  hours() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'horario'").toArray()[0];
+    const saved = row ? JSON.parse(row.value) : null;
+    return saved && saved.modo && new Date(saved.hasta) > new Date() ? saved : { modo: '', hasta: '', desde: '' };
+  }
+
+  setHours(modo, hasta) {
+    if (!modo) this.sql.exec("DELETE FROM settings WHERE key = 'horario'");
+    else {
+      const value = JSON.stringify({ modo, hasta, desde: new Date().toISOString() });
+      this.sql.exec(`INSERT INTO settings (key, value) VALUES ('horario', ?)
+        ON CONFLICT (key) DO UPDATE SET value = excluded.value`, value);
+    }
+    return this.hours();
+  }
+
   logQuoteEvent(quoteToken, icon, text) {
     const project = this.sql.exec('SELECT token FROM projects WHERE quote = ?', quoteToken).toArray()[0];
     if (project) this.logEvent(project.token, icon, text);
@@ -793,7 +811,8 @@ export async function handleStudio(request, env, ctx) {
   // ---- Cartel de disponibilidad (lo lee js/intake.js en el inicio)
   if (path === '/api/disponibilidad' && request.method === 'GET') {
     const { estado, reservaDesde } = await store.availability();
-    return new Response(JSON.stringify({ estado, reservaDesde }), {
+    const { modo, hasta } = await store.hours();
+    return new Response(JSON.stringify({ estado, reservaDesde, horario: modo ? { modo, hasta } : null }), {
       headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     });
   }
@@ -939,9 +958,19 @@ export async function handleStudio(request, env, ctx) {
       return json(await store.setAvailability(body.estado, month));
     }
 
+    // Cerrar ahora / Abrir ahora / Volver al horario habitual (modo vacío)
+    if (path === '/api/admin/horario' && request.method === 'POST') {
+      const body = (await readJson(request)) || {};
+      const modo = ['abierto', 'cerrado'].includes(body.modo) ? body.modo : '';
+      const hasta = new Date(body.hasta || '');
+      if (modo && (Number.isNaN(hasta.getTime()) || hasta <= new Date() || hasta - new Date() > 45 * DAY)) return badRequest();
+      return json(await store.setHours(modo, modo ? hasta.toISOString() : ''));
+    }
+
     if (path === '/api/admin/datos' && request.method === 'GET') {
       const data = await store.everything();
       data.availability = await store.availability();
+      data.hours = await store.hours();
       data.mailReady = Boolean(cleanEnv(env.RESEND_API_KEY) && cleanEnv(env.MAIL_FROM));
       data.mailError = await store.mailError();
       return json(data);

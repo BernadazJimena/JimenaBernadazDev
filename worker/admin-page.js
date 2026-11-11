@@ -128,6 +128,7 @@ export const adminPage = () => `<!doctype html>
       <div class="row"><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
     </header>
     <section id="availability"></section>
+    <section id="hours"></section>
     <section id="mail-check"></section>
     <nav id="tabs">
       <button data-tab="consultas" aria-pressed="true">Consultas <span class="badge" id="n-consultas"></span></button>
@@ -147,6 +148,8 @@ export const adminPage = () => `<!doctype html>
   <dialog class="brief-view" id="brief-view"><div class="brief-view-head"><strong id="brief-view-title">Brief</strong><div class="row"><button type="button" id="brief-view-print">Imprimir</button><button type="button" id="brief-view-close">Cerrar</button></div></div><div class="brief-view-body" id="brief-view-body"></div></dialog>
   <div class="toast" id="toast" role="status" hidden></div>
 </div>
+<script src="/js/holidays.js"></script>
+<script src="/js/availability.js"></script>
 <script>
 (() => {
   const STAGES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
@@ -577,6 +580,29 @@ export const adminPage = () => `<!doctype html>
       + '<p class="avail-preview"><span class="small muted">Así se ve en el inicio:</span><br><strong id="avail-preview">' + esc(availPreview(a.estado, a.reservaDesde)) + '</strong></p>'
       + '<div class="row"><button class="primary">Guardar</button><a class="btn" href="/" target="_blank">Ver el inicio ↗</a></div></form>';
   };
+  // ---- Horario de atención: "Disponible ahora / Fuera de horario" del inicio.
+  // El horario habitual (días hábiles de 9 a 17) lo calcula js/availability.js, el mismo que usa el inicio.
+  const HOURS_DATE = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Buenos_Aires' });
+  const renderHours = () => {
+    const H = window.JNBHours;
+    if (!H) { $('hours').innerHTML = ''; return; }
+    const h = data.hours || {};
+    const manual = h.modo && new Date(h.hasta) > new Date() ? h.modo : '';
+    const open = manual ? manual === 'abierto' : H.isOpenAt(new Date());
+    const until = manual ? HOURS_DATE.format(new Date(h.hasta)) : '';
+    $('hours').innerHTML = '<div class="card"><div class="row space"><h2 style="margin:0">Horario de atención</h2>'
+      + '<span class="chip ' + (open ? 'ok' : 'warn') + '">' + (open ? 'Disponible ahora' : 'Fuera de horario') + '</span></div>'
+      + '<p class="small muted" style="margin:.4rem 0 .75rem">El cartel de la sección Disponibilidad del inicio, en los tres idiomas. Horario habitual: lunes a viernes de 9 a 17, sin feriados.</p>'
+      + (manual
+        ? '<div class="alert" style="margin-bottom:.75rem">' + (manual === 'cerrado' ? '🔴 Cerrado a mano' : '🟢 Abierto a mano') + ' hasta el ' + esc(until) + '. Ahí vuelve solo el horario habitual.</div>'
+        : '<p style="margin:0 0 .75rem">Funciona con el horario habitual.</p>')
+      + '<div class="row">' + (open
+        ? '<button type="button" class="primary" data-hours="cerrado">Cerrar ahora</button>'
+        : '<button type="button" class="primary" data-hours="abierto">Abrir ahora</button>')
+      + (manual ? '<button type="button" data-hours="">Volver al horario habitual</button>' : '') + '</div></div>';
+  };
+  setInterval(() => { if (data) renderHours(); }, 60 * 1000);
+
   document.addEventListener('change', (e) => {
     const form = e.target.closest('#availability-form');
     if (!form) return;
@@ -647,7 +673,7 @@ export const adminPage = () => `<!doctype html>
         + '</tbody></table>' : '<p class="empty">Todavía no salió ningún aviso. Los artículos que ya estaban publicados no se avisan; sale uno con cada artículo nuevo.</p>');
   };
 
-  const render = () => { renderAvailability(); renderMailCheck(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); renderNewsletter(); };
+  const render = () => { renderAvailability(); renderHours(); renderMailCheck(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); renderNewsletter(); };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
@@ -751,6 +777,19 @@ export const adminPage = () => `<!doctype html>
         form.querySelectorAll('.step').forEach((b) => { b.disabled = false; });
         toast('No se pudo guardar');
       }
+      return;
+    }
+    const hoursBtn = e.target.closest('[data-hours]');
+    if (hoursBtn) {
+      const modo = hoursBtn.dataset.hours;
+      const hasta = modo ? window.JNBHours.manualUntil(modo) : null;
+      if (modo && !hasta) { toast('No se pudo calcular el próximo horario'); return; }
+      hoursBtn.disabled = true;
+      try {
+        data.hours = await api('horario', { modo, hasta: hasta ? hasta.toISOString() : '' });
+        renderHours();
+        toast(!modo ? 'Volvió el horario habitual' : (modo === 'cerrado' ? 'Cerrado hasta el ' : 'Abierto hasta el ') + HOURS_DATE.format(hasta));
+      } catch (err) { hoursBtn.disabled = false; toast('No se pudo guardar'); }
       return;
     }
     const unsub = e.target.closest('[data-unsub]');
