@@ -229,7 +229,7 @@
                 <tr><th scope="row">Dónde funciona</th><td data-label="Tiendanube">Argentina y otros países de Latinoamérica</td><td data-label="Empretienda">Solo Argentina</td></tr>
                 <tr><th scope="row">Prueba gratis</th><td data-label="Tiendanube">Plan Inicial gratis, sin límite de tiempo. Los planes pagos tienen 7 días de prueba</td><td data-label="Empretienda">15 días con todas las funciones</td></tr>
                 <tr><th scope="row">Costo mensual</th><td data-label="Tiendanube">Abono por mes según el plan. Inicial: $0. Esencial: $27.999. Impulso: $79.999. Escala: $244.999. Pagando el año completo, 25 % menos</td><td data-label="Empretienda">Abono de $10.490 por mes, el mismo para todas las tiendas (hay un solo plan)</td></tr>
-                <tr><th scope="row">Comisión de la plataforma por venta</th><td data-label="Tiendanube">Sin comisión si cobrás con Pago Nube. Con otros medios: 2 %, 1 % o 0,7 % según el plan</td><td data-label="Empretienda">Sin comisión por venta</td></tr>
+                <tr><th scope="row">Comisión de la plataforma por venta</th><td data-label="Tiendanube">Sin comisión si cobrás con Pago Nube. Con otros medios cobra un porcentaje de cada venta: Esencial 2 %, Impulso 1 % y Escala 0,7 % (lo llama “costo por transacción”; ver <a class="text-link" href="https://www.tiendanube.com/planes-y-precios" target="_blank" rel="noopener noreferrer">planes y precios de Tiendanube</a>)</td><td data-label="Empretienda">Sin comisión por venta</td></tr>
                 <tr><th scope="row">Medios de pago</th><td data-label="Tiendanube">Pago Nube en el plan Inicial. Todos los medios integrados en los planes pagos</td><td data-label="Empretienda">Mercado Pago, Ualá Bis, Go Cuotas, transferencia, efectivo o a convenir</td></tr>
                 <tr><th scope="row">Envíos</th><td data-label="Tiendanube">Envío Nube; más de 30 medios de envío en los planes pagos</td><td data-label="Empretienda">Andreani, Correo Argentino, OCA, Epick, envíos propios y retiro en el local</td></tr>
                 <tr><th scope="row">Diseño</th><td data-label="Tiendanube">Más de 65 diseños personalizables; acceso al código en los planes más completos</td><td data-label="Empretienda">Varias plantillas personalizables desde el panel</td></tr>
@@ -256,8 +256,10 @@
                 <label class="blog-calc-radio"><input type="radio" name="cobro" value="pagonube"> Con Pago Nube</label>
               </fieldset>
               <label class="blog-calc-check"><input type="checkbox" name="anual"> Pagar Tiendanube por año (25 % menos)</label>
+              <button type="submit" class="button button-primary blog-calc-submit">Calcular</button>
             </form>
-            <div class="blog-calc-results" aria-live="polite">
+            <div class="blog-calc-results">
+              <div class="blog-calc-summary" tabindex="-1" aria-live="polite"></div>
               <table class="blog-calc-table">
                 <caption class="visually-hidden">Costo mensual estimado de cada plataforma</caption>
                 <thead><tr><th scope="col">Plataforma y plan</th><th scope="col">Abono</th><th scope="col">Comisión</th><th scope="col">Total por mes</th></tr></thead>
@@ -266,6 +268,7 @@
             </div>
             <ul class="blog-calc-notes">
               <li><strong>Es solo lo que cobra la plataforma.</strong> El medio de pago (Mercado Pago, Pago Nube u otro) cobra aparte su propia comisión por cada venta, que depende del medio y del plazo en que retires el dinero. Por ejemplo, Pago Nube informa una comisión desde 2,99 % + IVA. Esa comisión existe con cualquiera de las dos plataformas.</li>
+              <li><strong>De dónde sale la comisión de Tiendanube:</strong> si cobrás con un medio que no sea Pago Nube, Tiendanube se queda con un porcentaje de cada venta, que baja en los planes más caros: 2 % en Esencial, 1 % en Impulso y 0,7 % en Escala. En su página de <a class="text-link" href="https://www.tiendanube.com/planes-y-precios" target="_blank" rel="noopener noreferrer">planes y precios de Tiendanube</a> figura como “costo por transacción con otros medios de pago”. Si cobrás con Pago Nube, ese costo no existe.</li>
               <li>El plan Inicial de Tiendanube solo permite cobrar con Pago Nube.</li>
               <li>El plan más económico no siempre es el que necesitás: cada plan incluye funciones distintas (mirá la tabla de arriba).</li>
               <li>Precios publicados a noviembre de 2026; pueden cambiar. Es una estimación orientativa: confirmá los valores en los sitios oficiales antes de contratar.</li>

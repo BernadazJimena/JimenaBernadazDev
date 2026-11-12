@@ -18,6 +18,7 @@
         const form = calc.querySelector('form');
         const salesInput = form.elements.ventas;
         const body = calc.querySelector('tbody');
+        const summary = calc.querySelector('.blog-calc-summary');
 
         // Solo números; se muestran con puntos de miles mientras se escribe
         const readSales = () => Number(salesInput.value.replace(/\D/g, '')) || 0;
@@ -31,8 +32,45 @@
             const pagoNube = form.elements.cobro.value === 'pagonube';
             const annual = form.elements.anual.checked;
 
+            // Costo de cada plan con lo que eligió (null = no disponible)
+            const totals = PLANS.map((plan) => {
+                if (plan.pagoNubeOnly && !pagoNube) return null;
+                const fee = plan.annualDiscount && annual ? Math.round(plan.fee * ANNUAL) : plan.fee;
+                const rate = pagoNube || plan.rate === null ? 0 : plan.rate;
+                return { plan, fee, rate, total: fee + Math.round(sales * rate) };
+            });
+            const available = totals.filter(Boolean);
+            const cheapest = available.reduce((a, b) => (b.total < a.total ? b : a));
+            const tiendanube = available.filter((t) => t.plan.name.startsWith('Tiendanube'));
+            const bestTn = tiendanube.reduce((a, b) => (b.total < a.total ? b : a));
+            const empretienda = available.find((t) => t.plan.name === 'Empretienda');
+            const shortName = (t) => t.plan.name.replace('Tiendanube · ', 'el plan ');
+
+            if (summary) {
+                if (!sales) {
+                    summary.innerHTML = '<p>Escribí cuánto vendés (o pensás vender) por mes y tocá <strong>Calcular</strong>.</p>';
+                } else {
+                    const strong = (text) => `<strong>${text}</strong>`;
+                    const lines = [];
+                    lines.push(`Con ventas de ${strong(money.format(sales))} por mes, lo que menos te cobra la plataforma es ${strong(`${cheapest.plan.name}: ${money.format(cheapest.total)} por mes`)}${cheapest.plan.fee === 0 ? ' (sin abono; pagás solo la comisión de Pago Nube)' : ''}.`);
+                    const other = cheapest === empretienda ? bestTn : empretienda;
+                    const diff = other.total - cheapest.total;
+                    lines.push(cheapest === empretienda
+                        ? `En Tiendanube, lo más económico para vos sería ${shortName(other)}: ${money.format(other.total)} por mes, ${strong(money.format(diff))} más (${money.format(diff * 12)} al año).`
+                        : `Empretienda te costaría ${money.format(other.total)} por mes, ${strong(money.format(diff))} más (${money.format(diff * 12)} al año).`);
+                    // ¿Desde qué nivel de ventas le conviene el plan siguiente de Tiendanube?
+                    if (!pagoNube) {
+                        const next = tiendanube.filter((t) => t.rate < bestTn.rate && t.fee > bestTn.fee)
+                            .map((t) => ({ t, at: Math.ceil((t.fee - bestTn.fee) / (bestTn.rate - t.rate)) }))
+                            .sort((a, b) => a.at - b.at)[0];
+                        if (next) lines.push(`Dato: si vendieras más de ${money.format(next.at)} por mes, en Tiendanube ${shortName(next.t)} pasaría a cobrarte menos que ${shortName(bestTn)}.`);
+                    }
+                    summary.innerHTML = lines.map((line) => `<p>${line}</p>`).join('');
+                }
+            }
+
             body.innerHTML = '';
-            PLANS.forEach((plan) => {
+            PLANS.forEach((plan, index) => {
                 const row = document.createElement('tr');
                 const cells = [plan.name];
 
@@ -57,13 +95,28 @@
                     cell.dataset.label = ['', 'Abono', 'Comisión', 'Total por mes'][i];
                     row.append(cell);
                 });
+                if (sales && totals[index] === cheapest) {
+                    row.classList.add('is-cheapest');
+                    row.querySelector('th').insertAdjacentHTML('beforeend', ' <span class="blog-calc-badge">Lo más económico</span>');
+                }
                 body.append(row);
             });
         };
 
         salesInput.addEventListener('input', () => { formatInput(); render(); });
         form.addEventListener('change', render);
-        form.addEventListener('submit', (e) => e.preventDefault());
+        // "Calcular": rehace la cuenta y lleva a la conclusión
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            formatInput();
+            render();
+            if (!summary) return;
+            summary.classList.remove('is-updated');
+            void summary.offsetWidth; // reinicia la animación
+            summary.classList.add('is-updated');
+            summary.focus({ preventScroll: true });
+            summary.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+        });
         render();
     });
 })();
