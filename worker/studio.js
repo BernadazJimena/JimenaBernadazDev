@@ -81,6 +81,9 @@ const newToken = () => randomFrom(ALNUM, 24);
 // Número de consulta: JNB-<año><mes>-XXXX. No es correlativo, así no deja ver cuántas consultas hubo.
 const newCode = (now) => `JNB-${String(now.getUTCFullYear()).slice(2)}${String(now.getUTCMonth() + 1).padStart(2, '0')}-${randomFrom(SAFE_LETTERS, 4)}`;
 
+// Gestor de tareas: columnas del tablero y prioridades
+const TASK_STATUSES = ['inbox', 'todo', 'doing', 'review', 'done'];
+const TASK_PRIORITIES = ['baja', 'media', 'alta'];
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
 const oneLine = (value, max) => text(value, max).replace(/\s+/g, ' ');
 const isoDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '');
@@ -251,6 +254,34 @@ export class StudioData extends DurableObject {
       created TEXT NOT NULL
     )`);
     this.sql.exec('CREATE INDEX IF NOT EXISTS payments_project ON payments(project)');
+    // Gestor de tareas de Jimena (tablero tipo Kanban). Las subtareas van como JSON: [{ "text": "...", "done": false }]
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      category INTEGER,
+      priority TEXT NOT NULL DEFAULT 'media',
+      status TEXT NOT NULL DEFAULT 'inbox',
+      position REAL NOT NULL DEFAULT 0,
+      due TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      subtasks TEXT NOT NULL DEFAULT '[]',
+      archived INTEGER NOT NULL DEFAULT 0,
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL,
+      done_at TEXT NOT NULL DEFAULT ''
+    )`);
+    this.sql.exec('CREATE INDEX IF NOT EXISTS tasks_status ON tasks(archived, status, position)');
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS task_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      position INTEGER NOT NULL DEFAULT 0
+    )`);
+    if (!this.sql.exec('SELECT 1 FROM task_categories LIMIT 1').toArray().length && !this.sql.exec("SELECT 1 FROM settings WHERE key = 'tareasCategorias'").toArray().length) {
+      ['Desarrollo web', 'Diseño', 'Marketing y redes sociales', 'SEO', 'Clientes y presupuestos', 'Administración', 'Ideas y proyectos', 'Estudio y formación']
+        .forEach((name, i) => this.sql.exec('INSERT INTO task_categories (name, position) VALUES (?, ?)', name, i));
+      this.sql.exec("INSERT INTO settings (key, value) VALUES ('tareasCategorias', '1')");
+    }
     this.linkClients();
   }
 
@@ -389,6 +420,86 @@ export class StudioData extends DurableObject {
     this.sql.exec('UPDATE payments SET concept = ?, currency = ?, amount = ?, due = ?, paid = ?, method = ?, note = ? WHERE id = ?',
       data.concept, data.currency, data.amount, data.due, data.paid, data.method, data.note, id);
     if (data.paid && !row.paid) this.logEvent(row.project, '💳', `Pagó: ${data.concept} · ${data.currency} ${data.amount.toLocaleString('es-AR')}`);
+    return true;
+  }
+
+  // ---- Gestor de tareas
+  tasksData() {
+    return {
+      categories: this.sql.exec('SELECT id, name, position FROM task_categories ORDER BY position, id').toArray(),
+      tasks: this.sql.exec('SELECT * FROM tasks ORDER BY archived, status, position, id').toArray()
+        .map((t) => ({ ...t, subtasks: JSON.parse(t.subtasks || '[]'), archived: Boolean(t.archived) })),
+    };
+  }
+
+  // Crea o actualiza una tarea. Al crear, va al final de su columna.
+  saveTask(t) {
+    const now = new Date().toISOString();
+    const category = t.category && this.sql.exec('SELECT 1 FROM task_categories WHERE id = ?', t.category).toArray().length ? t.category : null;
+    const subtasks = JSON.stringify(t.subtasks);
+    if (t.id) {
+      const old = this.sql.exec('SELECT status, done_at FROM tasks WHERE id = ?', t.id).toArray()[0];
+      if (!old) return false;
+      const doneAt = t.status === 'done' ? (old.status === 'done' ? old.done_at : now) : '';
+      this.sql.exec(`UPDATE tasks SET title = ?, description = ?, category = ?, priority = ?, status = ?, due = ?, notes = ?, subtasks = ?,
+        updated = ?, done_at = ? WHERE id = ?`, t.title, t.description, category, t.priority, t.status, t.due, t.notes, subtasks, now, doneAt, t.id);
+      if (old.status !== t.status) this.sql.exec('UPDATE tasks SET position = ? WHERE id = ?', this.lastTaskPosition(t.status) + 1, t.id);
+      return true;
+    }
+    this.sql.exec(`INSERT INTO tasks (title, description, category, priority, status, position, due, notes, subtasks, created, updated, done_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, t.title, t.description, category, t.priority, t.status,
+    this.lastTaskPosition(t.status) + 1, t.due, t.notes, subtasks, now, now, t.status === 'done' ? now : '');
+    return true;
+  }
+
+  lastTaskPosition(status) {
+    return this.sql.exec('SELECT COALESCE(MAX(position), 0) AS p FROM tasks WHERE status = ? AND archived = 0', status).one().p;
+  }
+
+  // Arrastrar y soltar: la tarea pasa a otra columna (o a otro lugar de la misma) y se reordena esa columna
+  moveTask(id, status, order) {
+    const row = this.sql.exec('SELECT status, done_at FROM tasks WHERE id = ?', id).toArray()[0];
+    if (!row) return false;
+    const now = new Date().toISOString();
+    this.ctx.storage.transactionSync(() => {
+      const doneAt = status === 'done' ? (row.status === 'done' ? row.done_at : now) : '';
+      this.sql.exec('UPDATE tasks SET status = ?, done_at = ?, updated = ? WHERE id = ?', status, doneAt, now, id);
+      order.forEach((taskId, i) => this.sql.exec('UPDATE tasks SET position = ? WHERE id = ? AND status = ?', i + 1, taskId, status));
+    });
+    return true;
+  }
+
+  duplicateTask(id) {
+    const t = this.sql.exec('SELECT * FROM tasks WHERE id = ?', id).toArray()[0];
+    if (!t) return false;
+    const subtasks = JSON.parse(t.subtasks || '[]').map((s) => ({ text: s.text, done: false }));
+    return this.saveTask({ ...t, id: 0, title: `${t.title} (copia)`.slice(0, 160), status: t.status === 'done' ? 'todo' : t.status, subtasks });
+  }
+
+  archiveTasks(ids, archived) {
+    for (const id of ids) this.sql.exec('UPDATE tasks SET archived = ?, updated = ? WHERE id = ?', archived ? 1 : 0, new Date().toISOString(), id);
+    return true;
+  }
+
+  deleteTask(id) {
+    this.sql.exec('DELETE FROM tasks WHERE id = ?', id);
+    return true;
+  }
+
+  // Categorías: la lista completa en el orden elegido. Las que se quitan dejan sus tareas "sin categoría".
+  saveTaskCategories(list) {
+    this.ctx.storage.transactionSync(() => {
+      const keep = list.filter((c) => c.id).map((c) => c.id);
+      const current = this.sql.exec('SELECT id FROM task_categories').toArray().map((r) => r.id);
+      for (const id of current.filter((x) => !keep.includes(x))) {
+        this.sql.exec('UPDATE tasks SET category = NULL WHERE category = ?', id);
+        this.sql.exec('DELETE FROM task_categories WHERE id = ?', id);
+      }
+      list.forEach((c, i) => {
+        if (c.id && current.includes(c.id)) this.sql.exec('UPDATE task_categories SET name = ?, position = ? WHERE id = ?', c.name, i, c.id);
+        else this.sql.exec('INSERT INTO task_categories (name, position) VALUES (?, ?)', c.name, i);
+      });
+    });
     return true;
   }
 
@@ -1245,8 +1356,49 @@ export async function handleStudio(request, env, ctx) {
       return json({ files: await store.clientFiles(Number(match[1])) });
     }
 
+    // ---- Gestor de tareas
+    if (path === '/api/admin/tareas' && request.method === 'GET') return json(await store.tasksData());
+
     if (request.method !== 'POST') return notFound();
     const body = (await readJson(request)) || {};
+
+    if (path === '/api/admin/tareas') {
+      const id = Number(body.id) || 0;
+      const ids = (list) => (Array.isArray(list) ? list.map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 2000) : []);
+      let ok = false;
+      if (body.action === 'save') {
+        const t = body.task || {};
+        const task = {
+          id: Number(t.id) || 0,
+          title: text(t.title, 160),
+          description: text(t.description, 4000),
+          category: Number(t.category) || null,
+          priority: TASK_PRIORITIES.includes(t.priority) ? t.priority : 'media',
+          status: TASK_STATUSES.includes(t.status) ? t.status : 'inbox',
+          due: /^\d{4}-\d{2}-\d{2}$/.test(t.due || '') ? t.due : '',
+          notes: text(t.notes, 4000),
+          subtasks: (Array.isArray(t.subtasks) ? t.subtasks : []).slice(0, 100)
+            .map((x) => ({ text: text(x && x.text, 300), done: Boolean(x && x.done) })).filter((x) => x.text),
+        };
+        if (!task.title) return badRequest();
+        ok = await store.saveTask(task);
+      } else if (body.action === 'move') {
+        if (!id || !TASK_STATUSES.includes(body.status)) return badRequest();
+        ok = await store.moveTask(id, body.status, ids(body.order));
+      } else if (body.action === 'duplicate') {
+        ok = await store.duplicateTask(id);
+      } else if (body.action === 'archive') {
+        ok = await store.archiveTasks(ids(body.ids), body.archived !== false);
+      } else if (body.action === 'delete') {
+        ok = await store.deleteTask(id);
+      } else if (body.action === 'categories') {
+        const list = (Array.isArray(body.categories) ? body.categories : []).slice(0, 40)
+          .map((c) => ({ id: Number(c && c.id) || 0, name: text(c && c.name, 60) })).filter((c) => c.name);
+        if (!list.length) return badRequest();
+        ok = await store.saveTaskCategories(list);
+      } else return badRequest();
+      return ok ? json(await store.tasksData()) : notFound();
+    }
 
     if (path === '/api/admin/reiniciar') {
       if (body.confirm !== 'REINICIAR') return badRequest();
