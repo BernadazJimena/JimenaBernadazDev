@@ -63,6 +63,16 @@
     const dueText = (date) => { const n = dayDiff(today(), date); return n < 0 ? 'Venció hace ' + (-n) + ' días' : n === 0 ? 'Vence hoy' : 'En ' + n + ' días'; };
     let showAllDue = false;
 
+    // ---- Revisión del cliente: 4 días hábiles desde que recibe la primera versión (no cuentan en el plazo de desarrollo)
+    const REVIEW_DAYS = 4;
+    const reviewCell = (p) => {
+        if (!p.reviewSent) return '<button type="button" data-ag-review="' + esc(p.token) + '" data-step="sent">Envié la 1.ª versión hoy</button>';
+        if (p.reviewDone) return tag('ok', 'Respondió el ' + fdate(p.reviewDone)) + ' <button type="button" class="link-btn" data-ag-review="' + esc(p.token) + '" data-step="reset">Deshacer</button>';
+        const left = remaining(today(), p.reviewUntil, true);
+        return tag(left < 0 ? 'muted' : left <= 1 ? 'warn' : 'ok', left < 0 ? 'Revisión cerrada (' + fdate(p.reviewUntil) + ')' : 'Revisa hasta ' + fdate(p.reviewUntil) + (left ? ' · faltan ' + left + ' hábiles' : ' · vence hoy'))
+            + '<br><button type="button" data-ag-review="' + esc(p.token) + '" data-step="done">Respondió ✓ (seguir)</button>';
+    };
+
     // ---- Presupuestos sin respuesta: propuesta enviada hace 5 días o más (o 5 días desde el último seguimiento)
     const WAIT_DAYS = 5;
     const quoteLink = (q) => 'https://jnbcreativestudio.com.ar/mi-presupuesto/' + (q.lang === 'es' ? '' : q.lang) + '?c=' + q.token;
@@ -94,11 +104,11 @@
         el.innerHTML = '<h2>Plazos y vencimientos</h2>'
             + quotesCard()
             + '<section class="card"><h3>Plazos de entrega</h3><p class="small muted">El plazo corre desde que llega todo el material: se completa solo al pasar el proyecto a "Diseño y desarrollo", o lo cargás acá. Cuenta días hábiles y saltea feriados (los premios del sorteo, días corridos).</p>'
-            + (list.length ? '<div class="ag-table"><table><thead><tr><th>Proyecto</th><th>Plazo</th><th>Material completo</th><th>Entrega</th><th>Estado</th></tr></thead><tbody>'
+            + (list.length ? '<div class="ag-table"><table><thead><tr><th>Proyecto</th><th>Plazo</th><th>Material completo</th><th>Entrega</th><th>Estado</th><th>Revisión del cliente</th></tr></thead><tbody>'
                 + list.map((x) => '<tr><td><a href="#proyectos/' + esc(x.p.code) + '">' + esc(x.p.code) + '</a> · ' + esc(nameOfProject(x.p)) + '<br><span class="small muted">' + esc(x.p.project) + '</span></td>'
                     + '<td class="small">' + (x.rule ? esc(x.rule.label) : 'Sin plazo (plan no reconocido)') + '</td>'
                     + '<td><input type="date" data-ag-material="' + esc(x.p.token) + '" value="' + esc(x.p.materialsAt || '') + '" aria-label="Fecha de material completo"></td>'
-                    + '<td>' + (x.due ? fdate(x.due) : '—') + '</td><td>' + tag(deliveryTone(x), deliveryText(x)) + '</td></tr>').join('')
+                    + '<td>' + (x.due ? fdate(x.due) : '—') + '</td><td>' + (x.p.reviewSent ? tag('ok', '1.ª versión enviada') : tag(deliveryTone(x), deliveryText(x))) + '</td><td>' + reviewCell(x.p) + '</td></tr>').join('')
                 + '</tbody></table></div>' : '<p class="empty">No hay proyectos en curso.</p>')
             + '</section>'
             + '<section class="card"><div class="row space"><h3 style="margin:0">Vencimientos</h3><label class="check-line"><input type="checkbox" data-ag-all' + (showAllDue ? ' checked' : '') + '> Ver también los de más de 90 días</label></div>'
@@ -233,6 +243,12 @@
     document.addEventListener('click', (e) => {
         const t = e.target.closest('button');
         if (!t) return;
+        if (t.dataset.agReview) {
+            const step = t.dataset.step;
+            const sent = today();
+            send('agenda', { action: 'review', project: t.dataset.agReview, step, sent, until: addBusiness(sent, REVIEW_DAYS) }, step === 'sent' ? 'Revisión iniciada: 4 días hábiles' : step === 'done' ? 'Listo: podés seguir con los ajustes' : 'Revisión borrada');
+            return;
+        }
         if (t.id === 'ag-csv') exportCsv();
         else if (t.dataset.agCopy) {
             const area = document.querySelector('[data-ag-msg="' + t.dataset.agCopy + '"]');

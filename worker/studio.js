@@ -511,6 +511,7 @@ export class StudioData extends DurableObject {
     // Fecha en que llegó todo el material del proyecto: desde ahí corre el plazo de entrega (se completa sola al pasar a Diseño)
     const agendaProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
     // Adicionales pedidos en un proyecto creado desde el panel (módulo Brief): el brief suma sus preguntas
+    for (const col of ['review_sent', 'review_until', 'review_done']) if (!agendaProjectColumns.includes(col)) this.sql.exec(`ALTER TABLE projects ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
     if (!agendaProjectColumns.includes('request')) this.sql.exec("ALTER TABLE projects ADD COLUMN request TEXT NOT NULL DEFAULT ''");
     if (!agendaProjectColumns.includes('materials_at')) this.sql.exec("ALTER TABLE projects ADD COLUMN materials_at TEXT NOT NULL DEFAULT ''");
     const agendaClientColumns = this.sql.exec('PRAGMA table_info(clients)').toArray().map((c) => c.name);
@@ -922,6 +923,20 @@ export class StudioData extends DurableObject {
     this.sql.exec("INSERT INTO settings (key, value) VALUES ('copiaMail', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", new Date().toISOString());
   }
 
+  // Revisión del cliente: 'sent' = le mandé la primera versión (revisa hasta "until", 4 días hábiles que calcula el panel con los feriados);
+  // 'done' = ya respondió (se puede seguir sin esperar); 'reset' = borrar las fechas
+  setClientReview(token, step, sent, until) {
+    if (!this.sql.exec('SELECT 1 FROM projects WHERE token = ?', token).toArray().length) return { error: 'not found' };
+    if (step === 'sent') {
+      this.sql.exec("UPDATE projects SET review_sent = ?, review_until = ?, review_done = '' WHERE token = ?", sent, until, token);
+      this.logEvent(token, '👀', `Le enviaste la primera versión: revisa hasta el ${until}`);
+    } else if (step === 'done') {
+      this.sql.exec('UPDATE projects SET review_done = ? WHERE token = ?', arToday(), token);
+      this.logEvent(token, '💬', 'El cliente envió sus comentarios de la revisión');
+    } else this.sql.exec("UPDATE projects SET review_sent = '', review_until = '', review_done = '' WHERE token = ?", token);
+    return { ok: true };
+  }
+
   setClientSource(id, source) {
     if (!this.clientExists(id)) return { error: 'not found' };
     this.sql.exec('UPDATE clients SET source = ? WHERE id = ?', source, id);
@@ -1223,7 +1238,7 @@ export class StudioData extends DurableObject {
       status: row.status,
       proposal,
       // Cuando el presupuesto se acepta, el mismo link muestra también el avance del proyecto
-      project: this.withBrief(this.withLaunch(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon FROM projects WHERE quote = ?', token).toArray()[0] || null), token),
+      project: this.withBrief(this.withLaunch(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon, review_sent AS reviewSent, review_until AS reviewUntil, review_done AS reviewDone FROM projects WHERE quote = ?', token).toArray()[0] || null), token),
     };
   }
 
@@ -1303,7 +1318,7 @@ export class StudioData extends DurableObject {
   }
 
   project(token) {
-    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon FROM projects WHERE token = ?', token).toArray()[0];
+    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon, review_sent AS reviewSent, review_until AS reviewUntil, review_done AS reviewDone FROM projects WHERE token = ?', token).toArray()[0];
     return this.withBrief(this.withLaunch(row || null), token);
   }
 
@@ -1602,7 +1617,7 @@ export class StudioData extends DurableObject {
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.code, p.client_id AS clientId, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
-        p.origin, p.winner_id AS winnerId, p.materials_at AS materialsAt, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
+        p.origin, p.winner_id AS winnerId, p.materials_at AS materialsAt, p.review_sent AS reviewSent, p.review_until AS reviewUntil, p.review_done AS reviewDone, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
         p.review_token AS reviewToken, (SELECT used FROM invitations v WHERE v.token = p.review_token) AS reviewDone,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
         b.edited AS briefEdited, CASE WHEN b.edit_seen = 0 THEN 1 ELSE 0 END AS briefEditUnseen,
@@ -2185,6 +2200,10 @@ export async function handleStudio(request, env, ctx) {
         saved = await store.renewalDone(Number(body.id) || 0, body.done !== false);
       } else if (body.action === 'renewal-delete') {
         saved = await store.deleteRenewal(Number(body.id) || 0);
+      } else if (body.action === 'review') {
+        if (!TOKEN.test(body.project || '') || !['sent', 'done', 'reset'].includes(body.step)) return badRequest();
+        if (body.step === 'sent' && (!isoDate(body.sent) || !isoDate(body.until) || body.until < body.sent)) return badRequest();
+        saved = await store.setClientReview(body.project, body.step, isoDate(body.sent), isoDate(body.until));
       } else if (body.action === 'quote-followup') {
         if (!TOKEN.test(body.token || '')) return badRequest();
         saved = await store.quoteFollowup(body.token);
