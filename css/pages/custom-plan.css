@@ -1,0 +1,990 @@
+/* Plan a medida: base, secciones, tabla de funcionalidades y resumen con el total estimado.
+   La tabla reutiliza .compare-scroll y .compare-table (css/pages/compare.css); acá van solo los agregados. */
+
+.cp-layout {
+    align-items: start;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    margin: 0 auto;
+    max-width: var(--content);
+}
+
+.cp-main {
+    counter-reset: cp-step;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2rem, 4vw, 2.75rem);
+    min-width: 0;
+}
+
+/* Cómo funciona: tres pasos en una línea */
+.cp-howto {
+    counter-reset: cp-how;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cp-howto li {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: .9rem;
+    counter-increment: cp-how;
+    line-height: 1.4;
+    padding: .85rem 1rem .85rem 3rem;
+    position: relative;
+}
+
+.cp-howto li::before {
+    align-items: center;
+    background: var(--blue);
+    border-radius: 50%;
+    color: #fff;
+    content: counter(cp-how);
+    display: flex;
+    font-family: "Manrope", sans-serif;
+    font-size: .875rem;
+    font-weight: 800;
+    height: 1.6rem;
+    justify-content: center;
+    left: .9rem;
+    position: absolute;
+    top: .85rem;
+    width: 1.6rem;
+}
+
+.cp-howto strong {
+    color: var(--text);
+    display: block;
+    font-size: .9375rem;
+}
+
+.cp-howto span {
+    color: var(--muted);
+    font-size: var(--text-sm);
+}
+
+/* Pasos numerados (los que no corresponden a la base elegida se ocultan y no cuentan) */
+.cp-step:not([hidden]) {
+    counter-increment: cp-step;
+}
+
+.cp-step h2 {
+    font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+    margin: 0 0 .5rem;
+}
+
+.cp-step h2::before {
+    color: var(--blue);
+    content: counter(cp-step) ". ";
+}
+
+.cp-hint {
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 0 0 1.1rem;
+}
+
+.cp-fineprint {
+    color: var(--muted);
+    font-size: .875rem;
+    margin: .75rem 0 0;
+}
+
+/* Paso 1: tarjetas de la base, con la franja de color de cada plan (igual que "¿Cuál te conviene?") */
+.cp-base-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cp-base-option {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: var(--radius);
+    border-top: .3rem solid var(--compare-color);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: 1.1rem 1.15rem 1.25rem;
+    position: relative;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.cp-base-option:hover {
+    border-color: var(--blue);
+    border-top-color: var(--compare-color);
+}
+
+.cp-base-option:has(input:checked) {
+    border-color: var(--blue);
+    border-top-color: var(--compare-color);
+    box-shadow: 0 0 0 .08rem var(--blue);
+}
+
+.cp-base-option input {
+    accent-color: var(--blue);
+    height: 1.05rem;
+    margin: 0;
+    position: absolute;
+    right: 1rem;
+    top: 1.1rem;
+    width: 1.05rem;
+}
+
+.cp-base-title {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.05rem;
+    font-weight: 800;
+    padding-right: 1.5rem;
+}
+
+.cp-base-price {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.cp-base-price small {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    margin-left: .35rem;
+}
+
+.cp-base-desc {
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+
+/* Paso 2: secciones */
+.cp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.cp-chip {
+    cursor: pointer;
+}
+
+.cp-chip input {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.cp-chip span {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: 99rem;
+    color: var(--text);
+    display: inline-block;
+    font-size: .9rem;
+    font-weight: 600;
+    padding: .5rem .95rem;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.cp-chip:hover span {
+    border-color: var(--blue);
+}
+
+.cp-chip input:checked + span {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+}
+
+.cp-chip input:checked + span::before {
+    content: "✓ ";
+}
+
+.cp-chip input:focus-visible + span {
+    outline: .15rem solid var(--blue);
+    outline-offset: .2rem;
+}
+
+.cp-stepper-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    justify-content: space-between;
+    margin-top: 1.1rem;
+}
+
+.cp-stepper-row > span {
+    color: var(--text);
+    font-size: .9375rem;
+}
+
+/* Botones − / + para las cantidades */
+.cp-stepper {
+    align-items: center;
+    background: var(--surface);
+    border: .08rem solid var(--field-border);
+    border-radius: 99rem;
+    display: inline-flex;
+    overflow: hidden;
+}
+
+.cp-stepper button {
+    background: none;
+    border: 0;
+    color: var(--blue);
+    cursor: pointer;
+    font: 800 1.1rem/1 "Manrope", sans-serif;
+    height: 2.25rem;
+    width: 2.25rem;
+}
+
+.cp-stepper button:hover:not(:disabled) {
+    background: var(--sky);
+}
+
+.cp-stepper input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    background: none;
+    border: 0;
+    color: var(--text);
+    font: 700 .95rem "Manrope", sans-serif;
+    text-align: center;
+    width: 2.4rem;
+}
+
+.cp-stepper input::-webkit-inner-spin-button,
+.cp-stepper input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Paso 3: tabla de funcionalidades (sobre la tabla comparativa) */
+.cp-table {
+    min-width: 0;
+}
+
+.cp-table thead th {
+    font-size: .875rem;
+    text-align: left;
+}
+
+.cp-table thead th:first-child {
+    position: static;
+}
+
+.cp-table tbody th,
+.cp-table td {
+    text-align: left;
+}
+
+.cp-table tbody th {
+    min-width: 0;
+    position: static;
+    width: 46%;
+}
+
+.cp-table tbody th small {
+    color: var(--muted);
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 400;
+    line-height: 1.45;
+    margin-top: .2rem;
+}
+
+.cp-table .cp-cat th {
+    background: var(--sky);
+    color: var(--blue);
+    font-family: "Manrope", sans-serif;
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    padding-bottom: .5rem;
+    padding-top: .5rem;
+    text-transform: uppercase;
+    width: auto;
+}
+
+.cp-table tbody:first-of-type .cp-cat th {
+    border-top: 0;
+}
+
+.cp-table tbody + tbody .cp-cat th {
+    border-top: .08rem solid var(--rule);
+}
+
+.cp-table tr[data-item] td,
+.cp-table tr[data-item] th {
+    transition: background-color .2s ease;
+}
+
+.cp-table tr.is-on th,
+.cp-table tr.is-on td,
+.cp-table tr[data-item]:has(input:checked) th,
+.cp-table tr[data-item]:has(input:checked) td {
+    background: color-mix(in srgb, var(--blue) 10%, var(--surface));
+}
+
+.cp-table tr[data-item]:has(input:checked) th {
+    box-shadow: inset .25rem 0 0 var(--blue);
+}
+
+.cp-unit {
+    color: var(--muted);
+    display: block;
+    font-size: var(--text-sm);
+}
+
+.cp-cond {
+    font-size: var(--text-sm);
+}
+
+.cp-included {
+    color: var(--blue);
+    font-weight: 700;
+}
+
+.cp-quote {
+    border: .08rem dashed var(--decoration);
+    border-radius: 99rem;
+    color: var(--text);
+    display: inline-block;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    padding: .15rem .6rem;
+    white-space: nowrap;
+}
+
+.cp-action {
+    text-align: right !important;
+    white-space: nowrap;
+    width: 1%;
+}
+
+.cp-action select {
+    background: var(--surface);
+    border: .08rem solid var(--field-border);
+    border-radius: .6rem;
+    color: var(--text);
+    font: 600 .875rem "Manrope", sans-serif;
+    padding: .45rem .6rem;
+}
+
+/* Botón "Agregar" / "Agregado" */
+.cp-add {
+    cursor: pointer;
+    display: inline-block;
+}
+
+.cp-add input {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.cp-add span {
+    border: .08rem solid var(--blue);
+    border-radius: 99rem;
+    color: var(--blue);
+    display: inline-block;
+    font-size: .875rem;
+    font-weight: 700;
+    min-width: 7.5rem;
+    padding: .45rem .9rem;
+    text-align: center;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.cp-add:hover span {
+    background: var(--sky);
+}
+
+.cp-add input:checked + span {
+    background: var(--blue);
+    color: #fff;
+}
+
+.cp-add input:checked + span::before {
+    content: "✓ ";
+}
+
+.cp-add input:focus-visible + span {
+    outline: .15rem solid var(--blue);
+    outline-offset: .2rem;
+}
+
+/* Lo que la base elegida no permite: se ve apagado y dice por qué */
+.cp-table tr.is-unavailable th,
+.cp-table tr.is-unavailable td:not(.cp-cond) {
+    opacity: .45;
+}
+
+.cp-table tr.is-unavailable .cp-cond {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.cp-table tr.is-unavailable .cp-add,
+.cp-table tr.is-unavailable .cp-stepper,
+.cp-table tr.is-unavailable select {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Resumen: acompaña el scroll en computadoras */
+.cp-summary {
+    position: sticky;
+    top: 6rem;
+}
+
+/* Si el resumen es más alto que la pantalla, se desliza por dentro (así el botón siempre se alcanza) */
+@media (min-width: 62.01rem) {
+    .cp-summary-card {
+        max-height: calc(100vh - 7rem);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+}
+
+.cp-summary-card {
+    background: var(--feature-bg);
+    border: .08rem solid var(--feature-border);
+    border-radius: var(--radius);
+    color: var(--feature-heading);
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    padding: 1.5rem;
+}
+
+:root[data-theme="dark"] .cp-summary-card {
+    background: linear-gradient(145deg, #3b2378, #211938);
+    border-color: #9b6dff;
+}
+
+.cp-summary-card .eyebrow {
+    margin: 0;
+}
+
+.cp-summary-card h2 {
+    font-size: 1.35rem;
+    margin: 0;
+}
+
+.cp-summary-empty {
+    color: var(--feature-copy);
+    font-size: .9375rem;
+    margin: 0;
+}
+
+.cp-summary-list,
+.cp-summary-quote ul {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cp-summary-list li {
+    animation: cp-in .25s ease;
+    border-bottom: .08rem solid var(--feature-rule);
+    display: flex;
+    font-size: .9rem;
+    gap: .75rem;
+    justify-content: space-between;
+    padding-bottom: .5rem;
+}
+
+.cp-summary-list li span {
+    color: var(--feature-copy);
+}
+
+.cp-summary-list li strong {
+    font-family: "Manrope", sans-serif;
+    white-space: nowrap;
+}
+
+.cp-summary-quote p {
+    font-size: .8125rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    margin: 0 0 .4rem;
+    text-transform: uppercase;
+}
+
+.cp-summary-quote li {
+    color: var(--feature-copy);
+    font-size: .9rem;
+    padding-left: 1.1rem;
+    position: relative;
+}
+
+.cp-summary-quote li::before {
+    content: "○";
+    left: 0;
+    position: absolute;
+}
+
+.cp-summary-total {
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+}
+
+.cp-summary-total span {
+    color: var(--feature-copy);
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.cp-summary-total strong {
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(1.9rem, 3vw, 2.3rem);
+    letter-spacing: -.02em;
+    line-height: 1.1;
+}
+
+.cp-summary-total small {
+    color: var(--feature-copy);
+    font-size: .875rem;
+}
+
+.cp-disclaimer {
+    color: var(--feature-copy);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.cp-request[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.cp-reset {
+    align-self: center;
+}
+
+.cp-plans-link {
+    color: var(--muted);
+    margin: 2.5rem auto 0;
+    max-width: var(--content);
+    text-align: center;
+}
+
+@keyframes cp-in {
+    from { opacity: 0; transform: translateY(-.25rem); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cp-summary-list li { animation: none; }
+}
+
+/* Barra del total en celulares */
+.cp-bar {
+    display: none;
+}
+
+@media (max-width: 62rem) {
+    .cp-layout {
+        grid-template-columns: minmax(0, 1fr);
+        padding-bottom: 4rem;   /* lugar para la barra del total */
+    }
+
+    .cp-summary {
+        position: static;
+    }
+
+    .cp-bar:not([hidden]) {
+        align-items: center;
+        background: var(--blue-dark);
+        border-radius: 99rem;
+        bottom: 1rem;
+        box-shadow: 0 .5rem 1.5rem rgba(9, 6, 18, .35);
+        color: #fff;
+        display: flex;
+        gap: .5rem;
+        left: 1rem;
+        padding: .75rem 1.1rem;
+        position: fixed;
+        right: 5.25rem;
+        text-decoration: none;
+        transition: opacity .25s ease, transform .25s ease;
+        z-index: 20;
+    }
+
+    .cp-bar.is-away {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(1rem);
+    }
+
+    .cp-bar span {
+        font-size: .8125rem;
+    }
+
+    .cp-bar strong {
+        font-family: "Manrope", sans-serif;
+        font-size: 1.05rem;
+    }
+
+    .cp-bar-link {
+        margin-left: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 52rem) {
+    .cp-base-grid,
+    .cp-base-grid-two,
+    .cp-howto {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Celulares: cada fila de la tabla pasa a ser una tarjeta (sin deslizar hacia el costado) */
+@media (max-width: 40rem) {
+    .cp-table thead {
+        display: none;
+    }
+
+    .cp-table,
+    .cp-table tbody,
+    .cp-table tr,
+    .cp-table th,
+    .cp-table td {
+        display: block;
+        width: auto !important;
+    }
+
+    .cp-table tr[data-item],
+    .cp-table tr[data-included] {
+        border-bottom: .08rem solid var(--rule);
+        display: grid;
+        gap: .35rem .75rem;
+        grid-template-areas: "name name" "price action" "cond cond";
+        grid-template-columns: 1fr auto;
+        padding: .85rem;
+    }
+
+    .cp-table tr[data-item] > *,
+    .cp-table tr[data-included] > * {
+        background: none !important;
+        border: 0;
+        box-shadow: none !important;
+        padding: 0;
+    }
+
+    .cp-table tr[data-item]:has(input:checked) {
+        background: color-mix(in srgb, var(--blue) 10%, var(--surface));
+        box-shadow: inset .25rem 0 0 var(--blue);
+    }
+
+    .cp-table tr > th[scope="row"] { grid-area: name; }
+    .cp-table tr > td:nth-of-type(1) { align-self: center; grid-area: price; }
+    .cp-table tr > td.cp-cond { grid-area: cond; }
+    .cp-table tr > td.cp-action { align-self: center; grid-area: action; }
+
+    .cp-table tbody:last-child tr:last-child {
+        border-bottom: 0;
+    }
+}
+
+/* Dos bases: estructura web y tienda */
+.cp-base-grid-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Base sumada sola porque otra opción la necesita: se explica en la tarjeta */
+.cp-base-option.is-locked {
+    cursor: default;
+}
+
+.cp-base-lock {
+    background: var(--sky);
+    border-radius: .6rem;
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.45;
+    margin-top: .35rem;
+    padding: .5rem .7rem;
+}
+
+.cp-base-lock::before {
+    content: "↳ ";
+}
+
+/* Aviso de propuesta (solo mientras se revisan los precios) */
+.cp-draft {
+    background: var(--sky);
+    border: .08rem dashed var(--decoration);
+    border-radius: 99rem;
+    color: var(--text);
+    font-size: .8125rem;
+    font-weight: 700;
+    margin: 0 auto 1.5rem;
+    padding: .4rem 1rem;
+    text-align: center;
+    width: fit-content;
+}
+
+/* Encabezado del resumen con el selector de moneda */
+.cp-summary-head {
+    align-items: flex-start;
+    display: flex;
+    gap: .75rem;
+    justify-content: space-between;
+}
+
+.cp-currency {
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: 99rem;
+    display: inline-flex;
+    flex-shrink: 0;
+    padding: .15rem;
+}
+
+.cp-currency button {
+    background: none;
+    border: 0;
+    border-radius: 99rem;
+    color: var(--muted);
+    cursor: pointer;
+    font: 800 .75rem "Manrope", sans-serif;
+    padding: .3rem .6rem;
+}
+
+.cp-currency button[aria-pressed="true"] {
+    background: var(--blue);
+    color: #fff;
+}
+
+.cp-summary-list li.is-auto span::after {
+    content: " ·  agregada";
+    font-size: .75rem;
+    font-style: italic;
+}
+
+.cp-summary-auto {
+    background: var(--surface);
+    border-left: .25rem solid var(--decoration);
+    border-radius: .6rem;
+    color: var(--text);
+    font-size: .8125rem;
+    line-height: 1.5;
+    margin: 0;
+    padding: .6rem .8rem;
+}
+
+.cp-summary-quote {
+    border: .08rem dashed var(--feature-rule);
+    border-radius: .75rem;
+    padding: .75rem .85rem;
+}
+
+.cp-summary-quote small {
+    color: var(--feature-copy);
+    display: block;
+    font-size: .75rem;
+    margin-top: .5rem;
+}
+
+@media (max-width: 40rem) {
+    .cp-base-grid-two {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Recomendación de plan: tarjeta dentro del resumen (amable, no de error) */
+.cp-reco {
+    animation: cp-in .3s ease;
+    background: var(--surface);
+    border: .08rem solid var(--line);
+    border-radius: 1rem;
+    border-top: .3rem solid var(--decoration);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+    padding: 1rem 1.05rem 1.1rem;
+}
+
+.cp-reco .eyebrow {
+    color: var(--blue);
+    margin: 0;
+}
+
+.cp-reco h3 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.cp-reco p {
+    font-size: .875rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.cp-reco-lead {
+    color: var(--muted);
+}
+
+.cp-reco-compare {
+    border: .08rem solid var(--line);
+    border-radius: .75rem;
+    margin: 0;
+    overflow: hidden;
+}
+
+.cp-reco-compare div {
+    align-items: baseline;
+    display: flex;
+    gap: .75rem;
+    justify-content: space-between;
+    padding: .5rem .75rem;
+}
+
+.cp-reco-compare div + div {
+    border-top: .08rem solid var(--line);
+}
+
+.cp-reco-compare dt {
+    color: var(--muted);
+    font-size: .8125rem;
+}
+
+.cp-reco-compare dd {
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.cp-reco-compare .is-plan {
+    background: var(--sky);
+}
+
+.cp-reco-compare .is-plan dt {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.cp-reco-compare .is-diff dd {
+    color: var(--blue);
+}
+
+.cp-reco-why {
+    font-weight: 600;
+}
+
+.cp-reco-list p {
+    font-size: .75rem !important;
+    font-weight: 800;
+    letter-spacing: .06em;
+    margin-bottom: .35rem !important;
+    text-transform: uppercase;
+}
+
+.cp-reco-list ul {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cp-reco-list li {
+    display: flex;
+    font-size: .8125rem;
+    gap: .5rem;
+    justify-content: space-between;
+    line-height: 1.4;
+    padding-left: 1.15rem;
+    position: relative;
+}
+
+.cp-reco-list li::before {
+    left: 0;
+    position: absolute;
+}
+
+.cp-reco-list.is-covered li::before,
+.cp-reco-list.is-extras li::before {
+    color: var(--blue);
+    content: "✓";
+    font-weight: 800;
+}
+
+.cp-reco-list.is-addons li::before {
+    color: var(--blue);
+    content: "+";
+    font-weight: 800;
+}
+
+.cp-reco-list.is-outside li::before {
+    content: "○";
+}
+
+.cp-reco-list li strong {
+    font-family: "Manrope", sans-serif;
+    white-space: nowrap;
+}
+
+.cp-reco-note {
+    color: var(--muted);
+    font-size: .75rem !important;
+}
+
+.cp-reco-actions {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.cp-reco-actions .button {
+    justify-content: center;
+}
+
+.cp-reco-keep,
+.cp-reco-again {
+    background: none;
+    border: 0;
+    color: var(--blue);
+    cursor: pointer;
+    font: 700 .875rem "Manrope", sans-serif;
+    padding: .35rem;
+    text-decoration: underline;
+    text-underline-offset: .2rem;
+}
+
+.cp-reco-again {
+    padding: 0;
+}
+
+.cp-reco.is-dismissed,
+.cp-reco.is-match {
+    border-top-width: .08rem;
+    gap: .4rem;
+    padding: .75rem .9rem;
+}
+
+/* Inglés: una sola base (sin tiendas) */
+.cp-base-grid-one {
+    grid-template-columns: minmax(0, 34rem);
+}

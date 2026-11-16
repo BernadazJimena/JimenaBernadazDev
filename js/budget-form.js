@@ -16,6 +16,26 @@
     const couponStatus = couponBox?.querySelector('.budget-coupon-status');
     let couponValid = false;
 
+    // Plan a medida: la selección armada en /plan-a-medida/ llega guardada en esta pestaña
+    const customGroup = form.querySelector('.budget-custom');
+    let customPlan = null;
+    try { customPlan = customGroup && JSON.parse(sessionStorage.getItem(customGroup.dataset.storeKey) || 'null'); } catch (e) { customPlan = null; }
+    const customLines = () => (customPlan ? [...customPlan.lines, customPlan.sections, customPlan.monthly].filter(Boolean) : []);
+    if (customGroup) {
+        const box = customGroup.querySelector('.budget-custom-summary');
+        customGroup.querySelector('.budget-custom-empty').hidden = Boolean(customPlan);
+        box.hidden = !customPlan;
+        if (customPlan) {
+            const items = [...customLines(), ...customPlan.quotes.map((q) => `${customGroup.dataset.lQuote}: ${q}`)];
+            customGroup.querySelector('.budget-custom-list').replaceChildren(...items.map((text) => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                return li;
+            }));
+            customGroup.querySelector('.budget-custom-total').textContent = customPlan.total ? `${customGroup.dataset.lTotal}: ${customPlan.total}` : '';
+        }
+    }
+
     const topicInput = () => form.querySelector('input[name="plan"]:checked');
     const activeGroup = () => groups.find((g) => !g.disabled);
     // Texto de una opción, sin el precio de referencia que tiene al lado
@@ -63,6 +83,11 @@
         if (topic) lines.push(`${t.lTopic}: ${optionText(topic)}`);
         const items = chosenItems();
         if (items.length) lines.push(`${t.lItems}: ${items.join('; ')}`);
+        if (topic?.value === 'medida' && customPlan) {
+            lines.push(`${customGroup.dataset.lItems}: ${customLines().join('; ')}`);
+            if (customPlan.quotes.length) lines.push(`${customGroup.dataset.lQuote}: ${customPlan.quotes.join('; ')}`);
+            if (customPlan.total) lines.push(`${customGroup.dataset.lTotal}: ${customPlan.total}`);
+        }
         if (details.value.trim()) lines.push(`${t.lDetails}: ${details.value.trim()}`);
         const country = form.querySelector('[name="pais"]');
         if (country && country.value) lines.push(`${country.closest('label').querySelector('span').textContent.trim()}: ${country.value}`);
@@ -84,7 +109,7 @@
             const missing = extraFields(box).find((field) => !field.value || !field.checkValidity());
             if (missing) return [missing.dataset.msg, missing];
         }
-        const needsDetails = topic === 'otro' || boxes.some((box) => box.dataset.other !== undefined);
+        const needsDetails = topic === 'otro' || (topic === 'medida' && !customPlan) || boxes.some((box) => box.dataset.other !== undefined);
         if (needsDetails && !details.value.trim()) return [t.errDetails, details];
         return null;
     };

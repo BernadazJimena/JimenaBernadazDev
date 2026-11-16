@@ -7,7 +7,7 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/inicio/en" />
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/inicio/pt" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/" />
-    <lastmod>2026-10-12</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -37,7 +37,7 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/planes/en" />
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/planes/pt" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/planes/" />
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -217,7 +217,17 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/comparar-planes/en" />
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/comparar-planes/pt" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/comparar-planes/" />
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/plan-a-medida/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jnbcreativestudio.com.ar/plan-a-medida/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/plan-a-medida/en" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/plan-a-medida/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/plan-a-medida/" />
+    <lastmod>2026-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -247,7 +257,7 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://jnbcreativestudio.com.ar/presupuesto/en" />
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://jnbcreativestudio.com.ar/presupuesto/pt" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://jnbcreativestudio.com.ar/presupuesto/" />
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

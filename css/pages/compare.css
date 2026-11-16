@@ -228,3 +228,14 @@
 .compare-table-two {
     min-width: 0;
 }
+
+/* Página Planes: el aviso del plan a medida va pegado al de la comparación */
+.plans-compare-link + .plans-custom-link {
+    border-left-color: var(--decoration);
+    margin-top: -1.5rem;
+}
+
+/* Comparar planes: aviso de la web a medida debajo de las tres tarjetas */
+.compare-custom-link {
+    margin-top: 1rem;
+}

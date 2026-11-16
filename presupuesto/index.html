@@ -105,6 +105,7 @@
               <div class="nav-submenu nav-submenu-nested" id="nav-submenu-planes">
                 <a href="/comparar-planes/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 10v10"/><path d="M15 10v10"/></svg><span class="nav-label">Comparar planes</span></a>
                 <a href="/planes/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h7"/></svg><span class="nav-label">Qué incluye cada plan</span></a>
+                <a href="/plan-a-medida/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="nav-label">Plan a medida</span></a>
                 <a href="/presupuesto/"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10a1 1 0 0 1 1 1v17l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="nav-label">Pedir presupuesto</span></a>
               </div>
             </div>
@@ -188,6 +189,7 @@
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="emprendedor" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Emprendedor · Tienda online</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="basico" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Básico · Landing esencial</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="premium" required data-msg-required="Elegí sobre qué es tu pedido."><span>Plan Premium · Web a medida</span></label>
+                <label class="plan-quiz-option"><input type="radio" name="plan" value="medida" required data-msg-required="Elegí sobre qué es tu pedido."><span>Web a medida · Lo que configuré en la web</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="update" required data-msg-required="Elegí sobre qué es tu pedido."><span>Actualizar una web o tienda que ya me entregaste</span></label>
                 <label class="plan-quiz-option"><input type="radio" name="plan" value="otro" required data-msg-required="Elegí sobre qué es tu pedido."><span>Otro</span></label>
             </div>
@@ -237,6 +239,17 @@
                 <div class="budget-extra" id="budget-extra-21" hidden><label class="contact-field"><span>¿Para qué fecha?</span><input type="date" data-msg="Elegí una fecha de hoy en adelante."></label></div>
                 <label class="plan-quiz-option"><input type="checkbox" data-other><span>Otro</span></label>
               </div>
+            </fieldset>
+            <fieldset class="budget-group budget-custom" data-for="medida" hidden disabled data-store-key="jnb-plan-a-medida"
+              data-l-total="Total estimado (sin los ítems a cotizar)" data-l-quote="A cotizar aparte" data-l-items="Web a medida">
+              <legend>Tu proyecto, a tu manera</legend>
+              <p class="budget-desc budget-custom-intro">Configurá tu sitio web seleccionando las secciones, páginas y funcionalidades que necesitás. Te muestro un presupuesto estimado y, cuando me lo envíes, lo reviso de forma personalizada. Lo que requiere un desarrollo especial aparece por separado como «A cotizar». El importe final queda sujeto a la revisión de tu proyecto.</p>
+              <div class="budget-custom-summary" hidden>
+                <ul class="budget-custom-list"></ul>
+                <p class="budget-custom-total"></p>
+                <p class="budget-desc">Es un importe orientativo: reviso tu pedido y te paso el presupuesto definitivo. <a class="text-link" href="/plan-a-medida/">Cambiar mi selección</a></p>
+              </div>
+              <p class="budget-custom-empty budget-desc" hidden>Todavía no configuraste tu web. <a class="text-link" href="/plan-a-medida/">Configurala acá</a> o contame en los detalles qué necesitás.</p>
             </fieldset>
             <fieldset class="budget-group" data-for="update" hidden disabled>
               <legend>¿Qué querés actualizar?</legend>

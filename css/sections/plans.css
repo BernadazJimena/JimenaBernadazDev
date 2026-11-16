@@ -719,3 +719,45 @@
         width: 2.5rem;
     }
 }
+
+/* Plan a medida: franja debajo de los tres planes (inicio) */
+.plan-custom-band {
+    align-items: center;
+    background: var(--surface);
+    border: .08rem dashed var(--decoration);
+    border-radius: var(--radius);
+    display: flex;
+    gap: 1.25rem 2rem;
+    justify-content: space-between;
+    margin: 1.5rem auto 0;
+    max-width: var(--content);
+    padding: 1.4rem 1.75rem;
+}
+
+.plan-custom-copy .eyebrow {
+    margin: 0 0 .35rem;
+}
+
+.plan-custom-copy h3 {
+    font-size: clamp(1.15rem, 2vw, 1.4rem);
+    margin: 0 0 .35rem;
+}
+
+.plan-custom-copy p:last-child {
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 44rem;
+}
+
+.plan-custom-band .button {
+    flex-shrink: 0;
+}
+
+@media (max-width: 48rem) {
+    .plan-custom-band {
+        align-items: stretch;
+        flex-direction: column;
+        text-align: center;
+    }
+}

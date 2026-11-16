@@ -245,3 +245,27 @@
     max-width: 22rem;
     width: 100%;
 }
+
+/* Plan a medida: resumen de lo que se armó en /plan-a-medida/ */
+.budget-custom-summary {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-left: .3rem solid var(--blue);
+    border-radius: .9rem;
+    padding: 1rem 1.15rem;
+}
+
+.budget-custom-list {
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0 0 .6rem;
+    padding-left: 1.1rem;
+}
+
+.budget-custom-total {
+    color: var(--text);
+    font-family: "Manrope", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0 0 .4rem;
+}
