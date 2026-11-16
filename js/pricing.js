@@ -51,11 +51,10 @@
             if (value) el.textContent = fmtArs(value);
         });
         // Cotización usada para los dólares
-        const day = RATE.date.split('-').reverse().join('/');
         const rateText = {
-            es: `Dólares calculados con el dólar MEP vendedor: $${RATE.mep.toLocaleString('es-AR', { minimumFractionDigits: 2 })} (${day}).`,
-            en: `USD prices use the Argentine MEP dollar (sell) rate: ARS ${RATE.mep.toLocaleString('en-US', { minimumFractionDigits: 2 })} (${day}).`,
-            pt: `Valores em dólares calculados com o dólar MEP de venda: ARS ${RATE.mep.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${day}).`,
+            es: 'Dólares aproximados, calculados con el dólar MEP vendedor. El valor final se confirma con tu presupuesto.',
+            en: 'Approximate USD prices, based on the Argentine MEP dollar (sell) rate. The final amount is confirmed in your quote.',
+            pt: 'Valores aproximados em dólares, calculados com o dólar MEP de venda. O valor final é confirmado no seu orçamento.',
         };
         document.querySelectorAll('[data-rate]').forEach((el) => { el.textContent = rateText[lang] || rateText.es; });
         document.querySelectorAll('[data-usd]').forEach((el) => {
