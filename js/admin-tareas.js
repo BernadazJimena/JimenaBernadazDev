@@ -394,7 +394,7 @@
         const i = cards.findIndex((c) => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
         return i === -1 ? cards.length : i;
     };
-    const clearMarks = () => document.querySelectorAll('.task-list.is-over').forEach((l) => l.classList.remove('is-over'));
+    const clearMarks = () => document.querySelectorAll('.task-list.is-over, .task-tab.is-over').forEach((l) => l.classList.remove('is-over'));
 
     const drop = async (list, y) => {
         const task = findTask(dragId);
@@ -466,19 +466,27 @@
             e.target.closest('.task-card')?.classList.remove('is-dragging');
             clearMarks();
         });
+        // Lista donde se suelta: la de la columna, o la de la pestaña sobre la que se suelta (va al final de esa columna)
+        const dropList = (target) => {
+            const tab = target.closest('.task-tab');
+            if (tab) return root().querySelector(`.task-col[data-status="${tab.dataset.col}"] .task-list`);
+            return target.closest('.task-col')?.querySelector('.task-list');
+        };
         el.addEventListener('dragover', (e) => {
-            const list = e.target.closest('.task-col')?.querySelector('.task-list');
+            const list = dropList(e.target);
             if (!list || !dragId) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            if (!list.classList.contains('is-over')) { clearMarks(); list.classList.add('is-over'); }
+            const mark = e.target.closest('.task-tab') || list;
+            if (!mark.classList.contains('is-over')) { clearMarks(); mark.classList.add('is-over'); }
         });
         el.addEventListener('drop', (e) => {
-            const list = e.target.closest('.task-col')?.querySelector('.task-list');
+            const fromTab = Boolean(e.target.closest('.task-tab'));
+            const list = dropList(e.target);
             if (!list || !dragId) return;
             e.preventDefault();
             clearMarks();
-            drop(list, e.clientY).finally(() => { dragId = 0; });
+            drop(list, fromTab ? Number.MAX_SAFE_INTEGER : e.clientY).finally(() => { dragId = 0; });
         });
 
         // Ventana del editor y de las categorías

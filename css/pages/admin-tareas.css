@@ -110,7 +110,6 @@ button.task-stat:disabled:hover { border-color: var(--line); }
   gap: .4rem; justify-content: center; margin-top: .4rem; padding: .4rem .6rem; width: 100%; }
 
 /* ---- Pestañas de columnas (solo en celulares) */
-.task-tabs { display: none; }
 
 /* ---- Agregar rápido */
 .task-quick { margin-top: .5rem; }
@@ -149,10 +148,33 @@ button.task-stat:disabled:hover { border-color: var(--line); }
 .task-sub input[type="text"], .task-cat input { padding: .4rem .6rem; }
 .task-sub-add { display: flex; gap: .4rem; }
 
+/* ---- Tablero: una columna a la vez, elegida con las pestañas (igual en compu, tablet y celular) */
+.task-tabs { display: flex; gap: .4rem; margin: 0 0 .6rem; overflow-x: auto; padding: 0 0 .2rem; scroll-snap-type: x proximity;
+  scrollbar-width: none; }
+.task-tabs::-webkit-scrollbar { display: none; }
+.task-tab { align-items: center; display: inline-flex; flex-shrink: 0; gap: .4rem; padding: .45rem .8rem; scroll-snap-align: start; white-space: nowrap; }
+.task-tab[data-col="inbox"] { --col: var(--c-inbox); }
+.task-tab[data-col="todo"] { --col: var(--c-todo); }
+.task-tab[data-col="doing"] { --col: var(--c-doing); }
+.task-tab[data-col="review"] { --col: var(--c-review); }
+.task-tab[data-col="done"] { --col: var(--c-done); }
+.task-tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.task-tab[aria-selected="true"] .task-count { background: color-mix(in srgb, var(--on-accent) 25%, transparent); color: inherit; }
+.task-tab[aria-selected="true"] .task-dot { background: var(--on-accent); box-shadow: none; }
+.task-board { display: block; overflow: visible; }
+.task-board .task-col { display: none; }
+.task-board[data-active="inbox"] .task-col[data-status="inbox"],
+.task-board[data-active="todo"] .task-col[data-status="todo"],
+.task-board[data-active="doing"] .task-col[data-status="doing"],
+.task-board[data-active="review"] .task-col[data-status="review"],
+.task-board[data-active="done"] .task-col[data-status="done"] { display: flex; }
+.task-board .task-col-head { display: none; }
+.task-board .task-col { background: none; border: 0; padding: 0; }
+.task-quick { order: -1; margin: 0 0 .6rem; }
+.task-quick label { background: var(--card); border-color: var(--line); border-style: solid; }
+.task-tab.is-over { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
 /* ---- Tablets: dos columnas y media a la vista */
-@media (max-width: 1100px) {
-  .task-board { grid-auto-columns: minmax(14rem, 40%); }
-}
 
 /* ---- Celulares */
 @media (max-width: 640px) {
@@ -166,30 +188,7 @@ button.task-stat:disabled:hover { border-color: var(--line); }
   .task-filters { display: none; flex-basis: 100%; }
   .task-toolbar.is-open .task-filters { display: flex; }
   .task-filters label { flex-basis: 100%; }
-  /* Una columna a la vez, elegida con las pestañas: la página no se hace eterna */
-  .task-tabs { display: flex; gap: .4rem; margin: 0 -1rem .6rem; overflow-x: auto; padding: 0 1rem .2rem; scroll-snap-type: x proximity;
-    scrollbar-width: none; }
-  .task-tabs::-webkit-scrollbar { display: none; }
-  .task-tab { align-items: center; display: inline-flex; flex-shrink: 0; gap: .4rem; padding: .45rem .8rem; scroll-snap-align: start; white-space: nowrap; }
-  .task-tab[data-col="inbox"] { --col: var(--c-inbox); }
-  .task-tab[data-col="todo"] { --col: var(--c-todo); }
-  .task-tab[data-col="doing"] { --col: var(--c-doing); }
-  .task-tab[data-col="review"] { --col: var(--c-review); }
-  .task-tab[data-col="done"] { --col: var(--c-done); }
-  .task-tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-  .task-tab[aria-selected="true"] .task-count { background: color-mix(in srgb, var(--on-accent) 25%, transparent); color: inherit; }
-  .task-tab[aria-selected="true"] .task-dot { background: var(--on-accent); box-shadow: none; }
-  .task-board { display: block; overflow: visible; }
-  .task-board .task-col { display: none; }
-  .task-board[data-active="inbox"] .task-col[data-status="inbox"],
-  .task-board[data-active="todo"] .task-col[data-status="todo"],
-  .task-board[data-active="doing"] .task-col[data-status="doing"],
-  .task-board[data-active="review"] .task-col[data-status="review"],
-  .task-board[data-active="done"] .task-col[data-status="done"] { display: flex; }
-  .task-board .task-col-head { display: none; }
-  .task-board .task-col { background: none; border: 0; padding: 0; }
-  .task-quick { order: -1; margin: 0 0 .6rem; }
-  .task-quick label { background: var(--card); border-color: var(--line); border-style: solid; }
+  .task-tabs { margin: 0 -1rem .6rem; padding: 0 1rem .2rem; }
   /* Resumen en una fila compacta */
   .task-summary { gap: .4rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .task-stat { padding: .5rem .55rem .5rem .7rem; }
