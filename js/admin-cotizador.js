@@ -247,7 +247,8 @@
         }
     });
     document.addEventListener('submit', (e) => {
-        const id = e.target.id;
+        // getAttribute: el formulario tiene un campo llamado "id" y e.target.id devolvería ese campo, no el id del formulario
+        const id = e.target.getAttribute('id');
         if (!['qz-form', 'qz-rates', 'qz-req', 'qz-load'].includes(id)) return;
         e.preventDefault();
         const d = Object.fromEntries(new FormData(e.target).entries());

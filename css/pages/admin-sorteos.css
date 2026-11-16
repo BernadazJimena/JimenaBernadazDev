@@ -31,5 +31,7 @@
   #m-sorteos .sg-late { color: #ff8a80; }
 }
 @media (max-width: 640px) {
-  #m-sorteos .sg-field { grid-template-columns: 5.5rem 1fr auto; }
+  #m-sorteos .sg-field { grid-template-columns: 1fr auto; }
+  #m-sorteos .sg-field > span:first-child { grid-column: 1 / -1; }
 }
+#m-sorteos .sg-link { background: color-mix(in srgb, var(--accent) 12%, var(--soft)); border-radius: .8rem; margin-top: .75rem; padding: .7rem .9rem; }

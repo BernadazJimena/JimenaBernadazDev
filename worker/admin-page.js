@@ -249,23 +249,25 @@ export const adminPage = () => `<!doctype html>
           <a href="#tareas" data-mod="tareas"><svg class="ico" aria-hidden="true"><use href="#i-kanban"/></svg><span class="side-label">Gestor de tareas</span><span class="badge" id="n-tareas" title=""></span></a>
           <p class="side-group">Comercial</p>
           <a href="#clientes" data-mod="clientes"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span class="side-label">Clientes</span><span class="badge" id="n-clientes"></span></a>
-          <a href="#proyectos" data-mod="proyectos"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="side-label">Proyectos</span><span class="badge" id="n-proyectos"></span></a>
           <a href="#consultas" data-mod="consultas"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><span class="side-label">Consultas</span><span class="badge" id="n-consultas"></span></a>
           <a href="#presupuestos" data-mod="presupuestos"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
+          <a href="#proyectos" data-mod="proyectos"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="side-label">Proyectos</span><span class="badge" id="n-proyectos"></span></a>
           <a href="#pagos" data-mod="pagos"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Pagos</span><span class="badge" id="n-pagos"></span></a>
-          <p class="side-group">Postventa</p>
-          <a href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
+          <p class="side-group">Marketing y comunicación</p>
+          <a href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos de Instagram</span><span class="badge" id="n-sorteos"></span></a>
           <a href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
-          <a href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos</span><span class="badge" id="n-sorteos"></span></a>
+          <a href="#newsletter" data-mod="newsletter"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg><span class="side-label">Newsletter</span><span class="badge" id="n-newsletter"></span></a>
+          <a href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
+          <a href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
+          <p class="side-group">Gestión y seguimiento</p>
           <a href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
           <a href="#agenda" data-mod="agenda"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Plazos y vencimientos</span><span class="badge" id="n-agenda"></span></a>
-          <a href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
+          <p class="side-group">Servicios y cotización</p>
           <a href="#cotizador" data-mod="cotizador"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Funcionalidades y cotizador</span></a>
           <p class="side-group">Sitio web</p>
           <a href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
           <a href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
           <a href="#faq" data-mod="faq"><svg class="ico" aria-hidden="true"><use href="#i-help"/></svg><span class="side-label">Preguntas frecuentes</span></a>
-          <a href="#newsletter" data-mod="newsletter"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg><span class="side-label">Newsletter</span><span class="badge" id="n-newsletter"></span></a>
           <p class="side-group">Configuración</p>
           <a href="#config" data-mod="config"><svg class="ico" aria-hidden="true"><use href="#i-settings"/></svg><span class="side-label">Configuración</span><span class="badge" id="n-config"></span></a>
         </nav>

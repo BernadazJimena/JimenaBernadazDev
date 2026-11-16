@@ -85,7 +85,7 @@
                 + list.map((w) => '<tr data-sg-open="' + w.id + '"><td><strong>' + esc(w.name) + '</strong><br><span class="small muted">@' + esc(w.instagram) + '</span></td><td>' + esc(w.giveaway_name) + '</td><td>' + esc(w.prize) + '</td><td>' + stageTag(w) + '</td>'
                     + '<td>' + (w.next_task ? esc(w.next_task) + '<br><span class="small ' + (alertOf(w) === 'vencida' ? 'sg-late' : 'muted') + '">' + fdate(w.follow_up) + '</span>' : '<span class="muted">—</span>') + '</td></tr>').join('')
                 + '</tbody></table></div>' : '<p class="empty">' + (winners.length ? 'No hay ganadores con esos filtros.' : 'Todavía no cargaste ganadores.') + '</p>')
-            + (giveaways.some((g) => !g.archived) ? '<details class="card" style="margin-top:1rem"><summary>➕ Registrar un ganador</summary>' + winnerForm({}) + '</details>' : '<p class="small muted">Para registrar ganadores, primero creá un sorteo.</p>');
+            + (giveaways.some((g) => !g.archived) ? '<details class="card" style="margin-top:1rem"><summary>➕ Registrar un ganador</summary>' + winnerForm({}) + '</details>' : '<p class="alert">Para registrar un ganador, primero creá el sorteo en la pestaña <button type="button" class="link-btn" data-sg-tab="sorteos">Sorteos</button>.</p>');
     };
 
     const winnerForm = (w) => {
@@ -176,12 +176,20 @@
     };
 
     const TASK_LABEL = { inbox: 'Bandeja de entrada', todo: 'Pendiente', doing: 'En proceso', review: 'En revisión', done: 'Completada' };
+    const linkBox = (w) => {
+        const link = (w.brief_link || '').replace(/#brief$/, '');
+        const msg = '¡Hola, ' + (w.name || '').split(' ')[0] + '! 🎉 Este es tu link personal: ahí vas a ver paso a paso cómo avanza tu web y vas a completar tu brief. ' + link;
+        return '<div class="sg-link"><p class="small muted" style="margin:0">🔗 Link único del ganador · estado de su web y brief</p><p style="margin:.2rem 0;overflow-wrap:anywhere"><strong>' + esc(link) + '</strong></p>'
+            + '<div class="row"><button type="button" data-sg-copy="' + esc(link) + '">Copiar link</button><button type="button" data-sg-copy="' + esc(msg) + '">Copiar mensaje para Instagram</button><a class="btn" href="' + esc(link) + '" target="_blank" rel="noopener">Abrir ↗</a></div></div>';
+    };
     const linksCard = (w) => {
         const taskOpen = w.task_id && w.task_status && w.task_status !== 'done' && !w.task_archived;
         return '<section class="card" style="margin-top:1rem"><h3>Cliente, proyecto y tarea</h3>'
             + '<div class="sg-field"><span class="small muted">Cliente</span><span>' + (w.client_code ? '<a href="#clientes/' + esc(w.client_code) + '">' + esc(w.client_code) + '</a>' : 'Todavía no es cliente') + '</span>' + (w.client_code ? '<span></span>' : '<button type="button" data-sg-do="client">Pasar a Clientes</button>') + '</div>'
             + '<div class="sg-field"><span class="small muted">Proyecto</span><span>' + (w.project_code ? '<a href="#proyectos/' + esc(w.project_code) + '">' + esc(w.project_code) + '</a> <span class="sg-tag sg-info">ORIGEN: SORTEO DE INSTAGRAM</span>' : (w.plan ? 'Sin crear' : 'El premio no lleva proyecto web (elegí el tipo en Editar datos)')) + '</span>' + (!w.project_code && w.plan ? '<button type="button" data-sg-do="project">Crear proyecto</button>' : '<span></span>') + '</div>'
             + '<div class="sg-field"><span class="small muted">Tarea</span><span>' + (w.task_id && w.task_status ? esc(TASK_LABEL[w.task_status] || w.task_status) + (w.task_archived ? ' (archivada)' : '') + ' · <a href="#tareas">Ver en el Gestor</a>' : 'Sin tarea') + '</span>' + (w.next_task ? '<button type="button" data-sg-do="task">' + (taskOpen ? 'Actualizar tarea' : 'Crear tarea') + '</button>' : '<span></span>') + '</div>'
+            // Link único del ganador (aparte del de presupuesto): ve el estado de su web y completa su brief
+            + (w.project_code ? linkBox(w) : '<p class="alert">Para mandarle su link único (estado de la web y brief): 1) cargá su mail en Editar datos, 2) elegí el tipo de proyecto y 3) tocá <strong>Crear proyecto</strong>.</p>')
             + (w.next_task ? '' : '<p class="small muted">Para crear una tarea en el Gestor, primero cargá la próxima tarea y guardá el seguimiento.</p>')
             + '</section>';
     };
