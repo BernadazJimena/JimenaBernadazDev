@@ -126,17 +126,20 @@
         const byName = Object.fromEntries(r.feats.map((f) => [f.name, f]));
         const skip = o.key === 'medida' && !req.base ? 0 : 1; // la primera línea es el plan o la estructura (ya está en el precio)
         const includes = [...o.included, ...o.lines.slice(skip).map((l) => (byName[l[0]] && byName[l[0]].description ? l[0] + ' — ' + byName[l[0]].description : l[0]))];
+        // Moneda como en el resto del panel: pesos si el cliente es de Argentina (o escribió en español sin país); si no, dólares
+        const q = openQuotes().find((x) => x.code === code) || {};
+        const inUsd = q.country ? !/argentina/i.test(q.country) : q.lang !== 'es';
         panel().go('presupuestos', code);
         setTimeout(() => {
             const form = document.querySelector('#m-presupuestos .quote-form');
             if (!form) { panel().toast('No encontré el formulario del presupuesto'); return; }
             form.closest('details').open = true;
-            form.currency.value = '$';
-            form.amount.value = Math.round(o.total).toLocaleString('es-AR');
+            form.currency.value = inUsd ? 'USD' : '$';
+            form.amount.value = (inUsd ? usdOf(o.total) : Math.round(o.total)).toLocaleString('es-AR');
             form.includes.value = includes.join('\n');
             if (form.status.value === 'recibido') form.status.value = 'preparando';
             form.scrollIntoView({ block: 'start' });
-            panel().toast('Listo: revisá la propuesta y tocá Guardar');
+            panel().toast(q.lang && q.lang !== 'es' ? 'Listo. Ojo: el cliente escribió en ' + (q.lang === 'en' ? 'inglés' : 'portugués') + ': traducí "Qué incluye" antes de guardar' : 'Listo: revisá la propuesta y tocá Guardar');
         }, 80);
     };
 
