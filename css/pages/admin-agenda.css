@@ -46,3 +46,5 @@
 #m-cotizador #qz-text { width: 100%; }
 #m-cotizador .qz-opt ul.qz-inc li { border: 0; display: block; padding: .1rem 0 .1rem 1.3rem; position: relative; }
 #m-cotizador .qz-opt ul.qz-inc li::before { color: var(--ok); content: "✓"; font-weight: 800; left: 0; position: absolute; }
+#m-cotizador .qz-load { align-items: end; background: var(--soft); border-radius: 1rem; display: flex; flex-wrap: wrap; gap: .75rem; margin: 0 0 1rem; padding: .9rem 1rem; }
+#m-cotizador .qz-load p { flex-basis: 100%; margin: 0; }

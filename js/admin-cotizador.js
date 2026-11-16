@@ -117,6 +117,29 @@
             + '</body></html>';
     };
 
+    // ---- Llevar una opción al presupuesto del cliente (Presupuestos): se completan precio y "Qué incluye" del formulario de siempre,
+    // y Jimena revisa y guarda. Desde ahí sigue el circuito de siempre: enviado → acepta → proyecto, brief y pagos.
+    const openQuotes = () => ((panel().data() || {}).inquiries || []).filter((q) => q.kind === 'presupuesto' && ['recibido', 'preparando'].includes(q.status));
+    const loadIntoQuote = (code, key) => {
+        const r = compare();
+        const o = r.opts.find((x) => x.key === key) || r.best;
+        const byName = Object.fromEntries(r.feats.map((f) => [f.name, f]));
+        const skip = o.key === 'medida' && !req.base ? 0 : 1; // la primera línea es el plan o la estructura (ya está en el precio)
+        const includes = [...o.included, ...o.lines.slice(skip).map((l) => (byName[l[0]] && byName[l[0]].description ? l[0] + ' — ' + byName[l[0]].description : l[0]))];
+        panel().go('presupuestos', code);
+        setTimeout(() => {
+            const form = document.querySelector('#m-presupuestos .quote-form');
+            if (!form) { panel().toast('No encontré el formulario del presupuesto'); return; }
+            form.closest('details').open = true;
+            form.currency.value = '$';
+            form.amount.value = Math.round(o.total).toLocaleString('es-AR');
+            form.includes.value = includes.join('\n');
+            if (form.status.value === 'recibido') form.status.value = 'preparando';
+            form.scrollIntoView({ block: 'start' });
+            panel().toast('Listo: revisá la propuesta y tocá Guardar');
+        }, 80);
+    };
+
     const render = () => {
         const el = document.getElementById('m-cotizador');
         if (!el || el.hidden) return;
@@ -156,6 +179,9 @@
                 + '<ul class="small">' + o.lines.map((l) => '<li><span>' + esc(l[0]) + '</span><span>' + ars(l[1]) + '</span></li>').join('') + '</ul>'
                 + (o.included.length ? '<p class="small" style="margin-bottom:.2rem"><strong>Incluye</strong></p><ul class="small qz-inc">' + o.included.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') + '</article>').join('') + '</div>'
             + '<div class="alert">💡 ' + esc(r.reco) + '</div>'
+            + (openQuotes().length ? '<form id="qz-load" class="qz-load"><label>Cargar en el presupuesto de<select name="code">' + openQuotes().map((q) => '<option value="' + esc(q.code) + '">' + esc(q.name + ' · ' + q.code + (q.plan ? ' · ' + q.plan : '')) + '</option>').join('') + '</select></label>'
+              + '<label>Opción<select name="opt">' + r.opts.map((o) => '<option value="' + o.key + '"' + (o.key === r.best.key ? ' selected' : '') + '>' + esc(o.name) + ' · ' + ars(o.total) + '</option>').join('') + '</select></label><button class="primary">Cargar en el presupuesto →</button>'
+              + '<p class="small muted">Completa el precio y "Qué incluye" de ese presupuesto. Lo revisás, lo guardás y sigue el circuito de siempre: enviado, acepta, proyecto, brief y pagos.</p></form>' : '<p class="small muted">Cuando tengas un pedido de presupuesto sin propuesta, vas a poder cargar esta opción ahí directamente.</p>')
             + '<h4>Propuesta para el cliente</h4><label class="check-line"><input type="checkbox" data-qz-hours' + (req.showHours ? ' checked' : '') + '> Mostrar las horas de desarrollo en la propuesta</label>'
             + '<textarea id="qz-text" rows="12">' + esc(proposalText(r)) + '</textarea>'
             + '<div class="row"><button type="button" data-qz-copy>Copiar propuesta</button><button type="button" class="primary" data-qz-print>Ver propuesta con diseño (PDF)</button></div></section>';
@@ -187,10 +213,11 @@
     });
     document.addEventListener('submit', (e) => {
         const id = e.target.id;
-        if (!['qz-form', 'qz-rates', 'qz-req'].includes(id)) return;
+        if (!['qz-form', 'qz-rates', 'qz-req', 'qz-load'].includes(id)) return;
         e.preventDefault();
         const d = Object.fromEntries(new FormData(e.target).entries());
         if (id === 'qz-form') send({ action: 'save', feature: d }, 'Funcionalidad guardada');
+        else if (id === 'qz-load') loadIntoQuote(d.code, d.opt);
         else if (id === 'qz-rates') send({ action: 'rate', rate: d.rate, hour: d.hour }, 'Precios recalculados');
         else { readReq(e.target); render(); }
     });
