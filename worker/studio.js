@@ -114,6 +114,129 @@ const QUOTE_SEED = [
   ['Cupones promocionales', 'Códigos de descuento abiertos.', 3, 1.5], ['Comparador de planes o servicios', 'Tabla interactiva para comparar opciones.', 3, 2],
   ['Botones para compartir', 'Por WhatsApp, redes o copiando el enlace.', 4, 0.5], ['Botón "Guardar contacto" (vCard)', 'Guarda tus datos en la agenda del teléfono.', 4, 0.5],
 ];
+// Traducciones del catálogo inicial (inglés y portugués): [nombre en, descripción en, nombre pt, descripción pt]
+const QUOTE_SEED_TR = {
+  "Galería de productos": [
+    "Product gallery",
+    "Catalog with categories or filters, no cart.",
+    "Galeria de produtos",
+    "Catálogo com categorias ou filtros, sem carrinho."
+  ],
+  "Catálogo de productos filtrable": [
+    "Filterable product catalog",
+    "Photos, categories, filters and search.",
+    "Catálogo de produtos filtrável",
+    "Fotos, categorias, filtros e busca."
+  ],
+  "Buscador interno": [
+    "Site search",
+    "Finds products, services or content on your site.",
+    "Busca interna",
+    "Encontra produtos, serviços ou conteúdos do site."
+  ],
+  "Portfolio filtrable": [
+    "Filterable portfolio",
+    "Your work by category, with photos and links.",
+    "Portfólio filtrável",
+    "Trabalhos por categoria, com fotos e links."
+  ],
+  "Sistema de reservas propio": [
+    "Custom booking system",
+    "Bookings with real availability (with a database).",
+    "Sistema de reservas próprio",
+    "Reservas com disponibilidade real (com banco de dados)."
+  ],
+  "Galería de imágenes ampliable": [
+    "Expandable image gallery",
+    "Photos that open full size and can be browsed with arrows.",
+    "Galeria de imagens ampliável",
+    "Fotos que abrem em tamanho grande e se navegam com setas."
+  ],
+  "Comparador antes y después": [
+    "Before and after slider",
+    "Two photos compared by sliding.",
+    "Comparador antes e depois",
+    "Duas fotos comparadas deslizando."
+  ],
+  "Menú digital con código QR": [
+    "Digital menu with QR code",
+    "Menu with categories, photos, prices and QR.",
+    "Cardápio digital com QR code",
+    "Cardápio com categorias, fotos, preços e QR."
+  ],
+  "Tarjeta digital de contacto": [
+    "Digital business card",
+    "A card to share or download.",
+    "Cartão digital de contato",
+    "Cartão para compartilhar ou baixar."
+  ],
+  "Carrito de pedidos por WhatsApp": [
+    "WhatsApp order cart",
+    "Builds the order message with products and quantities.",
+    "Carrinho de pedidos pelo WhatsApp",
+    "Monta a mensagem do pedido com produtos e quantidades."
+  ],
+  "Formulario de pedidos": [
+    "Order form",
+    "Orders with the details you need.",
+    "Formulário de pedidos",
+    "Pedidos com os dados de que você precisa."
+  ],
+  "Selector de turnos por WhatsApp": [
+    "WhatsApp appointment picker",
+    "Service, day and time via WhatsApp.",
+    "Seletor de horários pelo WhatsApp",
+    "Serviço, dia e horário pelo WhatsApp."
+  ],
+  "Calculadora de presupuestos": [
+    "Quote calculator",
+    "Estimated amount based on services and options.",
+    "Calculadora de orçamentos",
+    "Valor estimado conforme serviços e opções."
+  ],
+  "Calculadora de cuotas": [
+    "Installment calculator",
+    "Estimated installments and amounts.",
+    "Calculadora de parcelas",
+    "Parcelas e valores estimados."
+  ],
+  "Test de recomendación": [
+    "Recommendation quiz",
+    "Questions that recommend the ideal service.",
+    "Teste de recomendação",
+    "Perguntas que recomendam o serviço ideal."
+  ],
+  "Agregar al calendario": [
+    "Add to calendar",
+    "Saves an event on the phone or computer.",
+    "Adicionar à agenda",
+    "Salva um evento no celular ou no computador."
+  ],
+  "Cupones promocionales": [
+    "Promo codes",
+    "Open discount codes.",
+    "Cupons promocionais",
+    "Códigos de desconto abertos."
+  ],
+  "Comparador de planes o servicios": [
+    "Plan or service comparison",
+    "Interactive table to compare options.",
+    "Comparador de planos ou serviços",
+    "Tabela interativa para comparar opções."
+  ],
+  "Botones para compartir": [
+    "Share buttons",
+    "Via WhatsApp, social media or by copying the link.",
+    "Botões de compartilhar",
+    "Pelo WhatsApp, redes ou copiando o link."
+  ],
+  "Botón \"Guardar contacto\" (vCard)": [
+    "\"Save contact\" button (vCard)",
+    "Saves your details to the phone's contacts.",
+    "Botão \"Salvar contato\" (vCard)",
+    "Salva os seus dados nos contatos do celular."
+  ]
+};
 const QUOTE_RATE = 1580.90; // misma cotización inicial que js/pricing.js; después se edita en el panel
 const QUOTE_HOUR = 18990;   // valor de la hora (tarifario 2026); se edita en el panel
 // Precio = horas × valor de la hora, redondeado hacia arriba a $x.990; USD = pesos / cotización
@@ -427,6 +550,15 @@ export class StudioData extends DurableObject {
           name, description, QUOTE_CATEGORIES[cat], ars, Math.round(ars / QUOTE_RATE), hours, now);
       }
       this.sql.exec("INSERT INTO settings (key, value) VALUES ('cotizadorSeed', '1')");
+    }
+    // Nombre y descripción en inglés y portugués (para propuestas a clientes en esos idiomas); se cargan una vez para el catálogo inicial
+    const quoteColumns = this.sql.exec('PRAGMA table_info(quote_features)').toArray().map((c) => c.name);
+    for (const col of ['name_en', 'name_pt', 'desc_en', 'desc_pt']) if (!quoteColumns.includes(col)) this.sql.exec(`ALTER TABLE quote_features ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
+    if (!this.sql.exec("SELECT 1 FROM settings WHERE key = 'cotizadorTr'").toArray().length) {
+      for (const [name, [ne, de, np, dp]] of Object.entries(QUOTE_SEED_TR)) {
+        this.sql.exec("UPDATE quote_features SET name_en = ?, desc_en = ?, name_pt = ?, desc_pt = ? WHERE name = ? AND name_en = ''", ne, de, np, dp, name);
+      }
+      this.sql.exec("INSERT INTO settings (key, value) VALUES ('cotizadorTr', '1')");
     }
     this.linkClients();
   }
@@ -809,7 +941,7 @@ export class StudioData extends DurableObject {
   cotizadorData() {
     const get = (key, fallback) => { const row = this.sql.exec('SELECT value FROM settings WHERE key = ?', key).toArray()[0]; return row ? Number(row.value) : fallback; };
     return { rate: get('cotizadorDolar', QUOTE_RATE), hour: get('cotizadorHora', QUOTE_HOUR), categories: QUOTE_CATEGORIES,
-      features: this.sql.exec('SELECT id, name, description, category, ars, usd, hours FROM quote_features ORDER BY category, name').toArray() };
+      features: this.sql.exec('SELECT id, name, description, category, ars, usd, hours, name_en AS nameEn, desc_en AS descEn, name_pt AS namePt, desc_pt AS descPt FROM quote_features ORDER BY category, name').toArray() };
   }
 
   saveFeature(f) {
@@ -818,11 +950,11 @@ export class StudioData extends DurableObject {
     f.usd = Math.round(f.ars / rate);
     if (f.id) {
       if (!this.sql.exec('SELECT 1 FROM quote_features WHERE id = ?', f.id).toArray().length) return { error: 'not found' };
-      this.sql.exec('UPDATE quote_features SET name = ?, description = ?, category = ?, ars = ?, usd = ?, hours = ? WHERE id = ?', f.name, f.description, f.category, f.ars, f.usd, f.hours, f.id);
+      this.sql.exec('UPDATE quote_features SET name = ?, description = ?, category = ?, ars = ?, usd = ?, hours = ?, name_en = ?, desc_en = ?, name_pt = ?, desc_pt = ? WHERE id = ?', f.name, f.description, f.category, f.ars, f.usd, f.hours, f.nameEn, f.descEn, f.namePt, f.descPt, f.id);
       return { id: f.id };
     }
     if (this.sql.exec('SELECT 1 FROM quote_features WHERE lower(name) = lower(?)', f.name).toArray().length) return { error: 'duplicate' };
-    this.sql.exec('INSERT INTO quote_features (name, description, category, ars, usd, hours, created) VALUES (?, ?, ?, ?, ?, ?, ?)', f.name, f.description, f.category, f.ars, f.usd, f.hours, new Date().toISOString());
+    this.sql.exec('INSERT INTO quote_features (name, description, category, ars, usd, hours, name_en, desc_en, name_pt, desc_pt, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', f.name, f.description, f.category, f.ars, f.usd, f.hours, f.nameEn, f.descEn, f.namePt, f.descPt, new Date().toISOString());
     return { id: this.sql.exec('SELECT last_insert_rowid() AS id').one().id };
   }
 
@@ -1025,7 +1157,7 @@ export class StudioData extends DurableObject {
     const proposal = JSON.parse(row.proposal);
     const option = (proposal.options || [])[index];
     if (!Number.isInteger(index) || !option) return { error: 'option' };
-    Object.assign(proposal, { price: option.price, includes: option.includes, chosen: index });
+    Object.assign(proposal, { price: option.price, priceUsd: option.priceUsd || '', includes: option.includes, chosen: index });
     this.sql.exec('UPDATE inquiries SET proposal = ?, seen = 0 WHERE token = ?', JSON.stringify(proposal), token);
     return { code: row.code, name: row.name, option: option.name, price: option.price };
   }
@@ -2041,7 +2173,8 @@ export async function handleStudio(request, env, ctx) {
       if (body.action === 'save') {
         const f = body.feature || {};
         const item = { id: Number(f.id) || 0, name: oneLine(f.name, 120), description: text(f.description, 600),
-          category: QUOTE_CATEGORIES.includes(f.category) ? f.category : '', hours: num(f.hours, 1000) };
+          category: QUOTE_CATEGORIES.includes(f.category) ? f.category : '', hours: num(f.hours, 1000),
+          nameEn: oneLine(f.nameEn, 120), descEn: text(f.descEn, 600), namePt: oneLine(f.namePt, 120), descPt: text(f.descPt, 600) };
         if (!item.name || !item.category || !(item.hours > 0)) return badRequest();
         saved = await store.saveFeature(item);
       } else if (body.action === 'delete') {
@@ -2132,6 +2265,8 @@ export async function handleStudio(request, env, ctx) {
       const status = ['recibido', 'preparando', 'enviado', 'aceptado'].includes(body.status) ? body.status : 'recibido';
       const proposal = SHOWN_STATUSES.includes(status) ? {
         price: oneLine(body.price, 80),
+        // Referencia en dólares junto al precio en pesos (clientes en español)
+        priceUsd: oneLine(body.priceUsd, 40),
         includes: text(body.includes, 2000),
         validUntil: isoDate(body.validUntil),
         note: text(body.note, 1500),
@@ -2145,7 +2280,7 @@ export async function handleStudio(request, env, ctx) {
         let options = body.options;
         if (typeof options === 'string') { try { options = JSON.parse(options || '[]'); } catch { options = []; } }
         proposal.options = (Array.isArray(options) ? options : []).slice(0, 3)
-          .map((o) => ({ name: oneLine(o && o.name, 80), price: oneLine(o && o.price, 80), includes: text(o && o.includes, 2000), recommended: Boolean(o && o.recommended) }))
+          .map((o) => ({ name: oneLine(o && o.name, 80), price: oneLine(o && o.price, 80), priceUsd: oneLine(o && o.priceUsd, 40), includes: text(o && o.includes, 2000), recommended: Boolean(o && o.recommended) }))
           .filter((o) => o.name && o.price);
         if (proposal.options.length < 2) delete proposal.options;
         const chosen = Number(body.chosen);

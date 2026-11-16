@@ -756,6 +756,7 @@
                 const opt = el('article', 'client-choose-card' + (chosen ? ' is-chosen' : ''));
                 if (o.recommended) opt.append(el('span', 'client-status is-enviado', C.recommended));
                 opt.append(el('h3', 'client-option-title', o.name), el('p', 'client-option-amount', o.price));
+                if (o.priceUsd) opt.append(el('p', 'client-date', '≈ ' + o.priceUsd));
                 const list = el('ul', 'client-choose-list');
                 o.includes.split('\n').map((line) => splitItem(line.trim())[0]).filter(Boolean).forEach((line) => list.append(el('li', '', line)));
                 opt.append(list);
@@ -781,7 +782,9 @@
 
         // Inversión total
         const price = el('section', 'client-investment');
-        price.append(el('h2', 'client-small-title', T.investment), el('p', 'client-price', proposal.price), el('p', 'client-date', T.finalPrice));
+        price.append(el('h2', 'client-small-title', T.investment), el('p', 'client-price', proposal.price));
+        if (proposal.priceUsd) price.append(el('p', 'client-date', '≈ ' + proposal.priceUsd));
+        price.append(el('p', 'client-date', T.finalPrice));
         card.append(price);
 
         // Qué incluye

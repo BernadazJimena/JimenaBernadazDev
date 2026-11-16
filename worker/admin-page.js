@@ -419,6 +419,8 @@ export const adminPage = () => `<!doctype html>
     return digits ? Number(digits).toLocaleString('es-AR') : '';
   };
   document.addEventListener('input', (e) => {
+    // Si cambia el monto a mano, la referencia en dólares que cargó el cotizador ya no vale
+    if (e.target.name === 'amount' && e.target.form && e.target.form.priceUsd) e.target.form.priceUsd.value = '';
     if (!e.target.classList || !e.target.classList.contains('amount-input')) return;
     const formatted = formatAmount(e.target.value);
     if (formatted !== e.target.value) e.target.value = formatted;
@@ -447,7 +449,7 @@ export const adminPage = () => `<!doctype html>
         + (isQuote ? linkBox(clientLink('mi-presupuesto', q.lang, q.token), q.lang, q.name.split(' ')[0])
           + (q.status === 'aceptado' && inClient !== true ? '<p class="small" style="margin-top:.5rem">✓ Ya es un proyecto en marcha. <button type="button" data-open-quote="' + esc(q.token) + '">Abrir el proyecto</button></p>' : '') : '')
         + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
-          + '<input type="hidden" name="options" value="' + esc(JSON.stringify(p.options || [])) + '"><input type="hidden" name="chosen" value="' + (Number.isInteger(p.chosen) ? p.chosen : '') + '">'
+          + '<input type="hidden" name="options" value="' + esc(JSON.stringify(p.options || [])) + '"><input type="hidden" name="chosen" value="' + (Number.isInteger(p.chosen) ? p.chosen : '') + '"><input type="hidden" name="priceUsd" value="' + esc(p.priceUsd || '') + '">'
           + (p.options ? '<p class="alert">🔀 El cliente ve ' + p.options.length + ' opciones para elegir' + (Number.isInteger(p.chosen) ? ': <strong>eligió ' + esc(p.options[p.chosen].name) + '</strong> (el precio y lo que incluye ya son los de esa opción).' : '. Todavía no eligió.') + '</p>' : '')
           + '<div class="grid"><label>Estado<select name="status">' + Object.entries(STATUS).map(([v, l]) => '<option value="' + v + '"' + (q.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
           + priceFields(p.price, q)

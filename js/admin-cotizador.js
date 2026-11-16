@@ -137,6 +137,8 @@
     };
     const tr = (lang, s) => { const d = TR[lang]; if (!d) return s; if (d[s]) return d[s]; const m = s.match(/^(\d+) (.+)$/); return m && d[m[2]] ? m[1] + ' ' + d[m[2]] : s; };
 
+    // Nombre y descripción de una funcionalidad en el idioma del cliente (si falta la traducción, queda en español)
+    const featureText = (f, lang) => (lang === 'en' && f.nameEn ? [f.nameEn, f.descEn || f.description] : lang === 'pt' && f.namePt ? [f.namePt, f.descPt || f.description] : [f.name, f.description]);
     const openQuotes = () => ((panel().data() || {}).inquiries || []).filter((q) => q.kind === 'presupuesto' && ['recibido', 'preparando'].includes(q.status));
     const loadIntoQuote = (code, key, all) => {
         const r = compare();
@@ -145,9 +147,10 @@
         // la primera línea es el plan o la estructura (ya está en el precio)
         // Moneda como en el resto del panel: pesos si el cliente es de Argentina (o escribió en español sin país); si no, dólares
         const q = openQuotes().find((x) => x.code === code) || {};
-        const includesOf = (x) => [...x.included.map((s) => tr(q.lang, s)), ...x.lines.slice(x.key === 'medida' && !req.base ? 0 : 1).map((l) => (byName[l[0]] && byName[l[0]].description ? l[0] + ' — ' + byName[l[0]].description : tr(q.lang, l[0])))];
+        const includesOf = (x) => [...x.included.map((s) => tr(q.lang, s)), ...x.lines.slice(x.key === 'medida' && !req.base ? 0 : 1).map((l) => { const f = byName[l[0]]; if (!f) return tr(q.lang, l[0]); const [n, d] = featureText(f, q.lang); return d ? n + ' — ' + d : n; })];
         const includes = includesOf(o);
-        const inUsd = q.country ? !/argentina/i.test(q.country) : q.lang !== 'es';
+        // En inglés y portugués, solo dólares; en español, pesos con la referencia en dólares
+        const inUsd = q.lang && q.lang !== 'es';
         panel().go('presupuestos', code);
         setTimeout(() => {
             const form = document.querySelector('#m-presupuestos .quote-form');
@@ -158,11 +161,14 @@
             form.includes.value = includes.join('\n');
             // Con "Enviar las opciones", el cliente compara y elige en su link; la opción elegida acá es la que ve primero
             const priceOf = (x) => (inUsd ? 'USD ' + usdOf(x.total).toLocaleString('es-AR') : '$ ' + Math.round(x.total).toLocaleString('es-AR'));
-            form.options.value = all ? JSON.stringify(r.opts.map((x) => ({ name: tr(q.lang, x.name), price: priceOf(x), includes: includesOf(x).join('\n'), recommended: x.key === r.best.key }))) : '[]';
+            const usdRef = (x) => (inUsd ? '' : 'USD ' + usdOf(x.total).toLocaleString('es-AR'));
+            form.priceUsd.value = usdRef(o);
+            form.options.value = all ? JSON.stringify(r.opts.map((x) => ({ name: tr(q.lang, x.name), price: priceOf(x), priceUsd: usdRef(x), includes: includesOf(x).join('\n'), recommended: x.key === r.best.key }))) : '[]';
             form.chosen.value = '';
             if (form.status.value === 'recibido') form.status.value = 'preparando';
             form.scrollIntoView({ block: 'start' });
-            panel().toast(q.lang && q.lang !== 'es' ? 'Listo. Ojo: el cliente escribió en ' + (q.lang === 'en' ? 'inglés' : 'portugués') + ': lo fijo ya está traducido; traducí las funcionalidades en "Qué incluye" antes de guardar' : 'Listo: revisá la propuesta y tocá Guardar');
+            const missing = q.lang && q.lang !== 'es' ? r.feats.filter((f) => !(q.lang === 'en' ? f.nameEn : f.namePt)).map((f) => f.name) : [];
+            panel().toast(missing.length ? 'Listo. Faltan traducir: ' + missing.join(', ') + ' (cargalas en el catálogo)' : 'Listo: revisá la propuesta y tocá Guardar');
         }, 80);
     };
 
@@ -191,6 +197,9 @@
             + '<label>Horas estimadas<input name="hours" required inputmode="decimal" value="' + (ed.hours ? String(ed.hours).replace('.', ',') : '') + '"></label>'
             + '<label>Precio calculado<output data-qz-preview>' + (ed.hours ? ars(ed.ars) + ' · USD ' + ed.usd : '—') + '</output></label>'
             + '<label class="qz-wide">Descripción<textarea name="description" rows="2">' + esc(ed.description) + '</textarea></label>'
+            + '<details class="qz-wide"' + (ed.id && !(ed.nameEn && ed.namePt) ? ' open' : '') + '><summary class="small">🌐 Traducciones (para clientes en inglés y portugués)</summary><div class="grid">'
+            + '<label>Nombre en inglés<input name="nameEn" maxlength="120" value="' + esc(ed.nameEn) + '"></label><label>Descripción en inglés<input name="descEn" maxlength="600" value="' + esc(ed.descEn) + '"></label>'
+            + '<label>Nombre en portugués<input name="namePt" maxlength="120" value="' + esc(ed.namePt) + '"></label><label>Descripción en portugués<input name="descPt" maxlength="600" value="' + esc(ed.descPt) + '"></label></div></details>'
             + '<div class="row"><button class="primary">Guardar</button>' + (editing ? '<button type="button" data-qz-cancel>Cancelar</button>' : '') + '</div></form></details></section>'
             // Cotizador
             + '<section class="card"><h3>Cotizador comparativo</h3><form id="qz-req" class="grid">'
