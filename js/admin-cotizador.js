@@ -79,7 +79,7 @@
         if (r.feats.length) { L.push('Funcionalidades solicitadas:'); r.feats.forEach((f) => L.push('• ' + f.name + (req.showHours ? ' (' + hrs(f.hours) + ')' : ''))); L.push(''); }
         r.opts.forEach((o, i) => {
             L.push('Opción ' + (i + 1) + ' · ' + o.name + ': ' + ars(o.total) + ' (' + usd(o.total) + ')' + (o.key === r.best.key ? '  ★ recomendada' : ''));
-            if (o.included.length) L.push('  Incluye: ' + o.included.join(', '));
+            if (o.included.length) { L.push('  Incluye:'); o.included.forEach((x) => L.push('  ✓ ' + x)); }
         });
         if (req.showHours) L.push('', 'Tiempo estimado de desarrollo de las funcionalidades: ' + hrs(r.fHours));
         L.push('', r.reco, '', 'Dólares aproximados, calculados con el dólar MEP vendedor. El valor final se confirma con tu presupuesto.');
@@ -104,7 +104,7 @@
             + '.opts{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:18px}.opt{background:#ecdff4;border:2px solid #d9c6e8;border-radius:20px;padding:20px;position:relative;break-inside:avoid}'
             + '.opt.best{border-color:#7543d6;box-shadow:0 8px 24px rgba(117,67,214,.18)}.badge{background:#7543d6;border-radius:999px;color:#f3ebf6;font-size:12px;font-weight:800;padding:4px 11px;position:absolute;right:14px;top:-12px}'
             + '.num{color:#625970;font-size:12px;font-weight:700;letter-spacing:.6px;margin:0;text-transform:uppercase}.opt h3{font-size:19px;margin:2px 0 8px}.price{color:#5d31b8;font-size:30px;font-weight:800;line-height:1;margin:0}.usd{color:#1f7a4d;font-weight:800;margin:4px 0 12px}'
-            + '.opt h4{color:#5d31b8;font-size:12px;letter-spacing:.6px;margin:12px 0 6px;text-transform:uppercase}.opt ul{margin:0;padding-left:18px}.opt li{margin:2px 0}.opt table{border-collapse:collapse;font-size:13px;width:100%}.opt td{border-bottom:1px solid #d9c6e8;padding:4px 0}.opt td+td{text-align:right;white-space:nowrap}'
+            + '.opt h4{color:#5d31b8;font-size:12px;letter-spacing:.6px;margin:12px 0 6px;text-transform:uppercase}.opt ul{list-style:none;margin:0;padding:0}.opt li{margin:4px 0;padding-left:22px;position:relative}.opt li::before{color:#1f7a4d;content:"✓";font-weight:800;left:0;position:absolute}.opt table{border-collapse:collapse;font-size:13px;width:100%}.opt td{border-bottom:1px solid #d9c6e8;padding:4px 0}.opt td+td{text-align:right;white-space:nowrap}'
             + '.reco{background:#e2d0f0;border-left:5px solid #7543d6;border-radius:14px;font-weight:600;margin-bottom:18px;padding:16px 18px}.foot{color:#625970;font-size:13px;text-align:center}.foot strong{color:#5d31b8}'
             + '@page{margin:12mm}@media print{body{padding:0}}</style></head><body>'
             + '<header class="head"><span class="mark">JNB</span><div><h1>Propuesta' + (req.client ? ' para ' + esc(req.client) : '') + '</h1><p>JNB Creative Studio · ' + today + '</p></div></header>'
@@ -154,7 +154,7 @@
             + '<div class="qz-opts">' + r.opts.map((o) => '<article class="qz-opt' + (o.key === r.best.key ? ' is-best' : '') + '"><h4>' + esc(o.name) + (o.key === r.best.key ? ' <span class="chip ok">Recomendada</span>' : '') + '</h4>'
                 + '<p class="qz-price">' + ars(o.total) + '<span>' + usd(o.total) + '</span></p><p class="small muted">' + hrs(o.hours) + ' de funcionalidades</p>'
                 + '<ul class="small">' + o.lines.map((l) => '<li><span>' + esc(l[0]) + '</span><span>' + ars(l[1]) + '</span></li>').join('') + '</ul>'
-                + (o.included.length ? '<p class="small"><strong>Incluye:</strong> ' + esc(o.included.join(', ')) + '</p>' : '') + '</article>').join('') + '</div>'
+                + (o.included.length ? '<p class="small" style="margin-bottom:.2rem"><strong>Incluye</strong></p><ul class="small qz-inc">' + o.included.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') + '</article>').join('') + '</div>'
             + '<div class="alert">💡 ' + esc(r.reco) + '</div>'
             + '<h4>Propuesta para el cliente</h4><label class="check-line"><input type="checkbox" data-qz-hours' + (req.showHours ? ' checked' : '') + '> Mostrar las horas de desarrollo en la propuesta</label>'
             + '<textarea id="qz-text" rows="12">' + esc(proposalText(r)) + '</textarea>'
