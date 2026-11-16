@@ -49,9 +49,14 @@
             req.extras.forEach((x) => { if (!(plan && plan.includes.includes(x))) lines.push([EXTRAS[x], A[x]]); });
             feats.forEach((f) => lines.push([f.name, f.ars]));
             const total = lines.reduce((s, l) => s + l[1], 0);
-            const included = plan ? [plan.sections + ' secciones', plan.pages ? plan.pages + ' páginas secundarias' : '', ...plan.includes.map((x) => EXTRAS[x]), ...(plan.extraBenefits || []).map((b) => BENEFITS[b])].filter(Boolean)
+            // Lo que traen todas las opciones (planes y estructura mínima): así no parece que alguna no lo incluye.
+            // Rondas de ajustes: 2 en la estructura a medida y el Básico, 3 en el Premium (extraBenefits 'rounds3').
+            const benefits = plan ? plan.extraBenefits || [] : [];
+            // El mail en el contacto de los planes figura "a confirmar" (pending en custom-plan.js): no se promete
+            const COMMON = [plan && (plan.pending || []).includes('mail') ? 'Contacto con botón de WhatsApp y redes' : 'Contacto con botón de WhatsApp, redes y mail', 'Adaptada a celulares y SEO básico', 'Publicación, hosting sin costo y ayuda con el dominio', benefits.includes('rounds3') ? '3 rondas de ajustes' : '2 rondas de ajustes'];
+            const included = plan ? [plan.sections + ' secciones', plan.pages ? plan.pages + ' páginas secundarias' : '', ...plan.includes.map((x) => EXTRAS[x]), ...COMMON, ...benefits.filter((b) => b !== 'rounds3').map((b) => BENEFITS[b])].filter(Boolean)
                 // Estructura web mínima (como la describe /plan-a-medida/): portada y contacto, sin secciones de contenido
-                : (base ? ['Portada de presentación', 'Contacto con botón de WhatsApp, redes y mail', 'Adaptada a celulares y SEO básico', 'Publicación, hosting sin costo y ayuda con el dominio', '2 rondas de ajustes'] : []);
+                : (base ? ['Portada de presentación', ...COMMON] : []);
             return { key, name, lines, total, included, hours: fHours };
         };
         const opts = [
@@ -63,7 +68,7 @@
         const premium = opts.find((o) => o.key === 'premium');
         let reco = 'Conviene ' + best.name + ': es la opción más económica para lo que pide el cliente.';
         if (premium && best.key !== 'premium' && premium.total - best.total <= best.total * 0.15) {
-            reco += ' El Plan Premium cuesta solo ' + ars(premium.total - best.total) + ' más e incluye ' + premium.included.slice(-3).join(', ') + ': vale la pena ofrecerlo.';
+            reco += ' El Plan Premium cuesta solo ' + ars(premium.total - best.total) + ' más e incluye 3 rondas de ajustes, 30 días de soporte y diseño más personalizado: vale la pena ofrecerlo.';
         }
         if (!req.base && best.key === 'medida') reco += ' (Sin estructura web: solo las funcionalidades, para sumar a una web existente.)';
         return { opts, best, reco, feats, fTotal, fHours };
