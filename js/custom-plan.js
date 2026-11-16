@@ -23,6 +23,7 @@
         hours: pair(A.hours),
         storeAlone: pair(A.emprendedor),  // tienda sola = Plan Emprendedor
         storeAddOn: pair(A.storeAddOn),   // tienda sumada a una web (Plan Básico o Premium)
+        storeSaving: pair(A.emprendedor - A.storeAddOn), // ahorro de la tienda sumada frente a la tienda sola
         second: pair(A.second),
         support: pair(A.support),   // por mes, aparte del total
         // Productos: total por tramo (21-30 … 91-100). Hasta 50, cada 10 cuesta "products"; desde el 51, "products51".
@@ -74,6 +75,7 @@
             total: 'Total estimado', totalQuote: 'Total estimado, sin los ítems a cotizar',
             required: 'Necesaria para: {list}', auto: '{base}: la sumé porque la necesitan: {list}.',
             withWeb: 'con tu web',
+            storeSave: 'Ahorrás {amount}', storeWas: 'Precio de la tienda sola: {price}', storeLineNote: 'Precio con la estructura web: ahorrás {amount}',
             needsBase: '{list}: se suma a una web o a una tienda. Elegí una base para incluirlo.',
             plans: { emprendedor: 'Plan Emprendedor', emprendedorLanding: 'Plan Emprendedor + landing', basico: 'Plan Básico', premium: 'Plan Premium' },
             recoEyebrowAlt: 'Una alternativa para comparar',
@@ -117,6 +119,7 @@
             total: 'Estimated total', totalQuote: 'Estimated total, not including items to be quoted',
             required: 'Needed for: {list}', auto: '{base}: added because these need it: {list}.',
             withWeb: 'with your website',
+            storeSave: 'You save {amount}', storeWas: 'Store on its own: {price}', storeLineNote: 'Price with the website structure: you save {amount}',
             needsBase: '{list}: this is added to a website. Choose the website structure to include it.',
             plans: { basico: 'Basic Plan', premium: 'Premium Plan' },
             recoEyebrowAlt: 'An alternative to compare',
@@ -160,6 +163,7 @@
             total: 'Total estimado', totalQuote: 'Total estimado, sem os itens a orçar',
             required: 'Necessária para: {list}', auto: '{base}: incluí porque é necessária para: {list}.',
             withWeb: 'com o seu site',
+            storeSave: 'Você economiza {amount}', storeWas: 'Preço da loja sozinha: {price}', storeLineNote: 'Preço com a estrutura do site: você economiza {amount}',
             needsBase: '{list}: é somado a um site ou a uma loja. Escolha uma base para incluir.',
             plans: { emprendedor: 'Plano Empreendedor', emprendedorLanding: 'Plano Empreendedor + landing page', basico: 'Plano Básico', premium: 'Plano Premium' },
             recoEyebrowAlt: 'Uma alternativa para comparar',
@@ -304,7 +308,7 @@
         if (sel.other) add(`${T.otherSections} × ${sel.other}`, times(PRICES.section, sel.other));
         if (sel.pages) add(`${T.pages} × ${sel.pages}`, times(PRICES.page, sel.pages));
         ['map', 'agenda', 'dark', 'hours'].forEach((key) => { if (sel[key]) add(rowName(row(key)), PRICES[key]); });
-        if (sel.store) add(baseName('tienda'), sel.web ? PRICES.storeAddOn : PRICES.storeAlone, { auto: Boolean(baseBoxes.tienda.dataset.auto) });
+        if (sel.store) add(baseName('tienda'), sel.web ? PRICES.storeAddOn : PRICES.storeAlone, { auto: Boolean(baseBoxes.tienda.dataset.auto), promo: sel.web });
         if (sel.products) add(sel.products.label, PRICES.products[sel.products.tier]);
         if (sel.second) add(rowName(row('second')), PRICES.second);
         const subtotal = sum(lines.map((l) => l.price));
@@ -544,7 +548,17 @@
         paintPrices();
         // Precio de la tienda en su tarjeta: el del Plan Emprendedor sola, o el de la tienda sumada si también está la web
         const storePrice = root.querySelector('.cp-base-price[data-price="tienda"]');
-        if (storePrice) storePrice.textContent = baseBoxes.web.checked ? `${money(PRICES.storeAddOn)} ${T.withWeb}` : money(PRICES.storeAlone);
+        const promo = baseBoxes.web.checked;
+        baseBoxes.tienda?.closest('label').classList.toggle('is-promo', promo);
+        if (storePrice) {
+            if (promo && !baseBoxes.tienda?.checked) storePrice.textContent = `${money(PRICES.storeAddOn)} ${T.withWeb}`;
+            else if (promo) {
+                const was = el('s', 'cp-promo-was', money(PRICES.storeAlone));
+                was.setAttribute('aria-label', fill(T.storeWas, { price: money(PRICES.storeAlone) }));
+                storePrice.replaceChildren(el('span', 'cp-promo-now', money(PRICES.storeAddOn)), ' ', was, ' ',
+                    el('span', 'cp-promo-save', fill(T.storeSave, { amount: money(PRICES.storeSaving) })));
+            } else storePrice.textContent = money(PRICES.storeAlone);
+        }
         syncBases();
         const sel = readSelection();
         const budget = customBudget(sel);
@@ -560,7 +574,9 @@
         const hasAny = lines.length > 0 || sel.quotes.length > 0;
         list.replaceChildren(...lines.map((line) => {
             const li = el('li', line.auto ? 'is-auto' : '');
-            li.append(el('span', '', line.label), el('strong', '', money(line.price)));
+            const label = el('span', '', line.label);
+            if (line.promo) label.append(el('small', 'cp-line-note', fill(T.storeLineNote, { amount: money(PRICES.storeSaving) })));
+            li.append(label, el('strong', '', money(line.price)));
             return li;
         }));
         quoteBox.querySelector('ul').replaceChildren(...sel.quotes.map((label) => el('li', '', label)));
@@ -596,7 +612,7 @@
         try {
             if (!data) { sessionStorage.removeItem(storeKey); return; }
             sessionStorage.setItem(storeKey, JSON.stringify({
-                lines: data.lines.map((line) => `${line.label}: ${money(line.price)}`),
+                lines: data.lines.map((line) => `${line.label}${line.promo ? ` (${fill(T.storeLineNote, { amount: money(PRICES.storeSaving) })})` : ''}: ${money(line.price)}`),
                 sections: '',
                 quotes: data.quotes,
                 monthly: data.monthly ? `${rowName(row('support'))}: ${money(data.monthly)} ${T.monthly}` : '',
