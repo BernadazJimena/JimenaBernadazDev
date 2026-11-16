@@ -1017,6 +1017,19 @@ export class StudioData extends DurableObject {
     return this.sql.exec('SELECT * FROM inquiries WHERE code = ?', code).toArray()[0] || null;
   }
 
+  // El cliente elige una opción: el precio y lo que incluye pasan a ser los de esa opción (Jimena lo ve como consulta nueva)
+  chooseOption(token, index) {
+    const row = this.sql.exec("SELECT code, name, status, proposal FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
+    if (!row || !row.proposal) return null;
+    if (row.status !== 'enviado') return { error: 'closed' };
+    const proposal = JSON.parse(row.proposal);
+    const option = (proposal.options || [])[index];
+    if (!Number.isInteger(index) || !option) return { error: 'option' };
+    Object.assign(proposal, { price: option.price, includes: option.includes, chosen: index });
+    this.sql.exec('UPDATE inquiries SET proposal = ?, seen = 0 WHERE token = ?', JSON.stringify(proposal), token);
+    return { code: row.code, name: row.name, option: option.name, price: option.price };
+  }
+
   quote(token) {
     const row = this.sql.exec("SELECT * FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     if (!row) return null;
@@ -1592,6 +1605,20 @@ export async function handleStudio(request, env, ctx) {
   }
 
   // ---- Reseñas
+  // El cliente elige una de las opciones de su propuesta (solo mientras está "Enviado"); a Jimena le llega un aviso
+  if ((match = path.match(/^\/api\/presupuestos\/([^/]+)\/elegir$/)) && request.method === 'POST') {
+    if (!TOKEN.test(match[1])) return notFound();
+    const body = (await readJson(request)) || {};
+    const result = await store.chooseOption(match[1], Number(body.option));
+    if (!result) return notFound();
+    if (result.error) return json(result, 409);
+    if (env.MAIL_REPLY_TO) {
+      const msg = `${result.name} (${result.code}) eligió la opción "${result.option}" (${result.price}). Cuando te confirme, pasá el presupuesto a Aceptado: ${SITE}/api/admin#presupuestos/${result.code}`;
+      try { await sendAnyMail(env, cleanEnv(env.MAIL_REPLY_TO), { subject: `${result.name} eligió su opción · ${result.code}`, html: `<p style="font-family:Arial,sans-serif">${msg}</p>`, text: msg }); } catch { /* la elección quedó guardada igual */ }
+    }
+    return json(await store.quote(match[1]));
+  }
+
   if (path === '/api/resenas' && request.method === 'GET') {
     return json({ reviews: await store.publicReviews() });
   }
@@ -2113,6 +2140,17 @@ export async function handleStudio(request, env, ctx) {
         storeLink: typeof body.storeLink === 'string' && STORE_LINK.test(body.storeLink.trim()) ? body.storeLink.trim() : '',
       } : null;
       if (proposal && !proposal.price) return badRequest();
+      // Opciones para que el cliente compare y elija (las arma el cotizador): hasta 3, cada una con nombre, precio y qué incluye
+      if (proposal) {
+        let options = body.options;
+        if (typeof options === 'string') { try { options = JSON.parse(options || '[]'); } catch { options = []; } }
+        proposal.options = (Array.isArray(options) ? options : []).slice(0, 3)
+          .map((o) => ({ name: oneLine(o && o.name, 80), price: oneLine(o && o.price, 80), includes: text(o && o.includes, 2000), recommended: Boolean(o && o.recommended) }))
+          .filter((o) => o.name && o.price);
+        if (proposal.options.length < 2) delete proposal.options;
+        const chosen = Number(body.chosen);
+        if (proposal.options && body.chosen !== '' && body.chosen !== undefined && Number.isInteger(chosen) && chosen >= 0 && chosen < proposal.options.length) proposal.chosen = chosen;
+      }
       const result = await store.setQuote(match[1], status, proposal);
       if (!result) return notFound();
       // Recién aceptado: se crea el proyecto y le llega al cliente el link para completar su brief

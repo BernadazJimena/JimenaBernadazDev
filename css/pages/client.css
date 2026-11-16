@@ -1259,3 +1259,12 @@
         max-width: 36rem;
     }
 }
+
+/* Opciones para comparar y elegir (js/client-pages.js, CHOOSE) */
+.client-choose-grid { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); margin-top: .9rem; }
+.client-choose-card { border: 2px solid var(--color-border, rgba(155, 109, 255, .3)); border-radius: 1.1rem; display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }
+.client-choose-card.is-chosen { border-color: #7543d6; box-shadow: 0 8px 24px rgba(117, 67, 214, .18); }
+.client-choose-card .client-status { align-self: flex-start; }
+.client-choose-list { flex: 1; font-size: .9rem; margin: 0; padding-left: 1.1rem; }
+.client-choose-done { color: #1f7a4d; font-weight: 800; margin: 0; }
+.client-choose-card .button { width: 100%; }

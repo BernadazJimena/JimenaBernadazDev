@@ -119,15 +119,34 @@
 
     // ---- Llevar una opción al presupuesto del cliente (Presupuestos): se completan precio y "Qué incluye" del formulario de siempre,
     // y Jimena revisa y guarda. Desde ahí sigue el circuito de siempre: enviado → acepta → proyecto, brief y pagos.
+    // Traducción de lo que el cotizador escribe solo (nombres de opciones y lo que incluyen) para clientes en inglés o portugués.
+    // Las funcionalidades del catálogo están en español: el panel avisa que hay que traducirlas.
+    const TR = {
+        en: { 'Estructura web a medida': 'Custom website structure', 'Plan Básico': 'Basic Plan', 'Plan Premium': 'Premium Plan', 'Portada de presentación': 'Hero section',
+            'Contacto con botón de WhatsApp, redes y mail (tu casilla actual, por ejemplo @gmail; no es un mail con dominio propio)': 'Contact with WhatsApp, social media and email buttons (your current address, e.g. @gmail; not an email with your own domain)',
+            'Adaptada a celulares y SEO básico': 'Mobile-friendly with basic SEO', 'Publicación, hosting sin costo y ayuda con el dominio': 'Publishing, free hosting and help with your domain',
+            '2 rondas de ajustes': '2 rounds of adjustments', '3 rondas de ajustes': '3 rounds of adjustments', '30 días de soporte': '30 days of support', 'Diseño más personalizado': 'More personalized design',
+            'Ubicación con mapa': 'Location with map', 'Botón de agenda de turnos': 'Booking button', 'Modo claro / oscuro': 'Light / dark mode', 'Indicador abierto / cerrado': 'Open / closed indicator',
+            'secciones': 'sections', 'páginas secundarias': 'secondary pages', 'sección(es) extra': 'extra section(s)', 'página(s) secundaria(s)': 'secondary page(s)' },
+        pt: { 'Estructura web a medida': 'Estrutura web sob medida', 'Plan Básico': 'Plano Básico', 'Plan Premium': 'Plano Premium', 'Portada de presentación': 'Capa de apresentação',
+            'Contacto con botón de WhatsApp, redes y mail (tu casilla actual, por ejemplo @gmail; no es un mail con dominio propio)': 'Contato com botão de WhatsApp, redes e e-mail (o seu endereço atual, por exemplo @gmail; não é um e-mail com domínio próprio)',
+            'Adaptada a celulares y SEO básico': 'Adaptada para celular, com SEO básico', 'Publicación, hosting sin costo y ayuda con el dominio': 'Publicação, hospedagem sem custo e ajuda com o domínio',
+            '2 rondas de ajustes': '2 rodadas de ajustes', '3 rondas de ajustes': '3 rodadas de ajustes', '30 días de soporte': '30 dias de suporte', 'Diseño más personalizado': 'Design mais personalizado',
+            'Ubicación con mapa': 'Localização com mapa', 'Botón de agenda de turnos': 'Botão de agendamento', 'Modo claro / oscuro': 'Modo claro / escuro', 'Indicador abierto / cerrado': 'Indicador aberto / fechado',
+            'secciones': 'seções', 'páginas secundarias': 'páginas secundárias', 'sección(es) extra': 'seção(ões) extra(s)', 'página(s) secundaria(s)': 'página(s) secundária(s)' },
+    };
+    const tr = (lang, s) => { const d = TR[lang]; if (!d) return s; if (d[s]) return d[s]; const m = s.match(/^(\d+) (.+)$/); return m && d[m[2]] ? m[1] + ' ' + d[m[2]] : s; };
+
     const openQuotes = () => ((panel().data() || {}).inquiries || []).filter((q) => q.kind === 'presupuesto' && ['recibido', 'preparando'].includes(q.status));
-    const loadIntoQuote = (code, key) => {
+    const loadIntoQuote = (code, key, all) => {
         const r = compare();
         const o = r.opts.find((x) => x.key === key) || r.best;
         const byName = Object.fromEntries(r.feats.map((f) => [f.name, f]));
-        const skip = o.key === 'medida' && !req.base ? 0 : 1; // la primera línea es el plan o la estructura (ya está en el precio)
-        const includes = [...o.included, ...o.lines.slice(skip).map((l) => (byName[l[0]] && byName[l[0]].description ? l[0] + ' — ' + byName[l[0]].description : l[0]))];
+        // la primera línea es el plan o la estructura (ya está en el precio)
         // Moneda como en el resto del panel: pesos si el cliente es de Argentina (o escribió en español sin país); si no, dólares
         const q = openQuotes().find((x) => x.code === code) || {};
+        const includesOf = (x) => [...x.included.map((s) => tr(q.lang, s)), ...x.lines.slice(x.key === 'medida' && !req.base ? 0 : 1).map((l) => (byName[l[0]] && byName[l[0]].description ? l[0] + ' — ' + byName[l[0]].description : tr(q.lang, l[0])))];
+        const includes = includesOf(o);
         const inUsd = q.country ? !/argentina/i.test(q.country) : q.lang !== 'es';
         panel().go('presupuestos', code);
         setTimeout(() => {
@@ -137,9 +156,13 @@
             form.currency.value = inUsd ? 'USD' : '$';
             form.amount.value = (inUsd ? usdOf(o.total) : Math.round(o.total)).toLocaleString('es-AR');
             form.includes.value = includes.join('\n');
+            // Con "Enviar las opciones", el cliente compara y elige en su link; la opción elegida acá es la que ve primero
+            const priceOf = (x) => (inUsd ? 'USD ' + usdOf(x.total).toLocaleString('es-AR') : '$ ' + Math.round(x.total).toLocaleString('es-AR'));
+            form.options.value = all ? JSON.stringify(r.opts.map((x) => ({ name: tr(q.lang, x.name), price: priceOf(x), includes: includesOf(x).join('\n'), recommended: x.key === r.best.key }))) : '[]';
+            form.chosen.value = '';
             if (form.status.value === 'recibido') form.status.value = 'preparando';
             form.scrollIntoView({ block: 'start' });
-            panel().toast(q.lang && q.lang !== 'es' ? 'Listo. Ojo: el cliente escribió en ' + (q.lang === 'en' ? 'inglés' : 'portugués') + ': traducí "Qué incluye" antes de guardar' : 'Listo: revisá la propuesta y tocá Guardar');
+            panel().toast(q.lang && q.lang !== 'es' ? 'Listo. Ojo: el cliente escribió en ' + (q.lang === 'en' ? 'inglés' : 'portugués') + ': lo fijo ya está traducido; traducí las funcionalidades en "Qué incluye" antes de guardar' : 'Listo: revisá la propuesta y tocá Guardar');
         }, 80);
     };
 
@@ -183,7 +206,7 @@
                 + (o.included.length ? '<p class="small" style="margin-bottom:.2rem"><strong>Incluye</strong></p><ul class="small qz-inc">' + o.included.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') + '</article>').join('') + '</div>'
             + '<div class="alert">💡 ' + esc(r.reco) + '</div>'
             + (openQuotes().length ? '<form id="qz-load" class="qz-load"><label>Cargar en el presupuesto de<select name="code">' + openQuotes().map((q) => '<option value="' + esc(q.code) + '">' + esc(q.name + ' · ' + q.code + (q.plan ? ' · ' + q.plan : '')) + '</option>').join('') + '</select></label>'
-              + '<label>Opción<select name="opt">' + r.opts.map((o) => '<option value="' + o.key + '"' + (o.key === r.best.key ? ' selected' : '') + '>' + esc(o.name) + ' · ' + ars(o.total) + '</option>').join('') + '</select></label><button class="primary">Cargar en el presupuesto →</button>'
+              + '<label>Opción<select name="opt">' + r.opts.map((o) => '<option value="' + o.key + '"' + (o.key === r.best.key ? ' selected' : '') + '>' + esc(o.name) + ' · ' + ars(o.total) + '</option>').join('') + '</select></label><label class="check-line"><input type="checkbox" name="all" checked> Enviar las ' + r.opts.length + ' opciones para que el cliente compare y elija</label><button class="primary">Cargar en el presupuesto →</button>'
               + '<p class="small muted">Completa el precio y "Qué incluye" de ese presupuesto. Lo revisás, lo guardás y sigue el circuito de siempre: enviado, acepta, proyecto, brief y pagos.</p></form>' : '<p class="small muted">Cuando tengas un pedido de presupuesto sin propuesta, vas a poder cargar esta opción ahí directamente.</p>')
             + '<h4>Propuesta para el cliente</h4><label class="check-line"><input type="checkbox" data-qz-hours' + (req.showHours ? ' checked' : '') + '> Mostrar las horas de desarrollo en la propuesta</label>'
             + '<textarea id="qz-text" rows="12">' + esc(proposalText(r)) + '</textarea>'
@@ -220,7 +243,7 @@
         e.preventDefault();
         const d = Object.fromEntries(new FormData(e.target).entries());
         if (id === 'qz-form') send({ action: 'save', feature: d }, 'Funcionalidad guardada');
-        else if (id === 'qz-load') loadIntoQuote(d.code, d.opt);
+        else if (id === 'qz-load') loadIntoQuote(d.code, d.opt, d.all === 'on');
         else if (id === 'qz-rates') send({ action: 'rate', rate: d.rate, hour: d.hour }, 'Precios recalculados');
         else { readReq(e.target); render(); }
     });

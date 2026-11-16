@@ -705,6 +705,12 @@
     };
 
     // Propuesta comercial: precio, qué incluye, cómo pagar, condiciones, vigencia y aceptación
+    const CHOOSE = {
+        es: { title: 'Compará y elegí tu opción', lead: 'Te preparé varias alternativas. Elegí la que prefieras: abajo vas a ver el total y el detalle de la opción elegida.', chosenLead: 'Abajo ves el total y el detalle de la opción que elegiste. Podés cambiarla hasta que confirmemos el presupuesto.', recommended: 'Recomendada', choose: 'Elegir esta opción', chosen: '✓ Opción elegida', error: 'No se pudo guardar tu elección. Probá de nuevo o escribime.' },
+        en: { title: 'Compare and choose your option', lead: 'I prepared a few alternatives. Choose the one you prefer: below you will see the total and the details of the chosen option.', chosenLead: 'Below you can see the total and the details of the option you chose. You can change it until we confirm the quote.', recommended: 'Recommended', choose: 'Choose this option', chosen: '✓ Chosen option', error: 'Your choice could not be saved. Please try again or write to me.' },
+        pt: { title: 'Compare e escolha a sua opção', lead: 'Preparei algumas alternativas. Escolha a que preferir: abaixo você vê o total e o detalhe da opção escolhida.', chosenLead: 'Abaixo você vê o total e o detalhe da opção que escolheu. Você pode trocar até confirmarmos o orçamento.', recommended: 'Recomendada', choose: 'Escolher esta opção', chosen: '✓ Opção escolhida', error: 'Não foi possível salvar a sua escolha. Tente de novo ou me escreva.' },
+    };
+
     const renderProposal = (quote) => {
         const proposal = quote.proposal;
         const accepted = quote.status === 'aceptado';
@@ -737,6 +743,41 @@
         pdf.addEventListener('click', () => downloadPdf(card, quote.code, pdf));
         meta.append(metaText, pdf);
         card.append(meta);
+
+        // Opciones para comparar y elegir (si Jimena mandó más de una): al elegir, el total y lo que incluye pasan a ser los de esa opción
+        if (proposal.options && proposal.options.length > 1) {
+            const C = CHOOSE[lang] || CHOOSE.es;
+            const box = el('section', 'client-includes client-choose');
+            const canChoose = quote.status === 'enviado' && !expired;
+            box.append(el('h2', 'client-subtitle', C.title), el('p', 'client-date', Number.isInteger(proposal.chosen) ? C.chosenLead : C.lead));
+            const grid = el('div', 'client-choose-grid');
+            proposal.options.forEach((o, i) => {
+                const chosen = proposal.chosen === i;
+                const opt = el('article', 'client-choose-card' + (chosen ? ' is-chosen' : ''));
+                if (o.recommended) opt.append(el('span', 'client-status is-enviado', C.recommended));
+                opt.append(el('h3', 'client-option-title', o.name), el('p', 'client-option-amount', o.price));
+                const list = el('ul', 'client-choose-list');
+                o.includes.split('\n').map((line) => splitItem(line.trim())[0]).filter(Boolean).forEach((line) => list.append(el('li', '', line)));
+                opt.append(list);
+                if (chosen) opt.append(el('p', 'client-choose-done', C.chosen));
+                else if (canChoose) {
+                    const btn = el('button', 'button button-primary', C.choose);
+                    btn.type = 'button';
+                    btn.addEventListener('click', async () => {
+                        btn.disabled = true;
+                        try {
+                            const res = await fetch(`/api/presupuestos/${token}/elegir`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ option: i }) });
+                            if (!res.ok) throw new Error(res.status);
+                            location.reload();
+                        } catch (e) { btn.disabled = false; alert(C.error); }
+                    });
+                    opt.append(btn);
+                }
+                grid.append(opt);
+            });
+            box.append(grid);
+            card.append(box);
+        }
 
         // Inversión total
         const price = el('section', 'client-investment');
