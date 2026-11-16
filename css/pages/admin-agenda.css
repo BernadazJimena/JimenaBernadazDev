@@ -25,3 +25,22 @@
 }
 #m-agenda .ag-quote { border-bottom: 1px solid var(--line); padding: .75rem 0; }
 #m-agenda .ag-quote textarea { margin: .5rem 0; width: 100%; }
+/* Funcionalidades y cotizador (js/admin-cotizador.js) */
+#m-cotizador .card { margin-bottom: 1rem; }
+#m-cotizador .qz-rates { align-items: end; display: flex; flex-wrap: wrap; gap: .75rem; }
+#m-cotizador .qz-rates p { flex-basis: 100%; margin: 0; }
+#m-cotizador .qz-table { margin-bottom: 1rem; overflow-x: auto; }
+#m-cotizador .n { text-align: right; white-space: nowrap; }
+#m-cotizador .qz-act { white-space: nowrap; }
+#m-cotizador .qz-act button + button { margin-left: .3rem; }
+#m-cotizador .qz-wide { grid-column: 1 / -1; }
+#m-cotizador fieldset { border: 1px solid var(--line); border-radius: .75rem; }
+#m-cotizador .qz-opts { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); margin: .75rem 0; }
+#m-cotizador .qz-opt { background: var(--soft); border: 2px solid var(--line); border-radius: 1rem; padding: .9rem 1rem; }
+#m-cotizador .qz-opt.is-best { border-color: var(--accent); }
+#m-cotizador .qz-opt h4 { margin: 0 0 .4rem; }
+#m-cotizador .qz-price { color: var(--accent-ink); font-size: 1.4rem; font-weight: 800; margin: 0; }
+#m-cotizador .qz-price span { color: var(--ok); display: block; font-size: .95rem; }
+#m-cotizador .qz-opt ul { list-style: none; margin: .5rem 0; padding: 0; }
+#m-cotizador .qz-opt li { border-bottom: 1px solid var(--line); display: flex; gap: .5rem; justify-content: space-between; padding: .2rem 0; }
+#m-cotizador #qz-text { width: 100%; }

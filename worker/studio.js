@@ -98,6 +98,26 @@ const CLIENT_SOURCES = ['instagram', 'sorteo', 'upwork', 'recomendacion', 'googl
 // Fecha de hoy en Argentina (AAAA-MM-DD)
 const arToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
 // Premio con proyecto web: nombre del proyecto (planKey lo usa para elegir las preguntas del brief)
+// Cotizador: catálogo inicial de las funcionalidades "a cotizar" del Plan a medida ([nombre, descripción, categoría, horas]).
+// Precio inicial = horas × $18.990 (hora del tarifario 2026), redondeado hacia arriba a $x.990. Después se editan en el panel.
+const QUOTE_CATEGORIES = ['Desarrollo y estructura web', 'Diseño y personalización', 'Automatizaciones', 'Administración', 'Marketing y difusión'];
+const QUOTE_SEED = [
+  ['Galería de productos', 'Catálogo con categorías o filtros, sin carrito.', 0, 4], ['Catálogo de productos filtrable', 'Fotos, categorías, filtros y buscador.', 0, 5],
+  ['Buscador interno', 'Encuentra productos, servicios o contenidos de la web.', 0, 2], ['Portfolio filtrable', 'Trabajos por categorías, con fotos y enlaces.', 0, 3],
+  ['Sistema de reservas propio', 'Reservas con disponibilidad real (con base de datos).', 0, 12],
+  ['Galería de imágenes ampliable', 'Fotos que se abren en grande y se recorren con flechas.', 1, 1], ['Comparador antes y después', 'Dos fotos que se comparan deslizando.', 1, 1],
+  ['Menú digital con código QR', 'Carta con categorías, fotos, precios y QR.', 1, 3], ['Tarjeta digital de contacto', 'Tarjeta para compartir o descargar.', 1, 2],
+  ['Carrito de pedidos por WhatsApp', 'Arma el mensaje del pedido con productos y cantidades.', 2, 4], ['Formulario de pedidos', 'Pedidos con los datos que necesitás.', 2, 2.5],
+  ['Selector de turnos por WhatsApp', 'Servicio, día y horario por WhatsApp.', 2, 3.5], ['Calculadora de presupuestos', 'Importe estimado según servicios y opciones.', 2, 4],
+  ['Calculadora de cuotas', 'Cuotas e importes estimados.', 2, 1.5], ['Test de recomendación', 'Preguntas que recomiendan el servicio ideal.', 2, 3],
+  ['Agregar al calendario', 'Guarda un evento en el celular o la compu.', 2, 0.5],
+  ['Cupones promocionales', 'Códigos de descuento abiertos.', 3, 1.5], ['Comparador de planes o servicios', 'Tabla interactiva para comparar opciones.', 3, 2],
+  ['Botones para compartir', 'Por WhatsApp, redes o copiando el enlace.', 4, 0.5], ['Botón "Guardar contacto" (vCard)', 'Guarda tus datos en la agenda del teléfono.', 4, 0.5],
+];
+const QUOTE_RATE = 1580.90; // misma cotización inicial que js/pricing.js; después se edita en el panel
+const QUOTE_HOUR = 18990;   // valor de la hora (tarifario 2026); se edita en el panel
+// Precio = horas × valor de la hora, redondeado hacia arriba a $x.990; USD = pesos / cotización
+const quoteArs = (hours, hour) => (hours > 0 ? Math.ceil((hours * hour) / 1000) * 1000 - 10 : 0);
 const WINNER_PROJECTS = { premium: 'Plan Premium', basico: 'Plan Básico', emprendedor: 'Plan Emprendedor (tienda)' };
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
 const oneLine = (value, max) => text(value, max).replace(/\s+/g, ' ');
@@ -388,6 +408,26 @@ export class StudioData extends DurableObject {
       done_at TEXT NOT NULL DEFAULT '',
       created TEXT NOT NULL
     )`);
+    // Cotizador del panel: funcionalidades con precio y horas (el catálogo inicial se carga una sola vez)
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS quote_features (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      category TEXT NOT NULL,
+      ars INTEGER NOT NULL DEFAULT 0,
+      usd INTEGER NOT NULL DEFAULT 0,
+      hours REAL NOT NULL DEFAULT 0,
+      created TEXT NOT NULL
+    )`);
+    if (!this.sql.exec("SELECT 1 FROM settings WHERE key = 'cotizadorSeed'").toArray().length) {
+      const now = new Date().toISOString();
+      for (const [name, description, cat, hours] of QUOTE_SEED) {
+        const ars = quoteArs(hours, QUOTE_HOUR);
+        this.sql.exec('INSERT INTO quote_features (name, description, category, ars, usd, hours, created) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          name, description, QUOTE_CATEGORIES[cat], ars, Math.round(ars / QUOTE_RATE), hours, now);
+      }
+      this.sql.exec("INSERT INTO settings (key, value) VALUES ('cotizadorSeed', '1')");
+    }
     this.linkClients();
   }
 
@@ -762,6 +802,45 @@ export class StudioData extends DurableObject {
 
   setMonotributo(tope, cotizacion, desde = '2026-12') {
     this.sql.exec("INSERT INTO settings (key, value) VALUES ('monotributo', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", JSON.stringify({ tope, cotizacion, desde }));
+    return { ok: true };
+  }
+
+  // ---- Cotizador
+  cotizadorData() {
+    const get = (key, fallback) => { const row = this.sql.exec('SELECT value FROM settings WHERE key = ?', key).toArray()[0]; return row ? Number(row.value) : fallback; };
+    return { rate: get('cotizadorDolar', QUOTE_RATE), hour: get('cotizadorHora', QUOTE_HOUR), categories: QUOTE_CATEGORIES,
+      features: this.sql.exec('SELECT id, name, description, category, ars, usd, hours FROM quote_features ORDER BY category, name').toArray() };
+  }
+
+  saveFeature(f) {
+    const { rate, hour } = this.cotizadorData();
+    f.ars = quoteArs(f.hours, hour);
+    f.usd = Math.round(f.ars / rate);
+    if (f.id) {
+      if (!this.sql.exec('SELECT 1 FROM quote_features WHERE id = ?', f.id).toArray().length) return { error: 'not found' };
+      this.sql.exec('UPDATE quote_features SET name = ?, description = ?, category = ?, ars = ?, usd = ?, hours = ? WHERE id = ?', f.name, f.description, f.category, f.ars, f.usd, f.hours, f.id);
+      return { id: f.id };
+    }
+    if (this.sql.exec('SELECT 1 FROM quote_features WHERE lower(name) = lower(?)', f.name).toArray().length) return { error: 'duplicate' };
+    this.sql.exec('INSERT INTO quote_features (name, description, category, ars, usd, hours, created) VALUES (?, ?, ?, ?, ?, ?, ?)', f.name, f.description, f.category, f.ars, f.usd, f.hours, new Date().toISOString());
+    return { id: this.sql.exec('SELECT last_insert_rowid() AS id').one().id };
+  }
+
+  deleteFeature(id) {
+    if (!this.sql.exec('SELECT 1 FROM quote_features WHERE id = ?', id).toArray().length) return { error: 'not found' };
+    this.sql.exec('DELETE FROM quote_features WHERE id = ?', id);
+    return { id };
+  }
+
+  // Cotización del dólar y valor de la hora: al cambiarlos se recalculan los precios de todo el catálogo
+  setQuoteRate(rate, hour) {
+    for (const [key, value] of [['cotizadorDolar', rate], ['cotizadorHora', hour]]) {
+      this.sql.exec('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value', key, String(value));
+    }
+    for (const row of this.sql.exec('SELECT id, hours FROM quote_features').toArray()) {
+      const ars = quoteArs(row.hours, hour);
+      this.sql.exec('UPDATE quote_features SET ars = ?, usd = ? WHERE id = ?', ars, Math.round(ars / rate), row.id);
+    }
     return { ok: true };
   }
 
@@ -1713,6 +1792,7 @@ export async function handleStudio(request, env, ctx) {
       data.sorteos = await store.giveawaysData();
       data.monotributo = await store.monotributo();
       data.backupMailed = await store.backupMailedAt();
+      data.cotizador = await store.cotizadorData();
       return json(data);
     }
 
@@ -1924,6 +2004,30 @@ export async function handleStudio(request, env, ctx) {
         return json(await store.setMonotributo(num(body.tope), num(body.cotizacion), desde));
       }
       return badRequest();
+    }
+
+    // ---- Cotizador: catálogo de funcionalidades y cotización del dólar
+    if (path === '/api/admin/cotizador') {
+      let saved;
+      // Montos con puntos de miles (18.990) y decimales con coma o punto (2,5 · 1580.90)
+      const num = (v, max) => { let t = String(v ?? '').trim(); if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, ''); const n = Number(t.replace(',', '.')); return t !== '' && Number.isFinite(n) && n >= 0 && n <= max ? n : NaN; };
+      if (body.action === 'save') {
+        const f = body.feature || {};
+        const item = { id: Number(f.id) || 0, name: oneLine(f.name, 120), description: text(f.description, 600),
+          category: QUOTE_CATEGORIES.includes(f.category) ? f.category : '', hours: num(f.hours, 1000) };
+        if (!item.name || !item.category || !(item.hours > 0)) return badRequest();
+        saved = await store.saveFeature(item);
+      } else if (body.action === 'delete') {
+        saved = await store.deleteFeature(Number(body.id) || 0);
+      } else if (body.action === 'rate') {
+        const rate = num(body.rate, 1e6);
+        const hour = num(body.hour, 1e8);
+        if (!(rate > 0) || !(hour > 0)) return badRequest();
+        saved = await store.setQuoteRate(rate, Math.round(hour));
+      } else return badRequest();
+      if (saved.error === 'not found') return notFound();
+      if (saved.error) return json(saved, 409);
+      return json({ ...saved, cotizador: await store.cotizadorData() });
     }
 
     if (path === '/api/admin/reiniciar') {

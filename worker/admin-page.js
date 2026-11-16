@@ -241,6 +241,7 @@ export const adminPage = () => `<!doctype html>
           <a href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
           <a href="#agenda" data-mod="agenda"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Plazos y vencimientos</span><span class="badge" id="n-agenda"></span></a>
           <a href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
+          <a href="#cotizador" data-mod="cotizador"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Funcionalidades y cotizador</span></a>
           <p class="side-group">Sitio web</p>
           <a href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
           <a href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
@@ -267,6 +268,7 @@ export const adminPage = () => `<!doctype html>
         <section class="module" id="m-brief" hidden></section>
         <section class="module" id="m-agenda" hidden></section>
         <section class="module" id="m-numeros" hidden></section>
+        <section class="module" id="m-cotizador" hidden></section>
         <section class="module" id="m-cartel" hidden><div id="availability"></div></section>
         <section class="module" id="m-horario" hidden><div id="hours"></div></section>
         <section class="module" id="m-faq" hidden><div id="tab-faq"></div></section>
@@ -285,6 +287,9 @@ export const adminPage = () => `<!doctype html>
 <script src="/js/brief.js"></script>
 <script src="/js/admin-brief.js"></script>
 <script src="/js/admin-agenda.js"></script>
+<script src="/js/pricing.js"></script>
+<script src="/js/custom-plan.js"></script>
+<script src="/js/admin-cotizador.js"></script>
 <script>
 (() => {
   const STAGES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
@@ -944,7 +949,7 @@ export const adminPage = () => `<!doctype html>
   };
 
   // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
-  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'brief', 'agenda', 'numeros', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
+  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'brief', 'agenda', 'numeros', 'cotizador', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
   const parseHash = () => {
     const [mod, id] = decodeURIComponent(location.hash.slice(1)).split('/');
     return { mod: MODULES.includes(mod) ? mod : 'dashboard', id: id || '' };
@@ -978,6 +983,8 @@ export const adminPage = () => `<!doctype html>
       if (window.JNBBriefPreview) window.JNBBriefPreview.show();
     } else if (route.mod === 'agenda' || route.mod === 'numeros') {
       if (window.JNBAgenda) window.JNBAgenda.show(route.mod);
+    } else if (route.mod === 'cotizador') {
+      if (window.JNBQuoter) window.JNBQuoter.show();
     } else if (route.mod === 'presupuestos') {
       renderInquiries();
     }

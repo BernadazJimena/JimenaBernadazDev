@@ -3,7 +3,6 @@
 // Precios, prestaciones de los planes y textos están solo en este archivo: si cambia algo, se cambia acá.
 (() => {
     const root = document.querySelector('[data-custom-plan]');
-    if (!root) return;
 
     // ---------------------------------------------------------------------------------------------
     // Precios: [pesos argentinos, dólares]. Cada moneda se suma por separado: nunca se mezclan.
@@ -62,6 +61,9 @@
             pending: ['mail'], extraBenefits: ['rounds3', 'support30', 'design'],
         },
     };
+    // El cotizador del panel (js/admin-cotizador.js) compara con estos mismos planes
+    window.JNBPlans = PLANS;
+    if (!root) return;
     const URGENT = P.URGENT;
 
     // ---------------------------------------------------------------------------------------------
