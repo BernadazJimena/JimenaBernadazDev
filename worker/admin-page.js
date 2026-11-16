@@ -397,6 +397,13 @@ export const adminPage = () => `<!doctype html>
     t.querySelectorAll('tbody tr').forEach((tr) => [...tr.children].forEach((td, i) => { if (heads[i] && !td.dataset.label) td.dataset.label = heads[i]; }));
   });
   new MutationObserver(() => { clearTimeout(labelCells.t); labelCells.t = setTimeout(labelCells, 60); }).observe(document.body, { childList: true, subtree: true });
+  // Proyecto sin presupuesto: crear uno nuevo (queda En preparación en la pestaña Presupuesto)
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-pq-create]');
+    if (!b) return;
+    b.disabled = true;
+    try { const r = await api('proyectos/' + b.dataset.pqCreate + '/presupuesto', { action: 'create' }); toast('Presupuesto ' + r.code + ' creado: cargá la propuesta'); load(); } catch (err) { toast('No se pudo crear'); b.disabled = false; }
+  });
   let key = '';
   try { key = sessionStorage.getItem('jnb-admin') || ''; } catch (e) {}
   let data = null;
@@ -697,7 +704,13 @@ export const adminPage = () => `<!doctype html>
         + '<div class="row" style="margin-top:.75rem"><button class="primary">Guardar</button><button type="button" data-remove>Borrar proyecto</button>'
         + '<span class="small muted">Actualizado ' + date(p.updated) + '</span></div></form>';
     } else if (subTab === 'presupuesto') {
-      body = q ? inquiryCard(q, true) : '<p class="empty">Este proyecto se creó a mano: no tiene un pedido de presupuesto en el sitio.</p>';
+      // Sin presupuesto (creado a mano, desde Brief o de un sorteo): crear uno o vincular un pedido de la web (también del Plan a medida)
+      const free = data.inquiries.filter((x) => x.kind === 'presupuesto' && x.status !== 'aceptado' && !data.projects.some((y) => y.quote === x.token));
+      const mine = free.filter((x) => x.clientId === p.clientId);
+      body = q ? inquiryCard(q, true) : '<div class="card"><p style="margin-top:0">Este proyecto no tiene presupuesto todavía. Podés crearlo o vincular un pedido que el cliente hizo en la web.</p>'
+        + '<div class="row"><button type="button" class="primary" data-pq-create="' + esc(p.token) + '">➕ Crear presupuesto para este proyecto</button></div>'
+        + (free.length ? '<form class="row" data-pq-link="' + esc(p.token) + '" style="margin-top:.75rem;align-items:end"><label style="flex:1;min-width:12rem">Vincular un pedido existente<select name="quote">' + [...mine, ...free.filter((x) => !mine.includes(x))].map((x) => '<option value="' + esc(x.token) + '">' + esc(x.code + ' · ' + x.name + (x.plan ? ' · ' + x.plan : '') + (mine.includes(x) ? ' (de este cliente)' : '')) + '</option>').join('') + '</select></label><button>🔗 Vincular</button></form>' : '')
+        + '<p class="small muted">Después el link del cliente es el del presupuesto: ahí ve la propuesta, el estado y su brief. Si ya había empezado el brief, sus respuestas pasan a ese link.</p></div>';
     } else if (subTab === 'brief') {
       const lockChip = p.briefStatus === 'enviado' && (p.stage === 2 || p.stage === 4) ? '<span class="chip">🔒 Cerrado para cambios</span>' : (p.briefStatus === 'enviado' ? '<span class="chip">🔓 El cliente puede editarlo</span>' : '');
       body = '<div class="row" style="margin-bottom:.75rem">' + lockChip
@@ -1593,6 +1606,11 @@ export const adminPage = () => `<!doctype html>
 
   document.addEventListener('submit', async (e) => {
     const form = e.target;
+    if (form.dataset.pqLink) {
+      e.preventDefault();
+      try { const r = await api('proyectos/' + form.dataset.pqLink + '/presupuesto', { action: 'link', quote: form.quote.value }); toast('Presupuesto ' + r.code + ' vinculado'); load(); } catch (err) { toast('No se pudo vincular'); }
+      return;
+    }
     const values = Object.fromEntries(new FormData(form));
     if (form.classList.contains('quote-form')) {
       e.preventDefault();

@@ -988,6 +988,40 @@ export class StudioData extends DurableObject {
     this.logEvent(token, '📧', 'Le mandaste por mail el link para completar su brief');
   }
 
+  // Proyecto sin presupuesto (creado a mano, desde Brief o de un sorteo): se le vincula un pedido existente o uno nuevo.
+  // El link del cliente pasa a ser el del presupuesto; si ya había empezado el brief, sus respuestas y archivos se mueven ahí.
+  linkQuote(projectToken, inquiryToken) {
+    const p = this.sql.exec("SELECT token, quote, client_id FROM projects WHERE token = ?", projectToken).toArray()[0];
+    if (!p) return { error: 'not found' };
+    if (p.quote) return { error: 'linked' };
+    const q = this.sql.exec("SELECT token, code, client_id FROM inquiries WHERE token = ? AND kind = 'presupuesto'", inquiryToken).toArray()[0];
+    if (!q) return { error: 'not found' };
+    if (this.sql.exec('SELECT 1 FROM projects WHERE quote = ?', inquiryToken).toArray().length) return { error: 'used' };
+    this.ctx.storage.transactionSync(() => {
+      if (!this.sql.exec('SELECT 1 FROM briefs WHERE token = ?', inquiryToken).toArray().length) {
+        this.sql.exec('UPDATE briefs SET token = ? WHERE token = ?', inquiryToken, projectToken);
+        this.sql.exec('UPDATE brief_files SET token = ? WHERE token = ?', inquiryToken, projectToken);
+      }
+      this.sql.exec('UPDATE projects SET quote = ? WHERE token = ?', inquiryToken, projectToken);
+      if (!q.client_id && p.client_id) this.sql.exec('UPDATE inquiries SET client_id = ? WHERE token = ?', p.client_id, inquiryToken);
+    });
+    this.logEvent(projectToken, '🔗', `Presupuesto ${q.code} vinculado al proyecto`);
+    return { code: q.code };
+  }
+
+  // Presupuesto nuevo para un proyecto hecho a mano (queda "En preparación" para cargar la propuesta)
+  newQuoteFor(projectToken) {
+    const p = this.sql.exec('SELECT p.project, p.lang, p.client, p.request, c.name, c.email FROM projects p LEFT JOIN clients c ON c.id = p.client_id WHERE p.token = ?', projectToken).toArray()[0];
+    if (!p) return { error: 'not found' };
+    const now = new Date();
+    let code = newCode(now);
+    while (this.sql.exec('SELECT 1 FROM inquiries WHERE code = ?', code).toArray().length) code = newCode(now);
+    const token = newToken();
+    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, status, coupon, country, seen)
+      VALUES (?, ?, 'presupuesto', ?, ?, ?, ?, ?, ?, 'preparando', '', '', 1)`, code, token, now.toISOString(), p.lang, p.name || p.client, p.email || '', p.project, p.request || 'Presupuesto creado desde el panel');
+    return this.linkQuote(projectToken, token);
+  }
+
   winnerRow(id) {
     return this.sql.exec('SELECT w.*, g.name AS giveaway_name FROM giveaway_winners w JOIN giveaways g ON g.id = w.giveaway_id WHERE w.id = ?', id).toArray()[0];
   }
@@ -2359,6 +2393,14 @@ export async function handleStudio(request, env, ctx) {
       if (!project.client || !project.project) return badRequest();
       if (project.email && !normEmail(project.email)) return badRequest();
       return json({ token: await store.addProject(project) });
+    }
+
+    if ((match = path.match(/^\/api\/admin\/proyectos\/([^/]+)\/presupuesto$/))) {
+      if (!TOKEN.test(match[1])) return notFound();
+      const saved = body.action === 'link' && TOKEN.test(body.quote || '') ? await store.linkQuote(match[1], body.quote) : body.action === 'create' ? await store.newQuoteFor(match[1]) : { error: 'bad' };
+      if (saved.error === 'not found') return notFound();
+      if (saved.error === 'bad') return badRequest();
+      return saved.error ? json(saved, 409) : json(saved);
     }
 
     if ((match = path.match(/^\/api\/admin\/proyectos\/([^/]+)$/))) {
