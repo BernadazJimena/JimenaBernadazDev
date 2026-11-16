@@ -178,6 +178,7 @@ export const adminPage = () => `<!doctype html>
   .module-intro { color: var(--muted); margin: -.4rem 0 1rem; }
   .stats { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin-bottom: 1.25rem; }
   .stat { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; color: var(--text); display: block; padding: .9rem 1rem; text-decoration: none; }
+  @media (max-width: 640px) { .stats { gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat { padding: .65rem .75rem; } }
   .stat:hover { border-color: var(--accent); }
   .stat-n { color: var(--accent-ink); display: block; font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
   .stat-l { color: var(--muted); display: block; font-size: .85rem; font-weight: 700; }

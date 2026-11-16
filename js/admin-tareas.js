@@ -15,6 +15,18 @@
         { id: 'baja', name: 'Baja' },
     ];
 
+    const ICON = {
+        calendar: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>',
+        check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>',
+        tag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.6 21 11a2 2 0 0 1 0 2.8l-7.2 7.2a2 2 0 0 1-2.8 0L2.6 12.6A2 2 0 0 1 2 11.2V4a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+        archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/></svg>',
+        filter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4"/></svg>',
+        plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+        list: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+    };
+    let filtersOpen = false;
+    let mobileCol = '';   // columna que se ve en celulares (pestañas)
+
     let state = { tasks: [], categories: [] };
     let loaded = false;
     let showArchived = false;
@@ -75,18 +87,24 @@
     // ---- Tablero
     const cardHtml = (t) => {
         const subs = t.subtasks || [];
-        const doneSubs = subs.filter((s) => s.done).length;
+        const doneSubs = subs.filter((x) => x.done).length;
         const cat = categoryName(t.category);
         const overdue = isOverdue(t);
-        return `<article class="task-card prio-${esc(t.priority)}${overdue ? ' is-overdue' : ''}" draggable="true" data-id="${t.id}" tabindex="0"
-            aria-label="${esc(t.title)}. Prioridad ${esc(t.priority)}${t.due ? `. Vence el ${fmtDate(t.due)}` : ''}${overdue ? ', vencida' : ''}">
-            <p class="task-title">${esc(t.title)}</p>
-            <div class="task-meta">
-                ${cat ? `<span class="task-chip">${esc(cat)}</span>` : ''}
-                <span class="task-chip prio" title="Prioridad">${esc(PRIORITIES.find((p) => p.id === t.priority)?.name || '')}</span>
-                ${t.due ? `<span class="task-chip date${overdue ? ' overdue' : ''}" title="Fecha límite">${overdue ? 'Vencida · ' : ''}${fmtDate(t.due)}</span>` : ''}
-                ${subs.length ? `<span class="task-chip subs${doneSubs === subs.length ? ' complete' : ''}" title="Subtareas">✓ ${doneSubs}/${subs.length}</span>` : ''}
+        const prio = PRIORITIES.find((p) => p.id === t.priority)?.name || '';
+        const pct = subs.length ? Math.round((doneSubs / subs.length) * 100) : 0;
+        return `<article class="task-card prio-${esc(t.priority)}${overdue ? ' is-overdue' : ''}${t.status === 'done' ? ' is-done' : ''}" draggable="true" data-id="${t.id}" tabindex="0"
+            aria-label="${esc(t.title)}. Prioridad ${esc(prio.toLowerCase())}${t.due ? `. Vence el ${fmtDate(t.due)}` : ''}${overdue ? ', vencida' : ''}">
+            <div class="task-card-top">
+                <span class="task-cat" title="${esc(cat || 'Sin categoría')}">${cat ? esc(cat) : 'Sin categoría'}</span>
+                <span class="task-prio" title="Prioridad ${esc(prio.toLowerCase())}"><i aria-hidden="true"></i>${esc(prio)}</span>
             </div>
+            <p class="task-title">${esc(t.title)}</p>
+            ${t.description ? `<p class="task-desc">${esc(t.description)}</p>` : ''}
+            ${subs.length ? `<div class="task-progress" title="Subtareas: ${doneSubs} de ${subs.length}"><span style="width:${pct}%"></span></div>` : ''}
+            ${t.due || subs.length ? `<div class="task-card-foot">
+                ${t.due ? `<span class="task-date${overdue ? ' overdue' : ''}" title="Fecha límite">${ICON.calendar}${overdue ? 'Vencida · ' : ''}${fmtDate(t.due).slice(0, 5)}</span>` : '<span></span>'}
+                ${subs.length ? `<span class="task-subcount${doneSubs === subs.length ? ' complete' : ''}">${ICON.check}${doneSubs}/${subs.length}</span>` : ''}
+            </div>` : ''}
         </article>`;
     };
 
@@ -94,15 +112,20 @@
         const count = (st) => active.filter((t) => st.includes(t.status)).length;
         const overdue = active.filter(isOverdue).length;
         return `<div class="task-summary">
-            <div class="task-stat"><strong>${count(['inbox', 'todo'])}</strong><span>Pendientes</span></div>
-            <div class="task-stat"><strong>${count(['doing', 'review'])}</strong><span>En proceso y revisión</span></div>
-            <div class="task-stat"><strong>${count(['done'])}</strong><span>Completadas</span></div>
+            <div class="task-stat is-todo"><strong>${count(['inbox', 'todo'])}</strong><span>Pendientes</span></div>
+            <div class="task-stat is-doing"><strong>${count(['doing', 'review'])}</strong><span>En proceso y revisión</span></div>
+            <div class="task-stat is-done"><strong>${count(['done'])}</strong><span>Completadas</span></div>
             <button type="button" class="task-stat${overdue ? ' is-warn' : ''}" data-act="show-overdue" ${overdue ? '' : 'disabled'}><strong>${overdue}</strong><span>Vencidas</span></button>
         </div>`;
     };
 
-    const toolbarHtml = () => `<div class="task-toolbar">
-        <label class="task-search"><span class="sr-only">Buscar tareas</span><input type="search" id="task-q" placeholder="Buscar por nombre…" value="${esc(filters.q)}"></label>
+    const activeFilters = () => ['category', 'priority', 'date'].filter((k) => filters[k]).length;
+    const toolbarHtml = () => `<div class="task-toolbar${filtersOpen ? ' is-open' : ''}">
+        <div class="task-search-row">
+            <label class="task-search"><span class="sr-only">Buscar tareas</span><input type="search" id="task-q" placeholder="Buscar por nombre…" value="${esc(filters.q)}"></label>
+            <button type="button" class="task-filter-toggle" data-act="toggle-filters" aria-expanded="${filtersOpen}">${ICON.filter}<span>Filtros${activeFilters() ? ` (${activeFilters()})` : ''}</span></button>
+        </div>
+        <div class="task-filters">
         <label><span class="sr-only">Categoría</span><select id="task-f-category">
             <option value="">Todas las categorías</option>
             ${state.categories.map((c) => `<option value="${c.id}"${filters.category === String(c.id) ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
@@ -120,24 +143,34 @@
             <option value="nodate"${filters.date === 'nodate' ? ' selected' : ''}>Sin fecha límite</option>
         </select></label>
         ${filtering() ? '<button type="button" class="task-link" data-act="clear-filters">Limpiar filtros</button>' : ''}
+        </div>
     </div>`;
 
-    const boardHtml = (active) => `<div class="task-board" role="list">
+    const tabsHtml = (active) => `<div class="task-tabs" role="tablist" aria-label="Columnas">
+        ${COLUMNS.map((col) => {
+            const n = active.filter((t) => t.status === col.id && matches(t)).length;
+            return `<button type="button" role="tab" class="task-tab" data-act="tab" data-col="${col.id}" aria-selected="${col.id === mobileCol}">
+                <span class="task-dot" aria-hidden="true"></span>${col.name}<span class="task-count">${n}</span></button>`;
+        }).join('')}
+    </div>`;
+
+    const boardHtml = (active) => `${tabsHtml(active)}<div class="task-board" role="list" data-active="${mobileCol}">
         ${COLUMNS.map((col) => {
             const all = active.filter((t) => t.status === col.id);
             const shown = all.filter(matches);
             return `<section class="task-col" data-status="${col.id}" role="listitem" aria-label="${col.name}">
                 <header class="task-col-head">
-                    <h3>${col.name}</h3>
+                    <span class="task-dot" aria-hidden="true"></span>
+                    <h3 title="${col.name}">${col.name}</h3>
                     <span class="task-count" title="Tareas en esta columna">${filtering() ? `${shown.length}/${all.length}` : all.length}</span>
-                    ${col.id === 'done' && all.length ? '<button type="button" class="task-link" data-act="archive-done" title="Archivar todas las completadas">Archivar</button>' : ''}
                 </header>
                 <div class="task-list" data-status="${col.id}">
                     ${shown.map(cardHtml).join('') || `<p class="task-empty">${filtering() ? 'Nada con estos filtros' : 'Soltá una tarea acá'}</p>`}
                 </div>
                 <form class="task-quick" data-status="${col.id}">
-                    <label><span class="sr-only">Nueva tarea en ${col.name}</span><input name="title" maxlength="160" placeholder="+ Agregar tarea" autocomplete="off"></label>
+                    <label>${ICON.plus}<span class="sr-only">Nueva tarea en ${col.name}</span><input name="title" maxlength="160" placeholder="Agregar tarea" autocomplete="off"></label>
                 </form>
+                ${col.id === 'done' && all.length ? `<button type="button" class="task-archive-done" data-act="archive-done">${ICON.archive}Archivar completadas</button>` : ''}
             </section>`;
         }).join('')}
     </div>`;
@@ -167,13 +200,15 @@
             badge.title = overdue ? `${overdue} vencidas` : '';
         }
         if (!loaded) { el.innerHTML = '<h2>Gestor de tareas</h2><p class="muted">Cargando tareas…</p>'; return; }
+        // Al entrar desde el celular se abre la primera columna con tareas
+        if (!mobileCol) mobileCol = (COLUMNS.find((c) => active.some((t) => t.status === c.id && t.status !== 'done')) || COLUMNS[0]).id;
         const focusId = document.activeElement?.id;
         el.innerHTML = `<div class="task-head">
                 <h2>Gestor de tareas</h2>
-                <div class="row">
-                    <button type="button" data-act="categories">Categorías</button>
-                    <button type="button" data-act="toggle-archived" aria-pressed="${showArchived}">${showArchived ? 'Volver al tablero' : `Archivadas${archivedCount ? ` (${archivedCount})` : ''}`}</button>
-                    <button type="button" class="primary" data-act="new">+ Nueva tarea</button>
+                <div class="task-actions">
+                    <button type="button" class="task-btn" data-act="categories" title="Categorías">${ICON.tag}<span>Categorías</span></button>
+                    <button type="button" class="task-btn" data-act="toggle-archived" aria-pressed="${showArchived}" title="${showArchived ? 'Volver al tablero' : 'Archivadas'}">${showArchived ? ICON.list : ICON.archive}<span>${showArchived ? 'Volver al tablero' : `Archivadas${archivedCount ? ` (${archivedCount})` : ''}`}</span></button>
+                    <button type="button" class="task-btn primary" data-act="new">${ICON.plus}<span>Nueva tarea</span></button>
                 </div>
             </div>
             ${summaryHtml(active)}
@@ -308,6 +343,12 @@
             case 'open': openEditor(findTask(id)); break;
             case 'categories': openCategories(); break;
             case 'toggle-archived': showArchived = !showArchived; render(); break;
+            case 'toggle-filters': filtersOpen = !filtersOpen; render(); break;
+            case 'tab':
+                mobileCol = btn.dataset.col;
+                render();
+                root().querySelector(`.task-tab[data-col="${mobileCol}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
+                break;
             case 'clear-filters': Object.assign(filters, { q: '', category: '', priority: '', date: '' }); render(); break;
             case 'show-overdue': Object.assign(filters, { date: 'overdue' }); showArchived = false; render(); break;
             case 'close': d.close(); break;
