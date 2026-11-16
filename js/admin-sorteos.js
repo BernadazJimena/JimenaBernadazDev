@@ -159,6 +159,7 @@
             + '<ul class="sg-marks">' + MARKS.map(([f, label]) => '<li><span>' + label + '</span><span class="small ' + (w[f] ? '' : 'muted') + '">' + (w[f] ? fdate(w[f]) : 'pendiente') + '</span>'
                 + (w[f] ? '<button type="button" class="link-btn" data-sg-mark="' + f + '" data-date="">Quitar</button>' : '<button type="button" data-sg-mark="' + f + '">Registrar hoy</button>') + '</li>').join('') + '</ul></section>'
             + '</div>'
+            + linksCard(w)
             // Mensajes y brief
             + '<form class="card" data-sg-form="track"><h3>Mensajes, brief y próxima tarea</h3>'
             + '<label>Mensaje de felicitación <span class="small muted">(editalo antes de copiarlo)</span><textarea name="msgCongrats" rows="5">' + esc(w.msg_congrats || congratsText(w)) + '</textarea></label>'
@@ -172,6 +173,17 @@
             + '<button class="primary" style="margin-top:.75rem">Guardar seguimiento</button></form>'
             // Historial
             + '<section class="card"><h3>Historial de actividad</h3>' + (history.length ? '<ul class="feed">' + history.map((e) => '<li><span class="tl-icon">' + esc(e.icon) + '</span><div><p style="margin:0">' + esc(e.text) + '</p><p class="small muted" style="margin:0">' + new Date(e.at).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }) + '</p></div></li>').join('') + '</ul>' : '<p class="empty">Sin movimientos.</p>') + '</section>';
+    };
+
+    const TASK_LABEL = { inbox: 'Bandeja de entrada', todo: 'Pendiente', doing: 'En proceso', review: 'En revisión', done: 'Completada' };
+    const linksCard = (w) => {
+        const taskOpen = w.task_id && w.task_status && w.task_status !== 'done' && !w.task_archived;
+        return '<section class="card" style="margin-top:1rem"><h3>Cliente, proyecto y tarea</h3>'
+            + '<div class="sg-field"><span class="small muted">Cliente</span><span>' + (w.client_code ? '<a href="#clientes/' + esc(w.client_code) + '">' + esc(w.client_code) + '</a>' : 'Todavía no es cliente') + '</span>' + (w.client_code ? '<span></span>' : '<button type="button" data-sg-do="client">Pasar a Clientes</button>') + '</div>'
+            + '<div class="sg-field"><span class="small muted">Proyecto</span><span>' + (w.project_code ? '<a href="#proyectos/' + esc(w.project_code) + '">' + esc(w.project_code) + '</a> <span class="sg-tag sg-info">ORIGEN: SORTEO DE INSTAGRAM</span>' : (w.plan ? 'Sin crear' : 'El premio no lleva proyecto web (elegí el tipo en Editar datos)')) + '</span>' + (!w.project_code && w.plan ? '<button type="button" data-sg-do="project">Crear proyecto</button>' : '<span></span>') + '</div>'
+            + '<div class="sg-field"><span class="small muted">Tarea</span><span>' + (w.task_id && w.task_status ? esc(TASK_LABEL[w.task_status] || w.task_status) + (w.task_archived ? ' (archivada)' : '') + ' · <a href="#tareas">Ver en el Gestor</a>' : 'Sin tarea') + '</span>' + (w.next_task ? '<button type="button" data-sg-do="task">' + (taskOpen ? 'Actualizar tarea' : 'Crear tarea') + '</button>' : '<span></span>') + '</div>'
+            + (w.next_task ? '' : '<p class="small muted">Para crear una tarea en el Gestor, primero cargá la próxima tarea y guardá el seguimiento.</p>')
+            + '</section>';
     };
 
     const render = () => {
@@ -240,6 +252,14 @@
         } else if (d.sgCopy !== undefined) copy(d.sgCopy);
         else if (d.sgCopyField) { const area = el.querySelector('[name="' + d.sgCopyField + '"]'); if (area) copy(area.value, 'Mensaje copiado'); }
         else if (d.sgMark) send('sorteos/ganadores', { action: 'mark', id: openId, field: d.sgMark, date: d.date === '' ? '' : today() }, 'Fecha registrada');
+        else if (d.sgDo) {
+            const msg = { client: 'Ficha de cliente lista', project: 'Proyecto creado', task: 'Tarea lista en el Gestor' }[d.sgDo];
+            send('sorteos/ganadores', { action: d.sgDo, id: openId }, msg).then((r) => {
+                if (!r) return;
+                // Clientes, Proyectos y Tareas se vuelven a cargar para que muestren el vínculo nuevo
+                if (d.sgDo === 'task') { if (window.JNBTasks) window.JNBTasks.refresh(); } else panel().reload();
+            });
+        }
         else if ('sgNext' in d) {
             const w = data().winners.find((x) => x.id === openId);
             if (w) send('sorteos/ganadores', { action: 'stage', id: openId, stage: w.stage + 1 }, 'Etapa actualizada');

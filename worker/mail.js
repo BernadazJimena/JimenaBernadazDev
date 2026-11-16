@@ -312,19 +312,19 @@ export function launchMail({ lang, name, page, reviewLink, coupon, percent, budg
         <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#46385f;">${esc(t.reviewText)}</p>
         <a href="${esc(reviewLink)}" style="display:inline-block;background:#7543d6;color:#f3ebf6;text-decoration:none;font-weight:800;font-size:15px;border-radius:999px;padding:12px 22px;">${esc(t.reviewButton)} →</a>
       </div>
-      <div style="border:2px dashed #7543d6;border-radius:14px;padding:16px 18px;margin:0 0 14px;text-align:center;">
+      ${coupon ? `<div style="border:2px dashed #7543d6;border-radius:14px;padding:16px 18px;margin:0 0 14px;text-align:center;">
         <p style="margin:0 0 4px;font-size:13px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7543d6;">🎁 ${esc(t.couponTitle)}</p>
         <p style="margin:0 0 8px;font-size:26px;font-weight:800;letter-spacing:2px;color:#24185a;">${esc(coupon)}</p>
         <p style="margin:0 0 14px;font-size:14px;line-height:1.5;color:#46385f;">${esc(t.couponText(percent, until))}</p>
         <a href="${esc(budgetLink)}" style="color:#5d31b8;font-weight:800;font-size:14px;">${esc(t.couponButton)} →</a>
-      </div>
+      </div>` : ''}
       <p style="margin:0;font-size:14px;"><a href="${esc(page)}" style="color:#5d31b8;">${esc(t.page)}</a></p>
     </td></tr>
     <tr><td style="padding:24px 28px 28px;font-size:15px;line-height:1.6;">
       <p style="margin:0;font-weight:800;">${esc(t.sign)}</p>
       <p style="margin:0;"><a href="https://jnbcreativestudio.com.ar" style="color:#5d31b8;text-decoration:none;">JNB Creative Studio</a></p>
     </td></tr>`;
-  const plain = [t.hello(first), '', t.intro, '', `${t.reviewTitle} ${t.reviewText}`, `${t.reviewButton}: ${reviewLink}`, '', `${t.couponTitle}: ${coupon}`, t.couponText(percent, until), `${t.couponButton}: ${budgetLink}`, '', `${t.page}: ${page}`, '', t.sign].join('\n');
+  const plain = [t.hello(first), '', t.intro, '', `${t.reviewTitle} ${t.reviewText}`, `${t.reviewButton}: ${reviewLink}`, ...(coupon ? ['', `${t.couponTitle}: ${coupon}`, t.couponText(percent, until), `${t.couponButton}: ${budgetLink}`] : []), '', `${t.page}: ${page}`, '', t.sign].join('\n');
   return { subject, html: frame(lang, subject, inner, t.footer), text: plain };
 }
 

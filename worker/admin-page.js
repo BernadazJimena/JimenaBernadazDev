@@ -234,6 +234,7 @@ export const adminPage = () => `<!doctype html>
           <a href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
           <a href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
           <a href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos</span><span class="badge" id="n-sorteos"></span></a>
+          <a href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
           <p class="side-group">Sitio web</p>
           <a href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
           <a href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
@@ -257,6 +258,7 @@ export const adminPage = () => `<!doctype html>
         <section class="module" id="m-resenas" hidden><div id="tab-resenas"></div></section>
         <section class="module" id="m-cupones" hidden><div id="tab-cupones"></div></section>
         <section class="module" id="m-sorteos" hidden></section>
+        <section class="module" id="m-brief" hidden></section>
         <section class="module" id="m-cartel" hidden><div id="availability"></div></section>
         <section class="module" id="m-horario" hidden><div id="hours"></div></section>
         <section class="module" id="m-faq" hidden><div id="tab-faq"></div></section>
@@ -272,6 +274,8 @@ export const adminPage = () => `<!doctype html>
 <script src="/js/availability.js"></script>
 <script src="/js/admin-tareas.js"></script>
 <script src="/js/admin-sorteos.js"></script>
+<script src="/js/brief.js"></script>
+<script src="/js/admin-brief.js"></script>
 <script>
 (() => {
   const STAGES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
@@ -348,7 +352,7 @@ export const adminPage = () => `<!doctype html>
 
   // Gestor de tareas (js/admin-tareas.js): usa la misma conexión y los mismos avisos del panel
   // Sorteos (js/admin-sorteos.js) además lee los datos ya cargados y navega con go()
-  window.JNBPanel = { api: (path, body) => api(path, body), toast: (msg) => toast(msg), data: () => data, go: (mod, id) => go(mod, id) };
+  window.JNBPanel = { api: (path, body) => api(path, body), toast: (msg) => toast(msg), data: () => data, go: (mod, id) => go(mod, id), reload: () => load() };
 
   const showLogin = (wrong) => { $('app').hidden = true; $('login').hidden = false; $('login-error').hidden = !wrong; $('key').focus(); };
 
@@ -534,7 +538,7 @@ export const adminPage = () => `<!doctype html>
   const STAGE_GROUPS = { pendiente: [0, 1], desarrollo: [2, 3], publicado: [4] };
 
   const clientRow = (p) => '<button type="button" class="client-row" data-open="' + esc(p.token) + '">'
-    + '<span class="client-row-main"><strong>' + (p.code ? '<span class="client-code">' + esc(p.code) + '</span> · ' : '') + esc(clientName(p)) + '</strong><span class="small muted">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + esc((clientById(p.clientId) || {}).code || '') + '</span></span>'
+    + '<span class="client-row-main"><strong>' + (p.code ? '<span class="client-code">' + esc(p.code) + '</span> · ' : '') + esc(clientName(p)) + '</strong><span class="small muted">' + esc(p.project) + (p.origin === 'sorteo-instagram' ? ' · 🎁 ORIGEN: SORTEO DE INSTAGRAM' : '') + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + esc((clientById(p.clientId) || {}).code || '') + '</span></span>'
     + '<span class="client-row-tags">' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '')
     + '<span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>'
     + '<span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">' + briefLabel(p) + '</span>'
@@ -602,7 +606,7 @@ export const adminPage = () => `<!doctype html>
     const owner = clientById(p.clientId);
     const head = '<div class="row"><button type="button" class="btn" data-back>← Todos los proyectos</button>'
       + (owner ? '<button type="button" data-go-client="' + esc(owner.code) + '">👤 Ficha del cliente: ' + esc(owner.code) + ' · ' + esc(owner.name) + '</button>' : '') + '</div>'
-      + '<div class="bv-top" style="margin-top:.75rem"><div><p class="small client-code" style="margin:0">' + esc(p.code || '') + '</p><p class="bv-client">' + esc(owner ? owner.name : p.client) + '</p><p class="small muted" style="margin:0">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + LANG[p.lang] + ' · creado ' + date(p.created) + '</p></div>'
+      + '<div class="bv-top" style="margin-top:.75rem"><div><p class="small client-code" style="margin:0">' + esc(p.code || '') + '</p><p class="bv-client">' + esc(owner ? owner.name : p.client) + '</p><p class="small muted" style="margin:0">' + esc(p.project) + (p.origin === 'sorteo-instagram' ? ' · 🎁 ORIGEN: SORTEO DE INSTAGRAM' : '') + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + LANG[p.lang] + ' · creado ' + date(p.created) + '</p></div>'
       + '<div class="row"><span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '') + '</div></div>'
       + '<nav class="subtabs">' + SUBTABS.map(([id, label]) => '<button type="button" data-sub="' + id + '" aria-pressed="' + (subTab === id) + '">' + label + (id === 'brief' && p.briefEditUnseen ? ' ⚠' : '') + '</button>').join('') + '</nav>';
     let body = '';
@@ -904,7 +908,7 @@ export const adminPage = () => `<!doctype html>
   };
 
   // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
-  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
+  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'brief', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
   const parseHash = () => {
     const [mod, id] = decodeURIComponent(location.hash.slice(1)).split('/');
     return { mod: MODULES.includes(mod) ? mod : 'dashboard', id: id || '' };
@@ -934,6 +938,8 @@ export const adminPage = () => `<!doctype html>
       if (window.JNBTasks) window.JNBTasks.show();
     } else if (route.mod === 'sorteos') {
       if (window.JNBGiveaways) window.JNBGiveaways.show(route.id);
+    } else if (route.mod === 'brief') {
+      if (window.JNBBriefPreview) window.JNBBriefPreview.show();
     } else if (route.mod === 'presupuestos') {
       renderInquiries();
     }

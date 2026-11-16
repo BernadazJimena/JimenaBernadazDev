@@ -92,6 +92,8 @@ const WINNER_STAGE_DATES = { 2: 'contacted_at', 3: 'brief_sent_at', 4: 'brief_do
 const WINNER_MARKS = { contacted_at: 'Contactado', brief_sent_at: 'Brief enviado', brief_done_at: 'Brief completado', materials_at: 'Materiales recibidos', delivered_at: 'Premio entregado' };
 const INSTAGRAM_URL = /^https:\/\/(www\.)?instagram\.com\/[^\s"<>]*$/i;
 const HTTPS_URL = /^https:\/\/[^\s"<>]+$/;
+// Premio con proyecto web: nombre del proyecto (planKey lo usa para elegir las preguntas del brief)
+const WINNER_PROJECTS = { premium: 'Plan Premium', basico: 'Plan Básico', emprendedor: 'Plan Emprendedor (tienda)' };
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
 const oneLine = (value, max) => text(value, max).replace(/\s+/g, ' ');
 const isoDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '');
@@ -440,6 +442,7 @@ export class StudioData extends DurableObject {
       const target = this.sql.exec('SELECT email, phone, note FROM clients WHERE id = ?', into).one();
       this.sql.exec('UPDATE inquiries SET client_id = ? WHERE client_id = ?', into, from);
       this.sql.exec('UPDATE projects SET client_id = ? WHERE client_id = ?', into, from);
+      this.sql.exec('UPDATE giveaway_winners SET client_id = ? WHERE client_id = ?', into, from);
       this.sql.exec('DELETE FROM clients WHERE id = ?', from);
       const note = [target.note, source.note].filter(Boolean).join('\n');
       this.sql.exec('UPDATE clients SET email = ?, phone = ?, note = ? WHERE id = ?',
@@ -559,6 +562,7 @@ export class StudioData extends DurableObject {
 
   deleteTask(id) {
     this.sql.exec('DELETE FROM tasks WHERE id = ?', id);
+    this.sql.exec('UPDATE giveaway_winners SET task_id = NULL WHERE task_id = ?', id);
     return true;
   }
 
@@ -645,7 +649,12 @@ export class StudioData extends DurableObject {
     if (!old) return { error: 'not found' };
     this.sql.exec(`UPDATE giveaway_winners SET internal_notes = ?, next_task = ?, follow_up = ?, msg_congrats = ?, msg_brief = ?, brief_link = ?, updated = ? WHERE id = ?`,
       t.internalNotes, t.nextTask, t.followUp, t.msgCongrats, t.msgBrief, t.briefLink || old.brief_link, new Date().toISOString(), id);
-    if (t.nextTask && (t.nextTask !== old.next_task || t.followUp !== old.follow_up)) this.logWinner(id, '🗓️', `Próxima tarea: ${t.nextTask}${t.followUp ? ` (${t.followUp})` : ''}`);
+    if (t.nextTask && (t.nextTask !== old.next_task || t.followUp !== old.follow_up)) {
+      this.logWinner(id, '🗓️', `Próxima tarea: ${t.nextTask}${t.followUp ? ` (${t.followUp})` : ''}`);
+      // Si ya tiene una tarea abierta en el Gestor, se actualiza con la nueva próxima tarea y fecha
+      const w = this.winnerRow(id);
+      if (w.task_id && this.sql.exec("SELECT 1 FROM tasks WHERE id = ? AND archived = 0 AND status != 'done'", w.task_id).toArray().length) this.winnerTask(id);
+    }
     return { id };
   }
 
@@ -656,6 +665,65 @@ export class StudioData extends DurableObject {
     this.sql.exec(`UPDATE giveaway_winners SET ${field} = ?, updated = ? WHERE id = ?`, date, new Date().toISOString(), id);
     this.logWinner(id, '✅', date ? `${WINNER_MARKS[field]}: ${date.slice(0, 10)}` : `${WINNER_MARKS[field]}: fecha quitada`);
     return { id };
+  }
+
+  winnerRow(id) {
+    return this.sql.exec('SELECT w.*, g.name AS giveaway_name FROM giveaway_winners w JOIN giveaways g ON g.id = w.giveaway_id WHERE w.id = ?', id).toArray()[0];
+  }
+
+  // Pasar el ganador a Clientes: si su mail ya tiene ficha, se usa esa (clientFor); nunca se crea dos veces para el mismo ganador
+  winnerToClient(id) {
+    const w = this.winnerRow(id);
+    if (!w) return { error: 'not found' };
+    if (w.client_id && this.clientExists(w.client_id)) return { id, clientId: w.client_id };
+    const mail = normEmail(w.email);
+    const existed = mail ? this.sql.exec('SELECT id FROM clients WHERE email = ?', mail).toArray()[0] : null;
+    const clientId = this.clientFor(mail, w.name);
+    if (w.whatsapp) this.sql.exec("UPDATE clients SET phone = ? WHERE id = ? AND phone = ''", w.whatsapp, clientId);
+    if (!existed) this.sql.exec("UPDATE clients SET note = ? WHERE id = ? AND note = ''", `Ganador del sorteo "${w.giveaway_name}" (@${w.instagram})`, clientId);
+    this.sql.exec('UPDATE giveaway_winners SET client_id = ?, updated = ? WHERE id = ?', clientId, new Date().toISOString(), id);
+    this.logWinner(id, '👤', `${existed ? 'Vinculado con la ficha que ya existía' : 'Ficha de cliente creada'}: ${clientCode(clientId)}`);
+    return { id, clientId };
+  }
+
+  // Proyecto del premio (origen sorteo-instagram): sin presupuesto ni pagos; el brief es el del sitio, con el link del proyecto
+  winnerProject(id) {
+    const w = this.winnerRow(id);
+    if (!w) return { error: 'not found' };
+    if (w.project_token && this.sql.exec('SELECT 1 FROM projects WHERE token = ?', w.project_token).toArray().length) return { id, token: w.project_token };
+    if (!WINNER_PROJECTS[w.plan]) return { error: 'plan' };
+    const { clientId } = this.winnerToClient(id);
+    const token = this.addProject({ client: w.name.split(' ')[0], project: `${WINNER_PROJECTS[w.plan]} · Premio de sorteo`, lang: 'es', due: '', clientId });
+    this.sql.exec("UPDATE projects SET origin = 'sorteo-instagram', winner_id = ? WHERE token = ?", id, token);
+    this.logEvent(token, '🎁', `ORIGEN: SORTEO DE INSTAGRAM · "${w.giveaway_name}" (@${w.instagram})`);
+    const code = this.sql.exec('SELECT code FROM projects WHERE token = ?', token).one().code;
+    this.sql.exec('UPDATE giveaway_winners SET project_token = ?, brief_link = ?, updated = ? WHERE id = ?', token, `${projectLink('es', token)}#brief`, new Date().toISOString(), id);
+    if (w.task_id) this.sql.exec('UPDATE tasks SET project = ? WHERE id = ?', token, w.task_id);
+    this.logWinner(id, '📁', `Proyecto creado: ${code} (link del brief guardado)`);
+    return { id, token };
+  }
+
+  // Próxima tarea → Gestor de tareas. Una sola tarea abierta por ganador: si ya existe, se actualiza
+  winnerTask(id) {
+    const w = this.winnerRow(id);
+    if (!w) return { error: 'not found' };
+    if (!w.next_task) return { error: 'next' };
+    const now = new Date().toISOString();
+    const title = `${w.next_task} · ${w.name}`.slice(0, 160);
+    const open = w.task_id ? this.sql.exec("SELECT id FROM tasks WHERE id = ? AND archived = 0 AND status != 'done'", w.task_id).toArray()[0] : null;
+    if (open) {
+      this.sql.exec('UPDATE tasks SET title = ?, due = ?, project = ?, winner_id = ?, updated = ? WHERE id = ?', title, w.follow_up, w.project_token, id, now, open.id);
+      this.logWinner(id, '🗂️', 'Tarea del Gestor actualizada');
+      return { id, taskId: open.id, updated: true };
+    }
+    const category = this.sql.exec("SELECT id FROM task_categories WHERE name = 'Clientes y presupuestos'").toArray()[0];
+    this.saveTask({ id: 0, title, description: `Ganador del sorteo "${w.giveaway_name}" (@${w.instagram}). Ficha en el panel: Sorteos.`,
+      category: category ? category.id : null, priority: 'media', status: 'todo', due: w.follow_up, notes: '', subtasks: [] });
+    const taskId = this.sql.exec('SELECT last_insert_rowid() AS id').one().id;
+    this.sql.exec('UPDATE tasks SET winner_id = ?, project = ? WHERE id = ?', id, w.project_token, taskId);
+    this.sql.exec('UPDATE giveaway_winners SET task_id = ?, updated = ? WHERE id = ?', taskId, now, id);
+    this.logWinner(id, '🗂️', 'Tarea creada en el Gestor de tareas');
+    return { id, taskId };
   }
 
   giveawaysData() {
@@ -868,14 +936,27 @@ export class StudioData extends DurableObject {
       // Un proyecto con pagos cargados no se borra (primero hay que borrar sus pagos): así no quedan pagos sueltos
       if (this.sql.exec('SELECT 1 FROM payments WHERE project = ?', token).toArray().length) return { error: 'payments' };
       this.sql.exec('DELETE FROM projects WHERE token = ?', token);
+      // El ganador y la tarea que apuntaban a este proyecto quedan sin proyecto (no se borran)
+      this.sql.exec("UPDATE giveaway_winners SET project_token = '' WHERE project_token = ?", token);
+      this.sql.exec("UPDATE tasks SET project = '' WHERE project = ?", token);
       return true;
     }
-    const project = this.sql.exec('SELECT stage, client, lang, quote, coupon, project FROM projects WHERE token = ?', token).toArray()[0];
+    const project = this.sql.exec('SELECT stage, client, lang, quote, coupon, project, origin, review_token, client_id FROM projects WHERE token = ?', token).toArray()[0];
     if (!project) return false;
     this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
       changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
     const stageChanged = changes.stage !== project.stage;
     if (stageChanged) this.logEvent(token, '📍', `Etapa: ${STAGE_NAMES[changes.stage] || changes.stage}`);
+    // Premio de un sorteo de Instagram: al publicarse se pide la reseña, pero no se genera el cupón del 20 %
+    if (project.origin === 'sorteo-instagram' && changes.stage === LAUNCH_STAGE) {
+      if (project.review_token) return stageChanged ? { stageChanged, stage: changes.stage, ...this.contactOf(project, token) } : true;
+      const contact = this.contactOf(project, token);
+      if (!contact.email && project.client_id) contact.email = (this.sql.exec('SELECT email FROM clients WHERE id = ?', project.client_id).toArray()[0] || {}).email || '';
+      const reviewToken = this.invite(contact.name);
+      this.sql.exec('UPDATE projects SET review_token = ? WHERE token = ?', reviewToken, token);
+      this.logEvent(token, '🎉', 'Publicado: se pidió la reseña (premio de sorteo: sin cupón de descuento)');
+      return { launched: true, coupon: '', expires: '', reviewToken, ...contact };
+    }
     if (changes.stage !== LAUNCH_STAGE || project.coupon) return stageChanged ? { stageChanged, stage: changes.stage, ...this.contactOf(project, token) } : true;
     // Recién publicado: cupón de descuento y link para la reseña, y los datos para mandarle el mail
     const now = new Date();
@@ -1143,7 +1224,7 @@ export class StudioData extends DurableObject {
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.code, p.client_id AS clientId, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
-        p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
+        p.origin, p.winner_id AS winnerId, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
         p.review_token AS reviewToken, (SELECT used FROM invitations v WHERE v.token = p.review_token) AS reviewDone,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
         b.edited AS briefEdited, CASE WHEN b.edit_seen = 0 THEN 1 ELSE 0 END AS briefEditUnseen,
@@ -1644,6 +1725,12 @@ export async function handleStudio(request, env, ctx) {
       } else if (body.action === 'mark') {
         const date = body.date === '' ? '' : (isoDate(body.date) || new Date().toISOString().slice(0, 10));
         saved = await store.markWinner(id, String(body.field || ''), date);
+      } else if (body.action === 'client') {
+        saved = await store.winnerToClient(id);
+      } else if (body.action === 'project') {
+        saved = await store.winnerProject(id);
+      } else if (body.action === 'task') {
+        saved = await store.winnerTask(id);
       } else return badRequest();
       if (saved.error === 'not found' || saved.error === 'giveaway') return notFound();
       if (saved.error === 'duplicate') return json(saved, 409);

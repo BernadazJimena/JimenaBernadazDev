@@ -838,4 +838,6 @@
     };
 
     window.JNBBrief = { mount };
+    // Solo lectura: el panel (js/admin-brief.js) muestra estas preguntas como vista previa
+    window.JNBBriefSchema = { SECTIONS };
 })();
