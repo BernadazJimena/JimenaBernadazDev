@@ -1,6 +1,6 @@
 // Precios del estudio y cotización del dólar: TODO se cambia acá (planes, adicionales y la cotización).
 // Los dólares no se escriben a mano: salen de dividir el precio en pesos por la cotización del dólar MEP vendedor,
-// redondeados a dos decimales. Las páginas muestran estos valores (las cifras escritas en el HTML son solo de respaldo).
+// redondeados a dólares enteros (desde ,50 sube al siguiente: 113,85 → 114). Las páginas muestran estos valores (las cifras escritas en el HTML son solo de respaldo).
 (() => {
     const RATE = {
         mep: 1580.90,                      // dólar MEP (bolsa) vendedor, en pesos
@@ -35,11 +35,11 @@
     // mode: 'round' (por ronda), 'hour' (por hora) o 'quote' (presupuesto según complejidad). Sin precio aprobado = "A cotizar".
     const EXTRA_WORK = { mode: 'quote', round: null, hour: null };
 
-    const usd = (ars) => Math.round((ars / RATE.mep) * 100) / 100;
+    const usd = (ars) => Math.round(ars / RATE.mep);
     const fmtArs = (n) => `$${Math.round(n).toLocaleString('es-AR')}`;
     const fmtUsd = (n, lang) => (lang === 'es'
-        ? `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        ? `USD ${n.toLocaleString('es-AR')}`
+        : `$${n.toLocaleString('en-US')}`);
 
     window.JNBPricing = { RATE, ARS, URGENT, EXTRA_WORK, usd, fmtArs, fmtUsd };
 

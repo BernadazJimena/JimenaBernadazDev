@@ -205,7 +205,7 @@
     const money = (price) => {
         if (!cur) return `$${price[0].toLocaleString('es-AR')}`;
         // Dólares: el importe en pesos convertido con la cotización (así el total en USD coincide con el de pesos)
-        const usd = P.usd(price[0]).toLocaleString(lang === 'es' ? 'es-AR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const usd = P.usd(price[0]).toLocaleString(lang === 'es' ? 'es-AR' : 'en-US');
         return lang === 'es' ? `USD ${usd}` : `$${usd} USD`;
     };
     const fill = (text, values = {}) => Object.entries(values).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), text);
