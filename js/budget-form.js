@@ -91,6 +91,8 @@
         if (details.value.trim()) lines.push(`${t.lDetails}: ${details.value.trim()}`);
         const country = form.querySelector('[name="pais"]');
         if (country && country.value) lines.push(`${country.closest('label').querySelector('span').textContent.trim()}: ${country.value}`);
+        const source = form.querySelector('[name="origen"]');
+        if (source && source.value) lines.push(`${source.closest('label').querySelector('span').textContent.trim()} ${source.selectedOptions[0].textContent.trim()}`);
         if (couponBox && !couponBox.hidden && couponValid) lines.push(`${couponInput.dataset.label}: ${couponInput.value.trim().toUpperCase()}`);
         const name = form.querySelector('input[name="name"]').value.trim();
         if (withName && name) lines.push(`${t.lName}: ${name}`);

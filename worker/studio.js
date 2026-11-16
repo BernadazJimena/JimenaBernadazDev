@@ -370,6 +370,9 @@ export class StudioData extends DurableObject {
     if (!agendaProjectColumns.includes('materials_at')) this.sql.exec("ALTER TABLE projects ADD COLUMN materials_at TEXT NOT NULL DEFAULT ''");
     const agendaClientColumns = this.sql.exec('PRAGMA table_info(clients)').toArray().map((c) => c.name);
     if (!agendaClientColumns.includes('source')) this.sql.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT ''");
+    // Lo que respondió el cliente en "¿Cómo me conociste?" del formulario de presupuesto
+    const agendaInquiryColumns = this.sql.exec('PRAGMA table_info(inquiries)').toArray().map((c) => c.name);
+    if (!agendaInquiryColumns.includes('source')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN source TEXT NOT NULL DEFAULT ''");
     // Vencimientos de los clientes (dominio, soporte mensual, hosting...): los carga Jimena a mano
     this.sql.exec(`CREATE TABLE IF NOT EXISTS renewals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -867,6 +870,10 @@ export class StudioData extends DurableObject {
     const clientId = this.clientFor(data.email, data.name, now.toISOString());
     this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon, country, client_id, seen)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon, data.country || '', clientId);
+    if (data.source) {
+      this.sql.exec('UPDATE inquiries SET source = ? WHERE code = ?', data.source, code);
+      this.sql.exec("UPDATE clients SET source = ? WHERE id = ? AND source = ''", data.source, clientId);
+    }
     return { code, token, created: now.toISOString(), coupon };
   }
 
@@ -1434,6 +1441,8 @@ export async function handleStudio(request, env, ctx) {
       message: text(body.message, 5000),
       coupon: typeof body.coupon === 'string' ? body.coupon.trim().toUpperCase().slice(0, 30) : '',
       country: oneLine(body.country, 60),
+      // ¿Cómo me conociste? (opcional; 'recomendacao' es la opción en portugués)
+      source: CLIENT_SOURCES.includes(body.source) ? body.source : (body.source === 'recomendacao' ? 'recomendacion' : ''),
     };
     if (!data.name || !EMAIL.test(data.email) || !data.message) return badRequest();
     const saved = await store.addInquiry(data);
