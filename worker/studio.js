@@ -500,6 +500,26 @@ export class StudioData extends DurableObject {
       text TEXT NOT NULL
     )`);
     this.sql.exec('CREATE INDEX IF NOT EXISTS giveaway_events_winner ON giveaway_events(winner_id)');
+    // Borrador del sorteo de fin de año 2026 (bases en sorteo-2026/): se carga una sola vez; fechas, hora y app quedan para completar
+    if (!this.sql.exec("SELECT 1 FROM settings WHERE key = 'sorteoBorrador2026'").toArray().length) {
+      const now = new Date().toISOString();
+      this.sql.exec(`INSERT INTO giveaways (name, post, url, prize, conditions, status, created, updated) VALUES (?, ?, ?, ?, ?, 'borrador', ?, ?)`,
+        'Sorteo de fin de año 2026 · Empezá 2027 con tu web',
+        'Para cerrar el año, sorteo 3 páginas web gratis: una web completa a medida y dos landings, para que tu emprendimiento arranque 2027 con su lugar en internet.',
+        'https://www.instagram.com/jnbcreativestudio/',
+        '1.er premio: Plan Premium (web a medida). 2.º y 3.er premio: Plan Básico (landing esencial). Los tres incluyen hasta 3 rondas de ajustes, la publicación de la web (gratis en pages.dev) y 30 días corridos de soporte.',
+        [
+          'PENDIENTE: fechas de inicio y cierre, hora de cierre, fecha del sorteo, app de sorteos y cantidad de amigos a etiquetar.',
+          'Quién participa: mayores de 18 que vivan en Argentina. Gratis, sin compra. No cuentan cuentas falsas, creadas para sorteos ni privadas.',
+          'Cómo participar: seguir a @jnbcreativestudio, darle me gusta al posteo y comentar etiquetando amigos (cada comentario con personas distintas suma una participación). Compartir en historias es opcional.',
+          'Ganadores: al azar entre los comentarios válidos, en un vivo de Instagram. 3 ganadores y 3 suplentes; nadie gana más de un premio.',
+          'Si ganás: 72 horas para responder (si no, pasa al suplente); 10 días corridos desde el anuncio para mandar el material; entrega en hasta 7 días corridos desde que llega todo el material.',
+          'Pausa por las fiestas: del 24 de diciembre al 2 de enero inclusive se pausan todos los plazos.',
+          'No incluye: dominio y su renovación, correos con dominio propio, textos o fotos, tienda online, adicionales o páginas extra (se cotizan aparte).',
+          'Nunca se piden datos bancarios, claves ni pagos por el premio.',
+        ].join('\n'), now, now);
+      this.sql.exec("INSERT INTO settings (key, value) VALUES ('sorteoBorrador2026', '1')");
+    }
     // Origen del proyecto ('' = comercial; 'sorteo-instagram' = premio: sin presupuesto, sin pagos y sin cupón al publicar)
     const giveawayProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
     if (!giveawayProjectColumns.includes('origin')) this.sql.exec("ALTER TABLE projects ADD COLUMN origin TEXT NOT NULL DEFAULT ''");
