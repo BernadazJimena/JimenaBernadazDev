@@ -76,7 +76,9 @@
             unrequested: 'Incluye y no pediste', unrequestedValue: 'Valor de lista de lo que no pediste: {value}. La diferencia de precio es {diff}.',
             unrequestedValueTie: 'Valor de lista de lo que no pediste: {value}, por el mismo precio.',
             moreSections: '{n} secciones más', moreSection: '1 sección más', morePages: 'hasta {n} páginas secundarias', morePage: 'hasta 1 página secundaria',
-            pendingTitle: 'A confirmar con tu presupuesto', whyPending: 'Cubre lo que elegiste y cuesta {diff} menos. Lo marcado “a confirmar” te lo confirmo con el presupuesto.',
+            pendingTitle: 'A confirmar con tu presupuesto', whyPending: 'Cuesta {diff} menos. Lo marcado “a confirmar” te lo confirmo con el presupuesto.',
+            recoLeadPending: 'Según las características que seleccionaste, el {plan} puede ser más conveniente: cubre lo que está confirmado en su descripción, y {list} te lo confirmo con el presupuesto.',
+            recoLeadAltPending: 'El {plan} cubre lo que está confirmado en su descripción ({list}: a confirmar con el presupuesto), pero también incluye cosas que no pediste. Si no las vas a usar, tu configuración a medida es igual de válida.',
             pendingItems: { mail: 'Contacto por mail', map: 'Ubicación con mapa', agenda: 'Botón de agenda de turnos', dark: 'Modo claro / oscuro', hours: 'Cartel de abierto / cerrado' },
             availability: 'Horarios (la sección de disponibilidad ya viene incluida)',
             sameAlt: 'Otra opción con el mismo precio', sameAltDiff: '{plan}: mismo precio. Diferencias: {list}.', sameAltNone: '{plan}: mismo precio y mismas prestaciones.',
@@ -89,7 +91,7 @@
             whyCheaper: 'Cubre todo lo que elegiste y cuesta {diff} menos.',
             whyCheaperAddons: 'Con los adicionales que se le suman, cubre todo lo que elegiste y cuesta {diff} menos.',
             whyTie: 'Cuesta lo mismo y además incluye: {list}.',
-            covers: 'Incluye lo que elegiste', addons: 'Se le suman como adicionales', outside: 'Siguen a cotizar aparte (con cualquier opción)',
+            covers: 'Incluye lo que elegiste', coversConfirmed: 'Incluye (confirmado)', addons: 'Se le suman como adicionales', outside: 'Siguen a cotizar aparte (con cualquier opción)',
             alsoIncludes: 'Además incluye', urgentNote: 'La entrega urgente (+30 %) se calcula igual sobre cualquiera de las dos opciones.',
             supportNote: 'El soporte por mes no entra en la comparación: se contrata aparte en las dos opciones.',
             view: 'Ver este plan', keep: 'Continuar con mi configuración',
@@ -116,7 +118,9 @@
             unrequested: 'Included but not requested', unrequestedValue: 'List value of what you didn’t request: {value}. The price difference is {diff}.',
             unrequestedValueTie: 'List value of what you didn’t request: {value}, for the same price.',
             moreSections: '{n} more sections', moreSection: '1 more section', morePages: 'up to {n} secondary pages', morePage: 'up to 1 secondary page',
-            pendingTitle: 'To be confirmed with your quote', whyPending: 'It covers what you chose and costs {diff} less. Items marked “to be confirmed” will be confirmed with your quote.',
+            pendingTitle: 'To be confirmed with your quote', whyPending: 'It costs {diff} less. Items marked “to be confirmed” will be confirmed with your quote.',
+            recoLeadPending: 'Based on what you selected, the {plan} may be a better fit: it covers what its description confirms, and I’ll confirm {list} with your quote.',
+            recoLeadAltPending: 'The {plan} covers what its description confirms ({list}: to be confirmed with your quote), but it also includes things you didn’t ask for. If you won’t use them, your custom setup is just as valid.',
             pendingItems: { mail: 'Email contact', map: 'Location with map', agenda: 'Booking button', dark: 'Light / dark mode', hours: 'Open / closed sign' },
             availability: 'Opening hours (the availability section is already included)',
             sameAlt: 'Another option at the same price', sameAltDiff: '{plan}: same price. Differences: {list}.', sameAltNone: '{plan}: same price and same features.',
@@ -129,7 +133,7 @@
             whyCheaper: 'It covers everything you chose and costs {diff} less.',
             whyCheaperAddons: 'With the add-ons it needs, it covers everything you chose and costs {diff} less.',
             whyTie: 'It costs the same and also includes: {list}.',
-            covers: 'Includes what you chose', addons: 'Added as extras', outside: 'Still to be quoted separately (with either option)',
+            covers: 'Includes what you chose', coversConfirmed: 'Includes (confirmed)', addons: 'Added as extras', outside: 'Still to be quoted separately (with either option)',
             alsoIncludes: 'Also includes', urgentNote: 'Rush delivery (+30%) applies the same way to either option.',
             supportNote: 'Monthly support isn’t part of the comparison: it’s hired separately with either option.',
             view: 'See this plan', keep: 'Keep my custom setup',
@@ -156,7 +160,9 @@
             unrequested: 'Inclui e você não pediu', unrequestedValue: 'Valor de tabela do que você não pediu: {value}. A diferença de preço é {diff}.',
             unrequestedValueTie: 'Valor de tabela do que você não pediu: {value}, pelo mesmo preço.',
             moreSections: '{n} seções a mais', moreSection: '1 seção a mais', morePages: 'até {n} páginas secundárias', morePage: 'até 1 página secundária',
-            pendingTitle: 'A confirmar com seu orçamento', whyPending: 'Cobre o que você escolheu e custa {diff} a menos. O que está marcado “a confirmar” eu confirmo com o orçamento.',
+            pendingTitle: 'A confirmar com seu orçamento', whyPending: 'Custa {diff} a menos. O que está marcado “a confirmar” eu confirmo com o orçamento.',
+            recoLeadPending: 'De acordo com o que você selecionou, o {plan} pode ser mais vantajoso: cobre o que está confirmado na descrição dele, e {list} eu confirmo com o orçamento.',
+            recoLeadAltPending: 'O {plan} cobre o que está confirmado na descrição dele ({list}: a confirmar com o orçamento), mas também inclui coisas que você não pediu. Se não for usá-las, sua configuração sob medida é igualmente válida.',
             pendingItems: { mail: 'Contato por e-mail', map: 'Localização com mapa', agenda: 'Botão de agenda', dark: 'Modo claro / escuro', hours: 'Aviso de aberto / fechado' },
             availability: 'Horários (a seção de disponibilidade já vem incluída)',
             sameAlt: 'Outra opção pelo mesmo preço', sameAltDiff: '{plan}: mesmo preço. Diferenças: {list}.', sameAltNone: '{plan}: mesmo preço e mesmas funcionalidades.',
@@ -169,7 +175,7 @@
             whyCheaper: 'Cobre tudo o que você escolheu e custa {diff} a menos.',
             whyCheaperAddons: 'Com os adicionais necessários, cobre tudo o que você escolheu e custa {diff} a menos.',
             whyTie: 'Custa o mesmo e ainda inclui: {list}.',
-            covers: 'Inclui o que você escolheu', addons: 'Somados como adicionais', outside: 'Continuam a orçar à parte (em qualquer opção)',
+            covers: 'Inclui o que você escolheu', coversConfirmed: 'Inclui (confirmado)', addons: 'Somados como adicionais', outside: 'Continuam a orçar à parte (em qualquer opção)',
             alsoIncludes: 'Também inclui', urgentNote: 'A entrega urgente (+30 %) é calculada igual nas duas opções.',
             supportNote: 'O suporte mensal não entra na comparação: é contratado à parte nas duas opções.',
             view: 'Ver este plano', keep: 'Continuar com minha configuração',
@@ -443,7 +449,11 @@
         reco.classList.toggle('is-alt', rec.alt);
         reco.append(el('p', 'eyebrow', rec.alt ? T.recoEyebrowAlt : T.recoEyebrow));
         reco.append(el('h3', '', rec.name));
-        reco.append(el('p', 'cp-reco-lead', fill(rec.alt ? T.recoLeadAlt : (rec.diff ? T.recoLead : T.recoLeadTie), { plan: rec.name })));
+        const pendingList = joinList(rec.pending.map((x) => x.toLowerCase()));
+        const lead = rec.pending.length
+            ? (rec.alt ? T.recoLeadAltPending : T.recoLeadPending)
+            : (rec.alt ? T.recoLeadAlt : (rec.diff ? T.recoLead : T.recoLeadTie));
+        reco.append(el('p', 'cp-reco-lead', fill(lead, { plan: rec.name, list: pendingList })));
         if (rec.minNote) reco.append(el('p', 'cp-reco-min', rec.minNote));
 
         const compare = el('dl', 'cp-reco-compare');
@@ -463,7 +473,7 @@
             reco.append(el('p', 'cp-reco-why', fill(why, { diff: diffText })));
         }
 
-        [listBlock(T.covers, rec.covered, 'is-covered'),
+        [listBlock(rec.pending.length ? T.coversConfirmed : T.covers, rec.covered, 'is-covered'),
             listBlock(T.addons, rec.addons, 'is-addons'),
             listBlock(T.pendingTitle, rec.pending, 'is-pending'),
             listBlock(T.unrequested, rec.unrequested.map((u) => (u.price ? u : u.label)), 'is-unrequested'),
