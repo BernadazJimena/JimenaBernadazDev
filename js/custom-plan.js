@@ -638,9 +638,33 @@
     scrollArea?.addEventListener('scroll', syncScroll, { passive: true });
     window.addEventListener('resize', syncScroll);
 
-    const update = () => { render(); syncScroll(); };
+    // Recorrido 1-2-3: cada paso se marca como hecho a medida que el cliente avanza, y el siguiente queda resaltado
+    const howto = [...root.querySelectorAll('.cp-howto li')];
+    const syncSteps = () => {
+        const sel = readSelection();
+        const done = {
+            1: sel.web || sel.store,
+            2: sel.sections > 0 || sel.pages > 0 || sel.quotes.length > 0
+                || ['map', 'agenda', 'dark', 'hours', 'second', 'support', 'urgent'].some((key) => sel[key]) || Boolean(sel.products),
+        };
+        const current = !done[1] ? 1 : (!done[2] ? 2 : 3);
+        howto.forEach((li) => {
+            const n = Number(li.dataset.howto);
+            li.classList.toggle('is-done', Boolean(done[n]));
+            li.classList.toggle('is-current', n === current);
+            li.classList.toggle('is-pending', !done[n] && n !== current);
+            const link = li.querySelector('a');
+            if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+        });
+        root.querySelectorAll('.cp-step[data-howto-step]').forEach((step) => {
+            step.classList.toggle('is-done', Boolean(done[step.dataset.howtoStep]));
+        });
+    };
+
+    const update = () => { render(); syncScroll(); syncSteps(); };
     root.addEventListener('change', update);
     root.addEventListener('input', update);
-    root.addEventListener('click', () => requestAnimationFrame(syncScroll));
+    // Botones − / +, "Empezar de nuevo" y moneda llaman a render() directo: después se ponen al día la lista y los pasos
+    root.addEventListener('click', () => requestAnimationFrame(() => { syncScroll(); syncSteps(); }));
     update();
 })();

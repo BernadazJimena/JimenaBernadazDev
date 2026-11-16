@@ -174,13 +174,13 @@
 
         <div class="cp-main">
           <ol class="cp-howto" aria-label="How it works">
-            <li><strong>Start with the base</strong> <span>the structure of your website</span></li>
-            <li><strong>Add what you need</strong> <span>with every price in plain sight</span></li>
-            <li><strong>Request your quote</strong> <span>I review it and reply within 24 business hours</span></li>
+            <li data-howto="1"><a data-n="1" href="#cp-base-title"><strong>Start with the base</strong> <span>the structure of your website</span></a></li>
+            <li data-howto="2"><a data-n="2" href="#cp-sections-title"><strong>Add what you need</strong> <span>with every price in plain sight</span></a></li>
+            <li data-howto="3"><a data-n="3" href="#cp-resumen"><strong>Request your quote</strong> <span>I review it and reply within 24 business hours</span></a></li>
           </ol>
 
-          <section class="cp-step" aria-labelledby="cp-base-title">
-            <h2 id="cp-base-title">Start with the base</h2>
+          <section class="cp-step" data-howto-step="1" aria-labelledby="cp-base-title">
+            <h2 id="cp-base-title" data-n="1">Start with the base</h2>
             <p class="cp-hint">If you add something that needs the base, I add it for you and tell you why.</p>
             <div class="cp-base-grid cp-base-grid-one">
               <label class="cp-base-option compare-basico" data-base="web">
@@ -193,8 +193,8 @@
             </div>
           </section>
 
-          <section class="cp-step" id="cp-secciones" aria-labelledby="cp-sections-title">
-            <h2 id="cp-sections-title">Add sections</h2>
+          <section class="cp-step" data-howto-step="2" id="cp-secciones" aria-labelledby="cp-sections-title">
+            <h2 id="cp-sections-title" data-n="2">Add sections</h2>
             <p class="cp-hint">A section is a block of the page, such as “Services” or “Testimonials”. Each one costs <span data-price="section"></span> and needs the website structure.</p>
             <div class="cp-chips">
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Services"><span>Services</span></label>
@@ -220,8 +220,8 @@
             </div>
           </section>
 
-          <section class="cp-step" aria-labelledby="cp-table-title">
-            <h2 id="cp-table-title">Add features</h2>
+          <section class="cp-step" data-howto-step="2" aria-labelledby="cp-table-title">
+            <h2 id="cp-table-title" data-n="2">Add features</h2>
             <p class="cp-hint">Each row says what it needs. Items marked “To be quoted” need an evaluation: they stay out of the total and I send you their price with your quote.</p>
             <div class="compare-scroll cp-table-wrap">
               <table class="compare-table cp-table">

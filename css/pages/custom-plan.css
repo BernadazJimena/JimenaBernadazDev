@@ -18,9 +18,9 @@
     min-width: 0;
 }
 
-/* Cómo funciona: tres pasos en una línea */
+/* Cómo funciona: tres pasos unidos por una línea que se va completando a medida que el cliente avanza.
+   Cada paso lleva a su parte de la página. Estados: pendiente, actual (resaltado) y hecho (✓). */
 .cp-howto {
-    counter-reset: cp-how;
     display: grid;
     gap: .75rem;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -30,21 +30,36 @@
 }
 
 .cp-howto li {
-    background: var(--sky);
-    border: .08rem solid var(--line);
-    border-radius: .9rem;
-    counter-increment: cp-how;
-    line-height: 1.4;
-    padding: .85rem 1rem .85rem 3rem;
     position: relative;
 }
 
-.cp-howto li::before {
+.cp-howto a {
+    background: var(--sky);
+    border: .08rem solid var(--line);
+    border-radius: .9rem;
+    color: inherit;
+    display: block;
+    height: 100%;
+    line-height: 1.4;
+    padding: .85rem 1rem .85rem 3rem;
+    position: relative;
+    text-decoration: none;
+    transition: border-color .3s ease, box-shadow .3s ease, opacity .3s ease, transform .2s ease;
+}
+
+.cp-howto a:hover {
+    border-color: var(--blue);
+    transform: translateY(-.1rem);
+}
+
+/* Número del paso (se vuelve ✓ al completarse) */
+.cp-howto a::before {
     align-items: center;
-    background: var(--blue);
+    background: var(--surface);
+    border: .12rem solid var(--field-border);
     border-radius: 50%;
-    color: #fff;
-    content: counter(cp-how);
+    color: var(--muted);
+    content: attr(data-n);
     display: flex;
     font-family: "Manrope", sans-serif;
     font-size: .875rem;
@@ -54,7 +69,48 @@
     left: .9rem;
     position: absolute;
     top: .85rem;
+    transition: background-color .3s ease, border-color .3s ease, color .3s ease;
     width: 1.6rem;
+}
+
+/* Línea entre un paso y el siguiente: se llena de violeta cuando el paso se completa */
+.cp-howto li:not(:last-child)::after {
+    background: linear-gradient(90deg, var(--blue), var(--blue)) no-repeat left / 0% 100%, var(--line);
+    content: "";
+    height: .15rem;
+    left: 100%;
+    position: absolute;
+    top: 1.65rem;
+    transition: background-size .5s ease;
+    width: .75rem;
+    z-index: 1;
+}
+
+.cp-howto li.is-done:not(:last-child)::after {
+    background-size: 100% 100%, auto;
+}
+
+.cp-howto li.is-done a::before {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+    content: "✓";
+}
+
+.cp-howto li.is-current a {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .08rem var(--blue), 0 .4rem 1.2rem color-mix(in srgb, var(--blue) 22%, transparent);
+}
+
+.cp-howto li.is-current a::before {
+    animation: cp-pulse 1.8s ease-in-out infinite;
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+}
+
+.cp-howto li.is-pending a {
+    opacity: .7;
 }
 
 .cp-howto strong {
@@ -68,19 +124,29 @@
     font-size: var(--text-sm);
 }
 
-/* Pasos numerados (los que no corresponden a la base elegida se ocultan y no cuentan) */
-.cp-step:not([hidden]) {
-    counter-increment: cp-step;
+@keyframes cp-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--blue) 45%, transparent); }
+    50% { box-shadow: 0 0 0 .35rem color-mix(in srgb, var(--blue) 0%, transparent); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .cp-howto li.is-current a::before { animation: none; }
+    .cp-howto li::after { transition: none; }
+}
+
+/* Títulos de cada parte con el número del paso al que pertenecen (1: base; 2: secciones y funcionalidades) */
 .cp-step h2 {
     font-size: clamp(1.4rem, 2.5vw, 1.85rem);
     margin: 0 0 .5rem;
 }
 
-.cp-step h2::before {
+.cp-step[data-howto-step] h2::before {
     color: var(--blue);
-    content: counter(cp-step) ". ";
+    content: attr(data-n) ". ";
+}
+
+.cp-step.is-done h2::before {
+    content: "✓ ";
 }
 
 .cp-hint {
@@ -689,6 +755,18 @@
 }
 
 @media (max-width: 52rem) {
+    .cp-howto li:not(:last-child)::after {
+        background: linear-gradient(180deg, var(--blue), var(--blue)) no-repeat top / 100% 0%, var(--line);
+        height: .75rem;
+        left: 1.68rem;
+        top: 100%;
+        width: .15rem;
+    }
+
+    .cp-howto li.is-done:not(:last-child)::after {
+        background-size: 100% 100%, auto;
+    }
+
     .cp-base-grid,
     .cp-base-grid-two,
     .cp-howto {
@@ -1064,4 +1142,10 @@
 .cp-reco-list.is-same li::before {
     color: var(--blue);
     content: "↔";
+}
+
+/* Al tocar un paso, la página baja hasta esa parte sin que la tape el encabezado */
+.cp-step h2,
+#cp-resumen {
+    scroll-margin-top: 6rem;
 }

@@ -174,13 +174,13 @@
 
         <div class="cp-main">
           <ol class="cp-howto" aria-label="Cómo funciona">
-            <li><strong>Elegí la base</strong> <span>la estructura de tu web, una tienda o las dos</span></li>
-            <li><strong>Sumá lo que necesitás</strong> <span>cada cosa con su precio a la vista</span></li>
-            <li><strong>Pedí tu presupuesto</strong> <span>lo reviso y te respondo en 24 horas hábiles</span></li>
+            <li data-howto="1"><a data-n="1" href="#cp-base-title"><strong>Elegí la base</strong> <span>la estructura de tu web, una tienda o las dos</span></a></li>
+            <li data-howto="2"><a data-n="2" href="#cp-sections-title"><strong>Sumá lo que necesitás</strong> <span>cada cosa con su precio a la vista</span></a></li>
+            <li data-howto="3"><a data-n="3" href="#cp-resumen"><strong>Pedí tu presupuesto</strong> <span>lo reviso y te respondo en 24 horas hábiles</span></a></li>
           </ol>
 
-          <section class="cp-step" aria-labelledby="cp-base-title">
-            <h2 id="cp-base-title">Elegí la base</h2>
+          <section class="cp-step" data-howto-step="1" aria-labelledby="cp-base-title">
+            <h2 id="cp-base-title" data-n="1">Elegí la base</h2>
             <p class="cp-hint">Podés elegir una o las dos. Si sumás algo que necesita una base, la agrego sola y te aviso por qué.</p>
             <div class="cp-base-grid cp-base-grid-two">
               <label class="cp-base-option compare-basico" data-base="web">
@@ -201,8 +201,8 @@
             <p class="cp-fineprint">La tienda no incluye el abono mensual de Tiendanube o Empretienda, que se paga aparte a la plataforma.</p>
           </section>
 
-          <section class="cp-step" id="cp-secciones" aria-labelledby="cp-sections-title">
-            <h2 id="cp-sections-title">Sumá secciones</h2>
+          <section class="cp-step" data-howto-step="2" id="cp-secciones" aria-labelledby="cp-sections-title">
+            <h2 id="cp-sections-title" data-n="2">Sumá secciones</h2>
             <p class="cp-hint">Una sección es un bloque de la página, como “Servicios” o “Testimonios”. Cada una cuesta <span data-price="section"></span> y necesita la estructura web.</p>
             <div class="cp-chips">
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Servicios"><span>Servicios</span></label>
@@ -228,8 +228,8 @@
             </div>
           </section>
 
-          <section class="cp-step" aria-labelledby="cp-table-title">
-            <h2 id="cp-table-title">Sumá funcionalidades</h2>
+          <section class="cp-step" data-howto-step="2" aria-labelledby="cp-table-title">
+            <h2 id="cp-table-title" data-n="2">Sumá funcionalidades</h2>
             <p class="cp-hint">Cada fila dice qué necesita. Lo que dice “A cotizar” lo evalúo según tu proyecto: va aparte del total y te paso el precio con el presupuesto.</p>
             <div class="compare-scroll cp-table-wrap">
               <table class="compare-table cp-table">
