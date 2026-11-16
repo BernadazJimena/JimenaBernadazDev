@@ -1,0 +1,25 @@
+/* Plazos y vencimientos (#agenda) e Ingresos y origen (#numeros): js/admin-agenda.js. Usa los colores del panel. */
+#m-agenda .card, #m-numeros .card { margin-bottom: 1rem; }
+#m-agenda .ag-table, #m-numeros .ag-table { overflow-x: auto; }
+#m-agenda .ag-table input[type="date"] { max-width: 10.5rem; }
+#m-agenda .ag-actions { white-space: nowrap; }
+#m-agenda .ag-actions button + button { margin-left: .3rem; }
+#m-numeros .n, #m-numeros tfoot th.n { text-align: right; }
+.ag-tag { border-radius: 999px; display: inline-block; font-size: .75rem; font-weight: 700; padding: .12rem .55rem; white-space: nowrap; }
+.ag-ok { background: #cdebdc; color: #0f5534; }
+.ag-warn { background: #f6e1bd; color: #6b3d00; }
+.ag-late { background: #f6cfcc; color: #8a1c14; }
+.ag-muted { background: var(--soft); color: var(--muted); }
+.ag-late-text { color: #b3261e; font-weight: 700; }
+#m-numeros .ag-bar { background: var(--soft); border-radius: 999px; height: .75rem; overflow: hidden; }
+#m-numeros .ag-bar span { background: var(--accent); display: block; height: 100%; }
+#m-numeros .ag-bar span.is-warn { background: #e0a12b; }
+#m-numeros .ag-bar span.is-late { background: #d0453f; }
+#m-numeros .ag-sources { list-style: none; margin: .75rem 0 0; padding: 0; }
+#m-numeros .ag-sources li { align-items: center; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; padding: .35rem 0; }
+@media (prefers-color-scheme: dark) {
+  .ag-ok { background: #173f2c; color: #a8e4c6; }
+  .ag-warn { background: #4a3413; color: #f6d39a; }
+  .ag-late { background: #4a1916; color: #ffb4ab; }
+  .ag-late-text { color: #ff8a80; }
+}

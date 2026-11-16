@@ -92,6 +92,11 @@ const WINNER_STAGE_DATES = { 2: 'contacted_at', 3: 'brief_sent_at', 4: 'brief_do
 const WINNER_MARKS = { contacted_at: 'Contactado', brief_sent_at: 'Brief enviado', brief_done_at: 'Brief completado', materials_at: 'Materiales recibidos', delivered_at: 'Premio entregado' };
 const INSTAGRAM_URL = /^https:\/\/(www\.)?instagram\.com\/[^\s"<>]*$/i;
 const HTTPS_URL = /^https:\/\/[^\s"<>]+$/;
+// Agenda: tipos de vencimiento que carga Jimena y de dónde vino cada cliente (lo marca ella; los del sorteo se marcan solos)
+const RENEWAL_KINDS = ['dominio', 'soporte', 'hosting', 'otro'];
+const CLIENT_SOURCES = ['instagram', 'sorteo', 'upwork', 'recomendacion', 'google', 'otro'];
+// Fecha de hoy en Argentina (AAAA-MM-DD)
+const arToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
 // Premio con proyecto web: nombre del proyecto (planKey lo usa para elegir las preguntas del brief)
 const WINNER_PROJECTS = { premium: 'Plan Premium', basico: 'Plan Básico', emprendedor: 'Plan Emprendedor (tienda)' };
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
@@ -360,6 +365,24 @@ export class StudioData extends DurableObject {
     const giveawayTaskColumns = this.sql.exec('PRAGMA table_info(tasks)').toArray().map((c) => c.name);
     if (!giveawayTaskColumns.includes('winner_id')) this.sql.exec('ALTER TABLE tasks ADD COLUMN winner_id INTEGER');
     if (!giveawayTaskColumns.includes('project')) this.sql.exec("ALTER TABLE tasks ADD COLUMN project TEXT NOT NULL DEFAULT ''");
+    // Fecha en que llegó todo el material del proyecto: desde ahí corre el plazo de entrega (se completa sola al pasar a Diseño)
+    const agendaProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
+    if (!agendaProjectColumns.includes('materials_at')) this.sql.exec("ALTER TABLE projects ADD COLUMN materials_at TEXT NOT NULL DEFAULT ''");
+    const agendaClientColumns = this.sql.exec('PRAGMA table_info(clients)').toArray().map((c) => c.name);
+    if (!agendaClientColumns.includes('source')) this.sql.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT ''");
+    // Vencimientos de los clientes (dominio, soporte mensual, hosting...): los carga Jimena a mano
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS renewals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER REFERENCES clients(id),
+      project TEXT NOT NULL DEFAULT '',
+      kind TEXT NOT NULL DEFAULT 'otro',
+      label TEXT NOT NULL DEFAULT '',
+      due TEXT NOT NULL,
+      amount TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      done_at TEXT NOT NULL DEFAULT '',
+      created TEXT NOT NULL
+    )`);
     this.linkClients();
   }
 
@@ -443,6 +466,7 @@ export class StudioData extends DurableObject {
       this.sql.exec('UPDATE inquiries SET client_id = ? WHERE client_id = ?', into, from);
       this.sql.exec('UPDATE projects SET client_id = ? WHERE client_id = ?', into, from);
       this.sql.exec('UPDATE giveaway_winners SET client_id = ? WHERE client_id = ?', into, from);
+      this.sql.exec('UPDATE renewals SET client_id = ? WHERE client_id = ?', into, from);
       this.sql.exec('DELETE FROM clients WHERE id = ?', from);
       const note = [target.note, source.note].filter(Boolean).join('\n');
       this.sql.exec('UPDATE clients SET email = ?, phone = ?, note = ? WHERE id = ?',
@@ -667,6 +691,57 @@ export class StudioData extends DurableObject {
     return { id };
   }
 
+  // ---- Agenda: vencimientos y fecha de material completo
+  saveRenewal(r) {
+    if (r.clientId && !this.clientExists(r.clientId)) return { error: 'client' };
+    if (r.project && !this.sql.exec('SELECT 1 FROM projects WHERE token = ?', r.project).toArray().length) return { error: 'project' };
+    if (r.id) {
+      if (!this.sql.exec('SELECT 1 FROM renewals WHERE id = ?', r.id).toArray().length) return { error: 'not found' };
+      this.sql.exec('UPDATE renewals SET client_id = ?, project = ?, kind = ?, label = ?, due = ?, amount = ?, note = ? WHERE id = ?',
+        r.clientId || null, r.project, r.kind, r.label, r.due, r.amount, r.note, r.id);
+      return { id: r.id };
+    }
+    this.sql.exec('INSERT INTO renewals (client_id, project, kind, label, due, amount, note, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      r.clientId || null, r.project, r.kind, r.label, r.due, r.amount, r.note, new Date().toISOString());
+    return { id: this.sql.exec('SELECT last_insert_rowid() AS id').one().id };
+  }
+
+  renewalDone(id, done) {
+    if (!this.sql.exec('SELECT 1 FROM renewals WHERE id = ?', id).toArray().length) return { error: 'not found' };
+    this.sql.exec('UPDATE renewals SET done_at = ? WHERE id = ?', done ? arToday() : '', id);
+    return { id };
+  }
+
+  deleteRenewal(id) {
+    if (!this.sql.exec('SELECT 1 FROM renewals WHERE id = ?', id).toArray().length) return { error: 'not found' };
+    this.sql.exec('DELETE FROM renewals WHERE id = ?', id);
+    return { id };
+  }
+
+  setMaterials(token, date) {
+    if (!this.sql.exec('SELECT 1 FROM projects WHERE token = ?', token).toArray().length) return { error: 'not found' };
+    this.sql.exec('UPDATE projects SET materials_at = ? WHERE token = ?', date, token);
+    this.logEvent(token, '📦', date ? `Material completo recibido: ${date}` : 'Se quitó la fecha de material completo');
+    return { ok: true };
+  }
+
+  setClientSource(id, source) {
+    if (!this.clientExists(id)) return { error: 'not found' };
+    this.sql.exec('UPDATE clients SET source = ? WHERE id = ?', source, id);
+    return { ok: true };
+  }
+
+  // Tope anual de la categoría del monotributo (en pesos) y cotización del dólar para sumar los cobros en USD
+  monotributo() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'monotributo'").toArray()[0];
+    try { return row ? JSON.parse(row.value) : { tope: 0, cotizacion: 0 }; } catch { return { tope: 0, cotizacion: 0 }; }
+  }
+
+  setMonotributo(tope, cotizacion) {
+    this.sql.exec("INSERT INTO settings (key, value) VALUES ('monotributo', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", JSON.stringify({ tope, cotizacion }));
+    return { ok: true };
+  }
+
   winnerRow(id) {
     return this.sql.exec('SELECT w.*, g.name AS giveaway_name FROM giveaway_winners w JOIN giveaways g ON g.id = w.giveaway_id WHERE w.id = ?', id).toArray()[0];
   }
@@ -680,6 +755,7 @@ export class StudioData extends DurableObject {
     const existed = mail ? this.sql.exec('SELECT id FROM clients WHERE email = ?', mail).toArray()[0] : null;
     const clientId = this.clientFor(mail, w.name);
     if (w.whatsapp) this.sql.exec("UPDATE clients SET phone = ? WHERE id = ? AND phone = ''", w.whatsapp, clientId);
+    if (!existed) this.sql.exec("UPDATE clients SET source = 'sorteo' WHERE id = ? AND source = ''", clientId);
     if (!existed) this.sql.exec("UPDATE clients SET note = ? WHERE id = ? AND note = ''", `Ganador del sorteo "${w.giveaway_name}" (@${w.instagram})`, clientId);
     this.sql.exec('UPDATE giveaway_winners SET client_id = ?, updated = ? WHERE id = ?', clientId, new Date().toISOString(), id);
     this.logWinner(id, '👤', `${existed ? 'Vinculado con la ficha que ya existía' : 'Ficha de cliente creada'}: ${clientCode(clientId)}`);
@@ -751,13 +827,13 @@ export class StudioData extends DurableObject {
   // briefs y archivos, pagos, cupones, reseñas e historial, y los códigos vuelven a empezar. Quedan el cartel y el horario.
   resetAll() {
     this.ctx.storage.transactionSync(() => {
-      for (const table of ['giveaway_events', 'giveaway_winners', 'giveaways', 'brief_chunks', 'brief_files', 'briefs', 'payments', 'project_events', 'coupons', 'reviews', 'invitations', 'projects', 'inquiries', 'clients']) {
+      for (const table of ['renewals', 'giveaway_events', 'giveaway_winners', 'giveaways', 'brief_chunks', 'brief_files', 'briefs', 'payments', 'project_events', 'coupons', 'reviews', 'invitations', 'projects', 'inquiries', 'clients']) {
         this.sql.exec(`DELETE FROM ${table}`);
       }
       // Las tareas no se borran, pero dejan de apuntar a ganadores y proyectos que ya no existen
       this.sql.exec("UPDATE tasks SET winner_id = NULL, project = '' WHERE winner_id IS NOT NULL OR project != ''");
       this.sql.exec("DELETE FROM settings WHERE key IN ('mailError', 'seqProyecto', 'noDuplicados')");
-      this.sql.exec("DELETE FROM sqlite_sequence WHERE name IN ('clients', 'reviews', 'project_events', 'brief_files', 'payments', 'giveaways', 'giveaway_winners', 'giveaway_events')");
+      this.sql.exec("DELETE FROM sqlite_sequence WHERE name IN ('clients', 'reviews', 'project_events', 'brief_files', 'payments', 'giveaways', 'giveaway_winners', 'giveaway_events', 'renewals')");
     });
     return true;
   }
@@ -939,6 +1015,7 @@ export class StudioData extends DurableObject {
       // El ganador y la tarea que apuntaban a este proyecto quedan sin proyecto (no se borran)
       this.sql.exec("UPDATE giveaway_winners SET project_token = '' WHERE project_token = ?", token);
       this.sql.exec("UPDATE tasks SET project = '' WHERE project = ?", token);
+      this.sql.exec("UPDATE renewals SET project = '' WHERE project = ?", token);
       return true;
     }
     const project = this.sql.exec('SELECT stage, client, lang, quote, coupon, project, origin, review_token, client_id FROM projects WHERE token = ?', token).toArray()[0];
@@ -946,6 +1023,7 @@ export class StudioData extends DurableObject {
     this.sql.exec('UPDATE projects SET stage = ?, due = ?, note = ?, next = ?, preview = ?, updated = ? WHERE token = ?',
       changes.stage, changes.due, changes.note, changes.next, changes.preview, new Date().toISOString(), token);
     const stageChanged = changes.stage !== project.stage;
+    if (stageChanged && changes.stage >= 2) this.sql.exec("UPDATE projects SET materials_at = ? WHERE token = ? AND materials_at = ''", arToday(), token);
     if (stageChanged) this.logEvent(token, '📍', `Etapa: ${STAGE_NAMES[changes.stage] || changes.stage}`);
     // Premio de un sorteo de Instagram: al publicarse se pide la reseña, pero no se genera el cupón del 20 %
     if (project.origin === 'sorteo-instagram' && changes.stage === LAUNCH_STAGE) {
@@ -1211,7 +1289,7 @@ export class StudioData extends DurableObject {
   // ---- Panel
   everything() {
     return {
-      clients: this.sql.exec(`SELECT c.id, c.code, c.name, c.email, c.phone, c.status, c.note, c.created,
+      clients: this.sql.exec(`SELECT c.id, c.code, c.name, c.email, c.phone, c.status, c.note, c.created, c.source,
         (SELECT COUNT(*) FROM projects p WHERE p.client_id = c.id) AS projectCount,
         (SELECT COUNT(*) FROM inquiries i WHERE i.client_id = c.id) AS inquiryCount
         FROM clients c ORDER BY c.id DESC`).toArray(),
@@ -1224,7 +1302,7 @@ export class StudioData extends DurableObject {
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.code, p.client_id AS clientId, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
-        p.origin, p.winner_id AS winnerId, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
+        p.origin, p.winner_id AS winnerId, p.materials_at AS materialsAt, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
         p.review_token AS reviewToken, (SELECT used FROM invitations v WHERE v.token = p.review_token) AS reviewDone,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
         b.edited AS briefEdited, CASE WHEN b.edit_seen = 0 THEN 1 ELSE 0 END AS briefEditUnseen,
@@ -1236,6 +1314,7 @@ export class StudioData extends DurableObject {
       coupons: this.sql.exec(`SELECT c.code, (SELECT client_id FROM projects p WHERE p.token = c.project) AS clientId, c.client, c.email, c.lang, c.percent, c.created, c.expires, c.used_inquiry AS usedBy, c.used_at AS usedAt
         FROM coupons c ORDER BY c.created DESC`).toArray(),
       events: this.sql.exec('SELECT project, at, icon, text FROM project_events ORDER BY at DESC LIMIT 3000').toArray(),
+      renewals: this.sql.exec("SELECT id, client_id AS clientId, project, kind, label, due, amount, note, done_at AS doneAt, created FROM renewals ORDER BY (done_at != ''), due").toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
     };
   }
@@ -1573,6 +1652,7 @@ export async function handleStudio(request, env, ctx) {
       data.mailReady = Boolean(cleanEnv(env.RESEND_API_KEY) && cleanEnv(env.MAIL_FROM));
       data.mailError = await store.mailError();
       data.sorteos = await store.giveawaysData();
+      data.monotributo = await store.monotributo();
       return json(data);
     }
 
@@ -1736,6 +1816,49 @@ export async function handleStudio(request, env, ctx) {
       if (saved.error === 'duplicate') return json(saved, 409);
       if (saved.error) return badRequest();
       return json({ ...saved, ...(await store.giveawaysData()) });
+    }
+
+    // ---- Agenda: vencimientos de clientes y fecha de material completo de cada proyecto
+    if (path === '/api/admin/agenda') {
+      let saved;
+      if (body.action === 'renewal') {
+        const r = body.renewal || {};
+        const item = {
+          id: Number(r.id) || 0,
+          clientId: Number(r.clientId) || 0,
+          project: TOKEN.test(r.project || '') ? r.project : '',
+          kind: RENEWAL_KINDS.includes(r.kind) ? r.kind : 'otro',
+          label: oneLine(r.label, 120),
+          due: isoDate(r.due),
+          amount: oneLine(r.amount, 40),
+          note: text(r.note, 1000),
+        };
+        if (!item.due || (item.kind === 'otro' && !item.label)) return badRequest();
+        saved = await store.saveRenewal(item);
+      } else if (body.action === 'renewal-done') {
+        saved = await store.renewalDone(Number(body.id) || 0, body.done !== false);
+      } else if (body.action === 'renewal-delete') {
+        saved = await store.deleteRenewal(Number(body.id) || 0);
+      } else if (body.action === 'material') {
+        if (!TOKEN.test(body.project || '')) return badRequest();
+        saved = await store.setMaterials(body.project, body.date === '' ? '' : (isoDate(body.date) || arToday()));
+      } else return badRequest();
+      if (saved.error === 'not found') return notFound();
+      if (saved.error) return badRequest();
+      return json({ ok: true, ...saved });
+    }
+
+    // ---- Números: origen de cada cliente y datos del monotributo
+    if (path === '/api/admin/numeros') {
+      if (body.action === 'source') {
+        const saved = await store.setClientSource(Number(body.clientId) || 0, CLIENT_SOURCES.includes(body.source) ? body.source : '');
+        return saved.error ? notFound() : json(saved);
+      }
+      if (body.action === 'monotributo') {
+        const num = (v) => Math.min(Number(String(v || '').replace(/[^0-9]/g, '')) || 0, 1e12);
+        return json(await store.setMonotributo(num(body.tope), num(body.cotizacion)));
+      }
+      return badRequest();
     }
 
     if (path === '/api/admin/reiniciar') {

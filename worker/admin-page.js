@@ -7,6 +7,7 @@ export const adminPage = () => `<!doctype html>
 <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/pages/admin-tareas.css">
 <link rel="stylesheet" href="/css/pages/admin-sorteos.css">
+<link rel="stylesheet" href="/css/pages/admin-agenda.css">
 <style>
   :root { color-scheme: light; --bg: #f3ebf6; --card: #ecdff4; --soft: #e2d0f0; --text: #211632; --muted: #625970; --line: #d9c6e8;
     --accent: #7543d6; --accent-ink: #5d31b8; --on-accent: #f3ebf6; --ok: #1f7a4d; --warn: #9a5b00; }
@@ -235,6 +236,8 @@ export const adminPage = () => `<!doctype html>
           <a href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
           <a href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos</span><span class="badge" id="n-sorteos"></span></a>
           <a href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
+          <a href="#agenda" data-mod="agenda"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Plazos y vencimientos</span><span class="badge" id="n-agenda"></span></a>
+          <a href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
           <p class="side-group">Sitio web</p>
           <a href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
           <a href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
@@ -259,6 +262,8 @@ export const adminPage = () => `<!doctype html>
         <section class="module" id="m-cupones" hidden><div id="tab-cupones"></div></section>
         <section class="module" id="m-sorteos" hidden></section>
         <section class="module" id="m-brief" hidden></section>
+        <section class="module" id="m-agenda" hidden></section>
+        <section class="module" id="m-numeros" hidden></section>
         <section class="module" id="m-cartel" hidden><div id="availability"></div></section>
         <section class="module" id="m-horario" hidden><div id="hours"></div></section>
         <section class="module" id="m-faq" hidden><div id="tab-faq"></div></section>
@@ -276,6 +281,7 @@ export const adminPage = () => `<!doctype html>
 <script src="/js/admin-sorteos.js"></script>
 <script src="/js/brief.js"></script>
 <script src="/js/admin-brief.js"></script>
+<script src="/js/admin-agenda.js"></script>
 <script>
 (() => {
   const STAGES = ['Reserva y confirmación', 'Recepción de materiales', 'Diseño y desarrollo', 'Revisión y ajustes', 'Publicación y entrega'];
@@ -365,6 +371,7 @@ export const adminPage = () => `<!doctype html>
     applyRoute();
     if (window.JNBTasks) window.JNBTasks.refresh();
     if (window.JNBGiveaways) window.JNBGiveaways.refresh();
+    if (window.JNBAgenda) window.JNBAgenda.refresh();
   };
 
   // ---- Precio de la propuesta: moneda ($ o USD) y monto con puntos de miles (200.000)
@@ -908,7 +915,7 @@ export const adminPage = () => `<!doctype html>
   };
 
   // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
-  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'brief', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
+  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'brief', 'agenda', 'numeros', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
   const parseHash = () => {
     const [mod, id] = decodeURIComponent(location.hash.slice(1)).split('/');
     return { mod: MODULES.includes(mod) ? mod : 'dashboard', id: id || '' };
@@ -940,6 +947,8 @@ export const adminPage = () => `<!doctype html>
       if (window.JNBGiveaways) window.JNBGiveaways.show(route.id);
     } else if (route.mod === 'brief') {
       if (window.JNBBriefPreview) window.JNBBriefPreview.show();
+    } else if (route.mod === 'agenda' || route.mod === 'numeros') {
+      if (window.JNBAgenda) window.JNBAgenda.show(route.mod);
     } else if (route.mod === 'presupuestos') {
       renderInquiries();
     }
