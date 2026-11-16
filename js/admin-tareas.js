@@ -154,9 +154,13 @@
         }).join('')}
     </div>`;
 
+    const RANK = { alta: 0, media: 1, baja: 2 };
+    const byUrgency = (x, y) => ((x.due || '9999').localeCompare(y.due || '9999')) || ((RANK[x.priority] ?? 1) - (RANK[y.priority] ?? 1)) || (x.position - y.position);
+
     const boardHtml = (active) => `${tabsHtml(active)}<div class="task-board" role="list" data-active="${mobileCol}">
         ${COLUMNS.map((col) => {
-            const all = active.filter((t) => t.status === col.id);
+            // Más urgente primero: vencimiento más cercano (sin fecha al final) y, a igual fecha, prioridad Alta → Media → Baja
+            const all = active.filter((t) => t.status === col.id).sort(col.id === 'done' ? (x, y) => x.position - y.position : byUrgency);
             const shown = all.filter(matches);
             return `<section class="task-col" data-status="${col.id}" role="listitem" aria-label="${col.name}">
                 <header class="task-col-head">
