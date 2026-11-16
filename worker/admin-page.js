@@ -12,7 +12,7 @@ export const adminPage = () => `<!doctype html>
     --muted: #b6aecf; --line: #2f2549; --accent: #9b6dff; --accent-ink: #b9a0ff; --on-accent: #100b1d; --ok: #6fd3a0; --warn: #f2b45c; } }
   * { box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font: 15px/1.5 Manrope, system-ui, sans-serif; margin: 0; }
-  .wrap { margin: 0 auto; max-width: 60rem; padding: 1.25rem 1rem 4rem; }
+  .wrap { margin: 0 auto; max-width: 78rem; padding: 1.25rem 1rem 4rem; }
   header { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; margin-bottom: 1rem; }
   .brand { align-items: center; display: flex; font-weight: 800; gap: .5rem; }
   .mark { background: #24185a; border-radius: .5rem; color: #f3ebf6; font-size: .8rem; padding: .35rem .45rem; }
@@ -113,6 +113,46 @@ export const adminPage = () => `<!doctype html>
   .check-line { align-items: center; display: flex; font-size: .9rem; gap: .5rem; margin: .75rem 0; }
   .check-line input { accent-color: var(--accent); width: auto; }
   .price-row { display: grid; gap: .5rem; grid-template-columns: 7.5rem 1fr; }
+  /* Menú lateral: cada módulo en su propio panel */
+  .layout { align-items: start; display: grid; gap: 1.5rem; grid-template-columns: 14.5rem minmax(0, 1fr); }
+  .side { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; display: block; margin: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding: .6rem; position: sticky; top: 1rem; }
+  .side-group { color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .08em; margin: .9rem .6rem .3rem; text-transform: uppercase; }
+  .side a { align-items: center; border-radius: 999px; color: var(--text); display: flex; font-size: .9rem; font-weight: 700; gap: .5rem; justify-content: space-between; padding: .42rem .75rem; text-decoration: none; }
+  .side a:hover { background: var(--soft); color: var(--accent-ink); }
+  .side a[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+  .side a[aria-current="page"] .badge { background: var(--on-accent); color: var(--accent); }
+  .side .badge:empty { display: none; }
+  .menu-toggle { display: none; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .menu-toggle { display: inline-flex; }
+    .side { display: none; max-height: none; position: static; }
+    .side.is-open { display: block; }
+  }
+  .module-intro { color: var(--muted); margin: -.4rem 0 1rem; }
+  .stats { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin-bottom: 1.25rem; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; color: var(--text); display: block; padding: .9rem 1rem; text-decoration: none; }
+  .stat:hover { border-color: var(--accent); }
+  .stat-n { color: var(--accent-ink); display: block; font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
+  .stat-l { color: var(--muted); display: block; font-size: .85rem; font-weight: 700; }
+  .filters { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); margin: .75rem 0 1rem; }
+  .filters label { font-size: .75rem; }
+  .pager { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin: 1rem 0; }
+  .pager button:disabled { cursor: default; opacity: .45; }
+  .client-card { margin: 0; }
+  .client-card > summary { list-style: none; margin: 0; }
+  .client-card > summary::-webkit-details-marker { display: none; }
+  .client-card[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--accent); }
+  .client-card[open] .client-row-go { transform: rotate(90deg); }
+  .client-card-body { background: var(--card); border: 1px solid var(--accent); border-radius: 0 0 .9rem .9rem; border-top: 0; padding: .25rem 1rem 1rem; }
+  .client-code { color: var(--accent-ink); font-weight: 800; letter-spacing: .03em; }
+  .chip.new { background: var(--accent); color: var(--on-accent); }
+  .link-btn { background: none; border: 0; border-radius: 0; color: var(--accent-ink); padding: 0; text-decoration: underline; }
+  .feed { list-style: none; margin: 0; padding: 0; }
+  .feed li { align-items: flex-start; border-bottom: 1px solid var(--line); display: grid; gap: .6rem; grid-template-columns: 2rem 1fr; padding: .55rem 0; }
+  .feed li:last-child { border-bottom: 0; }
+  .money-ok { color: var(--ok); font-weight: 800; } .money-warn { color: var(--warn); font-weight: 800; }
+  .table-wrap { overflow-x: auto; }
   [hidden] { display: none !important; }
 </style></head>
 <body><div class="wrap">
@@ -126,25 +166,44 @@ export const adminPage = () => `<!doctype html>
   <div id="app" hidden>
     <header>
       <div class="brand"><span class="mark">JNB</span><h1>Panel</h1></div>
-      <div class="row"><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
+      <div class="row"><button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="side">☰ Menú</button><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
     </header>
-    <section id="availability"></section>
-    <section id="hours"></section>
-    <section id="mail-check"></section>
-    <nav id="tabs">
-      <button data-tab="consultas" aria-pressed="true">Consultas <span class="badge" id="n-consultas"></span></button>
-      <button data-tab="resenas" aria-pressed="false">Reseñas <span class="badge" id="n-resenas"></span></button>
-      <button data-tab="proyectos" aria-pressed="false">Clientes <span class="badge" id="n-proyectos"></span></button>
-      <button data-tab="cupones" aria-pressed="false">Cupones <span class="badge" id="n-cupones"></span></button>
-      <button data-tab="faq" aria-pressed="false">Preguntas frecuentes</button>
-      <button data-tab="newsletter" aria-pressed="false">Newsletter <span class="badge" id="n-newsletter"></span></button>
-    </nav>
-    <section id="tab-consultas"></section>
-    <section id="tab-resenas" hidden></section>
-    <section id="tab-proyectos" hidden></section>
-    <section id="tab-cupones" hidden></section>
-    <section id="tab-faq" hidden></section>
-    <section id="tab-newsletter" hidden></section>
+    <div class="layout">
+      <nav class="side" id="side" aria-label="Secciones del panel">
+        <a href="#dashboard" data-mod="dashboard"><span>🏠 Dashboard</span></a>
+        <p class="side-group">Comercial</p>
+        <a href="#clientes" data-mod="clientes"><span>👤 Clientes</span><span class="badge" id="n-clientes"></span></a>
+        <a href="#proyectos" data-mod="proyectos"><span>📁 Proyectos</span><span class="badge" id="n-proyectos"></span></a>
+        <a href="#consultas" data-mod="consultas"><span>✉️ Consultas</span><span class="badge" id="n-consultas"></span></a>
+        <a href="#presupuestos" data-mod="presupuestos"><span>💬 Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
+        <a href="#pagos" data-mod="pagos"><span>💳 Pagos</span><span class="badge" id="n-pagos"></span></a>
+        <p class="side-group">Después de la entrega</p>
+        <a href="#resenas" data-mod="resenas"><span>⭐ Reseñas</span><span class="badge" id="n-resenas"></span></a>
+        <a href="#cupones" data-mod="cupones"><span>🎁 Cupones</span><span class="badge" id="n-cupones"></span></a>
+        <p class="side-group">Sitio web</p>
+        <a href="#cartel" data-mod="cartel"><span>📣 Cartel del inicio</span></a>
+        <a href="#horario" data-mod="horario"><span>🕘 Horario de atención</span></a>
+        <a href="#faq" data-mod="faq"><span>❓ Preguntas frecuentes</span></a>
+        <a href="#newsletter" data-mod="newsletter"><span>📰 Newsletter</span><span class="badge" id="n-newsletter"></span></a>
+        <p class="side-group">Ajustes</p>
+        <a href="#config" data-mod="config"><span>⚙️ Configuración</span><span class="badge" id="n-config"></span></a>
+      </nav>
+      <main>
+        <section class="module" id="m-dashboard"></section>
+        <section class="module" id="m-clientes" hidden></section>
+        <section class="module" id="m-proyectos" hidden><div id="tab-proyectos"></div></section>
+        <section class="module" id="m-consultas" hidden></section>
+        <section class="module" id="m-presupuestos" hidden></section>
+        <section class="module" id="m-pagos" hidden></section>
+        <section class="module" id="m-resenas" hidden><div id="tab-resenas"></div></section>
+        <section class="module" id="m-cupones" hidden><div id="tab-cupones"></div></section>
+        <section class="module" id="m-cartel" hidden><div id="availability"></div></section>
+        <section class="module" id="m-horario" hidden><div id="hours"></div></section>
+        <section class="module" id="m-faq" hidden><div id="tab-faq"></div></section>
+        <section class="module" id="m-newsletter" hidden><div id="tab-newsletter"></div></section>
+        <section class="module" id="m-config" hidden><h2>Configuración</h2><div id="mail-check"></div><div id="backup"></div></section>
+      </main>
+    </div>
   </div>
   <dialog class="brief-view" id="brief-view"><div class="brief-view-head"><strong id="brief-view-title">Brief</strong><div class="row"><button type="button" id="brief-view-print">Imprimir</button><button type="button" id="brief-view-close">Cerrar</button></div></div><div class="brief-view-body" id="brief-view-body"></div></dialog>
   <div class="toast" id="toast" role="status" hidden></div>
@@ -205,6 +264,7 @@ export const adminPage = () => `<!doctype html>
   let key = '';
   try { key = sessionStorage.getItem('jnb-admin') || ''; } catch (e) {}
   let data = null;
+  let route = { mod: 'dashboard', id: '' };
 
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.timer); toast.timer = setTimeout(() => { t.hidden = true; }, 2200); };
   const copy = async (text) => { try { await navigator.clipboard.writeText(text); toast('Link copiado'); } catch (e) { prompt('Copiá el link:', text); } };
@@ -226,6 +286,7 @@ export const adminPage = () => `<!doctype html>
     try { data.newsletter = await api('newsletter'); } catch (e) { data.newsletter = null; }
     $('login').hidden = true; $('app').hidden = false;
     render();
+    applyRoute();
   };
 
   // ---- Precio de la propuesta: moneda ($ o USD) y monto con puntos de miles (200.000)
@@ -258,17 +319,19 @@ export const adminPage = () => `<!doctype html>
         + '<div class="row space"><div class="row"><span class="code">' + esc(q.code) + '</span>'
         + '<span class="chip">' + (isQuote ? 'Presupuesto' : 'Consulta') + '</span>'
         + (isQuote ? '<span class="chip ' + (SENT.includes(q.status) ? 'ok' : 'warn') + '">' + STATUS[q.status] + '</span>' : '')
+        + (!q.seen ? '<span class="chip new">Nueva</span>' : '')
         + '</div><span class="small muted">' + date(q.created) + ' · ' + LANG[q.lang] + '</span></div>'
         + '<p style="margin-top:.5rem"><strong>' + esc(q.name) + '</strong> · <a href="mailto:' + esc(q.email) + '?subject=' + encodeURIComponent(q.code) + '">' + esc(q.email) + '</a>'
         + (q.plan ? ' · ' + esc(q.plan) : '') + (q.country ? ' · 📍 ' + esc(q.country) : '') + '</p>'
+        + (clientById(q.clientId) && inClient !== 'client' ? '<p class="small" style="margin:0 0 .3rem"><button type="button" class="link-btn" data-go-client="' + esc(clientById(q.clientId).code) + '">👤 Ficha del cliente ' + esc(clientById(q.clientId).code) + '</button></p>' : '')
         + '<div class="message">' + esc(q.message) + '</div>'
-        + '<div class="row small"><span class="muted">' + (q.mailed ? 'Mail de confirmación enviado ✓' : 'Sin mail de confirmación') + '</span>'
+        + '<div class="row small">' + (!q.seen ? '<button type="button" data-seen="' + esc(q.code) + '">✓ Marcar como vista</button>' : '') + '<span class="muted">' + (q.mailed ? 'Mail de confirmación enviado ✓' : 'Sin mail de confirmación') + '</span>'
         + '<a class="btn" href="#" data-mail="' + esc(q.code) + '">Ver el mail</a>'
         + '<button type="button" data-resend="' + esc(q.code) + '">📧 ' + (q.mailed ? 'Reenviar' : 'Enviar') + ' el mail al cliente</button>'
         + '</div>'
         + (q.coupon ? '<div class="alert" style="margin-top:.6rem">🎁 Usa el cupón <strong>' + esc(q.coupon) + '</strong>: aplicá 20 % de descuento en la propuesta. Queda usado cuando lo pases a "Aceptado".</div>' : '')
         + (isQuote ? linkBox(clientLink('mi-presupuesto', q.lang, q.token), q.lang, q.name.split(' ')[0])
-          + (q.status === 'aceptado' && inClient !== true ? '<p class="small" style="margin-top:.5rem">✓ Ya es un proyecto en marcha. <button type="button" data-open-quote="' + esc(q.token) + '">Abrir la ficha del cliente</button></p>' : '') : '')
+          + (q.status === 'aceptado' && inClient !== true ? '<p class="small" style="margin-top:.5rem">✓ Ya es un proyecto en marcha. <button type="button" data-open-quote="' + esc(q.token) + '">Abrir el proyecto</button></p>' : '') : '')
         + (isQuote ? '<details' + (!SENT.includes(q.status) ? ' open' : '') + '><summary>Cargar la propuesta</summary><form class="quote-form">'
           + '<div class="grid"><label>Estado<select name="status">' + Object.entries(STATUS).map(([v, l]) => '<option value="' + v + '"' + (q.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
           + priceFields(p.price, q)
@@ -284,11 +347,73 @@ export const adminPage = () => `<!doctype html>
         + '</article>';
   };
 
+  // ---- Búsqueda, filtros y paginación (lo elegido se mantiene al volver a cada módulo)
+  const PAGE_SIZE = 20;
+  const F = {
+    clientes: { q: '', status: '' },
+    proyectos: { q: '', stage: '', type: '', from: '', to: '' },
+    consultas: { q: '', seen: '' },
+    presupuestos: { q: '', status: '' },
+    pagos: { q: '', state: 'pendientes' },
+  };
+  const PAGE = { clientes: 1, proyectos: 1, consultas: 1, presupuestos: 1, pagos: 1 };
+  const fold = (v) => String(v || '').toLowerCase().normalize('NFD').replace(/[^a-z0-9@. ]/g, '').replace(/ +/g, ' ').trim();
+  const matches = (q, parts) => !q || fold(parts.join(' ')).includes(fold(q));
+  const paged = (key, list) => {
+    const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    if (PAGE[key] > pages) PAGE[key] = pages;
+    const page = PAGE[key];
+    const nav = list.length > PAGE_SIZE
+      ? '<nav class="pager" aria-label="Páginas"><button type="button" data-page="' + key + '" data-to="' + (page - 1) + '"' + (page <= 1 ? ' disabled' : '') + '>← Anterior</button>'
+        + '<span class="small muted">Página ' + page + ' de ' + pages + ' · ' + list.length + ' en total</span>'
+        + '<button type="button" data-page="' + key + '" data-to="' + (page + 1) + '"' + (page >= pages ? ' disabled' : '') + '>Siguiente →</button></nav>'
+      : '';
+    return { items: list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), nav };
+  };
+  const searchBox = (key, placeholder) => '<label>Buscar<input type="search" id="f-' + key + '-q" data-f="' + key + '.q" placeholder="' + esc(placeholder) + '" value="' + esc(F[key].q) + '"></label>';
+  const selectBox = (key, name, label, options) => '<label>' + label + '<select id="f-' + key + '-' + name + '" data-f="' + key + '.' + name + '">'
+    + options.map(([v, l]) => '<option value="' + esc(v) + '"' + (String(F[key][name]) === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+  const dateBox = (key, name, label) => '<label>' + label + '<input type="date" id="f-' + key + '-' + name + '" data-f="' + key + '.' + name + '" value="' + esc(F[key][name]) + '"></label>';
+
+  // ---- Relaciones: cliente de cada cosa
+  const clientById = (id) => (data.clients || []).find((c) => c.id === id) || null;
+  const clientByCode = (code) => (data.clients || []).find((c) => c.code === code) || null;
+  const projectsOf = (id) => data.projects.filter((p) => p.clientId === id);
+  const inquiriesOf = (id) => data.inquiries.filter((q) => q.clientId === id);
+  const paymentsOf = (tokens) => (data.payments || []).filter((y) => tokens.includes(y.project));
+  const clientName = (p) => { const c = clientById(p.clientId); return c ? c.name : p.client; };
+
+  // ---- Consultas (formulario de contacto) y Presupuestos (pedidos de presupuesto): cada uno en su módulo
+  const mailNote = () => (data.mailReady ? '' : '<p class="small muted">El mail de confirmación todavía no se envía: faltan cargar RESEND_API_KEY y MAIL_FROM en Cloudflare. Las consultas se guardan igual.</p>');
+  const newCount = (kind) => data.inquiries.filter((q) => q.kind === kind && !q.seen).length;
+  const renderInquiryModule = (kind) => {
+    const key = kind === 'consulta' ? 'consultas' : 'presupuestos';
+    const f = F[key];
+    const focus = kind === 'presupuesto' && route.mod === 'presupuestos' && route.id;
+    let list = data.inquiries.filter((q) => q.kind === kind);
+    if (focus) list = list.filter((q) => q.code === route.id);
+    else list = list.filter((q) => matches(f.q, [q.code, q.name, q.email, q.plan, (clientById(q.clientId) || {}).code])
+      && (key === 'consultas' ? (!f.seen || (f.seen === 'nuevas' ? !q.seen : q.seen)) : (!f.status || (f.status === 'pendientes' ? !SENT.includes(q.status) : q.status === f.status))));
+    const { items, nav } = paged(key, list);
+    const unseen = newCount(kind);
+    $('m-' + key).innerHTML = '<div class="row space"><h2 style="margin:0">' + (kind === 'consulta' ? 'Consultas' : 'Presupuestos') + '</h2>'
+      + (unseen ? '<button type="button" data-seen-all="' + kind + '">✓ Marcar ' + (unseen === 1 ? 'la nueva' : 'las ' + unseen + ' nuevas') + ' como vistas</button>' : '') + '</div>'
+      + '<p class="module-intro small">' + (kind === 'consulta' ? 'Mensajes del formulario de contacto.' : 'Pedidos de presupuesto. Al pasar uno a "Aceptado" se crea solo el proyecto, dentro de la ficha del mismo cliente.') + '</p>'
+      + mailNote()
+      + (focus ? '<p><button type="button" data-go="presupuestos">← Ver todos los presupuestos</button></p>'
+        : '<div class="filters">' + searchBox(key, 'Nombre, mail o código')
+          + (key === 'consultas' ? selectBox(key, 'seen', 'Mostrar', [['', 'Todas'], ['nuevas', 'Solo nuevas'], ['vistas', 'Ya vistas']])
+            : selectBox(key, 'status', 'Estado', [['', 'Todos'], ['pendientes', 'Por preparar (Recibido o Preparando)'], ...Object.entries(STATUS)])) + '</div>')
+      + (items.length ? items.map((q) => inquiryCard(q, false)).join('') : '<p class="empty">' + (f.q || f.status || f.seen ? 'No hay resultados con esa búsqueda.' : (kind === 'consulta' ? 'Todavía no hay consultas.' : 'Todavía no hay pedidos de presupuesto.')) + '</p>')
+      + nav;
+  };
   const renderInquiries = () => {
-    const list = data.inquiries;
-    $('n-consultas').textContent = list.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length || '';
-    const mailNote = data.mailReady ? '' : '<p class="small muted">El mail de confirmación todavía no se envía: faltan cargar RESEND_API_KEY y MAIL_FROM en Cloudflare. Las consultas se guardan igual.</p>';
-    $('tab-consultas').innerHTML = '<h2>Consultas y pedidos de presupuesto</h2>' + mailNote + (list.length ? list.map((q) => inquiryCard(q, false)).join('') : '<p class="empty">Todavía no hay consultas.</p>');
+    const cNew = newCount('consulta');
+    const pending = data.inquiries.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length;
+    $('n-consultas').textContent = cNew || '';
+    $('n-presupuestos').textContent = pending || '';
+    renderInquiryModule('consulta');
+    renderInquiryModule('presupuesto');
   };
 
   // ---- Reseñas
@@ -316,15 +441,26 @@ export const adminPage = () => `<!doctype html>
         + '<td class="n">' + (i.used ? '' : '<button data-copy="' + esc(clientLink('resena', 'es', i.token)) + '">Copiar link</button>') + '</td></tr>').join('') + '</tbody></table>' : '');
   };
 
-  // ---- Clientes: lista compacta y, al tocar un nombre, su ficha con pestañas
+  // ---- Proyectos: lista con búsqueda y filtros y, al tocar uno, su ficha con pestañas
   let selected = '';      // proyecto abierto
   let subTab = 'estado';  // pestaña de la ficha
-  let clientFilter = '';
-  const SUBTABS = [['estado', '📍 Estado'], ['presupuesto', '💬 Presupuesto'], ['brief', '📝 Brief'], ['resena', '⭐ Reseña y cupón'], ['historial', '🕓 Historial']];
+  let presetClient = '';  // cliente elegido de antemano en "Crear un proyecto a mano" (desde la ficha del cliente)
+  const SUBTABS = [['estado', '📍 Estado'], ['presupuesto', '💬 Presupuesto'], ['brief', '📝 Brief'], ['pagos', '💳 Pagos'], ['resena', '⭐ Reseña y cupón'], ['historial', '🕓 Historial']];
   const briefLabel = (p) => (p.briefStatus === 'enviado' ? '📝 Brief ✓' : p.briefStatus === 'borrador' ? '📝 Brief en curso' : '📝 Sin brief');
+  // Tipo de servicio, según el plan del proyecto
+  const SERVICE = [['tienda', 'Tienda online'], ['landing', 'Landing / Plan Básico'], ['premium', 'Web a medida / Premium'], ['actualizacion', 'Actualización'], ['otro', 'Otro']];
+  const serviceOf = (text) => {
+    const t = String(text || '');
+    if (/actualiz|update|atualiza/i.test(t)) return 'actualizacion';
+    if (/emprendedor|empreendedor|tienda|loja|store/i.test(t)) return 'tienda';
+    if (/premium|a medida|custom|sob medida/i.test(t)) return 'premium';
+    if (/b[aá]sico|basic|landing/i.test(t)) return 'landing';
+    return 'otro';
+  };
+  const STAGE_GROUPS = { pendiente: [0, 1], desarrollo: [2, 3], publicado: [4] };
 
   const clientRow = (p) => '<button type="button" class="client-row" data-open="' + esc(p.token) + '">'
-    + '<span class="client-row-main"><strong>' + esc(p.client) + '</strong><span class="small muted">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + '</span></span>'
+    + '<span class="client-row-main"><strong>' + (p.code ? '<span class="client-code">' + esc(p.code) + '</span> · ' : '') + esc(clientName(p)) + '</strong><span class="small muted">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + esc((clientById(p.clientId) || {}).code || '') + '</span></span>'
     + '<span class="client-row-tags">' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '')
     + '<span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>'
     + '<span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">' + briefLabel(p) + '</span>'
@@ -339,20 +475,36 @@ export const adminPage = () => `<!doctype html>
   };
 
   const renderClientList = (editedBriefs) => {
-    const q = clientFilter.trim().toLowerCase();
-    const list = data.projects.filter((p) => !q || (p.client + ' ' + p.project + ' ' + (p.quoteCode || '')).toLowerCase().includes(q));
-    const active = list.filter((p) => p.stage < STAGES.length - 1);
-    const done = list.filter((p) => p.stage >= STAGES.length - 1);
-    $('tab-proyectos').innerHTML = '<div class="row space"><h2 style="margin:0">Clientes</h2><span class="small muted">' + data.projects.length + ' en total</span></div>'
-      + (editedBriefs.length ? '<div class="alert" style="margin-top:.75rem">⚠ ' + (editedBriefs.length === 1 ? esc(editedBriefs[0].client) + ' editó su brief después de enviarlo.' : editedBriefs.length + ' clientes editaron su brief después de enviarlo: ' + editedBriefs.map((x) => esc(x.client)).join(', ') + '.') + ' Abrí su ficha, pestaña Brief, para ver qué cambió.</div>' : '')
-      + '<input type="search" id="client-search" placeholder="Buscar cliente o código" value="' + esc(clientFilter) + '" style="margin:.75rem 0">'
-      + (active.length ? '<p class="client-group-title">En curso (' + active.length + ')</p><div class="client-list">' + active.map(clientRow).join('') + '</div>' : '')
-      + (done.length ? '<p class="client-group-title">Publicados (' + done.length + ')</p><div class="client-list">' + done.map(clientRow).join('') + '</div>' : '')
-      + (!list.length ? '<p class="empty">' + (q ? 'No hay clientes con esa búsqueda.' : 'Todavía no hay clientes. Se crean solos al aceptar un presupuesto.') + '</p>' : '')
-      + '<details class="card" style="margin-top:1rem"><summary>➕ Crear un proyecto a mano</summary>'
-      + '<p class="small muted">Para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp).</p>'
+    const f = F.proyectos;
+    const list = data.projects.filter((p) => {
+      const c = clientById(p.clientId) || {};
+      if (!matches(f.q, [p.code, p.client, c.name, c.code, c.email, p.project, p.quoteCode])) return false;
+      if (f.stage && (STAGE_GROUPS[f.stage] ? !STAGE_GROUPS[f.stage].includes(p.stage) : String(p.stage) !== f.stage)) return false;
+      if (f.type && serviceOf(p.project) !== f.type) return false;
+      if (f.from && p.created.slice(0, 10) < f.from) return false;
+      if (f.to && p.created.slice(0, 10) > f.to) return false;
+      return true;
+    });
+    const { items, nav } = paged('proyectos', list);
+    const filtered = f.q || f.stage || f.type || f.from || f.to;
+    const presetOk = presetClient && clientByCode(presetClient);
+    $('tab-proyectos').innerHTML = '<div class="row space"><h2 style="margin:0">Proyectos</h2><span class="small muted">' + data.projects.length + ' en total</span></div>'
+      + (editedBriefs.length ? '<div class="alert" style="margin-top:.75rem">⚠ ' + (editedBriefs.length === 1 ? esc(clientName(editedBriefs[0])) + ' editó su brief después de enviarlo.' : editedBriefs.length + ' clientes editaron su brief después de enviarlo: ' + editedBriefs.map((x) => esc(clientName(x))).join(', ') + '.') + ' Abrí su proyecto, pestaña Brief, para ver qué cambió.</div>' : '')
+      + '<div class="filters">' + searchBox('proyectos', 'Código de proyecto, cliente o plan')
+      + selectBox('proyectos', 'stage', 'Estado', [['', 'Todos'], ['pendiente', 'Pendientes (Reserva y Materiales)'], ['desarrollo', 'En desarrollo (Diseño y Revisión)'], ['publicado', 'Publicados'], ...STAGES.map((s, i) => [String(i), (i + 1) + '. ' + s])])
+      + selectBox('proyectos', 'type', 'Tipo de servicio', [['', 'Todos'], ...SERVICE])
+      + dateBox('proyectos', 'from', 'Creado desde') + dateBox('proyectos', 'to', 'Hasta') + '</div>'
+      + (items.length ? '<div class="client-list">' + items.map(clientRow).join('') + '</div>' : '<p class="empty">' + (filtered ? 'No hay proyectos con esa búsqueda.' : 'Todavía no hay proyectos. Se crean solos al aceptar un presupuesto.') + '</p>')
+      + nav
+      + '<details class="card" id="new-project-box" style="margin-top:1rem"' + (presetOk ? ' open' : '') + '><summary>➕ Crear un proyecto a mano</summary>'
+      + '<p class="small muted">Para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp). Si el cliente ya existe, elegilo: el proyecto queda en su misma ficha.</p>'
       + '<form id="new-project"><div class="grid">'
-      + '<label>Nombre del cliente (lo ve el cliente)<input name="client" required placeholder="Ej.: Ana"></label>'
+      + '<label>Cliente<select name="clientId" id="np-client"><option value="">➕ Cliente nuevo</option>'
+        + (data.clients || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'es')).map((c) => '<option value="' + c.id + '"' + (presetOk && presetOk.id === c.id ? ' selected' : '') + '>' + esc(c.code + ' · ' + c.name + (c.email ? ' · ' + c.email : '')) + '</option>').join('') + '</select></label>'
+      + '<label class="np-new"' + (presetOk ? ' hidden' : '') + '>Nombre y apellido<input name="fullName" placeholder="Ej.: Ana López"></label>'
+      + '<label class="np-new"' + (presetOk ? ' hidden' : '') + '>Mail (si ya existe, se usa esa ficha)<input type="email" name="email" placeholder="ana@ejemplo.com"></label>'
+      + '<label class="np-new"' + (presetOk ? ' hidden' : '') + '>Teléfono<input name="phone" placeholder="+54 9 11 ..."></label>'
+      + '<label>Nombre que ve el cliente (opcional)<input name="client" placeholder="Si lo dejás vacío, su primer nombre"></label>'
       + '<label>Proyecto<input name="project" required placeholder="Ej.: Landing · Plan Básico"></label>'
       + '<label>Idioma<select name="lang"><option value="es">Español</option><option value="en">Inglés</option><option value="pt">Portugués</option></select></label>'
       + '<label>Entrega estimada<input type="date" name="due"></label></div><button class="primary">Crear</button></form></details>';
@@ -373,8 +525,10 @@ export const adminPage = () => `<!doctype html>
 
   const renderClient = (p) => {
     const q = p.quote ? data.inquiries.find((x) => x.token === p.quote) : null;
-    const head = '<button type="button" class="btn" data-back>← Todos los clientes</button>'
-      + '<div class="bv-top" style="margin-top:.75rem"><div><p class="bv-client">' + esc(p.client) + '</p><p class="small muted" style="margin:0">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + LANG[p.lang] + '</p></div>'
+    const owner = clientById(p.clientId);
+    const head = '<div class="row"><button type="button" class="btn" data-back>← Todos los proyectos</button>'
+      + (owner ? '<button type="button" data-go-client="' + esc(owner.code) + '">👤 Ficha del cliente: ' + esc(owner.code) + ' · ' + esc(owner.name) + '</button>' : '') + '</div>'
+      + '<div class="bv-top" style="margin-top:.75rem"><div><p class="small client-code" style="margin:0">' + esc(p.code || '') + '</p><p class="bv-client">' + esc(owner ? owner.name : p.client) + '</p><p class="small muted" style="margin:0">' + esc(p.project) + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + LANG[p.lang] + ' · creado ' + date(p.created) + '</p></div>'
       + '<div class="row"><span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '') + '</div></div>'
       + '<nav class="subtabs">' + SUBTABS.map(([id, label]) => '<button type="button" data-sub="' + id + '" aria-pressed="' + (subTab === id) + '">' + label + (id === 'brief' && p.briefEditUnseen ? ' ⚠' : '') + '</button>').join('') + '</nav>';
     let body = '';
@@ -417,6 +571,10 @@ export const adminPage = () => `<!doctype html>
             + (p.reviewDone ? '<p>✓ Dejó su reseña. La aprobás en la pestaña <strong>Reseñas</strong>.</p>' : '<p>Se la pedimos al publicar. Todavía no respondió.</p><div class="row"><button type="button" data-copy="' + esc(clientLink('resena', p.lang, p.reviewToken)) + '">Copiar link de la reseña</button></div>')
             + '</section>'
           : '');
+    } else if (subTab === 'pagos') {
+      const list = paymentsOf([p.token]);
+      body = paymentTotals(list) + paymentTable(list, false)
+        + '<details class="card" style="margin-top:1rem"' + (list.length ? '' : ' open') + '><summary>➕ Registrar un pago de este proyecto</summary>' + paymentForm(p.token) + '</details>';
     } else if (subTab === 'historial') {
       const items = historyOf(p);
       body = items.length ? '<ol class="timeline">' + items.map((it) => '<li><span class="tl-icon">' + it.icon + '</span><div><p class="tl-text">' + esc(it.text) + '</p><p class="small muted">' + date(it.at) + '</p></div></li>').join('') + '</ol>'
@@ -426,13 +584,283 @@ export const adminPage = () => `<!doctype html>
     if (subTab === 'brief') loadBriefInline(p);
   };
 
+  // Abrir un proyecto (por su token): queda en la dirección #proyectos/JNB-PRY-0001
   const openClient = (token, tab) => {
-    selected = token; subTab = tab || 'estado';
-    document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === 'proyectos')));
-    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq', 'newsletter'].forEach((t) => { $('tab-' + t).hidden = t !== 'proyectos'; });
-    renderProjects();
-    window.scrollTo({ top: 0 });
+    const p = data.projects.find((x) => x.token === token);
+    if (!p) return;
+    subTab = tab || 'estado';
+    go('proyectos', p.code || '');
   };
+
+  // ---- Pagos (de cada proyecto; se cargan a mano)
+  const CONCEPTS = ['Anticipo', 'Saldo', 'Cuota', 'Pago total', 'Actualización', 'Otro'];
+  const METHODS = ['Tiendanube', 'Transferencia', 'Mercado Pago', 'PayPal', 'Efectivo'];
+  const money = (currency, amount) => (currency === 'USD' ? 'USD ' : '$ ') + Number(amount || 0).toLocaleString('es-AR');
+  const todayIso = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+  const sumBy = (list) => {
+    const out = {};
+    list.forEach((y) => { out[y.currency] = (out[y.currency] || 0) + y.amount; });
+    return Object.entries(out).map(([cur, n]) => money(cur, n)).join(' + ') || money('$', 0);
+  };
+  const paymentTotals = (list) => list.length
+    ? '<div class="row" style="margin-bottom:.75rem"><span class="chip ok">Cobrado: ' + esc(sumBy(list.filter((y) => y.paid))) + '</span><span class="chip warn">Pendiente: ' + esc(sumBy(list.filter((y) => !y.paid))) + '</span></div>' : '';
+  const paymentTable = (list, withProject) => (list.length
+    ? '<div class="table-wrap"><table><thead><tr>' + (withProject ? '<th>Proyecto</th>' : '') + '<th>Concepto</th><th class="n">Monto</th><th>Vence</th><th>Estado</th><th></th></tr></thead><tbody>'
+      + list.map((y) => {
+        const late = !y.paid && y.due && y.due < todayIso();
+        const c = clientById(y.clientId);
+        return '<tr data-payment="' + y.id + '">'
+          + (withProject ? '<td><button type="button" class="link-btn" data-open-code="' + esc(y.projectCode) + '">' + esc(y.projectCode) + '</button><br><span class="small muted">' + esc(c ? c.name : '') + '</span></td>' : '')
+          + '<td>' + esc(y.concept) + (y.method ? '<br><span class="small muted">' + esc(y.method) + '</span>' : '') + (y.note ? '<br><span class="small muted">' + esc(y.note) + '</span>' : '') + '</td>'
+          + '<td class="n"><strong>' + esc(money(y.currency, y.amount)) + '</strong></td><td>' + (day(y.due) || '—') + '</td>'
+          + '<td>' + (y.paid ? '<span class="chip ok">✓ Pagado ' + day(y.paid) + '</span>' : '<span class="chip ' + (late ? 'alert-chip' : 'warn') + '">' + (late ? 'Vencido' : 'Pendiente') + '</span>') + '</td>'
+          + '<td class="n"><div class="row" style="justify-content:flex-end">' + (y.paid ? '<button type="button" data-pay-toggle>Desmarcar</button>' : '<button type="button" class="primary" data-pay-toggle>Marcar pagado</button>') + '<button type="button" data-pay-remove>Borrar</button></div></td></tr>';
+      }).join('') + '</tbody></table></div>'
+    : '<p class="empty">Todavía no hay pagos cargados.</p>');
+  const paymentForm = (projectToken) => '<form class="payment-form">'
+    + (projectToken ? '<input type="hidden" name="project" value="' + esc(projectToken) + '">'
+      : '<label>Proyecto<select name="project" required><option value="">Elegí el proyecto</option>' + data.projects.map((p) => '<option value="' + esc(p.token) + '">' + esc((p.code || '') + ' · ' + clientName(p) + ' · ' + p.project) + '</option>').join('') + '</select></label>')
+    + '<div class="grid"><label>Concepto<input name="concept" list="pay-concepts" required placeholder="Anticipo"></label>'
+    + '<label>Monto<div class="price-row"><select name="currency"><option value="$">$ Pesos</option><option value="USD">USD Dólares</option></select><input name="amount" class="amount-input" inputmode="numeric" required placeholder="100.000"></div></label>'
+    + '<label>Vence (opcional)<input type="date" name="due"></label>'
+    + '<label>Pagado el (vacío = pendiente)<input type="date" name="paid"></label>'
+    + '<label>Medio de pago<input name="method" list="pay-methods" placeholder="Tiendanube"></label></div>'
+    + '<label>Nota (opcional)<input name="note" maxlength="500"></label>'
+    + '<datalist id="pay-concepts">' + CONCEPTS.map((c) => '<option value="' + c + '">').join('') + '</datalist>'
+    + '<datalist id="pay-methods">' + METHODS.map((c) => '<option value="' + c + '">').join('') + '</datalist>'
+    + '<button class="primary" style="margin-top:.75rem">Guardar pago</button></form>';
+  const renderPayments = () => {
+    const all = data.payments || [];
+    const unpaid = all.filter((y) => !y.paid);
+    const late = unpaid.filter((y) => y.due && y.due < todayIso()).length;
+    $('n-pagos').textContent = late ? '⚠ ' + late : (unpaid.length || '');
+    const f = F.pagos;
+    const list = all.filter((y) => {
+      const c = clientById(y.clientId) || {};
+      if (f.state === 'pendientes' && y.paid) return false;
+      if (f.state === 'pagados' && !y.paid) return false;
+      return matches(f.q, [y.projectCode, y.concept, y.method, c.name, c.code]);
+    });
+    const { items, nav } = paged('pagos', list);
+    $('m-pagos').innerHTML = '<h2>Pagos</h2><p class="module-intro small">Anticipos, saldos y cuotas de cada proyecto. Se cargan a mano (los cobros de la tienda no llegan solos). Un pago sin fecha de pago queda pendiente.</p>'
+      + paymentTotals(all)
+      + '<div class="filters">' + searchBox('pagos', 'Proyecto, cliente o concepto') + selectBox('pagos', 'state', 'Mostrar', [['pendientes', 'Pendientes'], ['pagados', 'Pagados'], ['', 'Todos']]) + '</div>'
+      + paymentTable(items, true) + nav
+      + '<details class="card" style="margin-top:1rem"><summary>➕ Registrar un pago</summary>' + (data.projects.length ? paymentForm('') : '<p class="empty">Primero tiene que haber un proyecto.</p>') + '</details>';
+  };
+
+  // ---- Clientes: una ficha por persona, con todos sus proyectos, presupuestos, pagos, archivos e historial
+  let openClientCode = '';
+  let jumpToClient = false; // al abrir una ficha por su dirección, mostrar la página de la lista donde está
+  let clientSub = 'datos';
+  const CLIENT_SUBTABS = [['datos', '👤 Datos'], ['proyectos', '📁 Proyectos'], ['presupuestos', '💬 Presupuestos'], ['pagos', '💳 Pagos'], ['archivos', '📎 Archivos'], ['historial', '🕓 Historial']];
+  const CLIENT_STATUS = { contacto: 'Contacto', presupuesto: 'En presupuesto', activo: 'Proyecto activo', publicado: 'Publicado', inactivo: 'Inactivo' };
+  const autoStatus = (c) => {
+    const ps = projectsOf(c.id);
+    if (ps.some((p) => p.stage < STAGES.length - 1)) return 'activo';
+    if (ps.length) return 'publicado';
+    if (inquiriesOf(c.id).some((q) => q.kind === 'presupuesto')) return 'presupuesto';
+    return 'contacto';
+  };
+  const statusOf = (c) => c.status || autoStatus(c);
+  const lastActivity = (c) => {
+    const tokens = projectsOf(c.id).map((p) => p.token);
+    const dates = [c.created, ...inquiriesOf(c.id).map((q) => q.created), ...(data.events || []).filter((e) => tokens.includes(e.project)).map((e) => e.at)];
+    return dates.sort().pop();
+  };
+  // Posibles duplicados: mismo nombre o mismo teléfono en fichas distintas (nunca se unen solas)
+  const duplicates = () => {
+    const pairs = [];
+    const seen = new Set(data.notDuplicates || []);
+    const list = data.clients || [];
+    for (let i = 0; i < list.length; i += 1) {
+      for (let k = i + 1; k < list.length; k += 1) {
+        const a = list[i]; const b = list[k];
+        const sameName = fold(a.name) && fold(a.name) === fold(b.name);
+        const phoneA = String(a.phone || '').replace(/[^0-9]/g, '');
+        const samePhone = phoneA.length >= 6 && phoneA === String(b.phone || '').replace(/[^0-9]/g, '');
+        if (!sameName && !samePhone) continue;
+        const [older, newer] = a.id < b.id ? [a, b] : [b, a];
+        if (seen.has(older.id + '-' + newer.id)) continue;
+        pairs.push({ older, newer, why: sameName ? 'mismo nombre' : 'mismo teléfono' });
+      }
+    }
+    return pairs;
+  };
+  const clientHistory = (c) => {
+    const projects = projectsOf(c.id);
+    const codeOf = new Map(projects.map((p) => [p.token, p.code]));
+    const items = (data.events || []).filter((e) => codeOf.has(e.project)).map((e) => ({ at: e.at, icon: e.icon, text: e.text, ref: codeOf.get(e.project) }));
+    inquiriesOf(c.id).forEach((q) => {
+      items.push({ at: q.created, icon: q.kind === 'presupuesto' ? '📩' : '✉️', text: (q.kind === 'presupuesto' ? 'Pidió presupuesto' : 'Escribió una consulta') + (q.plan ? ': ' + q.plan : ''), ref: q.code });
+      if (q.proposal && q.proposal.issued) items.push({ at: q.proposal.issued, icon: '💬', text: 'Le enviaste la propuesta (' + q.proposal.price + ')', ref: q.code });
+    });
+    items.push({ at: c.created, icon: '🆕', text: 'Se creó la ficha ' + c.code, ref: '' });
+    return items.sort((a, b) => (a.at < b.at ? 1 : -1));
+  };
+  const clientBody = (c) => {
+    const projects = projectsOf(c.id);
+    const quotes = inquiriesOf(c.id);
+    const pays = paymentsOf(projects.map((p) => p.token));
+    let body = '';
+    if (clientSub === 'datos') {
+      const others = (data.clients || []).filter((x) => x.id !== c.id);
+      body = '<form class="client-form" data-client-id="' + c.id + '"><div class="grid">'
+        + '<label>Nombre y apellido<input name="name" required maxlength="100" value="' + esc(c.name) + '"></label>'
+        + '<label>Mail<input type="email" name="email" maxlength="160" value="' + esc(c.email || '') + '"></label>'
+        + '<label>Teléfono<input name="phone" maxlength="40" placeholder="+54 9 11 ..." value="' + esc(c.phone) + '"></label>'
+        + '<label>Estado<select name="status"><option value="">Automático (' + CLIENT_STATUS[autoStatus(c)] + ')</option>' + Object.entries(CLIENT_STATUS).map(([v, l]) => '<option value="' + v + '"' + (c.status === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label></div>'
+        + '<label>Nota interna (solo la ves vos)<textarea name="note" maxlength="2000">' + esc(c.note) + '</textarea></label>'
+        + '<div class="row" style="margin-top:.75rem"><button class="primary">Guardar</button><span class="small muted">Cliente desde ' + date(c.created) + ' · ' + projects.length + ' ' + (projects.length === 1 ? 'proyecto' : 'proyectos') + ' · ' + quotes.length + ' ' + (quotes.length === 1 ? 'pedido' : 'pedidos') + '</span>'
+        + (c.email ? '<a class="btn" href="mailto:' + esc(c.email) + '">✉️ Escribirle</a>' : '')
+        + (c.phone ? '<a class="btn" target="_blank" href="' + esc('https://wa.me/' + c.phone.replace(/[^0-9]/g, '')) + '">WhatsApp ↗</a>' : '') + '</div></form>'
+        + (others.length ? '<details class="card" style="margin-top:1rem"><summary>🔗 Unir con otra ficha (si es la misma persona)</summary>'
+          + '<form class="merge-form" data-client-id="' + c.id + '"><p class="small muted">Todo lo de esta ficha (pedidos, proyectos, pagos, archivos) pasa a la ficha que elijas y esta deja de existir. Su código no se vuelve a usar.</p>'
+          + '<label>Pasar todo a<select name="into" required><option value="">Elegí la ficha</option>' + others.map((x) => '<option value="' + x.id + '">' + esc(x.code + ' · ' + x.name + (x.email ? ' · ' + x.email : '')) + '</option>').join('') + '</select></label>'
+          + '<button style="margin-top:.75rem">Unir fichas</button></form></details>' : '');
+    } else if (clientSub === 'proyectos') {
+      body = (projects.length ? '<div class="client-list">' + projects.map(clientRow).join('') + '</div>' : '<p class="empty">Todavía no tiene proyectos.</p>')
+        + '<p style="margin-top:.75rem"><button type="button" data-new-project-for="' + esc(c.code) + '">➕ Nuevo proyecto para este cliente</button></p>';
+    } else if (clientSub === 'presupuestos') {
+      const list = quotes.filter((q) => q.kind === 'presupuesto');
+      body = list.length ? '<div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Plan</th><th>Estado</th><th class="n">Precio</th><th></th></tr></thead><tbody>'
+        + list.map((q) => '<tr><td><span class="code">' + esc(q.code) + '</span><br><span class="small muted">' + date(q.created) + '</span></td><td>' + esc(q.plan || '—') + '</td>'
+          + '<td><span class="chip ' + (SENT.includes(q.status) ? 'ok' : 'warn') + '">' + STATUS[q.status] + '</span></td><td class="n">' + esc((q.proposal && q.proposal.price) || '—') + '</td>'
+          + '<td class="n"><button type="button" data-go="presupuestos/' + esc(q.code) + '">Abrir</button></td></tr>').join('') + '</tbody></table></div>'
+        : '<p class="empty">No pidió presupuestos por la web.</p>';
+    } else if (clientSub === 'pagos') {
+      body = paymentTotals(pays) + paymentTable(pays, true);
+    } else if (clientSub === 'archivos') {
+      body = '<div id="client-files" data-client-id="' + c.id + '"><p class="muted">Cargando archivos...</p></div>';
+    } else if (clientSub === 'historial') {
+      const items = clientHistory(c);
+      body = '<ol class="timeline">' + items.map((it) => '<li><span class="tl-icon">' + it.icon + '</span><div><p class="tl-text">' + esc(it.text) + '</p><p class="small muted">' + date(it.at) + (it.ref ? ' · ' + esc(it.ref) : '') + '</p></div></li>').join('') + '</ol>';
+    }
+    return '<nav class="subtabs">' + CLIENT_SUBTABS.map(([id, label]) => '<button type="button" data-client-sub="' + id + '" aria-pressed="' + (clientSub === id) + '">' + label + '</button>').join('') + '</nav>' + body;
+  };
+  const clientCard = (c) => {
+    const open = c.code === openClientCode;
+    const st = statusOf(c);
+    const n = projectsOf(c.id).length;
+    return '<details class="client-card" data-client-code="' + esc(c.code) + '"' + (open ? ' open' : '') + '>'
+      + '<summary class="client-row"><span class="client-row-main"><strong><span class="client-code">' + esc(c.code) + '</span> | ' + esc(c.name) + '</strong>'
+      + '<span class="small muted">' + esc(c.email || 'Sin mail') + (c.phone ? ' · ' + esc(c.phone) : '') + '</span></span>'
+      + '<span class="client-row-tags"><span class="chip' + (st === 'activo' ? ' warn' : st === 'publicado' ? ' ok' : '') + '">' + CLIENT_STATUS[st] + '</span>'
+      + '<span class="chip">📁 ' + n + '</span><span class="chip">📩 ' + inquiriesOf(c.id).length + '</span></span>'
+      + '<span class="client-row-go" aria-hidden="true">›</span></summary>'
+      + (open ? '<div class="client-card-body">' + clientBody(c) + '</div>' : '') + '</details>';
+  };
+  const renderClients = () => {
+    const dups = duplicates();
+    $('n-clientes').textContent = dups.length ? '⚠ ' + dups.length : '';
+    const f = F.clientes;
+    const list = (data.clients || []).filter((c) => matches(f.q, [c.code, c.name, c.email, c.phone]) && (!f.status || statusOf(c) === f.status));
+    // Si se abre una ficha por su dirección, se muestra la página donde está
+    const at = jumpToClient ? list.findIndex((c) => c.code === openClientCode) : -1;
+    if (at >= 0) PAGE.clientes = Math.floor(at / PAGE_SIZE) + 1;
+    jumpToClient = false;
+    const { items, nav } = paged('clientes', list);
+    $('m-clientes').innerHTML = '<div class="row space"><h2 style="margin:0">Clientes</h2><span class="small muted">' + (data.clients || []).length + ' en total</span></div>'
+      + '<p class="module-intro small" style="margin-top:.4rem">Una ficha por persona. Los pedidos con el mismo mail se suman solos a la misma ficha.</p>'
+      + (dups.length ? '<details class="card"' + (dups.length <= 3 ? ' open' : '') + '><summary>🔎 Posibles duplicados (' + dups.length + ')</summary><p class="small muted">Fichas con ' + 'el mismo nombre o teléfono. No se unen solas: revisá si son la misma persona.</p>'
+        + dups.map((d) => '<div class="bv-row row space"><span><strong>' + esc(d.older.code) + '</strong> ' + esc(d.older.name) + ' <span class="small muted">' + esc(d.older.email || 'sin mail') + '</span><br><strong>' + esc(d.newer.code) + '</strong> ' + esc(d.newer.name) + ' <span class="small muted">' + esc(d.newer.email || 'sin mail') + ' · ' + d.why + '</span></span>'
+          + '<span class="row"><button type="button" data-merge="' + d.newer.id + '" data-into="' + d.older.id + '" data-label="' + esc(d.newer.code + ' en ' + d.older.code) + '">Unir en ' + esc(d.older.code) + '</button><button type="button" data-not-dup="' + d.older.id + '-' + d.newer.id + '">No son la misma persona</button></span></div>').join('') + '</details>' : '')
+      + '<div class="filters">' + searchBox('clientes', 'Nombre, mail, teléfono o código') + selectBox('clientes', 'status', 'Estado', [['', 'Todos'], ...Object.entries(CLIENT_STATUS)]) + '</div>'
+      + (items.length ? '<div class="client-list">' + items.map(clientCard).join('') + '</div>' : '<p class="empty">' + (f.q || f.status ? 'No hay clientes con esa búsqueda.' : 'Todavía no hay clientes. Se crean solos con cada consulta o pedido de presupuesto.') + '</p>')
+      + nav
+      + '<details class="card" style="margin-top:1rem"><summary>➕ Nuevo cliente</summary><form id="new-client"><div class="grid">'
+      + '<label>Nombre y apellido<input name="name" required maxlength="100"></label><label>Mail<input type="email" name="email" maxlength="160"></label><label>Teléfono<input name="phone" maxlength="40"></label></div>'
+      + '<label>Nota interna (opcional)<textarea name="note"></textarea></label><button class="primary" style="margin-top:.75rem">Crear ficha</button></form></details>';
+    if (openClientCode && clientSub === 'archivos') loadClientFiles();
+  };
+  const loadClientFiles = async () => {
+    const box = $('client-files');
+    if (!box) return;
+    const r = await api('clientes/' + box.dataset.clientId + '/archivos').catch(() => null);
+    if (!$('client-files')) return;
+    const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
+    $('client-files').innerHTML = !r ? '<p class="empty">No se pudieron cargar los archivos.</p>' : r.files.length
+      ? '<ul class="brief-files-list">' + r.files.map((f) => '<li><span>' + esc(f.name) + ' <small class="muted">' + size(f.size) + ' · ' + esc(f.projectCode || '') + '</small></span><button type="button" data-file="' + f.id + '" data-name="' + esc(f.name) + '">⬇ Descargar</button></li>').join('') + '</ul>'
+      : '<p class="empty">Todavía no subió archivos en sus briefs.</p>';
+  };
+
+  // ---- Dashboard: resumen general con datos reales
+  const renderDashboard = () => {
+    const P = data.projects;
+    const inGroup = (g) => P.filter((p) => STAGE_GROUPS[g].includes(p.stage)).length;
+    const quotesToDo = data.inquiries.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length;
+    const quotesWaiting = data.inquiries.filter((q) => q.kind === 'presupuesto' && q.status === 'enviado').length;
+    const unpaid = (data.payments || []).filter((y) => !y.paid);
+    const unseen = data.inquiries.filter((q) => !q.seen).length;
+    const stat = (href, n, label, extra, attrs) => '<a class="stat" href="#' + href + '"' + (attrs || '') + '><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="small muted">' + extra + '</span>' : '') + '</a>';
+    const edited = P.filter((p) => p.briefEditUnseen);
+    const dups = duplicates();
+    // Actividad reciente: movimientos de los proyectos y pedidos nuevos
+    const byToken = new Map(P.map((p) => [p.token, p]));
+    const feed = [
+      ...(data.events || []).filter((e) => byToken.has(e.project)).map((e) => { const p = byToken.get(e.project); return { at: e.at, icon: e.icon, text: e.text, who: clientName(p), go: 'proyectos/' + (p.code || '') }; }),
+      ...data.inquiries.map((q) => ({ at: q.created, icon: q.kind === 'presupuesto' ? '📩' : '✉️', text: (q.kind === 'presupuesto' ? 'Pidió presupuesto' : 'Nueva consulta') + (q.plan ? ': ' + q.plan : ''), who: q.name, go: q.kind === 'presupuesto' ? 'presupuestos/' + q.code : 'consultas' })),
+    ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 12);
+    $('m-dashboard').innerHTML = '<h2>Resumen</h2>'
+      + (edited.length ? '<div class="alert">⚠ ' + edited.length + ' ' + (edited.length === 1 ? 'cliente editó su brief' : 'clientes editaron su brief') + ' después de enviarlo: ' + edited.map((p) => '<button type="button" class="link-btn" data-open="' + esc(p.token) + '">' + esc(clientName(p)) + '</button>').join(', ') + '.</div>' : '')
+      + (dups.length ? '<div class="alert">🔎 Hay ' + dups.length + ' ' + (dups.length === 1 ? 'posible cliente duplicado' : 'posibles clientes duplicados') + ' para revisar. <a href="#clientes">Ver en Clientes</a></div>' : '')
+      + '<div class="stats">'
+      + stat('clientes', (data.clients || []).length, 'Clientes')
+      + stat('proyectos', P.length, 'Proyectos', '', ' data-stage-filter=""')
+      + stat('proyectos', inGroup('pendiente'), 'Proyectos pendientes', 'Reserva y materiales', ' data-stage-filter="pendiente"')
+      + stat('proyectos', inGroup('desarrollo'), 'En desarrollo', 'Diseño y revisión', ' data-stage-filter="desarrollo"')
+      + stat('proyectos', inGroup('publicado'), 'Publicados', '', ' data-stage-filter="publicado"')
+      + stat('presupuestos', quotesToDo, 'Presupuestos pendientes', quotesWaiting ? quotesWaiting + ' esperando respuesta' : '', ' data-quote-filter="pendientes"')
+      + stat('pagos', unpaid.length, 'Pagos pendientes', unpaid.length ? sumBy(unpaid) : '', ' data-pay-filter="pendientes"')
+      + stat(newCount('consulta') || !newCount('presupuesto') ? 'consultas' : 'presupuestos', unseen, 'Consultas nuevas', unseen ? 'Sin ver todavía' : '', newCount('consulta') ? ' data-seen-filter="nuevas"' : '')
+      + '</div>'
+      + '<div class="card"><h2>Actividad reciente</h2>' + (feed.length ? '<ul class="feed">' + feed.map((it) => '<li><span class="tl-icon">' + it.icon + '</span><div><p style="margin:0"><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="small muted" style="margin:0">' + date(it.at) + ' · <button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ul>' : '<p class="empty">Todavía no hay movimientos.</p>') + '</div>';
+  };
+
+  // ---- Copia de seguridad (en Configuración)
+  const renderBackup = () => {
+    $('backup').innerHTML = '<div class="card"><h2>Copia de seguridad</h2>'
+      + '<p class="small muted">Descarga un archivo .json con todo lo que guarda el panel: clientes, consultas, presupuestos, proyectos, briefs, pagos, reseñas, cupones e historial. Los archivos que suben los clientes no van en la copia (se descargan desde cada proyecto). Tiene datos privados de tus clientes: guardalo en un lugar seguro.</p>'
+      + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia de seguridad</button></div>';
+  };
+
+  // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
+  const MODULES = ['dashboard', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
+  const parseHash = () => {
+    const [mod, id] = decodeURIComponent(location.hash.slice(1)).split('/');
+    return { mod: MODULES.includes(mod) ? mod : 'dashboard', id: id || '' };
+  };
+  const go = (mod, id) => {
+    const hash = '#' + mod + (id ? '/' + id : '');
+    if (location.hash !== hash) location.hash = hash; else applyRoute();
+  };
+  const applyRoute = () => {
+    if (!data) return;
+    const before = route.mod;
+    route = parseHash();
+    MODULES.forEach((m) => { $('m-' + m).hidden = m !== route.mod; });
+    document.querySelectorAll('#side a').forEach((a) => { if (a.dataset.mod === route.mod) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    $('side').classList.remove('is-open');
+    $('menu-toggle').setAttribute('aria-expanded', 'false');
+    if (route.mod === 'proyectos') {
+      const p = route.id ? data.projects.find((x) => x.code === route.id) : null;
+      if (!p) subTab = 'estado';
+      selected = p ? p.token : '';
+      renderProjects();
+    } else if (route.mod === 'clientes') {
+      if (route.id !== openClientCode) { clientSub = 'datos'; jumpToClient = true; }
+      openClientCode = route.id;
+      renderClients();
+    } else if (route.mod === 'presupuestos') {
+      renderInquiries();
+    }
+    if (before !== route.mod || route.mod !== 'clientes') window.scrollTo({ top: 0 });
+    if (route.mod === 'clientes' && openClientCode) {
+      const el = document.querySelector('[data-client-code="' + openClientCode + '"]');
+      if (el) el.scrollIntoView({ block: 'start' });
+    }
+  };
+  window.addEventListener('hashchange', applyRoute);
 
   // ---- Preguntas frecuentes
   const renderFaq = () => {
@@ -713,7 +1141,8 @@ export const adminPage = () => `<!doctype html>
   };
   const renderMailCheck = () => {
     const err = data.mailError;
-    $('mail-check').innerHTML = '<details class="card"' + (data.mailReady && !err ? '' : ' open') + '><summary>📧 Mails al cliente: '
+    $('n-config').textContent = data.mailReady && !err ? '' : '⚠';
+    $('mail-check').innerHTML = '<details class="card" open><summary>📧 Mails y notificaciones: '
       + (data.mailReady ? '<span class="chip ok">claves cargadas</span>' : '<span class="chip warn">faltan claves</span>') + (err ? ' <span class="chip alert-chip">hubo un error</span>' : '') + '</summary>'
       + (err ? '<div class="alert" style="margin-top:.75rem">Último error (' + date(err.at) + ', a ' + esc(err.to || '') + '): <strong>' + esc(err.error) + '</strong><br>' + esc(explainMail(err)) + '</div>' : '')
       + '<form id="mail-test" class="row" style="margin-top:.75rem"><input type="email" name="to" required placeholder="Tu mail, por ejemplo jnb.creativestudio@gmail.com" style="flex:1;min-width:14rem"><button class="primary">Probar envío de mail</button></form>'
@@ -741,7 +1170,8 @@ export const adminPage = () => `<!doctype html>
         + '</tbody></table>' : '<p class="empty">Todavía no salió ningún aviso. Los artículos que ya estaban publicados no se avisan; sale uno con cada artículo nuevo.</p>');
   };
 
-  const render = () => { renderAvailability(); renderHours(); renderMailCheck(); renderInquiries(); renderReviews(); renderProjects(); renderCoupons(); renderFaq(); renderNewsletter(); };
+  const render = () => { renderAvailability(); renderHours(); renderMailCheck(); renderBackup(); renderInquiries(); renderReviews(); renderProjects(); renderClients(); renderPayments(); renderCoupons(); renderFaq(); renderNewsletter(); renderDashboard(); };
+  const RENDER = { clientes: renderClients, proyectos: renderProjects, consultas: renderInquiries, presupuestos: renderInquiries, pagos: renderPayments };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
@@ -752,22 +1182,105 @@ export const adminPage = () => `<!doctype html>
   });
   $('logout').addEventListener('click', () => { key = ''; try { sessionStorage.removeItem('jnb-admin'); } catch (e) {} showLogin(false); });
 
-  document.addEventListener('input', (e) => {
-    if (e.target.id !== 'client-search') return;
-    clientFilter = e.target.value;
-    const pos = e.target.selectionStart;
-    renderProjects();
-    const again = $('client-search'); again.focus(); again.setSelectionRange(pos, pos);
+  // Búsquedas y filtros: se aplican mientras escribís, vuelven a la página 1 y el cursor queda donde estaba
+  const applyFilter = (el) => {
+    const [mod, name] = el.dataset.f.split('.');
+    F[mod][name] = el.value;
+    PAGE[mod] = 1;
+    const id = el.id;
+    const pos = el.type === 'search' ? el.selectionStart : null;
+    RENDER[mod]();
+    const again = $(id);
+    if (again) { again.focus(); if (pos !== null) again.setSelectionRange(pos, pos); }
+  };
+  document.addEventListener('input', (e) => { if (e.target.dataset && e.target.dataset.f && e.target.type === 'search') applyFilter(e.target); });
+  document.addEventListener('change', (e) => {
+    if (e.target.dataset && e.target.dataset.f && e.target.type !== 'search') applyFilter(e.target);
+    if (e.target.id === 'np-client') document.querySelectorAll('.np-new').forEach((l) => { l.hidden = Boolean(e.target.value); });
   });
 
-  $('tabs').addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-tab]'); if (!b) return;
-    document.querySelectorAll('#tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    ['consultas', 'resenas', 'proyectos', 'cupones', 'faq', 'newsletter'].forEach((t) => { $('tab-' + t).hidden = t !== b.dataset.tab; });
-    if (b.dataset.tab === 'proyectos') { selected = ''; renderProjects(); }
+  $('menu-toggle').addEventListener('click', () => {
+    const open = $('side').classList.toggle('is-open');
+    $('menu-toggle').setAttribute('aria-expanded', String(open));
   });
+
+  // Abrir o cerrar la ficha de un cliente (una a la vez); la dirección cambia a #clientes/JNB-CLI-0001
+  document.addEventListener('toggle', (e) => {
+    const card = e.target.closest && e.target.closest('.client-card');
+    if (!card || card !== e.target) return;
+    const code = card.dataset.clientCode;
+    if (card.open && code !== openClientCode) go('clientes', code);
+    else if (!card.open && code === openClientCode) go('clientes', '');
+  }, true);
 
   document.addEventListener('click', async (e) => {
+    // Accesos del Dashboard que llegan con un filtro ya elegido
+    const statLink = e.target.closest('.stat');
+    if (statLink) {
+      if (statLink.dataset.stageFilter !== undefined) { F.proyectos = { q: '', stage: statLink.dataset.stageFilter, type: '', from: '', to: '' }; PAGE.proyectos = 1; selected = ''; }
+      if (statLink.dataset.quoteFilter) { F.presupuestos = { q: '', status: statLink.dataset.quoteFilter }; PAGE.presupuestos = 1; }
+      if (statLink.dataset.payFilter) { F.pagos = { q: '', state: statLink.dataset.payFilter }; PAGE.pagos = 1; }
+      if (statLink.dataset.seenFilter) { F.consultas = { q: '', seen: statLink.dataset.seenFilter }; PAGE.consultas = 1; }
+      const target = statLink.getAttribute('href').slice(1);
+      if (location.hash === '#' + target) { e.preventDefault(); applyRoute(); }
+      return;
+    }
+    const goBtn = e.target.closest('[data-go]');
+    if (goBtn) { const [mod, id] = goBtn.dataset.go.split('/'); go(mod, id || ''); return; }
+    const goClient = e.target.closest('[data-go-client]');
+    if (goClient) { clientSub = 'datos'; go('clientes', goClient.dataset.goClient); return; }
+    const openCode = e.target.closest('[data-open-code]');
+    if (openCode) { subTab = 'pagos'; go('proyectos', openCode.dataset.openCode); return; }
+    const clientSubBtn = e.target.closest('[data-client-sub]');
+    if (clientSubBtn) { clientSub = clientSubBtn.dataset.clientSub; renderClients(); return; }
+    const pageBtn = e.target.closest('[data-page]');
+    if (pageBtn) { PAGE[pageBtn.dataset.page] = Number(pageBtn.dataset.to); RENDER[pageBtn.dataset.page](); window.scrollTo({ top: 0 }); return; }
+    const newFor = e.target.closest('[data-new-project-for]');
+    if (newFor) { presetClient = newFor.dataset.newProjectFor; go('proyectos', ''); const box = $('new-project-box'); if (box) box.scrollIntoView({ block: 'start' }); return; }
+    const seenBtn = e.target.closest('[data-seen]');
+    if (seenBtn) { await api('consultas/vistas', { codes: [seenBtn.dataset.seen] }); toast('Marcada como vista'); load(); return; }
+    const seenAll = e.target.closest('[data-seen-all]');
+    if (seenAll) {
+      const codes = data.inquiries.filter((q) => q.kind === seenAll.dataset.seenAll && !q.seen).map((q) => q.code);
+      await api('consultas/vistas', { codes }); toast('Listo'); load(); return;
+    }
+    const mergeBtn = e.target.closest('[data-merge]');
+    if (mergeBtn) {
+      if (!confirm('¿Unir ' + mergeBtn.dataset.label + '? Todos sus pedidos, proyectos y pagos pasan a una sola ficha. No se puede deshacer.')) return;
+      await api('clientes/' + mergeBtn.dataset.merge + '/unir', { into: Number(mergeBtn.dataset.into) });
+      toast('Fichas unidas'); load(); return;
+    }
+    const notDup = e.target.closest('[data-not-dup]');
+    if (notDup) {
+      const [a, b] = notDup.dataset.notDup.split('-').map(Number);
+      await api('duplicados/descartar', { a, b }); toast('Listo: no se vuelven a sugerir'); load(); return;
+    }
+    const payRow = e.target.closest('[data-payment]');
+    if (payRow && e.target.closest('[data-pay-toggle]')) {
+      const y = data.payments.find((x) => x.id === Number(payRow.dataset.payment));
+      await api('pagos/' + y.id, { ...y, paid: y.paid ? '' : todayIso() });
+      toast(y.paid ? 'Vuelve a quedar pendiente' : 'Pago marcado como cobrado'); load(); return;
+    }
+    if (payRow && e.target.closest('[data-pay-remove]')) {
+      if (!confirm('¿Borrar este pago? No se puede deshacer.')) return;
+      await api('pagos/' + payRow.dataset.payment, { remove: true }); toast('Pago borrado'); load(); return;
+    }
+    if (e.target.closest('#backup-btn')) {
+      const btn = $('backup-btn');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/copia', { headers: { 'x-clave': key } });
+        if (!res.ok) throw new Error(res.status);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(await res.blob());
+        a.download = 'jnb-panel-copia-' + todayIso() + '.json';
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast('Listo: la copia quedó en tu carpeta Descargas');
+      } catch (err) { toast('No se pudo descargar la copia'); }
+      btn.disabled = false;
+      return;
+    }
     const copyBtn = e.target.closest('[data-copy]');
     if (copyBtn) { e.preventDefault(); copy(copyBtn.dataset.copy); return; }
     const resend = e.target.closest('[data-resend]');
@@ -790,7 +1303,7 @@ export const adminPage = () => `<!doctype html>
     if (openBtn) { openClient(openBtn.dataset.open); return; }
     const openQuote = e.target.closest('[data-open-quote]');
     if (openQuote) { const pr = data.projects.find((x) => x.quote === openQuote.dataset.openQuote); if (pr) openClient(pr.token, 'presupuesto'); return; }
-    if (e.target.closest('[data-back]')) { selected = ''; renderProjects(); return; }
+    if (e.target.closest('[data-back]')) { go('proyectos', ''); return; }
     const sub = e.target.closest('[data-sub]');
     if (sub) { subTab = sub.dataset.sub; renderProjects(); return; }
     if (e.target.closest('#brief-print')) { printBrief(); return; }
@@ -870,8 +1383,13 @@ export const adminPage = () => `<!doctype html>
     const remove = e.target.closest('[data-remove]');
     if (remove) {
       if (!confirm('¿Borrar este proyecto? El link del cliente deja de funcionar.')) return;
-      await api('proyectos/' + remove.closest('[data-project]').dataset.project, { remove: true });
-      toast('Proyecto borrado'); load();
+      try {
+        await api('proyectos/' + remove.closest('[data-project]').dataset.project, { remove: true });
+      } catch (err) {
+        toast(err.message === '409' ? 'Tiene pagos cargados: borralos primero (pestaña Pagos)' : 'No se pudo borrar');
+        return;
+      }
+      toast('Proyecto borrado'); go('proyectos', ''); load();
     }
   });
 
@@ -934,8 +1452,37 @@ export const adminPage = () => `<!doctype html>
       toast('Guardado: el inicio ya muestra "' + availPreview(data.availability.estado, data.availability.reservaDesde) + '"');
     } else if (form.id === 'new-project') {
       e.preventDefault();
-      await api('proyectos', values);
+      const existing = values.clientId ? clientById(Number(values.clientId)) : null;
+      if (!existing && !values.fullName.trim()) { toast('Falta el nombre del cliente'); return; }
+      // Nombre que ve el cliente: si no se escribe, su primer nombre
+      if (!values.client.trim()) values.client = (existing ? existing.name : values.fullName).trim().split(' ')[0];
+      try { await api('proyectos', values); } catch (err) { toast('No se pudo crear: revisá el mail'); return; }
+      presetClient = '';
       toast('Proyecto creado'); load();
+    } else if (form.id === 'new-client') {
+      e.preventDefault();
+      try {
+        const r = await api('clientes', values);
+        toast('Ficha ' + r.code + ' creada'); clientSub = 'datos'; await load(); go('clientes', r.code);
+      } catch (err) { toast(err.message === '409' ? 'Ya hay una ficha con ese mail' : 'No se pudo crear la ficha'); }
+    } else if (form.classList.contains('client-form')) {
+      e.preventDefault();
+      try {
+        await api('clientes/' + form.dataset.clientId, values);
+        toast('Ficha guardada'); load();
+      } catch (err) { toast(err.message === '409' ? 'Ese mail ya es de otra ficha: si es la misma persona, unilas' : 'No se pudo guardar'); }
+    } else if (form.classList.contains('merge-form')) {
+      e.preventDefault();
+      const into = clientById(Number(values.into));
+      const from = clientById(Number(form.dataset.clientId));
+      if (!into || !from || !confirm('¿Pasar todo de ' + from.code + ' a ' + into.code + '? ' + from.code + ' deja de existir. No se puede deshacer.')) return;
+      await api('clientes/' + from.id + '/unir', { into: into.id });
+      toast('Fichas unidas'); await load(); go('clientes', into.code);
+    } else if (form.classList.contains('payment-form')) {
+      e.preventDefault();
+      if (!values.project) { toast('Elegí el proyecto'); return; }
+      try { await api('pagos', values); } catch (err) { toast('Revisá el concepto y el monto'); return; }
+      toast(values.paid ? 'Pago registrado' : 'Pago pendiente registrado'); load();
     } else if (form.classList.contains('project-form')) {
       e.preventDefault();
       await api('proyectos/' + form.closest('[data-project]').dataset.project, { stage: Number(values.stage), due: values.due, note: values.note, next: values.next, preview: values.preview });
