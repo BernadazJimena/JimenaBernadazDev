@@ -274,6 +274,17 @@
     margin-top: 0;
 }
 
+/* Términos: subtítulos dentro de una sección (por ejemplo, "Revisiones y cambios") */
+.legal-accordion .legal-panel h3.legal-subhead {
+    color: var(--text);
+    font-size: 1rem;
+    margin: 1.75rem 0 .5rem;
+}
+
+.legal-accordion .legal-panel h3.legal-subhead:first-child {
+    margin-top: 0;
+}
+
 .legal-panel .plan-detail-cta {
     margin-top: 1.5rem;
 }
