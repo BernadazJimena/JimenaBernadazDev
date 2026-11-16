@@ -904,5 +904,5 @@
 
     window.JNBBrief = { mount };
     // Solo lectura: el panel (js/admin-brief.js) muestra estas preguntas como vista previa
-    window.JNBBriefSchema = { SECTIONS };
+    window.JNBBriefSchema = { SECTIONS, FEATURES: FEATURE_QS.map(([key]) => key) };
 })();

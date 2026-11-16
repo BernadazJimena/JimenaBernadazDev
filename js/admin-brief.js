@@ -2,7 +2,7 @@
 // Las preguntas viven en js/brief.js (window.JNBBriefSchema); acá no se edita ni se guarda nada.
 (() => {
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const PLANS = [['emprendedor', 'Emprendedor (tienda)'], ['basico', 'Básico (landing)'], ['premium', 'Premium (web a medida)']];
+    const PLANS = [['emprendedor', 'Emprendedor (tienda)'], ['basico', 'Básico (landing)'], ['premium', 'Premium (web completa)'], ['medida', 'Plan a medida']];
     const TYPES = { text: 'Texto corto', textarea: 'Texto largo', radio: 'Una opción', checkbox: 'Varias opciones', check: 'Casilla', file: 'Archivos', select: 'Lista', email: 'Mail', tel: 'Teléfono', url: 'Link', date: 'Fecha' };
     let plan = 'premium';
     let previewLang = 'es';
@@ -11,7 +11,9 @@
     // Para ver las condicionales: "todos los adicionales pedidos" (x) y "respondió que sí a todo" (a)
     const ALL = new Proxy({}, { get: () => true });
     const YES = new Proxy({}, { get: () => 'yes' });
-    const ctx = (x = {}, a = {}) => ({ a, lang: previewLang, knownPlan: true, plan, x });
+    // Plan a medida: el brief lo trata como web (premium) y suma las preguntas de las funciones que elija el cliente
+    const MEDIDA_X = () => Object.fromEntries(((window.JNBBriefSchema || {}).FEATURES || []).map((k) => [k, true]));
+    const ctx = (x = {}, a = {}) => ({ a, lang: previewLang, knownPlan: true, plan: plan === 'medida' ? 'premium' : plan, x: plan === 'medida' && !Object.keys(x).length ? MEDIDA_X() : x });
     const val = (v) => { try { return typeof v === 'function' ? v(ctx()) : v; } catch (e) { return ''; } };
     const test = (item, c) => { try { return !item.when || Boolean(item.when(c)); } catch (e) { return false; } };
     const shows = (item) => test(item, ctx());
