@@ -7,6 +7,8 @@
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const today = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
     const fdate = (v) => (v ? new Date(v.length === 10 ? v + 'T12:00:00' : v).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+    // Los sorteos se hacen siempre en la cuenta de Instagram del estudio
+    const ACCOUNT = 'https://www.instagram.com/jnbcreativestudio/';
     const STATUS = { borrador: 'Borrador', activo: 'Activo', finalizado: 'Finalizado' };
     const PLANS = { '': 'Sin proyecto web', premium: 'Plan Premium', basico: 'Plan Básico', emprendedor: 'Tienda (Emprendedor)' };
     const MARKS = [['contacted_at', 'Contactado'], ['brief_sent_at', 'Brief enviado'], ['brief_done_at', 'Brief completado'], ['materials_at', 'Materiales recibidos'], ['delivered_at', 'Premio entregado']];
@@ -47,7 +49,7 @@
     const stageTag = (w) => '<span class="sg-tag sg-' + stageTone(w.stage) + '">' + esc(data().stages[w.stage] || '') + '</span>';
 
     // ---- Mensajes sugeridos (se editan antes de copiar y lo editado queda guardado)
-    const congratsText = (w) => '¡Hola, ' + (w.name || '').split(' ')[0] + '! 🎉 ¡Ganaste el sorteo "' + w.giveaway_name + '" de JNB Creative Studio! Tu premio: ' + (w.prize || '') + '.\n\nPara empezar, ¿me pasás un mail y un WhatsApp de contacto? Te cuento los próximos pasos por acá. ¡Felicitaciones! 💜';
+    const congratsText = (w) => '¡Hola, ' + (w.name || '').split(' ')[0] + '! 🎉 ¡Ganaste el sorteo "' + w.giveaway_name + '" de @jnbcreativestudio! Tu premio: ' + (w.prize || '') + '.\n\nPara empezar, ¿me pasás un mail y un WhatsApp de contacto? Te cuento los próximos pasos por acá. ¡Felicitaciones! 💜';
     const briefText = (w) => '¡Hola, ' + (w.name || '').split(' ')[0] + '! Ya está listo tu brief: son unas preguntas para conocer tu proyecto y armar tu web.\n\nCompletalo acá: ' + (w.brief_link || '[link del brief]') + '\n\nTenés 10 días corridos para enviarlo junto con tu material (logo, fotos y textos). Cualquier duda, escribime por acá. 💜';
 
     // ---- Resumen
@@ -121,12 +123,12 @@
 
     const giveawayForm = (g) => '<form data-sg-form="giveaway"><input type="hidden" name="id" value="' + (g.id || '') + '"><div class="grid">'
         + '<label>Nombre del sorteo<input name="name" required maxlength="120" value="' + esc(g.name) + '"></label>'
-        + '<label>URL de la publicación<input name="url" type="url" placeholder="https://www.instagram.com/p/..." value="' + esc(g.url) + '"></label>'
+        + '<label>Link del posteo en @jnbcreativestudio<input name="url" type="url" placeholder="https://www.instagram.com/p/..." value="' + esc(g.url || ACCOUNT) + '"></label>'
         + '<label>Fecha de inicio<input name="starts" type="date" value="' + esc(g.starts) + '"></label>'
         + '<label>Fecha de finalización<input name="ends" type="date" value="' + esc(g.ends) + '"></label>'
         + '<label>Fecha de selección del ganador<input name="drawDate" type="date" value="' + esc(g.draw_date) + '"></label>'
         + '<label>Estado<select name="status">' + Object.entries(STATUS).map(([k, v]) => '<option value="' + k + '"' + ((g.status || 'borrador') === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label>'
-        + '</div><label>Publicación de Instagram (texto o descripción)<textarea name="post" rows="2">' + esc(g.post) + '</textarea></label>'
+        + '</div><label>Texto del posteo (opcional)<textarea name="post" rows="2">' + esc(g.post) + '</textarea></label>'
         + '<label>Premio ofrecido<textarea name="prize" rows="2">' + esc(g.prize) + '</textarea></label>'
         + '<label>Condiciones<textarea name="conditions" rows="3">' + esc(g.conditions) + '</textarea></label>'
         + '<div class="row" style="margin-top:.75rem"><button class="primary">' + (g.id ? 'Guardar cambios' : 'Crear sorteo') + '</button>' + (g.id ? '<button type="button" data-sg-edit="0">Cancelar</button>' : '') + '</div></form>';
