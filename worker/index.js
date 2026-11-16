@@ -10,7 +10,7 @@
 // así un mismo navegador no suma dos veces el mismo artículo. No se guarda la IP ni nada personal.
 
 import { DurableObject } from 'cloudflare:workers';
-import { handleStudio, isAdmin } from './studio.js';
+import { handleStudio, isAdmin, weeklyBackup } from './studio.js';
 import { handleNewsletter, notifyNewArticles } from './newsletter.js';
 
 export { StudioData } from './studio.js';
@@ -256,5 +256,7 @@ export default {
   // Una vez por hora (wrangler.jsonc → triggers): si se publicó un artículo nuevo, avisa a los suscriptores del blog
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(notifyNewArticles(env));
+    // Y los lunes desde las 9, la copia de seguridad del panel por mail (studio.js)
+    ctx.waitUntil(weeklyBackup(env));
   },
 };

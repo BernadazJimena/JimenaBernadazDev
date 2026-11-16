@@ -547,7 +547,7 @@ export const adminPage = () => `<!doctype html>
   const clientRow = (p) => '<button type="button" class="client-row" data-open="' + esc(p.token) + '">'
     + '<span class="client-row-main"><strong>' + (p.code ? '<span class="client-code">' + esc(p.code) + '</span> · ' : '') + esc(clientName(p)) + '</strong><span class="small muted">' + esc(p.project) + (p.origin === 'sorteo-instagram' ? ' · 🎁 ORIGEN: SORTEO DE INSTAGRAM' : '') + (p.quoteCode ? ' · ' + esc(p.quoteCode) : '') + ' · ' + esc((clientById(p.clientId) || {}).code || '') + '</span></span>'
     + '<span class="client-row-tags">' + (p.briefEditUnseen ? '<span class="chip alert-chip">⚠ Editó el brief</span>' : '')
-    + '<span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>'
+    + (p.stage === STAGES.length - 1 ? '<span class="chip ok">✓ Finalizado</span>' : '<span class="chip">' + (p.stage + 1) + '. ' + STAGES[p.stage] + '</span>')
     + '<span class="chip ' + (p.briefStatus === 'enviado' ? 'ok' : 'warn') + '">' + briefLabel(p) + '</span>'
     + (p.coupon ? '<span class="chip">🎁</span>' : '') + (p.reviewDone ? '<span class="chip ok">⭐</span>' : '') + '</span>'
     + '<span class="client-row-go" aria-hidden="true">›</span></button>';
@@ -570,7 +570,9 @@ export const adminPage = () => `<!doctype html>
       if (f.to && p.created.slice(0, 10) > f.to) return false;
       return true;
     });
-    const { items, nav } = paged('proyectos', list);
+    // Sin filtro de estado, los finalizados (Publicación y entrega) van agrupados aparte, al final
+    const done = f.stage ? [] : list.filter((p) => p.stage === STAGES.length - 1);
+    const { items, nav } = paged('proyectos', f.stage ? list : list.filter((p) => p.stage < STAGES.length - 1));
     const filtered = f.q || f.stage || f.type || f.from || f.to;
     const presetOk = presetClient && clientByCode(presetClient);
     $('tab-proyectos').innerHTML = '<div class="row space"><h2 style="margin:0">Proyectos</h2><span class="small muted">' + data.projects.length + ' en total</span></div>'
@@ -579,8 +581,9 @@ export const adminPage = () => `<!doctype html>
       + selectBox('proyectos', 'stage', 'Estado', [['', 'Todos'], ['pendiente', 'Pendientes (Reserva y Materiales)'], ['desarrollo', 'En desarrollo (Diseño y Revisión)'], ['publicado', 'Publicados'], ...STAGES.map((s, i) => [String(i), (i + 1) + '. ' + s])])
       + selectBox('proyectos', 'type', 'Tipo de servicio', [['', 'Todos'], ...SERVICE])
       + dateBox('proyectos', 'from', 'Creado desde') + dateBox('proyectos', 'to', 'Hasta') + '</div>'
-      + (items.length ? '<div class="client-list">' + items.map(clientRow).join('') + '</div>' : '<p class="empty">' + (filtered ? 'No hay proyectos con esa búsqueda.' : 'Todavía no hay proyectos. Se crean solos al aceptar un presupuesto.') + '</p>')
+      + (items.length ? '<div class="client-list">' + items.map(clientRow).join('') + '</div>' : done.length ? '<p class="empty">No hay proyectos en curso: todos están finalizados.</p>' : '<p class="empty">' + (filtered ? 'No hay proyectos con esa búsqueda.' : 'Todavía no hay proyectos. Se crean solos al aceptar un presupuesto.') + '</p>')
       + nav
+      + (done.length ? '<details class="card" style="margin-top:1rem"><summary>✓ Proyectos finalizados (' + done.length + ')</summary><div class="client-list" style="margin-top:.75rem">' + done.map(clientRow).join('') + '</div></details>' : '')
       + '<details class="card" id="new-project-box" style="margin-top:1rem"' + (presetOk ? ' open' : '') + '><summary>➕ Crear un proyecto a mano</summary>'
       + '<p class="small muted">Para clientes que no pidieron presupuesto por la web (por ejemplo, por WhatsApp). Si el cliente ya existe, elegilo: el proyecto queda en su misma ficha.</p>'
       + '<form id="new-project"><div class="grid">'
@@ -906,6 +909,7 @@ export const adminPage = () => `<!doctype html>
   const renderBackup = () => {
     $('backup').innerHTML = '<div class="card"><h2>Copia de seguridad</h2>'
       + '<p class="small muted">Descarga un archivo .json con todo lo que guarda el panel: clientes, consultas, presupuestos, proyectos, briefs, pagos, reseñas, cupones e historial. Los archivos que suben los clientes no van en la copia (se descargan desde cada proyecto). Tiene datos privados de tus clientes: guardalo en un lugar seguro.</p>'
+      + '<p class="small">📧 Además, todos los lunes desde las 9 te llega sola por mail (a tu casilla de respuestas). ' + (data.backupMailed ? 'Última: ' + date(data.backupMailed) + '.' : 'Todavía no salió ninguna.') + '</p>'
       + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia de seguridad</button></div>'
       + '<details class="card"><summary>⚠ Reiniciar datos en cero</summary>'
       + '<form id="reset-form"><p class="small muted" style="margin-top:.6rem">Borra clientes, consultas, presupuestos, proyectos, briefs y sus archivos, pagos, cupones, reseñas e historial. Los códigos vuelven a empezar en JNB-CLI-0001. No se tocan los me gusta del blog, el newsletter, el cartel del inicio ni el horario. <strong>No se puede deshacer: descargá antes la copia de seguridad.</strong></p>'

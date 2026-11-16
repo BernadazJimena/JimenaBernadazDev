@@ -372,6 +372,8 @@ export class StudioData extends DurableObject {
     if (!agendaClientColumns.includes('source')) this.sql.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT ''");
     // Lo que respondió el cliente en "¿Cómo me conociste?" del formulario de presupuesto
     const agendaInquiryColumns = this.sql.exec('PRAGMA table_info(inquiries)').toArray().map((c) => c.name);
+    if (!agendaInquiryColumns.includes('sent_at')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN sent_at TEXT NOT NULL DEFAULT ''");
+    if (!agendaInquiryColumns.includes('followup_at')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN followup_at TEXT NOT NULL DEFAULT ''");
     if (!agendaInquiryColumns.includes('source')) this.sql.exec("ALTER TABLE inquiries ADD COLUMN source TEXT NOT NULL DEFAULT ''");
     // Vencimientos de los clientes (dominio, soporte mensual, hosting...): los carga Jimena a mano
     this.sql.exec(`CREATE TABLE IF NOT EXISTS renewals (
@@ -728,6 +730,24 @@ export class StudioData extends DurableObject {
     return { ok: true };
   }
 
+  // "Ya le escribí" en un presupuesto sin respuesta: el aviso vuelve a contar desde hoy
+  quoteFollowup(token) {
+    if (!this.sql.exec("SELECT 1 FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray().length) return { error: 'not found' };
+    this.sql.exec('UPDATE inquiries SET followup_at = ? WHERE token = ?', new Date().toISOString(), token);
+    this.logQuoteEvent(token, '💬', 'Le escribiste para hacer seguimiento del presupuesto');
+    return { ok: true };
+  }
+
+  // Copia de seguridad semanal por mail: cuándo salió la última
+  backupMailedAt() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'copiaMail'").toArray()[0];
+    return row ? row.value : '';
+  }
+
+  markBackupMailed() {
+    this.sql.exec("INSERT INTO settings (key, value) VALUES ('copiaMail', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", new Date().toISOString());
+  }
+
   setClientSource(id, source) {
     if (!this.clientExists(id)) return { error: 'not found' };
     this.sql.exec('UPDATE clients SET source = ? WHERE id = ?', source, id);
@@ -957,6 +977,8 @@ export class StudioData extends DurableObject {
     // La fecha de emisión se fija la primera vez que se envía y no cambia al corregir la propuesta
     if (proposal) proposal.issued = (row.proposal && JSON.parse(row.proposal).issued) || new Date().toISOString();
     this.sql.exec('UPDATE inquiries SET status = ?, proposal = ? WHERE token = ?', status, proposal ? JSON.stringify(proposal) : null, token);
+    // Cuándo se envió la propuesta (la primera vez): desde ahí se cuentan los días sin respuesta
+    if (status === 'enviado') this.sql.exec("UPDATE inquiries SET sent_at = ? WHERE token = ? AND sent_at = ''", new Date().toISOString(), token);
     // Si recién se aceptó, se devuelven los datos para mandarle al cliente el mail con el link del brief
     if (!created) return true;
     const email = this.sql.exec('SELECT email FROM inquiries WHERE token = ?', token).one().email;
@@ -1303,7 +1325,7 @@ export class StudioData extends DurableObject {
       notDuplicates: this.notDuplicates(),
       payments: this.sql.exec(`SELECT y.id, y.project, y.concept, y.currency, y.amount, y.due, y.paid, y.method, y.note, y.created, p.code AS projectCode, p.client_id AS clientId
         FROM payments y JOIN projects p ON p.token = y.project ORDER BY (y.paid = '') DESC, COALESCE(NULLIF(y.paid, ''), y.due, y.created) DESC`).toArray(),
-      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon, country, client_id AS clientId, seen
+      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon, country, client_id AS clientId, seen, sent_at AS sentAt, followup_at AS followupAt
         FROM inquiries ORDER BY created DESC LIMIT 3000`).toArray()
         .map((row) => ({ ...row, proposal: row.proposal ? JSON.parse(row.proposal) : null })),
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
@@ -1334,6 +1356,34 @@ let mailStore = null; // se completa en cada pedido, para poder guardar el últi
 // Los valores cargados en Cloudflare se limpian: espacios y comillas de más son un error común al pegarlos
 const cleanEnv = (value) => String(value || '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
 
+// ---- Copia de seguridad semanal: los lunes desde las 9 (hora de Argentina) llega por mail a MAIL_REPLY_TO, con el .json adjunto.
+// La corre el cron de cada hora (worker/index.js); si el envío falla, lo vuelve a intentar a la hora siguiente.
+export async function weeklyBackup(env) {
+  const to = cleanEnv(env.MAIL_REPLY_TO);
+  if (!to) return;
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'short', hour: 'numeric', hourCycle: 'h23' })
+    .formatToParts(new Date()).map((p) => [p.type, p.value]));
+  if (parts.weekday !== 'Mon' || Number(parts.hour) < 9) return;
+  const store = env.STUDIO.get(env.STUDIO.idFromName('studio'));
+  const last = await store.backupMailedAt();
+  if (last && Date.now() - new Date(last).getTime() < 5 * DAY) return;
+  const copy = await store.backup();
+  const bytes = new TextEncoder().encode(JSON.stringify(copy, null, 1));
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  const day = copy.created.slice(0, 10);
+  const count = (t) => (copy.tables[t] || []).length;
+  const summary = `${count('clients')} clientes, ${count('projects')} proyectos, ${count('inquiries')} consultas y presupuestos, ${count('payments')} pagos`;
+  mailStore = store;
+  const result = await resendSend(env, to, {
+    subject: `Copia de seguridad semanal · ${day}`,
+    html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#211632"><p>Hola, Jimena:</p><p>Te llega la copia de seguridad semanal del panel (${summary}).</p><p>El archivo adjunto tiene datos privados de tus clientes: guardalo en un lugar seguro. Los archivos que subieron los clientes al brief no van en la copia (se descargan desde cada proyecto).</p><p style="color:#625970;font-size:13px">JNB Creative Studio · copia automática de los lunes</p></div>`,
+    text: `Hola, Jimena:\n\nTe llega la copia de seguridad semanal del panel (${summary}).\nEl archivo adjunto tiene datos privados de tus clientes: guardalo en un lugar seguro.`,
+    attachments: [{ filename: `jnb-panel-copia-${day}.json`, content: btoa(binary) }],
+  });
+  if (result.ok) await store.markBackupMailed();
+}
+
 export async function resendSend(env, to, mail) {
   // Si la clave quedó pegada con otro texto (por ejemplo "RESEND_API_KEY=re_..."), se usa solo la parte "re_..."
   const rawKey = cleanEnv(env.RESEND_API_KEY);
@@ -1347,7 +1397,7 @@ export async function resendSend(env, to, mail) {
     res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ from, to: [to], reply_to: replyTo || undefined, subject: mail.subject, html: mail.html, text: mail.text }),
+      body: JSON.stringify({ from, to: [to], reply_to: replyTo || undefined, subject: mail.subject, html: mail.html, text: mail.text, attachments: mail.attachments }),
     });
   } catch (networkError) {
     return remember({ ok: false, status: 0, error: `No se pudo conectar con Resend: ${networkError.message}` }, to, mail);
@@ -1662,6 +1712,7 @@ export async function handleStudio(request, env, ctx) {
       data.mailError = await store.mailError();
       data.sorteos = await store.giveawaysData();
       data.monotributo = await store.monotributo();
+      data.backupMailed = await store.backupMailedAt();
       return json(data);
     }
 
@@ -1848,6 +1899,9 @@ export async function handleStudio(request, env, ctx) {
         saved = await store.renewalDone(Number(body.id) || 0, body.done !== false);
       } else if (body.action === 'renewal-delete') {
         saved = await store.deleteRenewal(Number(body.id) || 0);
+      } else if (body.action === 'quote-followup') {
+        if (!TOKEN.test(body.token || '')) return badRequest();
+        saved = await store.quoteFollowup(body.token);
       } else if (body.action === 'material') {
         if (!TOKEN.test(body.project || '')) return badRequest();
         saved = await store.setMaterials(body.project, body.date === '' ? '' : (isoDate(body.date) || arToday()));

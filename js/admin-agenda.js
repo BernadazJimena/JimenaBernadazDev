@@ -63,6 +63,28 @@
     const dueText = (date) => { const n = dayDiff(today(), date); return n < 0 ? 'Venció hace ' + (-n) + ' días' : n === 0 ? 'Vence hoy' : 'En ' + n + ' días'; };
     let showAllDue = false;
 
+    // ---- Presupuestos sin respuesta: propuesta enviada hace 5 días o más (o 5 días desde el último seguimiento)
+    const WAIT_DAYS = 5;
+    const quoteLink = (q) => 'https://jnbcreativestudio.com.ar/mi-presupuesto/' + (q.lang === 'es' ? '' : q.lang) + '?c=' + q.token;
+    const FOLLOW = {
+        es: (n, plan, link) => '¡Hola, ' + n + '! ¿Cómo estás? Te escribo por la propuesta que te envié' + (plan ? ' para ' + plan : '') + '. ¿Pudiste verla? Si tenés alguna duda o querés ajustar algo, contame y lo vemos.\n\nAcá la tenés: ' + link + '\n\n¡Saludos! Jimena · JNB Creative Studio',
+        en: (n, plan, link) => 'Hi, ' + n + '! I hope you are well. I am following up on the proposal I sent you' + (plan ? ' for ' + plan : '') + '. Did you have a chance to look at it? If you have any questions or want to adjust something, just let me know.\n\nHere it is: ' + link + '\n\nBest regards, Jimena · JNB Creative Studio',
+        pt: (n, plan, link) => 'Olá, ' + n + '! Tudo bem? Estou escrevendo sobre a proposta que te enviei' + (plan ? ' para ' + plan : '') + '. Conseguiu ver? Se tiver alguma dúvida ou quiser ajustar algo, me conta e a gente vê.\n\nAqui está: ' + link + '\n\nAbraços! Jimena · JNB Creative Studio',
+    };
+    const waitingQuotes = () => (D().inquiries || []).filter((q) => q.kind === 'presupuesto' && q.status === 'enviado').map((q) => {
+        const base = (q.followupAt || q.sentAt || q.created).slice(0, 10);
+        return { q, days: dayDiff(base, today()), followed: Boolean(q.followupAt) };
+    }).filter((x) => x.days >= WAIT_DAYS).sort((a, b) => b.days - a.days);
+    const quotesCard = () => {
+        const list = waitingQuotes();
+        if (!list.length) return '';
+        return '<section class="card"><h3>💬 Presupuestos sin respuesta (' + list.length + ')</h3><p class="small muted">Propuestas enviadas hace ' + WAIT_DAYS + ' días o más que todavía no aceptaron. Editá el mensaje si querés, copialo y mandalo; después tocá "Ya le escribí" y el aviso vuelve a contar desde hoy.</p>'
+            + list.map(({ q, days, followed }) => '<div class="ag-quote"><p style="margin:0"><a href="#presupuestos/' + esc(q.code) + '"><strong>' + esc(q.name) + '</strong></a> · ' + esc(q.plan || 'Presupuesto') + ' · ' + tag(days >= 10 ? 'late' : 'warn', (followed ? 'Último seguimiento hace ' : 'Enviado hace ') + days + ' días') + ' · ' + { es: 'Español', en: 'Inglés', pt: 'Portugués' }[q.lang] + '</p>'
+                + '<textarea rows="5" data-ag-msg="' + esc(q.token) + '">' + esc((FOLLOW[q.lang] || FOLLOW.es)(q.name.split(' ')[0], q.plan, quoteLink(q))) + '</textarea>'
+                + '<div class="row"><button type="button" data-ag-copy="' + esc(q.token) + '">Copiar mensaje</button><button type="button" data-ag-follow="' + esc(q.token) + '">Ya le escribí ✓</button></div></div>').join('')
+            + '</section>';
+    };
+
     const renderAgenda = () => {
         const el = document.getElementById('m-agenda');
         const list = deadlines().sort((a, b) => (a.left === null) - (b.left === null) || (a.left ?? 0) - (b.left ?? 0));
@@ -70,6 +92,7 @@
         const visible = showAllDue ? due : due.filter((x) => dayDiff(today(), x.date) <= 90);
         const clients = D().clients || [];
         el.innerHTML = '<h2>Plazos y vencimientos</h2>'
+            + quotesCard()
             + '<section class="card"><h3>Plazos de entrega</h3><p class="small muted">El plazo corre desde que llega todo el material: se completa solo al pasar el proyecto a "Diseño y desarrollo", o lo cargás acá. Cuenta días hábiles y saltea feriados (los premios del sorteo, días corridos).</p>'
             + (list.length ? '<div class="ag-table"><table><thead><tr><th>Proyecto</th><th>Plazo</th><th>Material completo</th><th>Entrega</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((x) => '<tr><td><a href="#proyectos/' + esc(x.p.code) + '">' + esc(x.p.code) + '</a> · ' + esc(nameOfProject(x.p)) + '<br><span class="small muted">' + esc(x.p.project) + '</span></td>'
@@ -185,7 +208,7 @@
     const badge = () => {
         const b = document.getElementById('n-agenda');
         if (!b || !D().projects) return;
-        const n = deadlines().filter((x) => x.left !== null && x.left <= 2).length + dueItems().filter((x) => dayDiff(today(), x.date) <= 7).length;
+        const n = waitingQuotes().length + deadlines().filter((x) => x.left !== null && x.left <= 2).length + dueItems().filter((x) => dayDiff(today(), x.date) <= 7).length;
         b.textContent = n || '';
     };
 
@@ -211,6 +234,10 @@
         const t = e.target.closest('button');
         if (!t) return;
         if (t.id === 'ag-csv') exportCsv();
+        else if (t.dataset.agCopy) {
+            const area = document.querySelector('[data-ag-msg="' + t.dataset.agCopy + '"]');
+            if (area) navigator.clipboard.writeText(area.value).then(() => panel().toast('Mensaje copiado'), () => window.prompt('Copiá el mensaje:', area.value));
+        } else if (t.dataset.agFollow) send('agenda', { action: 'quote-followup', token: t.dataset.agFollow }, 'Listo: el aviso vuelve a contar desde hoy');
         else if (t.dataset.agDone) send('agenda', { action: 'renewal-done', id: Number(t.dataset.agDone) }, 'Marcado como hecho');
         else if (t.dataset.agDel && window.confirm('¿Borrar este vencimiento?')) send('agenda', { action: 'renewal-delete', id: Number(t.dataset.agDel) }, 'Vencimiento borrado');
     });

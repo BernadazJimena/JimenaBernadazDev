@@ -23,3 +23,5 @@
   .ag-late { background: #4a1916; color: #ffb4ab; }
   .ag-late-text { color: #ff8a80; }
 }
+#m-agenda .ag-quote { border-bottom: 1px solid var(--line); padding: .75rem 0; }
+#m-agenda .ag-quote textarea { margin: .5rem 0; width: 100%; }
