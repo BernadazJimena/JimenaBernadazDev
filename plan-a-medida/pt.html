@@ -211,7 +211,7 @@
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Fotos do seu trabalho"><span>Fotos do seu trabalho</span></label>
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Produtos em destaque"><span>Produtos em destaque</span></label>
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Depoimentos"><span>Depoimentos</span></label>
-              <label class="cp-chip"><input type="checkbox" name="cp-section" value="Horários"><span>Horários</span></label>
+              <label class="cp-chip"><input type="checkbox" name="cp-section" value="Horários" data-availability><span>Horários</span></label>
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Perguntas frequentes"><span>Perguntas frequentes</span></label>
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Como eu trabalho"><span>Como eu trabalho</span></label>
               <label class="cp-chip"><input type="checkbox" name="cp-section" value="Promoções"><span>Promoções</span></label>
@@ -350,19 +350,23 @@
                 <button type="button" data-currency="usd" aria-pressed="true">USD</button>
               </div>
             </div>
-            <p class="cp-summary-empty"></p>
-            <ul class="cp-summary-list" aria-live="polite"></ul>
-            <p class="cp-summary-auto" hidden></p>
-            <div class="cp-summary-total" hidden>
-              <span class="cp-total-label"></span>
-              <strong class="cp-total"></strong>
-              <small class="cp-total-monthly" hidden></small>
+            <div class="cp-summary-scroll">
+              <p class="cp-summary-empty"></p>
+              <ul class="cp-summary-list" aria-live="polite"></ul>
+              <p class="cp-summary-auto" hidden></p>
+              <div class="cp-summary-quote" hidden><p>A orçar à parte</p><ul></ul><small>Não estão no total: envio o preço junto com o orçamento.</small></div>
+              <div class="cp-reco" aria-live="polite" hidden></div>
+              <p class="cp-disclaimer">Valor estimado, de pagamento único e em dólares. Entrega de referência: entre 5 e 10 dias úteis, conforme o que você escolher. Confirmo o orçamento e o prazo finais depois de revisar o seu projeto.</p>
             </div>
-            <div class="cp-summary-quote" hidden><p>A orçar à parte</p><ul></ul><small>Não estão no total: envio o preço junto com o orçamento.</small></div>
-            <div class="cp-reco" aria-live="polite" hidden></div>
-            <p class="cp-disclaimer">Valor estimado, de pagamento único e em dólares. Entrega de referência: entre 5 e 10 dias úteis, conforme o que você escolher. Confirmo o orçamento e o prazo finais depois de revisar o seu projeto.</p>
-            <a class="button button-primary cp-request" href="/presupuesto/pt?plan=medida" aria-disabled="true">Pedir este orçamento <span aria-hidden="true">→</span></a>
-            <button class="plan-quiz-restart cp-reset" type="button">Começar de novo</button>
+            <div class="cp-summary-foot">
+              <div class="cp-summary-total" hidden>
+                <span class="cp-total-label"></span>
+                <strong class="cp-total"></strong>
+                <small class="cp-total-monthly" hidden></small>
+              </div>
+              <a class="button button-primary cp-request" href="/presupuesto/pt?plan=medida" aria-disabled="true">Pedir este orçamento <span aria-hidden="true">→</span></a>
+              <button class="plan-quiz-restart cp-reset" type="button">Começar de novo</button>
+            </div>
           </div>
         </aside>
 

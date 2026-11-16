@@ -447,12 +447,53 @@
     top: 6rem;
 }
 
-/* Si el resumen es más alto que la pantalla, se desliza por dentro (así el botón siempre se alcanza) */
+/* Resumen: el encabezado, el total y el botón quedan siempre a la vista; si la lista no entra, se desliza solo
+   la parte del medio, con una barra fina del color de la paleta y un leve desvanecido abajo que indica que hay más. */
+.cp-summary-scroll,
+.cp-summary-foot {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.cp-summary-foot {
+    border-top: .08rem solid var(--feature-rule);
+    padding-top: .9rem;
+}
+
+.cp-summary-foot:has(.cp-summary-total[hidden]) {
+    border-top: 0;
+    padding-top: 0;
+}
+
 @media (min-width: 62.01rem) {
     .cp-summary-card {
         max-height: calc(100vh - 7rem);
+    }
+
+    .cp-summary-scroll {
+        flex: 1 1 auto;
+        margin-right: -.6rem;
+        min-height: 4rem;
         overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: .6rem;
+        scrollbar-color: var(--feature-rule) transparent;
         scrollbar-width: thin;
+    }
+
+    .cp-summary-scroll.is-scrollable {
+        -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent);
+        mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent);
+    }
+
+    .cp-summary-scroll.is-scrollable.is-end {
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+
+    .cp-summary-foot {
+        flex: 0 0 auto;
     }
 }
 
@@ -987,4 +1028,40 @@
 /* Inglés: una sola base (sin tiendas) */
 .cp-base-grid-one {
     grid-template-columns: minmax(0, 34rem);
+}
+
+/* Recomendación: alternativa con cosas que no se pidieron, pendientes y otra opción al mismo precio */
+.cp-reco.is-alt {
+    border-top-color: var(--line);
+}
+
+.cp-reco.is-alt .eyebrow {
+    color: var(--muted);
+}
+
+.cp-reco-min,
+.cp-reco-value {
+    background: var(--sky);
+    border-radius: .6rem;
+    padding: .55rem .7rem;
+}
+
+.cp-reco-list.is-pending li::before {
+    color: var(--decoration);
+    content: "?";
+    font-weight: 800;
+}
+
+.cp-reco-list.is-unrequested li {
+    color: var(--muted);
+}
+
+.cp-reco-list.is-unrequested li::before {
+    content: "·";
+    font-weight: 800;
+}
+
+.cp-reco-list.is-same li::before {
+    color: var(--blue);
+    content: "↔";
 }

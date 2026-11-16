@@ -28,21 +28,32 @@
     // Planes cerrados, tal como los describe /planes/ (no se modifican: solo se usan para comparar).
     // type: 'web' = landing o web; 'store' = tienda. Lo que no está acá NO se considera incluido.
     // ---------------------------------------------------------------------------------------------
+    // sections: máximo de secciones incluidas; minSections: las que el plan trae sí o sí (si el cliente pide menos, le sobran).
+    // includes: funciones incluidas. pending: lo que la descripción del plan no aclara: NO se da por incluido,
+    // se muestra "a confirmar" hasta que Jimena lo confirme. availability: la sección de disponibilidad no cuenta como sección.
     const PLANS = {
         emprendedor: {
             type: 'store', price: [66990, 43], anchor: 'emprendedor', langs: ['es', 'pt'],
             // Tienda en una plataforma, 20 productos, pagos y envíos. Productos extra y 2.ª plataforma: adicionales.
         },
+        // Plan Emprendedor + landing (adicional de $94.990 / USD 61): "5 secciones, como el Plan Básico".
+        // PENDIENTE: confirmar si la landing incluye mapa y botón de agenda como el Básico.
+        emprendedorLanding: {
+            type: 'web+store', price: [161980, 104], anchor: 'emprendedor', langs: ['es', 'pt'],
+            sections: 5, minSections: 5, pages: 0, includes: [], pending: ['mail', 'map', 'agenda'], extraBenefits: [],
+        },
         basico: {
             type: 'web', price: [111990, 72], anchor: 'basico', langs: ['es', 'en', 'pt'],
-            sections: 5, pages: 0, includes: ['map', 'agenda'],
+            sections: 5, minSections: 5, pages: 0, includes: ['map', 'agenda'],
             // Modo claro / oscuro y abierto / cerrado: adicionales del Básico. Páginas secundarias: se cotizan aparte (precio de lista).
-            extraBenefits: [],
+            // PENDIENTE: el plan menciona WhatsApp y redes, pero no el mail en el contacto.
+            pending: ['mail'], extraBenefits: [],
         },
         premium: {
             type: 'web', price: [189990, 122], anchor: 'premium', langs: ['es', 'en', 'pt'],
-            sections: 10, pages: 4, includes: ['map', 'agenda', 'dark', 'hours'],
-            extraBenefits: ['rounds3', 'support30', 'design'],
+            sections: 10, minSections: 6, pages: 4, includes: ['map', 'agenda', 'dark', 'hours'], availability: true,
+            // PENDIENTE: igual que el Básico, el mail en el contacto no está especificado.
+            pending: ['mail'], extraBenefits: ['rounds3', 'support30', 'design'],
         },
     };
     const URGENT = 0.3;
@@ -58,7 +69,18 @@
             total: 'Total estimado', totalQuote: 'Total estimado, sin los ítems a cotizar',
             required: 'Necesaria para: {list}', auto: '{base}: la sumé porque la necesitan: {list}.',
             needsBase: '{list}: se suma a una web o a una tienda. Elegí una base para incluirlo.',
-            plans: { emprendedor: 'Plan Emprendedor', basico: 'Plan Básico', premium: 'Plan Premium' },
+            plans: { emprendedor: 'Plan Emprendedor', emprendedorLanding: 'Plan Emprendedor + landing', basico: 'Plan Básico', premium: 'Plan Premium' },
+            recoEyebrowAlt: 'Una alternativa para comparar',
+            recoLeadAlt: 'El {plan} cubre lo que seleccionaste, pero también incluye cosas que no pediste. Si no las vas a usar, tu configuración a medida es igual de válida.',
+            minSections: 'El {plan} incluye como mínimo {min} secciones: elegiste {n}, así que tendrías {x} más de las que necesitás.',
+            unrequested: 'Incluye y no pediste', unrequestedValue: 'Valor de lista de lo que no pediste: {value}. La diferencia de precio es {diff}.',
+            unrequestedValueTie: 'Valor de lista de lo que no pediste: {value}, por el mismo precio.',
+            moreSections: '{n} secciones más', moreSection: '1 sección más', morePages: 'hasta {n} páginas secundarias', morePage: 'hasta 1 página secundaria',
+            pendingTitle: 'A confirmar con tu presupuesto', whyPending: 'Cubre lo que elegiste y cuesta {diff} menos. Lo marcado “a confirmar” te lo confirmo con el presupuesto.',
+            pendingItems: { mail: 'Contacto por mail', map: 'Ubicación con mapa', agenda: 'Botón de agenda de turnos', dark: 'Modo claro / oscuro', hours: 'Cartel de abierto / cerrado' },
+            availability: 'Horarios (la sección de disponibilidad ya viene incluida)',
+            sameAlt: 'Otra opción con el mismo precio', sameAltDiff: '{plan}: mismo precio. Diferencias: {list}.', sameAltNone: '{plan}: mismo precio y mismas prestaciones.',
+            diffConfirm: '{item}: a confirmar', diffIncluded: '{item}: incluido', diffExtra: '{item}: se suma como adicional',
             planWithStore: '{plan} + tienda online',
             recoEyebrow: 'Hay una opción que puede convenirte más',
             recoLead: 'Según las características que seleccionaste, el {plan} puede ofrecerte lo que necesitás por un precio más conveniente que tu configuración personalizada.',
@@ -88,6 +110,17 @@
             required: 'Needed for: {list}', auto: '{base}: added because these need it: {list}.',
             needsBase: '{list}: this is added to a website. Choose the website structure to include it.',
             plans: { basico: 'Basic Plan', premium: 'Premium Plan' },
+            recoEyebrowAlt: 'An alternative to compare',
+            recoLeadAlt: 'The {plan} covers what you selected, but it also includes things you didn’t ask for. If you won’t use them, your custom setup is just as valid.',
+            minSections: 'The {plan} includes at least {min} sections: you chose {n}, so you would get {x} more than you need.',
+            unrequested: 'Included but not requested', unrequestedValue: 'List value of what you didn’t request: {value}. The price difference is {diff}.',
+            unrequestedValueTie: 'List value of what you didn’t request: {value}, for the same price.',
+            moreSections: '{n} more sections', moreSection: '1 more section', morePages: 'up to {n} secondary pages', morePage: 'up to 1 secondary page',
+            pendingTitle: 'To be confirmed with your quote', whyPending: 'It covers what you chose and costs {diff} less. Items marked “to be confirmed” will be confirmed with your quote.',
+            pendingItems: { mail: 'Email contact', map: 'Location with map', agenda: 'Booking button', dark: 'Light / dark mode', hours: 'Open / closed sign' },
+            availability: 'Opening hours (the availability section is already included)',
+            sameAlt: 'Another option at the same price', sameAltDiff: '{plan}: same price. Differences: {list}.', sameAltNone: '{plan}: same price and same features.',
+            diffConfirm: '{item}: to be confirmed', diffIncluded: '{item}: included', diffExtra: '{item}: added as an extra',
             planWithStore: '{plan} + online store',
             recoEyebrow: 'There’s an option that may suit you better',
             recoLead: 'Based on what you selected, the {plan} can give you what you need for a better price than your custom setup.',
@@ -116,7 +149,18 @@
             total: 'Total estimado', totalQuote: 'Total estimado, sem os itens a orçar',
             required: 'Necessária para: {list}', auto: '{base}: incluí porque é necessária para: {list}.',
             needsBase: '{list}: é somado a um site ou a uma loja. Escolha uma base para incluir.',
-            plans: { emprendedor: 'Plano Empreendedor', basico: 'Plano Básico', premium: 'Plano Premium' },
+            plans: { emprendedor: 'Plano Empreendedor', emprendedorLanding: 'Plano Empreendedor + landing page', basico: 'Plano Básico', premium: 'Plano Premium' },
+            recoEyebrowAlt: 'Uma alternativa para comparar',
+            recoLeadAlt: 'O {plan} cobre o que você selecionou, mas também inclui coisas que você não pediu. Se não for usá-las, sua configuração sob medida é igualmente válida.',
+            minSections: 'O {plan} inclui no mínimo {min} seções: você escolheu {n}, então teria {x} a mais do que precisa.',
+            unrequested: 'Inclui e você não pediu', unrequestedValue: 'Valor de tabela do que você não pediu: {value}. A diferença de preço é {diff}.',
+            unrequestedValueTie: 'Valor de tabela do que você não pediu: {value}, pelo mesmo preço.',
+            moreSections: '{n} seções a mais', moreSection: '1 seção a mais', morePages: 'até {n} páginas secundárias', morePage: 'até 1 página secundária',
+            pendingTitle: 'A confirmar com seu orçamento', whyPending: 'Cobre o que você escolheu e custa {diff} a menos. O que está marcado “a confirmar” eu confirmo com o orçamento.',
+            pendingItems: { mail: 'Contato por e-mail', map: 'Localização com mapa', agenda: 'Botão de agenda', dark: 'Modo claro / escuro', hours: 'Aviso de aberto / fechado' },
+            availability: 'Horários (a seção de disponibilidade já vem incluída)',
+            sameAlt: 'Outra opção pelo mesmo preço', sameAltDiff: '{plan}: mesmo preço. Diferenças: {list}.', sameAltNone: '{plan}: mesmo preço e mesmas funcionalidades.',
+            diffConfirm: '{item}: a confirmar', diffIncluded: '{item}: incluído', diffExtra: '{item}: somado como adicional',
             planWithStore: '{plan} + loja virtual',
             recoEyebrow: 'Há uma opção que pode ser melhor para você',
             recoLead: 'De acordo com o que você selecionou, o {plan} pode oferecer o que você precisa por um preço melhor que a sua configuração personalizada.',
@@ -217,6 +261,7 @@
             quotes: [], missingBase: [], need,
         };
         sel.sections = sel.sectionNames.length + sel.other;
+        sel.availability = sectionBoxes.some((box) => box.checked && box.dataset.availability !== undefined);
         rows.filter(isOn).forEach((r) => {
             const key = r.dataset.item;
             const input = rowInput(r);
@@ -259,44 +304,63 @@
         // Tipo de proyecto: un plan de tienda no sirve para una web, ni uno de web solo para una tienda
         if (plan.type === 'store' && sel.web) return null;
         if (plan.type === 'web' && !sel.web) return null;
+        if (plan.type === 'web+store' && !(sel.web && sel.store)) return null;
 
         const covered = [];
         const addons = [];
+        const pending = [];
+        const unrequested = [];   // { label, price|null }: lo que el plan trae y el cliente no pidió
         const addon = (label, price) => addons.push({ label, price });
+        let minNote = '';
 
         if (plan.type === 'store') {
             covered.push(T.storeIncluded);
         } else {
             covered.push(T.structure);
-            if (sel.sections) {
-                const inPlan = Math.min(sel.sections, plan.sections);
-                if (inPlan) covered.push(fill(inPlan === 1 ? T.nSection : T.nSections, { n: inPlan, max: plan.sections }));
-                const extra = sel.sections - inPlan;
-                if (extra) addon(fill(extra === 1 ? T.extraSection : T.extraSections, { n: extra }), times(PRICES.section, extra));
+            if ((plan.pending || []).includes('mail')) pending.push(T.pendingItems.mail);
+            // Secciones: si el plan ya trae la de disponibilidad, "Horarios" no se cuenta ni se cobra dos veces
+            let sections = sel.sections;
+            if (plan.availability && sel.availability) { sections -= 1; covered.push(T.availability); }
+            const inPlan = Math.min(sections, plan.sections);
+            if (inPlan) covered.push(fill(inPlan === 1 ? T.nSection : T.nSections, { n: inPlan, max: plan.sections }));
+            const extra = sections - inPlan;
+            if (extra) addon(fill(extra === 1 ? T.extraSection : T.extraSections, { n: extra }), times(PRICES.section, extra));
+            const short = Math.max(0, plan.minSections - sections);
+            if (short) {
+                unrequested.push({ label: fill(short === 1 ? T.moreSection : T.moreSections, { n: short }), price: times(PRICES.section, short) });
+                minNote = fill(T.minSections, { plan: T.plans[key], min: plan.minSections, n: sections, x: short });
             }
-            if (sel.pages) {
-                const inPlan = Math.min(sel.pages, plan.pages);
-                if (inPlan) covered.push(fill(inPlan === 1 ? T.nPage : T.nPages, { n: inPlan, max: plan.pages }));
-                const extra = sel.pages - inPlan;
-                if (extra) addon(fill(extra === 1 ? T.extraPage : T.extraPages, { n: extra }), times(PRICES.page, extra));
-            }
+            const pagesIn = Math.min(sel.pages, plan.pages);
+            if (pagesIn) covered.push(fill(pagesIn === 1 ? T.nPage : T.nPages, { n: pagesIn, max: plan.pages }));
+            const pagesExtra = sel.pages - pagesIn;
+            if (pagesExtra) addon(fill(pagesExtra === 1 ? T.extraPage : T.extraPages, { n: pagesExtra }), times(PRICES.page, pagesExtra));
+            const pagesUnused = plan.pages - pagesIn;
+            if (pagesUnused) unrequested.push({ label: fill(pagesUnused === 1 ? T.morePage : T.morePages, { n: pagesUnused }), price: times(PRICES.page, pagesUnused) });
             ['map', 'agenda', 'dark', 'hours'].forEach((item) => {
-                if (!sel[item]) return;
-                if (plan.includes.includes(item)) covered.push(rowName(row(item)));
-                else addon(rowName(row(item)), PRICES[item]);
+                if (plan.includes.includes(item)) {
+                    if (sel[item]) covered.push(rowName(row(item)));
+                    else unrequested.push({ label: T.benefits[item], price: PRICES[item] });
+                } else if (sel[item]) {
+                    if ((plan.pending || []).includes(item)) pending.push(T.pendingItems[item]);
+                    else addon(rowName(row(item)), PRICES[item]);
+                }
             });
-            if (sel.store) addon(T.store, PRICES.storeAddOn);
+            plan.extraBenefits.forEach((item) => unrequested.push({ label: T.benefits[item], price: null }));
+            if (plan.type === 'web' && sel.store) addon(T.store, PRICES.storeAddOn);
+            if (plan.type === 'web+store') covered.push(T.storeIncluded);
         }
         // Lo de la tienda que no viene en ningún plan se suma igual (mismo precio en las dos opciones)
         if (sel.products) addon(sel.products.label, PRICES.products[sel.products.tier]);
         if (sel.second) addon(rowName(row('second')), PRICES.second);
 
-        // Prestaciones del plan que el cliente no pidió (se muestran como "además incluye", nunca se cobran aparte)
-        const extras = plan.type === 'web'
-            ? [...plan.includes.filter((item) => !sel[item]), ...plan.extraBenefits].map((item) => T.benefits[item])
-            : [];
-        const total = sum([plan.price, ...addons.map((a) => a.price)]);
-        return { key, name: sel.store && plan.type === 'web' ? fill(T.planWithStore, { plan: T.plans[key] }) : T.plans[key], plan, covered, addons, extras, total };
+        const total = sum([plan.price, ...addons.map((x) => x.price)]);
+        const unrequestedValue = sum(unrequested.filter((u) => u.price).map((u) => u.price));
+        const name = sel.store && plan.type === 'web' ? fill(T.planWithStore, { plan: T.plans[key] }) : T.plans[key];
+        const status = {};
+        ['mail', 'map', 'agenda', 'dark', 'hours'].forEach((item) => {
+            status[item] = (plan.includes || []).includes(item) ? 'included' : ((plan.pending || []).includes(item) ? 'pending' : 'extra');
+        });
+        return { key, name, plan, covered, addons, pending, unrequested, unrequestedValue, minNote, total, status };
     };
 
     // Recomienda el plan más barato que cubra la selección, solo si cuesta lo mismo o menos que la configuración.
@@ -305,14 +369,19 @@
         if (!budget.lines.length) return null;
         // La decisión se toma siempre en pesos (la moneda de referencia de los precios), así la misma selección
         // da la misma recomendación en ARS y en USD; los dólares están redondeados y podrían cambiar el resultado.
+        // A igual precio, primero el que deja menos cosas "a confirmar" (cubre más con certeza; no es una elección arbitraria).
         const options = Object.keys(PLANS).map((key) => planOption(key, sel)).filter(Boolean)
-            .sort((a, b) => a.total[0] - b.total[0]);
+            .sort((a, b) => a.total[0] - b.total[0] || (a.plan.pending || []).length - (b.plan.pending || []).length);
         const best = options[0];
         if (!best || best.total[0] > budget.subtotal[0]) return null;
-        // Mismo precio y nada más incluido = es exactamente ese plan: se avisa, no se "recomienda"
-        if (best.total[0] === budget.subtotal[0] && !best.extras.length) return { ...best, match: true };
+        const same = options.slice(1).filter((o) => o.total[0] === best.total[0]);
+        const tie = best.total[0] === budget.subtotal[0];
+        // Mismo precio y nada de más ni a confirmar = es exactamente ese plan: se avisa, no se "recomienda"
+        if (tie && !best.unrequested.length && !best.pending.length) return { ...best, match: true };
         const diff = Math.max(0, budget.subtotal[cur] - best.total[cur]);   // se muestra en la moneda elegida
-        return { ...best, diff, custom: budget.subtotal };
+        // Si el plan trae cosas que el cliente no pidió (o cuesta lo mismo), se presenta como alternativa, no como "conviene más"
+        const alt = best.unrequested.some((u) => u.price) || Boolean(best.minNote) || tie;
+        return { ...best, diff, custom: budget.subtotal, alt, same };
     };
 
     // ---------------------------------------------------------------------------------------------
@@ -371,9 +440,11 @@
 
         reco.className = 'cp-reco';
         reco.dataset.id = id;
-        reco.append(el('p', 'eyebrow', T.recoEyebrow));
+        reco.classList.toggle('is-alt', rec.alt);
+        reco.append(el('p', 'eyebrow', rec.alt ? T.recoEyebrowAlt : T.recoEyebrow));
         reco.append(el('h3', '', rec.name));
-        reco.append(el('p', 'cp-reco-lead', fill(rec.diff ? T.recoLead : T.recoLeadTie, { plan: rec.name })));
+        reco.append(el('p', 'cp-reco-lead', fill(rec.alt ? T.recoLeadAlt : (rec.diff ? T.recoLead : T.recoLeadTie), { plan: rec.name })));
+        if (rec.minNote) reco.append(el('p', 'cp-reco-min', rec.minNote));
 
         const compare = el('dl', 'cp-reco-compare');
         const pair = (label, value, cls) => {
@@ -386,15 +457,34 @@
         pair(T.recoDiff, rec.diff ? `− ${money(cur ? [0, rec.diff] : [rec.diff, 0])}` : T.recoSame, 'is-diff');
         reco.appendChild(compare);
 
-        const why = rec.diff
-            ? fill(rec.addons.length ? T.whyCheaperAddons : T.whyCheaper, { diff: money(cur ? [0, rec.diff] : [rec.diff, 0]) })
-            : fill(T.whyTie, { list: joinList(rec.extras) });
-        reco.append(el('p', 'cp-reco-why', why));
+        const diffText = money(cur ? [0, rec.diff] : [rec.diff, 0]);
+        if (rec.diff) {
+            const why = rec.pending.length ? T.whyPending : (rec.addons.length ? T.whyCheaperAddons : T.whyCheaper);
+            reco.append(el('p', 'cp-reco-why', fill(why, { diff: diffText })));
+        }
 
         [listBlock(T.covers, rec.covered, 'is-covered'),
             listBlock(T.addons, rec.addons, 'is-addons'),
-            rec.diff ? listBlock(T.alsoIncludes, rec.extras, 'is-extras') : null,
+            listBlock(T.pendingTitle, rec.pending, 'is-pending'),
+            listBlock(T.unrequested, rec.unrequested.map((u) => (u.price ? u : u.label)), 'is-unrequested'),
             listBlock(T.outside, sel.quotes, 'is-outside')].forEach((block) => { if (block) reco.appendChild(block); });
+        if (rec.unrequestedValue[cur]) {
+            reco.append(el('p', 'cp-reco-value', fill(rec.diff ? T.unrequestedValue : T.unrequestedValueTie, { value: money(rec.unrequestedValue), diff: diffText })));
+        }
+        // Otra combinación con el mismo precio (por ejemplo, Básico + tienda y Emprendedor + landing): se muestran las dos
+        if (rec.same.length) {
+            const lines = rec.same.map((other) => {
+                const diffs = Object.keys(other.status).filter((item) => other.status[item] !== rec.status[item]).map((item) => {
+                    const label = T.pendingItems[item] || T.benefits[item];
+                    if (other.status[item] === 'pending') return fill(T.diffConfirm, { item: label });
+                    if (other.status[item] === 'included') return fill(T.diffIncluded, { item: label });
+                    return fill(T.diffExtra, { item: label });
+                });
+                return diffs.length ? fill(T.sameAltDiff, { plan: other.name, list: joinList(diffs) }) : fill(T.sameAltNone, { plan: other.name });
+            });
+            const block = listBlock(T.sameAlt, lines, 'is-same');
+            if (block) reco.appendChild(block);
+        }
 
         if (sel.urgent) reco.append(el('p', 'cp-reco-note', T.urgentNote));
         if (sel.support) reco.append(el('p', 'cp-reco-note', T.supportNote));
@@ -537,7 +627,20 @@
         new IntersectionObserver(([entry]) => bar.classList.toggle('is-away', entry.isIntersecting)).observe(summary);
     }
 
-    root.addEventListener('change', render);
-    root.addEventListener('input', render);
-    render();
+    // Parte del resumen que se desliza: marca si hay más contenido abajo (para el desvanecido)
+    const scrollArea = summary.querySelector('.cp-summary-scroll');
+    const syncScroll = () => {
+        if (!scrollArea) return;
+        const scrollable = scrollArea.scrollHeight > scrollArea.clientHeight + 2;
+        scrollArea.classList.toggle('is-scrollable', scrollable);
+        scrollArea.classList.toggle('is-end', scrollable && scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 2);
+    };
+    scrollArea?.addEventListener('scroll', syncScroll, { passive: true });
+    window.addEventListener('resize', syncScroll);
+
+    const update = () => { render(); syncScroll(); };
+    root.addEventListener('change', update);
+    root.addEventListener('input', update);
+    root.addEventListener('click', () => requestAnimationFrame(syncScroll));
+    update();
 })();
