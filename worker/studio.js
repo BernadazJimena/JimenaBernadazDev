@@ -510,6 +510,8 @@ export class StudioData extends DurableObject {
     if (!giveawayTaskColumns.includes('project')) this.sql.exec("ALTER TABLE tasks ADD COLUMN project TEXT NOT NULL DEFAULT ''");
     // Fecha en que llegó todo el material del proyecto: desde ahí corre el plazo de entrega (se completa sola al pasar a Diseño)
     const agendaProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
+    // Adicionales pedidos en un proyecto creado desde el panel (módulo Brief): el brief suma sus preguntas
+    if (!agendaProjectColumns.includes('request')) this.sql.exec("ALTER TABLE projects ADD COLUMN request TEXT NOT NULL DEFAULT ''");
     if (!agendaProjectColumns.includes('materials_at')) this.sql.exec("ALTER TABLE projects ADD COLUMN materials_at TEXT NOT NULL DEFAULT ''");
     const agendaClientColumns = this.sql.exec('PRAGMA table_info(clients)').toArray().map((c) => c.name);
     if (!agendaClientColumns.includes('source')) this.sql.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT ''");
@@ -976,6 +978,16 @@ export class StudioData extends DurableObject {
     return { ok: true };
   }
 
+  // Datos para mandar el link del brief de un proyecto (mail y nombre salen de la ficha del cliente)
+  projectInvite(token) {
+    const row = this.sql.exec('SELECT p.lang, p.client, c.email, c.name FROM projects p LEFT JOIN clients c ON c.id = p.client_id WHERE p.token = ?', token).toArray()[0];
+    return row ? { lang: row.lang, email: row.email || '', name: (row.name || row.client || '').split(' ')[0] } : null;
+  }
+
+  logInvite(token) {
+    this.logEvent(token, '📧', 'Le mandaste por mail el link para completar su brief');
+  }
+
   winnerRow(id) {
     return this.sql.exec('SELECT w.*, g.name AS giveaway_name FROM giveaway_winners w JOIN giveaways g ON g.id = w.giveaway_id WHERE w.id = ?', id).toArray()[0];
   }
@@ -1251,6 +1263,7 @@ export class StudioData extends DurableObject {
     if (project.phone) this.sql.exec("UPDATE clients SET phone = ? WHERE id = ? AND phone = ''", project.phone, clientId);
     this.sql.exec(`INSERT INTO projects (token, client, project, lang, due, quote, created, updated, client_id, code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       token, project.client, project.project, project.lang, project.due, project.quote || '', now, now, clientId, this.nextProjectCode());
+    if (project.request) this.sql.exec('UPDATE projects SET request = ? WHERE token = ?', project.request, token);
     this.logEvent(token, '🤝', project.quote ? 'Aceptó el presupuesto: se creó el proyecto y se le pidió el brief' : 'Proyecto creado a mano');
     return token;
   }
@@ -1377,8 +1390,8 @@ export class StudioData extends DurableObject {
     const fromQuote = this.sql.exec(`SELECT i.plan, i.lang, i.name, i.code, i.message FROM inquiries i JOIN projects p ON p.quote = i.token
       WHERE i.token = ? AND i.kind = 'presupuesto'`, token).toArray()[0];
     if (fromQuote) return { planText: fromQuote.plan, lang: fromQuote.lang, client: fromQuote.name, code: fromQuote.code, request: fromQuote.message };
-    const project = this.sql.exec("SELECT project, lang, client FROM projects WHERE token = ? AND quote = ''", token).toArray()[0];
-    return project ? { planText: project.project, lang: project.lang, client: project.client, code: '', request: '' } : null;
+    const project = this.sql.exec("SELECT project, lang, client, request FROM projects WHERE token = ? AND quote = ''", token).toArray()[0];
+    return project ? { planText: project.project, lang: project.lang, client: project.client, code: '', request: project.request || '' } : null;
   }
 
   // Al publicar: link de la reseña (si todavía no la dejó) y el cupón (con su estado)
@@ -2190,6 +2203,17 @@ export async function handleStudio(request, env, ctx) {
       return json({ ...saved, cotizador: await store.cotizadorData() });
     }
 
+    // ---- Brief: mandarle por mail a un cliente el link de su brief (proyecto creado desde el módulo Brief)
+    if (path === '/api/admin/brief-invitar') {
+      if (!TOKEN.test(body.token || '')) return badRequest();
+      const c = await store.projectInvite(body.token);
+      if (!c) return notFound();
+      if (!c.email) return json({ ok: false, error: 'email' });
+      const mailed = await sendAnyMail(env, c.email, briefInviteMail({ lang: c.lang, name: c.name, link: `${projectLink(c.lang, body.token)}#brief` }));
+      if (mailed) await store.logInvite(body.token);
+      return json({ ok: mailed });
+    }
+
     if (path === '/api/admin/reiniciar') {
       if (body.confirm !== 'REINICIAR') return badRequest();
       await store.resetAll();
@@ -2330,6 +2354,7 @@ export async function handleStudio(request, env, ctx) {
         fullName: oneLine(body.fullName, 100),
         email: oneLine(body.email, 160),
         phone: oneLine(body.phone, 40),
+        request: text(body.request, 2000),
       };
       if (!project.client || !project.project) return badRequest();
       if (project.email && !normEmail(project.email)) return badRequest();

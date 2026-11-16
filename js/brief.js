@@ -190,7 +190,8 @@
     };
     const extrasFrom = (text) => {
         // Solo la línea de adicionales del pedido ("Quiero sumar o actualizar: ...")
-        const line = String(text || '').split('\n').find((row) => /^(Quiero sumar o actualizar|I want to add or update|Quero adicionar ou atualizar):/i.test(row)) || '';
+        // También la línea del Plan a medida ("Web a medida: ..."), así sus ítems suman las mismas preguntas que los adicionales
+        const line = String(text || '').split('\n').filter((row) => /^(Quiero sumar o actualizar|I want to add or update|Quero adicionar ou atualizar|Web a medida|Custom website|Site sob medida):/i.test(row)).join(' ');
         return Object.fromEntries(Object.entries(EXTRAS).map(([key, re]) => [key, re.test(line)]));
     };
 
