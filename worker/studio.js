@@ -84,6 +84,13 @@ const newCode = (now) => `JNB-${String(now.getUTCFullYear()).slice(2)}${String(n
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
 const oneLine = (value, max) => text(value, max).replace(/\s+/g, ' ');
 const isoDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '');
+// Mail normalizado (sin espacios y en minúsculas): dos pedidos con el mismo mail son del mismo cliente
+const normEmail = (value) => {
+  const mail = String(value || '').trim().toLowerCase();
+  return EMAIL.test(mail) ? mail.slice(0, 160) : '';
+};
+const clientCode = (id) => `JNB-CLI-${String(id).padStart(4, '0')}`;
+const CLIENT_STATUSES = ['', 'contacto', 'presupuesto', 'activo', 'publicado', 'inactivo'];
 
 export class StudioData extends DurableObject {
   constructor(ctx, env) {
@@ -206,12 +213,208 @@ export class StudioData extends DurableObject {
       data BLOB NOT NULL,
       PRIMARY KEY (file, idx)
     )`);
+    // ---- Fichas de cliente (una por persona). La clave técnica es id; el código JNB-CLI-0001 sale del id y no cambia nunca
+    // (AUTOINCREMENT no reutiliza números, aunque se una o se borre una ficha). El mail se guarda normalizado y no se repite.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS clients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE,
+      phone TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      created TEXT NOT NULL
+    )`);
+    // Cada pedido y cada proyecto apunta a su cliente; los datos personales viven solo en clients
+    const crmInquiryColumns = this.sql.exec('PRAGMA table_info(inquiries)').toArray().map((c) => c.name);
+    if (!crmInquiryColumns.includes('client_id')) this.sql.exec('ALTER TABLE inquiries ADD COLUMN client_id INTEGER REFERENCES clients(id)');
+    // Consultas nuevas (sin ver): las que ya existían cuentan como vistas
+    if (!crmInquiryColumns.includes('seen')) this.sql.exec('ALTER TABLE inquiries ADD COLUMN seen INTEGER NOT NULL DEFAULT 1');
+    const crmProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
+    if (!crmProjectColumns.includes('client_id')) this.sql.exec('ALTER TABLE projects ADD COLUMN client_id INTEGER REFERENCES clients(id)');
+    // Código del proyecto (JNB-PRY-0001): distinto del código del cliente y del número de solicitud JNB-AAMM-XXXX
+    if (!crmProjectColumns.includes('code')) this.sql.exec('ALTER TABLE projects ADD COLUMN code TEXT');
+    this.sql.exec('CREATE UNIQUE INDEX IF NOT EXISTS projects_code ON projects(code)');
+    this.sql.exec('CREATE INDEX IF NOT EXISTS inquiries_client ON inquiries(client_id)');
+    this.sql.exec('CREATE INDEX IF NOT EXISTS projects_client ON projects(client_id)');
+    // Pagos de cada proyecto (los carga Jimena a mano: anticipo, saldo, cuotas). Sin fecha de pago = pendiente.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project TEXT NOT NULL REFERENCES projects(token),
+      concept TEXT NOT NULL,
+      currency TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      due TEXT NOT NULL DEFAULT '',
+      paid TEXT NOT NULL DEFAULT '',
+      method TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      created TEXT NOT NULL
+    )`);
+    this.sql.exec('CREATE INDEX IF NOT EXISTS payments_project ON payments(project)');
+    this.linkClients();
+  }
+
+  // ---- Clientes
+  // Asocia los pedidos y proyectos que todavía no tienen cliente (los que ya existían antes de las fichas).
+  // Se recorre todo por fecha, así JNB-CLI-0001 es el cliente más antiguo. Se puede correr las veces que sea: solo toca lo que falta.
+  linkClients() {
+    const pending = [
+      ...this.sql.exec('SELECT code AS ref, created, name, email FROM inquiries WHERE client_id IS NULL').toArray().map((r) => ({ ...r, type: 'inquiry' })),
+      ...this.sql.exec('SELECT token AS ref, created, client AS name, quote FROM projects WHERE client_id IS NULL').toArray().map((r) => ({ ...r, type: 'project' })),
+    ].sort((a, b) => (a.created < b.created ? -1 : a.created > b.created ? 1 : (a.type === 'inquiry' ? -1 : 1)));
+    const noCode = this.sql.exec('SELECT token FROM projects WHERE code IS NULL ORDER BY created').toArray();
+    if (!pending.length && !noCode.length) return;
+    this.ctx.storage.transactionSync(() => {
+      for (const row of pending) {
+        if (row.type === 'inquiry') {
+          this.sql.exec('UPDATE inquiries SET client_id = ? WHERE code = ?', this.clientFor(row.email, row.name, row.created), row.ref);
+          continue;
+        }
+        let id = null;
+        if (row.quote) {
+          const quote = this.sql.exec('SELECT client_id, email, name, created FROM inquiries WHERE token = ?', row.quote).toArray()[0];
+          if (quote) id = quote.client_id || this.clientFor(quote.email, quote.name, quote.created);
+        }
+        // Proyecto creado a mano (o cuyo pedido ya no está): el mail que puso en el brief, si lo hay
+        if (!id) id = this.clientFor(this.briefEmail(row.quote || row.ref), row.name, row.created);
+        this.sql.exec('UPDATE projects SET client_id = ? WHERE token = ?', id, row.ref);
+      }
+      for (const row of noCode) this.sql.exec('UPDATE projects SET code = ? WHERE token = ?', this.nextProjectCode(), row.token);
+    });
+  }
+
+  briefEmail(token) {
+    const brief = token ? this.sql.exec('SELECT answers FROM briefs WHERE token = ?', token).toArray()[0] : null;
+    if (!brief) return '';
+    try { return normEmail(JSON.parse(brief.answers).email); } catch { return ''; }
+  }
+
+  // El cliente de ese mail (normalizado) o, si no hay, una ficha nueva. Sin mail siempre es una ficha nueva:
+  // nunca se une a nadie por el nombre (si coincide, aparece en "Posibles duplicados" para que Jimena decida).
+  clientFor(email, name, created = new Date().toISOString()) {
+    const mail = normEmail(email);
+    if (mail) {
+      const row = this.sql.exec('SELECT id FROM clients WHERE email = ?', mail).toArray()[0];
+      if (row) return row.id;
+    }
+    this.sql.exec('INSERT INTO clients (name, email, created) VALUES (?, ?, ?)', oneLine(name, 100) || 'Sin nombre', mail || null, created);
+    const id = this.sql.exec('SELECT last_insert_rowid() AS id').one().id;
+    this.sql.exec('UPDATE clients SET code = ? WHERE id = ?', clientCode(id), id);
+    return id;
+  }
+
+  clientExists(id) {
+    return Boolean(this.sql.exec('SELECT 1 FROM clients WHERE id = ?', id).toArray().length);
+  }
+
+  addClient(data) {
+    const mail = normEmail(data.email);
+    if (mail && this.sql.exec('SELECT 1 FROM clients WHERE email = ?', mail).toArray().length) return { error: 'email' };
+    const id = this.clientFor(mail, data.name);
+    this.sql.exec('UPDATE clients SET phone = ?, note = ? WHERE id = ?', data.phone || '', data.note || '', id);
+    return { id, code: clientCode(id) };
+  }
+
+  setClient(id, data) {
+    if (!this.clientExists(id)) return { error: 'not found' };
+    const mail = normEmail(data.email);
+    if (mail && this.sql.exec('SELECT 1 FROM clients WHERE email = ? AND id != ?', mail, id).toArray().length) return { error: 'email' };
+    this.sql.exec('UPDATE clients SET name = ?, email = ?, phone = ?, status = ?, note = ? WHERE id = ?',
+      data.name, mail || null, data.phone, data.status, data.note, id);
+    return { ok: true };
+  }
+
+  // Unir dos fichas (solo cuando Jimena lo confirma): todo pasa a "into" y la ficha "from" deja de existir.
+  // El código de "from" no se vuelve a usar.
+  mergeClients(from, into) {
+    if (from === into || !this.clientExists(from) || !this.clientExists(into)) return false;
+    this.ctx.storage.transactionSync(() => {
+      const source = this.sql.exec('SELECT code, email, phone, note FROM clients WHERE id = ?', from).one();
+      const target = this.sql.exec('SELECT email, phone, note FROM clients WHERE id = ?', into).one();
+      this.sql.exec('UPDATE inquiries SET client_id = ? WHERE client_id = ?', into, from);
+      this.sql.exec('UPDATE projects SET client_id = ? WHERE client_id = ?', into, from);
+      this.sql.exec('DELETE FROM clients WHERE id = ?', from);
+      const note = [target.note, source.note].filter(Boolean).join('\n');
+      this.sql.exec('UPDATE clients SET email = ?, phone = ?, note = ? WHERE id = ?',
+        target.email || source.email || null, target.phone || source.phone, note, into);
+      const merged = `Se unió la ficha ${source.code}${source.email && source.email !== target.email ? ` (${source.email})` : ''}`;
+      for (const p of this.sql.exec('SELECT token FROM projects WHERE client_id = ?', into).toArray()) this.logEvent(p.token, '🔗', merged);
+    });
+    return true;
+  }
+
+  // Pares que Jimena marcó como "no son la misma persona"
+  notDuplicates() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'noDuplicados'").toArray()[0];
+    return row ? JSON.parse(row.value) : [];
+  }
+
+  dismissDuplicate(a, b) {
+    const pair = [a, b].sort((x, y) => x - y).join('-');
+    const list = [...new Set([...this.notDuplicates(), pair])];
+    this.sql.exec(`INSERT INTO settings (key, value) VALUES ('noDuplicados', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value`, JSON.stringify(list));
+  }
+
+  // Archivos de todos los briefs de un cliente (sin marcar el brief como visto)
+  clientFiles(id) {
+    return this.sql.exec(`SELECT f.id, f.name, f.size, f.created, p.code AS projectCode, p.project
+      FROM brief_files f JOIN projects p ON f.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)
+      WHERE p.client_id = ? ORDER BY f.created DESC`, id).toArray();
+  }
+
+  nextProjectCode() {
+    const row = this.sql.exec("SELECT value FROM settings WHERE key = 'seqProyecto'").toArray()[0];
+    const n = (row ? Number(row.value) : 0) + 1;
+    this.sql.exec(`INSERT INTO settings (key, value) VALUES ('seqProyecto', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value`, String(n));
+    return `JNB-PRY-${String(n).padStart(4, '0')}`;
+  }
+
+  // ---- Pagos
+  addPayment(data) {
+    if (!this.sql.exec('SELECT 1 FROM projects WHERE token = ?', data.project).toArray().length) return false;
+    this.sql.exec('INSERT INTO payments (project, concept, currency, amount, due, paid, method, note, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      data.project, data.concept, data.currency, data.amount, data.due, data.paid, data.method, data.note, new Date().toISOString());
+    this.logEvent(data.project, '💳', `${data.paid ? 'Pago registrado' : 'Pago pendiente'}: ${data.concept} · ${data.currency} ${data.amount.toLocaleString('es-AR')}`);
+    return true;
+  }
+
+  setPayment(id, data) {
+    const row = this.sql.exec('SELECT project, concept, paid FROM payments WHERE id = ?', id).toArray()[0];
+    if (!row) return false;
+    if (data.remove) {
+      this.sql.exec('DELETE FROM payments WHERE id = ?', id);
+      this.logEvent(row.project, '🗑️', `Se borró el pago: ${row.concept}`);
+      return true;
+    }
+    this.sql.exec('UPDATE payments SET concept = ?, currency = ?, amount = ?, due = ?, paid = ?, method = ?, note = ? WHERE id = ?',
+      data.concept, data.currency, data.amount, data.due, data.paid, data.method, data.note, id);
+    if (data.paid && !row.paid) this.logEvent(row.project, '💳', `Pagó: ${data.concept} · ${data.currency} ${data.amount.toLocaleString('es-AR')}`);
+    return true;
+  }
+
+  // ---- Consultas nuevas
+  markSeen(codes) {
+    if (codes === 'all') this.sql.exec('UPDATE inquiries SET seen = 1 WHERE seen = 0');
+    else for (const code of codes) this.sql.exec('UPDATE inquiries SET seen = 1 WHERE code = ?', code);
+  }
+
+  // ---- Copia de seguridad: todas las tablas (los archivos del brief van solo con su nombre y tamaño; se bajan desde cada proyecto)
+  backup() {
+    const tables = this.sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name != 'brief_chunks' ORDER BY name").toArray();
+    const out = { created: new Date().toISOString(), tables: {} };
+    for (const { name } of tables) out.tables[name] = this.sql.exec(`SELECT * FROM "${name}"`).toArray();
+    return out;
   }
 
   // ---- Consultas y pedidos de presupuesto
   addInquiry(data) {
     const now = new Date();
-    this.sql.exec('DELETE FROM inquiries WHERE created < ?', new Date(now - KEEP_INQUIRIES_DAYS * DAY).toISOString());
+    // Al año se borran solas las consultas que no llegaron a ser un proyecto (las de un proyecto quedan en la ficha del cliente),
+    // y también las fichas que quedaron sin pedidos ni proyectos (salvo que Jimena les haya puesto estado o nota)
+    const cutoff = new Date(now - KEEP_INQUIRIES_DAYS * DAY).toISOString();
+    this.sql.exec("DELETE FROM inquiries WHERE created < ? AND token NOT IN (SELECT quote FROM projects WHERE quote != '')", cutoff);
+    this.sql.exec(`DELETE FROM clients WHERE created < ? AND status = '' AND note = ''
+      AND NOT EXISTS (SELECT 1 FROM inquiries i WHERE i.client_id = clients.id) AND NOT EXISTS (SELECT 1 FROM projects p WHERE p.client_id = clients.id)`, cutoff);
     // Freno para envíos automáticos: como mucho 5 por mail por hora
     const lastHour = new Date(now - DAY / 24).toISOString();
     if (this.sql.exec('SELECT COUNT(*) AS n FROM inquiries WHERE email = ? AND created > ?', data.email, lastHour).one().n >= 5) return null;
@@ -220,8 +423,10 @@ export class StudioData extends DurableObject {
     const token = newToken();
     // El cupón se guarda solo si es válido en este momento
     const coupon = data.coupon && this.couponState(data.coupon).valid ? data.coupon : '';
-    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon, country)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon, data.country || '');
+    // Mismo mail = mismo cliente: no se crea una ficha nueva por cada pedido
+    const clientId = this.clientFor(data.email, data.name, now.toISOString());
+    this.sql.exec(`INSERT INTO inquiries (code, token, kind, created, lang, name, email, plan, message, coupon, country, client_id, seen)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`, code, token, data.kind, now.toISOString(), data.lang, data.name, data.email, data.plan, data.message, coupon, data.country || '', clientId);
     return { code, token, created: now.toISOString(), coupon };
   }
 
@@ -286,7 +491,7 @@ export class StudioData extends DurableObject {
   }
 
   setQuote(token, status, proposal) {
-    const row = this.sql.exec("SELECT proposal, name, plan, lang FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
+    const row = this.sql.exec("SELECT proposal, name, plan, lang, client_id FROM inquiries WHERE token = ? AND kind = 'presupuesto'", token).toArray()[0];
     if (!row) return false;
     // Al aceptarlo se crea solo el seguimiento del proyecto, vinculado a este presupuesto (una sola vez)
     if (status === 'aceptado') {
@@ -299,7 +504,7 @@ export class StudioData extends DurableObject {
     }
     let created = false;
     if (status === 'aceptado' && !this.sql.exec('SELECT 1 FROM projects WHERE quote = ?', token).toArray().length) {
-      this.addProject({ client: row.name.split(' ')[0], project: row.plan || '—', lang: row.lang, due: '', quote: token });
+      this.addProject({ client: row.name.split(' ')[0], project: row.plan || '—', lang: row.lang, due: '', quote: token, clientId: row.client_id });
       created = true;
     }
     // La fecha de emisión se fija la primera vez que se envía y no cambia al corregir la propuesta
@@ -347,8 +552,12 @@ export class StudioData extends DurableObject {
   addProject(project) {
     const token = newToken();
     const now = new Date().toISOString();
-    this.sql.exec(`INSERT INTO projects (token, client, project, lang, due, quote, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      token, project.client, project.project, project.lang, project.due, project.quote || '', now, now);
+    // Cliente: el del presupuesto, el elegido en el panel o, si es nuevo, una ficha con el mail que se cargó
+    const clientId = project.clientId && this.clientExists(project.clientId)
+      ? project.clientId : this.clientFor(project.email, project.fullName || project.client, now);
+    if (project.phone) this.sql.exec("UPDATE clients SET phone = ? WHERE id = ? AND phone = ''", project.phone, clientId);
+    this.sql.exec(`INSERT INTO projects (token, client, project, lang, due, quote, created, updated, client_id, code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      token, project.client, project.project, project.lang, project.due, project.quote || '', now, now, clientId, this.nextProjectCode());
     this.logEvent(token, '🤝', project.quote ? 'Aceptó el presupuesto: se creó el proyecto y se le pidió el brief' : 'Proyecto creado a mano');
     return token;
   }
@@ -360,6 +569,8 @@ export class StudioData extends DurableObject {
 
   setProject(token, changes) {
     if (changes.remove) {
+      // Un proyecto con pagos cargados no se borra (primero hay que borrar sus pagos): así no quedan pagos sueltos
+      if (this.sql.exec('SELECT 1 FROM payments WHERE project = ?', token).toArray().length) return { error: 'payments' };
       this.sql.exec('DELETE FROM projects WHERE token = ?', token);
       return true;
     }
@@ -623,12 +834,19 @@ export class StudioData extends DurableObject {
   // ---- Panel
   everything() {
     return {
-      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon, country
-        FROM inquiries ORDER BY created DESC LIMIT 300`).toArray()
+      clients: this.sql.exec(`SELECT c.id, c.code, c.name, c.email, c.phone, c.status, c.note, c.created,
+        (SELECT COUNT(*) FROM projects p WHERE p.client_id = c.id) AS projectCount,
+        (SELECT COUNT(*) FROM inquiries i WHERE i.client_id = c.id) AS inquiryCount
+        FROM clients c ORDER BY c.id DESC`).toArray(),
+      notDuplicates: this.notDuplicates(),
+      payments: this.sql.exec(`SELECT y.id, y.project, y.concept, y.currency, y.amount, y.due, y.paid, y.method, y.note, y.created, p.code AS projectCode, p.client_id AS clientId
+        FROM payments y JOIN projects p ON p.token = y.project ORDER BY (y.paid = '') DESC, COALESCE(NULLIF(y.paid, ''), y.due, y.created) DESC`).toArray(),
+      inquiries: this.sql.exec(`SELECT code, token, kind, created, lang, name, email, plan, message, status, proposal, mailed, coupon, country, client_id AS clientId, seen
+        FROM inquiries ORDER BY created DESC LIMIT 3000`).toArray()
         .map((row) => ({ ...row, proposal: row.proposal ? JSON.parse(row.proposal) : null })),
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
-      projects: this.sql.exec(`SELECT p.token, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
+      projects: this.sql.exec(`SELECT p.token, p.code, p.client_id AS clientId, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
         p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
         p.review_token AS reviewToken, (SELECT used FROM invitations v WHERE v.token = p.review_token) AS reviewDone,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
@@ -638,7 +856,7 @@ export class StudioData extends DurableObject {
         LEFT JOIN inquiries i ON i.token = p.quote AND p.quote != ''
         LEFT JOIN briefs b ON b.token = (CASE WHEN p.quote != '' THEN p.quote ELSE p.token END)
         ORDER BY p.updated DESC`).toArray(),
-      coupons: this.sql.exec(`SELECT c.code, c.client, c.email, c.lang, c.percent, c.created, c.expires, c.used_inquiry AS usedBy, c.used_at AS usedAt
+      coupons: this.sql.exec(`SELECT c.code, (SELECT client_id FROM projects p WHERE p.token = c.project) AS clientId, c.client, c.email, c.lang, c.percent, c.created, c.expires, c.used_inquiry AS usedBy, c.used_at AS usedAt
         FROM coupons c ORDER BY c.created DESC`).toArray(),
       events: this.sql.exec('SELECT project, at, icon, text FROM project_events ORDER BY at DESC LIMIT 3000').toArray(),
       minPublicReviews: MIN_PUBLIC_REVIEWS,
@@ -998,8 +1216,88 @@ export async function handleStudio(request, env, ctx) {
       return new Response(confirmationMail(inquiry, link).html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
     }
 
+    // Copia de seguridad de todo lo guardado (se descarga como archivo .json)
+    if (path === '/api/admin/copia' && request.method === 'GET') {
+      const copy = await store.backup();
+      return new Response(JSON.stringify(copy, null, 1), {
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'content-disposition': `attachment; filename="jnb-panel-copia-${copy.created.slice(0, 10)}.json"`,
+          'cache-control': 'no-store',
+        },
+      });
+    }
+
+    if ((match = path.match(/^\/api\/admin\/clientes\/(\d+)\/archivos$/)) && request.method === 'GET') {
+      return json({ files: await store.clientFiles(Number(match[1])) });
+    }
+
     if (request.method !== 'POST') return notFound();
     const body = (await readJson(request)) || {};
+
+    // ---- Clientes
+    const clientData = () => ({
+      name: oneLine(body.name, 100),
+      email: oneLine(body.email, 160),
+      phone: oneLine(body.phone, 40),
+      status: CLIENT_STATUSES.includes(body.status) ? body.status : '',
+      note: text(body.note, 2000),
+    });
+    if (path === '/api/admin/clientes') {
+      const data = clientData();
+      if (!data.name || (data.email && !normEmail(data.email))) return badRequest();
+      const saved = await store.addClient(data);
+      return saved.error ? json(saved, 409) : json(saved);
+    }
+    if ((match = path.match(/^\/api\/admin\/clientes\/(\d+)$/))) {
+      const data = clientData();
+      if (!data.name || (data.email && !normEmail(data.email))) return badRequest();
+      const saved = await store.setClient(Number(match[1]), data);
+      if (saved.error === 'not found') return notFound();
+      return saved.error ? json(saved, 409) : json(saved);
+    }
+    if ((match = path.match(/^\/api\/admin\/clientes\/(\d+)\/unir$/))) {
+      const into = Number(body.into);
+      if (!Number.isInteger(into)) return badRequest();
+      return (await store.mergeClients(Number(match[1]), into)) ? json({ ok: true }) : notFound();
+    }
+    if (path === '/api/admin/duplicados/descartar') {
+      const a = Number(body.a);
+      const b = Number(body.b);
+      if (!Number.isInteger(a) || !Number.isInteger(b)) return badRequest();
+      await store.dismissDuplicate(a, b);
+      return json({ ok: true });
+    }
+
+    // ---- Pagos
+    const paymentData = () => ({
+      project: String(body.project || ''),
+      concept: oneLine(body.concept, 60),
+      currency: body.currency === 'USD' ? 'USD' : '$',
+      amount: Number(String(body.amount || '').replace(/[^0-9]/g, '')),
+      due: isoDate(body.due),
+      paid: isoDate(body.paid),
+      method: oneLine(body.method, 40),
+      note: text(body.note, 500),
+      remove: body.remove === true,
+    });
+    if (path === '/api/admin/pagos') {
+      const data = paymentData();
+      if (!TOKEN.test(data.project) || !data.concept || !data.amount) return badRequest();
+      return (await store.addPayment(data)) ? json({ ok: true }) : notFound();
+    }
+    if ((match = path.match(/^\/api\/admin\/pagos\/(\d+)$/))) {
+      const data = paymentData();
+      if (!data.remove && (!data.concept || !data.amount)) return badRequest();
+      return (await store.setPayment(Number(match[1]), data)) ? json({ ok: true }) : notFound();
+    }
+
+    // ---- Consultas nuevas: marcar como vistas (una, varias o todas)
+    if (path === '/api/admin/consultas/vistas') {
+      const codes = body.all === true ? 'all' : (Array.isArray(body.codes) ? body.codes.filter((c) => CODE.test(c)).slice(0, 500) : []);
+      await store.markSeen(codes);
+      return json({ ok: true });
+    }
 
     if ((match = path.match(/^\/api\/admin\/presupuestos\/([^/]+)$/))) {
       if (!TOKEN.test(match[1])) return notFound();
@@ -1053,8 +1351,14 @@ export async function handleStudio(request, env, ctx) {
         project: oneLine(body.project, 120),
         lang: LANGS.has(body.lang) ? body.lang : 'es',
         due: isoDate(body.due),
+        // Cliente existente (clientId) o uno nuevo: nombre completo, mail y teléfono (si el mail ya existe, se usa esa ficha)
+        clientId: Number.isInteger(Number(body.clientId)) && Number(body.clientId) > 0 ? Number(body.clientId) : 0,
+        fullName: oneLine(body.fullName, 100),
+        email: oneLine(body.email, 160),
+        phone: oneLine(body.phone, 40),
       };
       if (!project.client || !project.project) return badRequest();
+      if (project.email && !normEmail(project.email)) return badRequest();
       return json({ token: await store.addProject(project) });
     }
 
@@ -1072,6 +1376,7 @@ export async function handleStudio(request, env, ctx) {
       };
       const result = await store.setProject(match[1], changes);
       if (!result) return notFound();
+      if (result.error) return json(result, 409);
       // Recién publicado: mail al cliente con la reseña (opcional) y su cupón
       let launchMailed = false;
       if (result.launched && result.email) {
