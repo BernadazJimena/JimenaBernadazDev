@@ -1073,13 +1073,15 @@
         // Revisión de la primera versión: 4 días hábiles para mandar comentarios (no cuentan en el plazo de desarrollo)
         if (project.reviewSent) {
             const R = {
-                es: { title: 'Tu revisión', open: 'Te envié la primera versión el {from}. Tenés hasta el {until} (4 días hábiles) para mandarme tus comentarios y los ajustes incluidos en tu plan. ¡Si me escribís antes, avanzamos más rápido!', done: '¡Gracias! Recibí tus comentarios el {done} y sigo con los ajustes.', closed: 'La revisión de la primera versión cerró el {until}. Los cambios posteriores pueden tener un costo adicional.' },
-                en: { title: 'Your review', open: 'I sent you the first version on {from}. You have until {until} (4 business days) to send me your feedback and the revisions included in your plan. If you write sooner, we move forward faster!', done: 'Thank you! I received your feedback on {done} and I am working on the revisions.', closed: 'The review of the first version closed on {until}. Later changes may have an extra cost.' },
-                pt: { title: 'A sua revisão', open: 'Enviei a primeira versão em {from}. Você tem até {until} (4 dias úteis) para me enviar suas observações e os ajustes incluídos no seu plano. Se me escrever antes, avançamos mais rápido!', done: 'Obrigada! Recebi suas observações em {done} e sigo com os ajustes.', closed: 'A revisão da primeira versão foi encerrada em {until}. Alterações posteriores podem ter um custo adicional.' },
+                es: { title: 'Tu revisión', open: 'Te envié la versión para revisar el {from}. Tenés hasta el {until} (4 días hábiles) para mandarme tus comentarios y los ajustes incluidos en tu plan. ¡Si me escribís antes, avanzamos más rápido!', done: '¡Gracias! Recibí tus comentarios el {done} y sigo con los ajustes.', closed: 'Esta ronda de revisión cerró el {until}. Los cambios posteriores pueden tener un costo adicional.' },
+                en: { title: 'Your review', open: 'I sent you the version to review on {from}. You have until {until} (4 business days) to send me your feedback and the revisions included in your plan. If you write sooner, we move forward faster!', done: 'Thank you! I received your feedback on {done} and I am working on the revisions.', closed: 'This review round closed on {until}. Later changes may have an extra cost.' },
+                pt: { title: 'A sua revisão', open: 'Enviei a versão para revisar em {from}. Você tem até {until} (4 dias úteis) para me enviar suas observações e os ajustes incluídos no seu plano. Se me escrever antes, avançamos mais rápido!', done: 'Obrigada! Recebi suas observações em {done} e sigo com os ajustes.', closed: 'Esta rodada de revisão foi encerrada em {until}. Alterações posteriores podem ter um custo adicional.' },
             }[lang] || {};
             const day = (iso) => longDate(iso + 'T12:00:00');
             const todayIso = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
-            const review = section('client-next', R.title);
+            const maxRounds = project.origin === 'sorteo-instagram' || (/premium/i.test(project.project) && !/a medida|custom|sob medida/i.test(project.project)) ? 3 : 2;
+            const roundWord = { es: 'ronda', en: 'round', pt: 'rodada' }[lang] || 'ronda';
+            const review = section('client-next', R.title + (project.reviewRound ? ' · ' + roundWord + ' ' + project.reviewRound + ' / ' + maxRounds : ''));
             review.append(el('p', '', fill(project.reviewDone ? R.done : project.reviewUntil < todayIso ? R.closed : R.open, { from: day(project.reviewSent), until: day(project.reviewUntil), done: project.reviewDone ? day(project.reviewDone) : '' })));
             card.append(review);
         }

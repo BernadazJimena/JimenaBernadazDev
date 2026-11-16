@@ -65,11 +65,18 @@
 
     // ---- Revisión del cliente: 4 días hábiles desde que recibe la primera versión (no cuentan en el plazo de desarrollo)
     const REVIEW_DAYS = 4;
+    // Rondas incluidas: 3 en Premium y en los premios de sorteo; 2 en Emprendedor, Básico y Plan a medida
+    const roundsOf = (p) => (p.origin === 'sorteo-instagram' || (/premium/i.test(p.project) && !/a medida|custom|sob medida/i.test(p.project)) ? 3 : 2);
     const reviewCell = (p) => {
+        const max = roundsOf(p);
+        const round = p.reviewRound || 0;
+        const label = 'Ronda ' + Math.max(round, 1) + ' de ' + max;
         if (!p.reviewSent) return '<button type="button" data-ag-review="' + esc(p.token) + '" data-step="sent">Envié la 1.ª versión hoy</button>';
-        if (p.reviewDone) return tag('ok', 'Respondió el ' + fdate(p.reviewDone)) + ' <button type="button" class="link-btn" data-ag-review="' + esc(p.token) + '" data-step="reset">Deshacer</button>';
+        if (p.reviewDone) return tag('ok', label + ' · respondió el ' + fdate(p.reviewDone))
+            + '<br><button type="button" data-ag-review="' + esc(p.token) + '" data-step="sent">' + (round < max ? 'Envié la versión con ajustes (ronda ' + (round + 1) + ')' : 'Ronda extra (se cotiza aparte)') + '</button>'
+            + ' <button type="button" class="link-btn" data-ag-review="' + esc(p.token) + '" data-step="reset">Reiniciar</button>';
         const left = remaining(today(), p.reviewUntil, true);
-        return tag(left < 0 ? 'muted' : left <= 1 ? 'warn' : 'ok', left < 0 ? 'Revisión cerrada (' + fdate(p.reviewUntil) + ')' : 'Revisa hasta ' + fdate(p.reviewUntil) + (left ? ' · faltan ' + left + ' hábiles' : ' · vence hoy'))
+        return tag(left < 0 ? 'muted' : left <= 1 ? 'warn' : 'ok', label + ' · ' + (left < 0 ? 'cerrada (' + fdate(p.reviewUntil) + ')' : 'revisa hasta ') + fdate(p.reviewUntil) + (left ? ' · faltan ' + left + ' hábiles' : ' · vence hoy'))
             + '<br><button type="button" data-ag-review="' + esc(p.token) + '" data-step="done">Respondió ✓ (seguir)</button>';
     };
 
@@ -246,7 +253,7 @@
         if (t.dataset.agReview) {
             const step = t.dataset.step;
             const sent = today();
-            send('agenda', { action: 'review', project: t.dataset.agReview, step, sent, until: addBusiness(sent, REVIEW_DAYS) }, step === 'sent' ? 'Revisión iniciada: 4 días hábiles' : step === 'done' ? 'Listo: podés seguir con los ajustes' : 'Revisión borrada');
+            send('agenda', { action: 'review', project: t.dataset.agReview, step, sent, until: addBusiness(sent, REVIEW_DAYS) }, step === 'sent' ? 'Ronda de revisión iniciada: 4 días hábiles' : step === 'done' ? 'Listo: podés seguir con los ajustes' : 'Revisión borrada');
             return;
         }
         if (t.id === 'ag-csv') exportCsv();

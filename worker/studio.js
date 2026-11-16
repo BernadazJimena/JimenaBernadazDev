@@ -511,6 +511,7 @@ export class StudioData extends DurableObject {
     // Fecha en que llegó todo el material del proyecto: desde ahí corre el plazo de entrega (se completa sola al pasar a Diseño)
     const agendaProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
     // Adicionales pedidos en un proyecto creado desde el panel (módulo Brief): el brief suma sus preguntas
+    if (!agendaProjectColumns.includes('review_round')) this.sql.exec('ALTER TABLE projects ADD COLUMN review_round INTEGER NOT NULL DEFAULT 0');
     for (const col of ['review_sent', 'review_until', 'review_done']) if (!agendaProjectColumns.includes(col)) this.sql.exec(`ALTER TABLE projects ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
     if (!agendaProjectColumns.includes('request')) this.sql.exec("ALTER TABLE projects ADD COLUMN request TEXT NOT NULL DEFAULT ''");
     if (!agendaProjectColumns.includes('materials_at')) this.sql.exec("ALTER TABLE projects ADD COLUMN materials_at TEXT NOT NULL DEFAULT ''");
@@ -928,12 +929,16 @@ export class StudioData extends DurableObject {
   setClientReview(token, step, sent, until) {
     if (!this.sql.exec('SELECT 1 FROM projects WHERE token = ?', token).toArray().length) return { error: 'not found' };
     if (step === 'sent') {
-      this.sql.exec("UPDATE projects SET review_sent = ?, review_until = ?, review_done = '' WHERE token = ?", sent, until, token);
-      this.logEvent(token, '👀', `Le enviaste la primera versión: revisa hasta el ${until}`);
+      // Ronda nueva si la anterior ya tuvo respuesta (o es la primera); si no, se reenvía la misma ronda
+      const cur = this.sql.exec('SELECT review_round, review_done, review_sent, stage FROM projects WHERE token = ?', token).one();
+      const round = !cur.review_sent || cur.review_done ? cur.review_round + 1 : cur.review_round;
+      this.sql.exec("UPDATE projects SET review_sent = ?, review_until = ?, review_done = '', review_round = ? WHERE token = ?", sent, until, round, token);
+      if (cur.stage < 3) { this.sql.exec('UPDATE projects SET stage = 3, updated = ? WHERE token = ?', new Date().toISOString(), token); this.logEvent(token, '📍', `Etapa: ${STAGE_NAMES[3]}`); }
+      this.logEvent(token, '👀', `${round === 1 ? 'Le enviaste la primera versión' : `Le enviaste la versión con ajustes (ronda ${round})`}: revisa hasta el ${until}`);
     } else if (step === 'done') {
       this.sql.exec('UPDATE projects SET review_done = ? WHERE token = ?', arToday(), token);
-      this.logEvent(token, '💬', 'El cliente envió sus comentarios de la revisión');
-    } else this.sql.exec("UPDATE projects SET review_sent = '', review_until = '', review_done = '' WHERE token = ?", token);
+      this.logEvent(token, '💬', 'El cliente envió sus comentarios de la ronda de revisión');
+    } else this.sql.exec("UPDATE projects SET review_sent = '', review_until = '', review_done = '', review_round = 0 WHERE token = ?", token);
     return { ok: true };
   }
 
@@ -1238,7 +1243,7 @@ export class StudioData extends DurableObject {
       status: row.status,
       proposal,
       // Cuando el presupuesto se acepta, el mismo link muestra también el avance del proyecto
-      project: this.withBrief(this.withLaunch(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon, review_sent AS reviewSent, review_until AS reviewUntil, review_done AS reviewDone FROM projects WHERE quote = ?', token).toArray()[0] || null), token),
+      project: this.withBrief(this.withLaunch(this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon, review_sent AS reviewSent, review_until AS reviewUntil, review_done AS reviewDone, review_round AS reviewRound, origin FROM projects WHERE quote = ?', token).toArray()[0] || null), token),
     };
   }
 
@@ -1318,7 +1323,7 @@ export class StudioData extends DurableObject {
   }
 
   project(token) {
-    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon, review_sent AS reviewSent, review_until AS reviewUntil, review_done AS reviewDone FROM projects WHERE token = ?', token).toArray()[0];
+    const row = this.sql.exec('SELECT client, project, lang, stage, due, note, next, preview, updated, review_token, coupon, review_sent AS reviewSent, review_until AS reviewUntil, review_done AS reviewDone, review_round AS reviewRound, origin FROM projects WHERE token = ?', token).toArray()[0];
     return this.withBrief(this.withLaunch(row || null), token);
   }
 
@@ -1617,7 +1622,7 @@ export class StudioData extends DurableObject {
       invitations: this.sql.exec('SELECT token, client, created, used FROM invitations ORDER BY created DESC LIMIT 200').toArray(),
       reviews: this.sql.exec('SELECT id, created, lang, name, business, body, status FROM reviews ORDER BY created DESC').toArray(),
       projects: this.sql.exec(`SELECT p.token, p.code, p.client_id AS clientId, p.client, p.project, p.lang, p.stage, p.due, p.note, p.next, p.preview, p.created, p.updated,
-        p.origin, p.winner_id AS winnerId, p.materials_at AS materialsAt, p.review_sent AS reviewSent, p.review_until AS reviewUntil, p.review_done AS reviewDone, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
+        p.origin, p.winner_id AS winnerId, p.materials_at AS materialsAt, p.review_sent AS reviewSent, p.review_until AS reviewUntil, p.review_done AS reviewDone, p.review_round AS reviewRound, p.coupon, (SELECT used_inquiry FROM coupons c WHERE c.code = p.coupon) AS couponUsedBy,
         p.review_token AS reviewToken, (SELECT used FROM invitations v WHERE v.token = p.review_token) AS reviewDone,
         p.quote, i.code AS quoteCode, b.status AS briefStatus, b.sent AS briefSent, b.updated AS briefUpdated,
         b.edited AS briefEdited, CASE WHEN b.edit_seen = 0 THEN 1 ELSE 0 END AS briefEditUnseen,
