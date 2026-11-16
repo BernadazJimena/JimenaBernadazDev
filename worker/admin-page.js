@@ -178,6 +178,25 @@ export const adminPage = () => `<!doctype html>
   }
   @media (prefers-reduced-motion: reduce) { .side, .wrap { transition: none !important; } }
   .module-intro { color: var(--muted); margin: -.4rem 0 1rem; }
+  /* Celulares: nada se desplaza hacia los costados. Las tablas pasan a tarjetas (cada dato con el nombre de su columna, que pone el script del panel) y las pestañas bajan de renglón */
+  @media (max-width: 700px) {
+    html, body { max-width: 100%; overflow-x: hidden; }
+    main, .module, .card, section, article, details, form, .grid { min-width: 0; max-width: 100%; }
+    input, select, textarea, button { max-width: 100%; }
+    .linkbox, .message, td, p, li { overflow-wrap: anywhere; }
+    .subtabs, .task-tabs { flex-wrap: wrap; overflow-x: visible; }
+    .qz-table, .ag-table, .sg-table, .table-wrap { overflow-x: visible; }
+    .module table, .module thead, .module tbody, .module tfoot, .module tr, .module th, .module td { display: block; width: 100%; }
+    .module thead { display: none; }
+    .module tr { background: var(--soft); border: 1px solid var(--line); border-radius: .8rem; margin: 0 0 .6rem; padding: .5rem .7rem; }
+    .module td, .module tfoot th { border: 0; padding: .2rem 0; text-align: left !important; white-space: normal !important; }
+    .module td[data-label]::before { color: var(--muted); content: attr(data-label); display: block; font-size: .72rem; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+    .module td:empty { display: none; }
+    /* Menú abierto: la página de atrás queda quieta y el menú solo se desplaza hacia abajo */
+    html:has(.side.is-open), html:has(.side.is-open) body { overflow: hidden; }
+    .side { overscroll-behavior: contain; touch-action: pan-y; }
+    .side-scroll { overscroll-behavior: contain; }
+  }
   .quote-card.is-min > :not(:first-child):not(.q-who) { display: none; }
   .quote-card.is-min .q-who { margin-bottom: 0; }
   .min-btn { margin-left: .3rem; min-width: 2rem; padding: .1rem .5rem; }
@@ -368,6 +387,14 @@ export const adminPage = () => `<!doctype html>
     if (all) { all.dataset.minAll = close ? '0' : '1'; all.textContent = close ? '↕ Expandir todas' : '↕ Minimizar todas'; }
     saveMin();
   });
+  // Celulares: cada celda de tabla lleva el nombre de su columna (el CSS la muestra como etiqueta en la tarjeta)
+  const labelCells = () => document.querySelectorAll('.module table').forEach((t) => {
+    // Un encabezado que ocupa varias columnas (colspan) etiqueta a todas ellas
+    const heads = [...t.querySelectorAll('thead th')].flatMap((th) => Array(th.colSpan || 1).fill(th.textContent.trim()));
+    if (!heads.length) return;
+    t.querySelectorAll('tbody tr').forEach((tr) => [...tr.children].forEach((td, i) => { if (heads[i] && !td.dataset.label) td.dataset.label = heads[i]; }));
+  });
+  new MutationObserver(() => { clearTimeout(labelCells.t); labelCells.t = setTimeout(labelCells, 60); }).observe(document.body, { childList: true, subtree: true });
   let key = '';
   try { key = sessionStorage.getItem('jnb-admin') || ''; } catch (e) {}
   let data = null;
