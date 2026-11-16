@@ -49,7 +49,9 @@
             req.extras.forEach((x) => { if (!(plan && plan.includes.includes(x))) lines.push([EXTRAS[x], A[x]]); });
             feats.forEach((f) => lines.push([f.name, f.ars]));
             const total = lines.reduce((s, l) => s + l[1], 0);
-            const included = plan ? [plan.sections + ' secciones', plan.pages ? plan.pages + ' páginas secundarias' : '', ...plan.includes.map((x) => EXTRAS[x]), ...(plan.extraBenefits || []).map((b) => BENEFITS[b])].filter(Boolean) : [];
+            const included = plan ? [plan.sections + ' secciones', plan.pages ? plan.pages + ' páginas secundarias' : '', ...plan.includes.map((x) => EXTRAS[x]), ...(plan.extraBenefits || []).map((b) => BENEFITS[b])].filter(Boolean)
+                // Estructura web mínima (como la describe /plan-a-medida/): portada y contacto, sin secciones de contenido
+                : (base ? ['Portada de presentación', 'Contacto con botón de WhatsApp, redes y mail', 'Adaptada a celulares y SEO básico', 'Publicación, hosting sin costo y ayuda con el dominio', '2 rondas de ajustes'] : []);
             return { key, name, lines, total, included, hours: fHours };
         };
         const opts = [
