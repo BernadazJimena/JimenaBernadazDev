@@ -737,11 +737,11 @@ export class StudioData extends DurableObject {
   // Tope anual de la categoría del monotributo (en pesos) y cotización del dólar para sumar los cobros en USD
   monotributo() {
     const row = this.sql.exec("SELECT value FROM settings WHERE key = 'monotributo'").toArray()[0];
-    try { return row ? JSON.parse(row.value) : { tope: 0, cotizacion: 0 }; } catch { return { tope: 0, cotizacion: 0 }; }
+    try { return { desde: '2026-12', ...(row ? JSON.parse(row.value) : { tope: 0, cotizacion: 0 }) }; } catch { return { tope: 0, cotizacion: 0, desde: '2026-12' }; }
   }
 
-  setMonotributo(tope, cotizacion) {
-    this.sql.exec("INSERT INTO settings (key, value) VALUES ('monotributo', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", JSON.stringify({ tope, cotizacion }));
+  setMonotributo(tope, cotizacion, desde = '2026-12') {
+    this.sql.exec("INSERT INTO settings (key, value) VALUES ('monotributo', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", JSON.stringify({ tope, cotizacion, desde }));
     return { ok: true };
   }
 
@@ -1865,7 +1865,9 @@ export async function handleStudio(request, env, ctx) {
       }
       if (body.action === 'monotributo') {
         const num = (v) => Math.min(Number(String(v || '').replace(/[^0-9]/g, '')) || 0, 1e12);
-        return json(await store.setMonotributo(num(body.tope), num(body.cotizacion)));
+        // Mes desde el que se cuentan los ingresos (AAAA-MM); por defecto diciembre 2026
+        const desde = /^\d{4}-(0[1-9]|1[0-2])$/.test(body.desde || '') ? body.desde : '2026-12';
+        return json(await store.setMonotributo(num(body.tope), num(body.cotizacion), desde));
       }
       return badRequest();
     }

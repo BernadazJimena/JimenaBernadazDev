@@ -97,7 +97,17 @@
     // ---- Números
     const SOURCES = { instagram: 'Instagram', sorteo: 'Sorteo de Instagram', upwork: 'Upwork', recomendacion: 'Recomendación', google: 'Google / la web', otro: 'Otro' };
     const monthKey = (iso) => iso.slice(0, 7);
-    const lastMonths = () => { const out = []; const [y, m] = today().split('-').map(Number); for (let i = 0; i < 12; i += 1) { const d = new Date(Date.UTC(y, m - 1 - i, 1)); out.push(d.toISOString().slice(0, 7)); } return out; };
+    // Meses que se muestran: desde el mes de inicio que elegís (por defecto diciembre 2026), como mucho los últimos 12
+    const DEFAULT_FROM = '2026-12';
+    const shiftMonth = (k, n) => { const [y, m] = k.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7); };
+    const lastMonths = (from) => {
+        const now = today().slice(0, 7);
+        const end = now > from ? now : from;
+        const start = shiftMonth(end, -11) > from ? shiftMonth(end, -11) : from;
+        const out = [];
+        for (let k = end; k >= start; k = shiftMonth(k, -1)) out.push(k);
+        return out;
+    };
     const monthName = (k) => new Date(k + '-15T12:00:00').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
     const planOf = (text) => { const t = String(text || ''); if (/emprendedor|tienda|loja|store/i.test(t)) return 'Emprendedor'; if (/a medida|custom|sob medida/i.test(t)) return 'Plan a medida'; if (/premium/i.test(t)) return 'Premium'; if (/b[aá]sico|basic|landing/i.test(t)) return 'Básico'; if (/actualiz|update/i.test(t)) return 'Actualización'; return 'Otro'; };
     const pct = (a, b) => (b ? Math.round((a / b) * 100) + ' %' : '—');
@@ -106,7 +116,9 @@
         const el = document.getElementById('m-numeros');
         const d = D();
         const pays = d.payments || [];
-        const months = lastMonths();
+        const mono = d.monotributo || { tope: 0, cotizacion: 0 };
+        const from = /^\d{4}-\d{2}$/.test(mono.desde || '') ? mono.desde : DEFAULT_FROM;
+        const months = lastMonths(from);
         const byMonth = Object.fromEntries(months.map((k) => [k, { '$': 0, USD: 0 }]));
         pays.filter((y) => y.paid && byMonth[monthKey(y.paid)]).forEach((y) => { byMonth[monthKey(y.paid)][y.currency === 'USD' ? 'USD' : '$'] += y.amount; });
         const total = months.reduce((acc, k) => ({ '$': acc['$'] + byMonth[k]['$'], USD: acc.USD + byMonth[k].USD }), { '$': 0, USD: 0 });
@@ -114,7 +126,6 @@
         const pend = { '$': 0, USD: 0 };
         pending.forEach((y) => { pend[y.currency === 'USD' ? 'USD' : '$'] += y.amount; });
         const late = pending.filter((y) => y.due && y.due < today()).length;
-        const mono = d.monotributo || { tope: 0, cotizacion: 0 };
         const inPesos = total['$'] + total.USD * (mono.cotizacion || 0);
         const used = mono.tope ? Math.round((inPesos / mono.tope) * 100) : 0;
         // Embudo: pedidos → propuestas enviadas → aceptados (por plan)
@@ -127,11 +138,11 @@
         clients.forEach((c) => { const k = c.source || ''; bySource[k] = bySource[k] || { n: 0, withProject: 0 }; bySource[k].n += 1; if (c.projectCount > 0) bySource[k].withProject += 1; });
         el.innerHTML = '<h2>Ingresos y origen de clientes</h2>'
             // Monotributo
-            + '<section class="card"><h3>Monotributo: últimos 12 meses</h3>'
+            + '<section class="card"><h3>Monotributo: ' + (months.length < 12 ? 'desde ' + monthName(months[months.length - 1]) : 'últimos 12 meses') + '</h3>'
             + '<p>Cobrado: <strong>$ ' + money(total['$']) + '</strong>' + (total.USD ? ' y <strong>USD ' + money(total.USD) + '</strong>' : '') + (total.USD && mono.cotizacion ? ' (≈ $ ' + money(inPesos) + ' en total)' : '') + '</p>'
             + (mono.tope ? '<div class="ag-bar" role="img" aria-label="' + used + ' % del tope"><span style="width:' + Math.min(used, 100) + '%" class="' + (used >= 90 ? 'is-late' : used >= 75 ? 'is-warn' : '') + '"></span></div><p class="small ' + (used >= 75 ? 'ag-late-text' : 'muted') + '">' + used + ' % del tope de tu categoría ($ ' + money(mono.tope) + ')' + (used >= 75 ? ': revisá si te conviene recategorizarte.' : '') + '</p>' : '<p class="small muted">Cargá el tope anual de tu categoría para ver cuánto te falta.</p>')
             + (total.USD && !mono.cotizacion ? '<p class="small muted">Tenés cobros en dólares: cargá una cotización para sumarlos al total.</p>' : '')
-            + '<form id="ag-mono" class="grid"><label>Tope anual de tu categoría ($)<input name="tope" inputmode="numeric" value="' + (mono.tope ? money(mono.tope) : '') + '"></label><label>Cotización del dólar ($ por USD)<input name="cotizacion" inputmode="numeric" value="' + (mono.cotizacion ? money(mono.cotizacion) : '') + '"></label><div><button class="primary" style="margin-top:1.4rem">Guardar</button></div></form>'
+            + '<form id="ag-mono" class="grid"><label>Tope anual de tu categoría ($)<input name="tope" inputmode="numeric" value="' + (mono.tope ? money(mono.tope) : '') + '"></label><label>Cotización del dólar ($ por USD)<input name="cotizacion" inputmode="numeric" value="' + (mono.cotizacion ? money(mono.cotizacion) : '') + '"></label><label>Contar desde (mes y año)<input name="desde" type="month" required value="' + esc(from) + '"></label><div><button class="primary" style="margin-top:1.4rem">Guardar</button></div></form>'
             + '<p class="small muted">Se calcula con los pagos que cargás en Pagos (fecha de pago). Los premios de sorteos no tienen pagos, así que no suman.</p></section>'
             // Ingresos por mes
             + '<section class="card"><div class="row space"><h3 style="margin:0">Cobrado por mes</h3><button type="button" id="ag-csv">⬇ Exportar pagos (Excel)</button></div>'
