@@ -178,6 +178,9 @@ export const adminPage = () => `<!doctype html>
   }
   @media (prefers-reduced-motion: reduce) { .side, .wrap { transition: none !important; } }
   .module-intro { color: var(--muted); margin: -.4rem 0 1rem; }
+  .quote-card.is-min > :not(:first-child):not(.q-who) { display: none; }
+  .quote-card.is-min .q-who { margin-bottom: 0; }
+  .min-btn { margin-left: .3rem; min-width: 2rem; padding: .1rem .5rem; }
   .stats { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin-bottom: 1.25rem; }
   .stat { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; color: var(--text); display: block; padding: .9rem 1rem; text-decoration: none; }
   @media (max-width: 640px) { .stats { gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat { padding: .65rem .75rem; } }
@@ -339,6 +342,27 @@ export const adminPage = () => `<!doctype html>
     + '<a class="btn" target="_blank" href="' + esc('https://wa.me/?text=' + encodeURIComponent((SHARE[lang] || SHARE.es)(name, link))) + '">Mandar por WhatsApp ↗</a>'
     + '<a class="btn" target="_blank" href="' + esc(link) + '">Abrir ↗</a></div>';
 
+  // Tarjetas de consultas y presupuestos minimizadas (se recuerda en este navegador)
+  let minimized = new Set();
+  try { minimized = new Set(JSON.parse(localStorage.getItem('jnb-admin-min') || '[]')); } catch (e) {}
+  const isMin = (q) => minimized.has(q.code);
+  const saveMin = () => { try { localStorage.setItem('jnb-admin-min', JSON.stringify([...minimized].slice(-3000))); } catch (e) {} };
+  document.addEventListener('click', (e) => {
+    const one = e.target.closest('[data-min]');
+    const all = e.target.closest('[data-min-all]');
+    if (!one && !all) return;
+    const cards = one ? [one.closest('.quote-card')] : [...all.closest('.module').querySelectorAll('.quote-card')];
+    const close = one ? !cards[0].classList.contains('is-min') : all.dataset.minAll === '1';
+    cards.forEach((card) => {
+      card.classList.toggle('is-min', close);
+      if (close) minimized.add(card.dataset.code); else minimized.delete(card.dataset.code);
+      const b = card.querySelector('[data-min]');
+      b.textContent = close ? '▸' : '▾';
+      b.setAttribute('aria-expanded', String(!close));
+    });
+    if (all) { all.dataset.minAll = close ? '0' : '1'; all.textContent = close ? '↕ Expandir todas' : '↕ Minimizar todas'; }
+    saveMin();
+  });
   let key = '';
   try { key = sessionStorage.getItem('jnb-admin') || ''; } catch (e) {}
   let data = null;
@@ -400,13 +424,13 @@ export const adminPage = () => `<!doctype html>
   const inquiryCard = (q, inClient) => {
       const isQuote = q.kind === 'presupuesto';
       const p = q.proposal || {};
-      return '<article class="card" data-token="' + esc(q.token) + '">'
+      return '<article class="card quote-card' + (isMin(q) ? ' is-min' : '') + '" data-token="' + esc(q.token) + '" data-code="' + esc(q.code) + '">'
         + '<div class="row space"><div class="row"><span class="code">' + esc(q.code) + '</span>'
         + '<span class="chip">' + (isQuote ? 'Presupuesto' : 'Consulta') + '</span>'
         + (isQuote ? '<span class="chip ' + (SENT.includes(q.status) ? 'ok' : 'warn') + '">' + STATUS[q.status] + '</span>' : '')
         + (!q.seen ? '<span class="chip new">Nueva</span>' : '')
-        + '</div><span class="small muted">' + date(q.created) + ' · ' + LANG[q.lang] + '</span></div>'
-        + '<p style="margin-top:.5rem"><strong>' + esc(q.name) + '</strong> · <a href="mailto:' + esc(q.email) + '?subject=' + encodeURIComponent(q.code) + '">' + esc(q.email) + '</a>'
+        + '</div><span class="small muted">' + date(q.created) + ' · ' + LANG[q.lang] + ' <button type="button" class="min-btn" data-min="' + esc(q.code) + '" aria-expanded="' + !isMin(q) + '" title="Minimizar o expandir">' + (isMin(q) ? '▸' : '▾') + '</button></span></div>'
+        + '<p class="q-who" style="margin-top:.5rem"><strong>' + esc(q.name) + '</strong> · <a href="mailto:' + esc(q.email) + '?subject=' + encodeURIComponent(q.code) + '">' + esc(q.email) + '</a>'
         + (q.plan ? ' · ' + esc(q.plan) : '') + (q.country ? ' · 📍 ' + esc(q.country) : '') + '</p>'
         + (clientById(q.clientId) && inClient !== 'client' ? '<p class="small" style="margin:0 0 .3rem"><button type="button" class="link-btn" data-go-client="' + esc(clientById(q.clientId).code) + '">👤 Ficha del cliente ' + esc(clientById(q.clientId).code) + '</button></p>' : '')
         + '<div class="message">' + esc(q.message) + '</div>'
@@ -482,8 +506,9 @@ export const adminPage = () => `<!doctype html>
     const { items, nav } = paged(key, list);
     const unseen = newCount(kind);
     $('m-' + key).innerHTML = '<div class="row space"><h2 style="margin:0">' + (kind === 'consulta' ? 'Consultas' : 'Presupuestos') + '</h2>'
-      + (unseen ? '<button type="button" data-seen-all="' + kind + '">✓ Marcar ' + (unseen === 1 ? 'la nueva' : 'las ' + unseen + ' nuevas') + ' como vistas</button>' : '') + '</div>'
-      + '<p class="module-intro small">' + (kind === 'consulta' ? 'Mensajes del formulario de contacto.' : 'Pedidos de presupuesto. Al pasar uno a "Aceptado" se crea solo el proyecto, dentro de la ficha del mismo cliente.') + '</p>'
+      + '<div class="row">' + (items.length ? '<button type="button" data-min-all="' + (items.every(isMin) ? '0' : '1') + '">' + (items.every(isMin) ? '↕ Expandir todas' : '↕ Minimizar todas') + '</button>' : '')
+      + (unseen ? '<button type="button" data-seen-all="' + kind + '">✓ Marcar ' + (unseen === 1 ? 'la nueva' : 'las ' + unseen + ' nuevas') + ' como vistas</button>' : '') + '</div></div>'
+      + '<p class="module-intro small" style="margin-top:.6rem">' + (kind === 'consulta' ? 'Mensajes del formulario de contacto.' : 'Pedidos de presupuesto. Al pasar uno a "Aceptado" se crea solo el proyecto, dentro de la ficha del mismo cliente.') + '</p>'
       + mailNote()
       + (focus ? '<p><button type="button" data-go="presupuestos">← Ver todos los presupuestos</button></p>'
         : '<div class="filters">' + searchBox(key, 'Nombre, mail o código')
