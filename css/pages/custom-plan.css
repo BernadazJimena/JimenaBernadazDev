@@ -1173,3 +1173,9 @@
 .cp-terms ul { margin: .5rem 0; padding-left: 1.1rem; }
 .cp-terms li { color: var(--muted); margin-bottom: .3rem; }
 .cp-rate { color: var(--muted); margin: .5rem 0 0; }
+
+/* Ejemplo de precio de la tienda sumada a la web */
+.cp-example {
+  display: block;
+  margin-top: .4rem;
+}

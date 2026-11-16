@@ -247,6 +247,7 @@
             const key = el.dataset.price;
             if (key === 'tienda') el.textContent = money(PRICES.storeAlone);
             else if (key === 'products') el.textContent = `${T.from} ${money(PRICES.products[0])}`;
+            else if (key === 'webStore') el.textContent = money(sum([PRICES.web, PRICES.storeAddOn])); // ejemplo: web + tienda sumada
             else if (PRICES[key]) el.textContent = money(PRICES[key]);
         });
     };
