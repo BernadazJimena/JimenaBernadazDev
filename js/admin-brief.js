@@ -58,7 +58,10 @@
     const SITE = 'https://jnbcreativestudio.com.ar';
     const TYPES_WEB = [['Plan Emprendedor (tienda)', 'Tienda online (Plan Emprendedor)'], ['Plan Básico (landing)', 'Landing (Plan Básico)'], ['Plan Premium', 'Web completa (Plan Premium)'], ['Plan a medida', 'Plan a medida']];
     // Adicionales: el texto sigue el formato del pedido de presupuesto, así el brief suma sus preguntas (EXTRAS en js/brief.js)
-    const ADDONS = [['secciones extra', 'Secciones extra'], ['páginas secundarias', 'Páginas secundarias'], ['modo claro / oscuro', 'Modo claro / oscuro'], ['abierto / cerrado', 'Indicador abierto / cerrado'], ['tienda online en', 'Tienda online sumada'], ['segunda plataforma', 'Tienda en una segunda plataforma'], ['landing page además', 'Landing además de la tienda']];
+    const ADDONS = [['secciones extra', 'Secciones extra'], ['páginas secundarias', 'Páginas secundarias'], ['modo claro / oscuro', 'Modo claro / oscuro'], ['abierto / cerrado', 'Indicador abierto / cerrado'], ['tienda online en', 'Tienda online sumada'], ['segunda plataforma', 'Tienda en una segunda plataforma'], ['landing page además', 'Landing además de la tienda'],
+        ['catálogo de productos', 'Catálogo de productos'], ['carrito de pedidos', 'Carrito por WhatsApp'], ['formulario de pedidos', 'Formulario de pedidos'], ['menú digital', 'Menú digital QR'], ['sistema de reservas', 'Reservas o turnos'],
+        ['calculadora de presupuestos', 'Calculadora'], ['test de recomendación', 'Test de recomendación'], ['portfolio filtrable', 'Portfolio'], ['antes y después', 'Antes y después'], ['tarjeta digital', 'Tarjeta de contacto'],
+        ['cupones promocionales', 'Cupones'], ['comparador de planes', 'Comparador'], ['agregar al calendario', 'Agregar al calendario']];
     const LANG_NAMES = { es: 'Español', en: 'Inglés', pt: 'Portugués' };
     const linkOf = (p) => SITE + '/mi-proyecto/' + (p.lang === 'es' ? '' : p.lang) + '?c=' + p.token + '#brief';
     const MSG = {
@@ -87,7 +90,7 @@
             + '<label class="bf-new">Nombre y apellido<input name="fullName" maxlength="100"></label><label class="bf-new">Mail<input name="email" type="email"></label><label class="bf-new">WhatsApp<input name="phone" inputmode="tel"></label>'
             + '<label>Tipo de web (define las preguntas)<select name="project">' + TYPES_WEB.map(([v, t]) => '<option value="' + esc(v) + '">' + t + '</option>').join('') + '</select></label>'
             + '<label>Idioma del brief<select name="lang">' + Object.entries(LANG_NAMES).map(([k, v]) => '<option value="' + k + '">' + v + '</option>').join('') + '</select></label></div>'
-            + '<fieldset class="bf-addons"><legend class="small">Adicionales que pidió (suman sus preguntas al brief)</legend>' + ADDONS.map(([v, t]) => '<label class="check-line"><input type="checkbox" name="addon" value="' + esc(v) + '"> ' + t + '</label>').join('') + '</fieldset>'
+            + '<fieldset class="bf-addons"><legend class="small">Adicionales y funciones que pidió (suman sus preguntas al brief)</legend>' + ADDONS.map(([v, t]) => '<label class="check-line"><input type="checkbox" name="addon" value="' + esc(v) + '"> ' + t + '</label>').join('') + '</fieldset>'
             + '<button class="primary" style="margin-top:.75rem">Crear link del brief</button></form>'
             + (fresh ? '<div class="alert" style="margin-top:.75rem">✓ Listo: link de ' + esc((byId(fresh.clientId) || {}).name || fresh.client) + ' (' + esc(fresh.code) + ' · ' + LANG_NAMES[fresh.lang] + ')' + linkRow(fresh, byId(fresh.clientId)) + '</div>' : '')
             + (open.length ? '<details style="margin-top:1rem"><summary>Briefs sin responder (' + open.length + ')</summary>' + open.map((p) => { const c = byId(p.clientId); const st = BRIEF[p.briefStatus] || ['warn', 'Sin empezar']; return '<div style="border-top:1px solid var(--line);padding:.6rem 0"><p style="margin:0"><strong>' + esc(c ? c.name : p.client) + '</strong> · ' + esc(p.code) + ' · ' + LANG_NAMES[p.lang] + ' · <span class="chip ' + st[0] + '">' + st[1] + '</span></p>' + linkRow(p, c) + '</div>'; }).join('') + '</details>' : '')
