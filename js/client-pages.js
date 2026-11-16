@@ -559,8 +559,10 @@
         else if (/\.\d{1,2}$/.test(raw)) number = parseFloat(raw.replace(/,/g, ''));
         else number = parseFloat(raw.replace(/[.,]/g, ''));
         if (!number) return '';
-        const half = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(number / 2);
-        return [match[1].trim(), half, match[3].trim()].filter(Boolean).join(' ');
+        // Anticipo y saldo en montos enteros que suman el total: el anticipo se redondea hacia arriba (USD 149 = 75 + 74)
+        const deposit = Math.ceil(number / 2);
+        const show = (n) => [match[1].trim(), new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n), match[3].trim()].filter(Boolean).join(' ');
+        return [show(deposit), show(number - deposit)];
     };
 
     // "Galería de tortas — Fotos ampliables" → título y descripción
@@ -773,7 +775,7 @@
         const half = halfPrice(proposal.price);
         if (half) {
             const amounts = el('div', 'client-option-amounts');
-            [[half, T.payDeposit], [half, T.payBalance]].forEach(([amount, label]) => {
+            [[half[0], T.payDeposit], [half[1], T.payBalance]].forEach(([amount, label]) => {
                 const cell = el('div');
                 cell.append(el('p', 'client-option-amount', amount), el('p', 'client-date', label));
                 amounts.append(cell);
