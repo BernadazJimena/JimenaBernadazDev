@@ -1149,3 +1149,27 @@
 #cp-resumen {
     scroll-margin-top: 6rem;
 }
+
+/* Aclaración "Sin base de datos propia" en las funcionalidades nuevas */
+.cp-nodb {
+  background: color-mix(in srgb, var(--blue) 16%, transparent);
+  color: var(--text);
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 0.3rem;
+  padding: 0.1rem 0.55rem;
+}
+
+/* Condiciones resumidas y cotización del dólar, debajo del resumen del presupuesto */
+.cp-terms {
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  margin-top: .75rem;
+  padding-top: .6rem;
+}
+.cp-terms summary { cursor: pointer; font-weight: 700; }
+.cp-terms ul { margin: .5rem 0; padding-left: 1.1rem; }
+.cp-terms li { color: var(--muted); margin-bottom: .3rem; }
+.cp-rate { color: var(--muted); margin: .5rem 0 0; }

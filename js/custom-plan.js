@@ -8,20 +8,25 @@
     // ---------------------------------------------------------------------------------------------
     // Precios: [pesos argentinos, dólares]. Cada moneda se suma por separado: nunca se mezclan.
     // ---------------------------------------------------------------------------------------------
+    // Los precios salen de js/pricing.js (único lugar donde se cambian). Cada precio es [pesos, dólares]:
+    // los dólares se calculan con la cotización del dólar MEP que figura ahí.
+    const P = window.JNBPricing;
+    const pair = (ars) => [ars, P.usd(ars)];
+    const A = P.ARS;
     const PRICES = {
-        web: [54990, 35],           // PROVISIONAL: estructura web mínima, sujeta a revisión de rentabilidad
-        map: [3990, 3],             // PROVISIONAL: ubicación con mapa
-        agenda: [3990, 3],          // PROVISIONAL: botón de agenda (integración sencilla)
-        section: [11990, 8],
-        page: [34990, 23],          // página secundaria de hasta 3 secciones
-        dark: [17990, 12],
-        hours: [8990, 6],
-        storeAlone: [66990, 43],    // tienda sola = Plan Emprendedor
-        storeAddOn: [49990, 32],    // tienda sumada a una web (Plan Básico o Premium)
-        second: [39990, 26],
-        support: [14990, 10],       // por mes, aparte del total
-        // Productos: total por tramo (21-30 … 91-100)
-        products: [[9990, 6], [19980, 12], [29970, 18], [37960, 23], [45950, 28], [53940, 33], [61930, 38], [69920, 43]],
+        web: pair(A.medida),        // estructura web mínima (precio base del Plan a medida)
+        map: pair(A.map),
+        agenda: pair(A.agenda),
+        section: pair(A.section),
+        page: pair(A.page),         // página secundaria de hasta 3 secciones
+        dark: pair(A.dark),
+        hours: pair(A.hours),
+        storeAlone: pair(A.emprendedor),  // tienda sola = Plan Emprendedor
+        storeAddOn: pair(A.storeAddOn),   // tienda sumada a una web (Plan Básico o Premium)
+        second: pair(A.second),
+        support: pair(A.support),   // por mes, aparte del total
+        // Productos: total por tramo (21-30 … 91-100). Hasta 50, cada 10 cuesta "products"; desde el 51, "products51".
+        products: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => pair(Math.min(n, 3) * A.products + Math.max(0, n - 3) * A.products51)),
     };
 
     // ---------------------------------------------------------------------------------------------
@@ -33,30 +38,30 @@
     // se muestra "a confirmar" hasta que Jimena lo confirme. availability: la sección de disponibilidad no cuenta como sección.
     const PLANS = {
         emprendedor: {
-            type: 'store', price: [66990, 43], anchor: 'emprendedor', langs: ['es', 'pt'],
+            type: 'store', price: pair(A.emprendedor), anchor: 'emprendedor', langs: ['es', 'pt'],
             // Tienda en una plataforma, 20 productos, pagos y envíos. Productos extra y 2.ª plataforma: adicionales.
         },
-        // Plan Emprendedor + landing (adicional de $94.990 / USD 61): "5 secciones, como el Plan Básico".
+        // Plan Emprendedor + landing: "5 secciones, como el Plan Básico". Cuesta lo mismo que el Plan Básico + la tienda sumada.
         // PENDIENTE: confirmar si la landing incluye mapa y botón de agenda como el Básico.
         emprendedorLanding: {
-            type: 'web+store', price: [161980, 104], anchor: 'emprendedor', langs: ['es', 'pt'],
+            type: 'web+store', price: pair(A.basico + A.storeAddOn), anchor: 'emprendedor', langs: ['es', 'pt'],
             sections: 5, minSections: 5, pages: 0, includes: [], pending: ['mail', 'map', 'agenda'], extraBenefits: [],
         },
         basico: {
-            type: 'web', price: [111990, 72], anchor: 'basico', langs: ['es', 'en', 'pt'],
+            type: 'web', price: pair(A.basico), anchor: 'basico', langs: ['es', 'en', 'pt'],
             sections: 5, minSections: 5, pages: 0, includes: ['map', 'agenda'],
             // Modo claro / oscuro y abierto / cerrado: adicionales del Básico. Páginas secundarias: se cotizan aparte (precio de lista).
             // PENDIENTE: el plan menciona WhatsApp y redes, pero no el mail en el contacto.
             pending: ['mail'], extraBenefits: [],
         },
         premium: {
-            type: 'web', price: [189990, 122], anchor: 'premium', langs: ['es', 'en', 'pt'],
+            type: 'web', price: pair(A.premium), anchor: 'premium', langs: ['es', 'en', 'pt'],
             sections: 10, minSections: 6, pages: 4, includes: ['map', 'agenda', 'dark', 'hours'], availability: true,
             // PENDIENTE: igual que el Básico, el mail en el contacto no está especificado.
             pending: ['mail'], extraBenefits: ['rounds3', 'support30', 'design'],
         },
     };
-    const URGENT = 0.3;
+    const URGENT = P.URGENT;
 
     // ---------------------------------------------------------------------------------------------
     // Textos (los nombres de las opciones salen de la página, que ya está traducida)
@@ -68,6 +73,7 @@
             empty: 'Elegí lo que necesitás y acá vas a ver cómo se arma tu presupuesto.',
             total: 'Total estimado', totalQuote: 'Total estimado, sin los ítems a cotizar',
             required: 'Necesaria para: {list}', auto: '{base}: la sumé porque la necesitan: {list}.',
+            withWeb: 'con tu web',
             needsBase: '{list}: se suma a una web o a una tienda. Elegí una base para incluirlo.',
             plans: { emprendedor: 'Plan Emprendedor', emprendedorLanding: 'Plan Emprendedor + landing', basico: 'Plan Básico', premium: 'Plan Premium' },
             recoEyebrowAlt: 'Una alternativa para comparar',
@@ -110,6 +116,7 @@
             empty: 'Choose what you need and you’ll see your quote take shape here.',
             total: 'Estimated total', totalQuote: 'Estimated total, not including items to be quoted',
             required: 'Needed for: {list}', auto: '{base}: added because these need it: {list}.',
+            withWeb: 'with your website',
             needsBase: '{list}: this is added to a website. Choose the website structure to include it.',
             plans: { basico: 'Basic Plan', premium: 'Premium Plan' },
             recoEyebrowAlt: 'An alternative to compare',
@@ -152,6 +159,7 @@
             empty: 'Escolha o que você precisa e aqui você vai ver seu orçamento se formar.',
             total: 'Total estimado', totalQuote: 'Total estimado, sem os itens a orçar',
             required: 'Necessária para: {list}', auto: '{base}: incluí porque é necessária para: {list}.',
+            withWeb: 'com o seu site',
             needsBase: '{list}: é somado a um site ou a uma loja. Escolha uma base para incluir.',
             plans: { emprendedor: 'Plano Empreendedor', emprendedorLanding: 'Plano Empreendedor + landing page', basico: 'Plano Básico', premium: 'Plano Premium' },
             recoEyebrowAlt: 'Uma alternativa para comparar',
@@ -196,7 +204,9 @@
     let cur = lang === 'es' ? 0 : 1;   // 0 = pesos, 1 = dólares (inglés y portugués: siempre dólares)
     const money = (price) => {
         if (!cur) return `$${price[0].toLocaleString('es-AR')}`;
-        return lang === 'es' ? `USD ${price[1].toLocaleString('en-US')}` : `$${price[1].toLocaleString('en-US')} USD`;
+        // Dólares: el importe en pesos convertido con la cotización (así el total en USD coincide con el de pesos)
+        const usd = P.usd(price[0]).toLocaleString(lang === 'es' ? 'es-AR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return lang === 'es' ? `USD ${usd}` : `$${usd} USD`;
     };
     const fill = (text, values = {}) => Object.entries(values).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), text);
     const times = (price, n) => [price[0] * n, price[1] * n];
@@ -531,6 +541,9 @@
 
     const render = () => {
         paintPrices();
+        // Precio de la tienda en su tarjeta: el del Plan Emprendedor sola, o el de la tienda sumada si también está la web
+        const storePrice = root.querySelector('.cp-base-price[data-price="tienda"]');
+        if (storePrice) storePrice.textContent = baseBoxes.web.checked ? `${money(PRICES.storeAddOn)} ${T.withWeb}` : money(PRICES.storeAlone);
         syncBases();
         const sel = readSelection();
         const budget = customBudget(sel);

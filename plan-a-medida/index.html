@@ -81,6 +81,7 @@
   <script src="../js/no-orphans.js" defer></script>
   <script src="../js/updated.js" defer></script>
   <script src="../js/reveal.js" defer></script>
+  <script src="../js/pricing.js" defer></script>
   <script src="../js/custom-plan.js" defer></script>
 </head>
 
@@ -194,7 +195,7 @@
                 <input type="checkbox" name="cp-base" value="tienda">
                 <span class="cp-base-title">Tienda online</span>
                 <span class="cp-base-price" data-price="tienda"></span>
-                <span class="cp-base-desc">Tu tienda en Tiendanube o Empretienda, con hasta 20 productos, pagos y envíos. Sola es el Plan Emprendedor; sumada a tu web cuesta <span data-price="storeAddOn"></span>.</span>
+                <span class="cp-base-desc">Tu tienda en Tiendanube o Empretienda, con hasta 20 productos, pagos y envíos. Sola es el Plan Emprendedor. Si también elegís la estructura web, la tienda baja a <span data-price="storeAddOn"></span> y se suma al precio de la web.</span>
                 <span class="cp-base-lock" hidden></span>
               </label>
             </div>
@@ -285,6 +286,31 @@
                     <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
                     <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
                   </tr>
+                
+                  <tr data-item="f-catalog" data-needs="web" data-quote>
+                    <th scope="row">Catálogo de productos filtrable<small>Fotos, categorías, filtros y buscador. Los productos se cargan en la propia web, sin panel para editarlos. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-cart" data-needs="web" data-quote>
+                    <th scope="row">Carrito de pedidos por WhatsApp<small>Elige productos y cantidades y arma solo el mensaje del pedido. No cobra ni guarda los pedidos. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-menu" data-needs="web" data-quote>
+                    <th scope="row">Menú digital con código QR<small>Carta para gastronomía con categorías, fotos y precios, y el QR para tus mesas. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-quotecalc" data-needs="web" data-quote>
+                    <th scope="row">Calculadora de presupuestos<small>Tus clientes eligen servicios, cantidades y opciones y ven un importe estimado. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
                 </tbody>
                 <tbody>
                   <tr class="cp-cat"><th scope="colgroup" colspan="4">Comunicación y contacto</th></tr>
@@ -300,6 +326,34 @@
                     <td class="cp-cond">Necesita la estructura web</td>
                     <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Agregar</span></label></td>
                   </tr>
+                  <tr data-item="hours" data-needs="web">
+                    <th scope="row">Indicador “abierto / cerrado”<small>Un cartel que cambia solo según tu horario de atención.</small></th>
+                    <td data-label="Precio"><span class="compare-price" data-price="hours"></span></td>
+                    <td class="cp-cond">Necesita la estructura web</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Agregar</span></label></td>
+                  </tr>
+                
+                  <tr data-item="f-card" data-needs="web" data-quote>
+                    <th scope="row">Tarjeta digital de contacto<small>Una tarjeta con tus datos profesionales para compartir o descargar, con la opción de guardarte en la agenda del teléfono. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-vcard" data-needs="web" data-quote>
+                    <th scope="row">Botón “Guardar contacto” (vCard)<small>Un botón en tu web que guarda tus datos en la agenda del teléfono. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-share" data-needs="web" data-quote>
+                    <th scope="row">Botones para compartir<small>Para compartir productos o servicios por WhatsApp, redes o copiando el enlace. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                </tbody>
+                <tbody>
+                  <tr class="cp-cat"><th scope="colgroup" colspan="4">Gestión de turnos</th></tr>
                   <tr data-item="agenda" data-needs="web">
                     <th scope="row">Botón de agenda de turnos<small>Integración sencilla: un botón que lleva a tu agenda online (por ejemplo, Google Calendar o Calendly). Si necesitás un sistema propio, elegí “Sistema de reservas”.</small></th>
                     <td data-label="Precio"><span class="compare-price" data-price="agenda"></span></td>
@@ -312,11 +366,71 @@
                     <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
                     <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
                   </tr>
-                  <tr data-item="hours" data-needs="web">
-                    <th scope="row">Indicador “abierto / cerrado”<small>Un cartel que cambia solo según tu horario de atención.</small></th>
-                    <td data-label="Precio"><span class="compare-price" data-price="hours"></span></td>
-                    <td class="cp-cond">Necesita la estructura web</td>
-                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Agregar</span></label></td>
+                  <tr data-item="f-slots" data-needs="web" data-quote>
+                    <th scope="row">Selector de turnos por WhatsApp<small>Elige servicio, día y horario de los que configures y te manda la solicitud por WhatsApp. No ve tu agenda en tiempo real ni evita turnos repetidos. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                </tbody>
+                <tbody>
+                  <tr class="cp-cat"><th scope="colgroup" colspan="4">Interactividad y herramientas</th></tr>
+                  <tr data-item="f-quiz" data-needs="web" data-quote>
+                    <th scope="row">Test de recomendación<small>Unas preguntas y, según las respuestas, el servicio o producto que más le conviene. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-search" data-needs="web" data-quote>
+                    <th scope="row">Buscador interno<small>Para encontrar productos, servicios o contenidos dentro de tu web. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-installments" data-needs="web" data-quote>
+                    <th scope="row">Calculadora de cuotas<small>Muestra cuotas e importes estimados según los valores que configures. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-compare" data-needs="web" data-quote>
+                    <th scope="row">Comparador de planes o servicios<small>Una tabla interactiva para comparar tus opciones lado a lado. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-calendar" data-needs="web" data-quote>
+                    <th scope="row">Agregar al calendario<small>Un botón para guardar un evento o una fecha en el calendario del celular o la compu. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-coupons" data-needs="web" data-quote>
+                    <th scope="row">Cupones promocionales<small>Códigos de descuento que vos definís. Los códigos quedan a la vista en la web: sirven para promociones abiertas, no para descuentos privados. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                </tbody>
+                <tbody>
+                  <tr class="cp-cat"><th scope="colgroup" colspan="4">Contenido y galerías</th></tr>
+                  <tr data-item="f-portfolio" data-needs="web" data-quote>
+                    <th scope="row">Portfolio filtrable<small>Tus trabajos por categorías, con fotos, descripciones y enlaces. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-beforeafter" data-needs="web" data-quote>
+                    <th scope="row">Comparador antes y después<small>Dos fotos que se comparan deslizando un control. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
+                  </tr>
+                  <tr data-item="f-gallery" data-needs="web" data-quote>
+                    <th scope="row">Galería de imágenes ampliable<small>Fotos que se abren en grande y se recorren con flechas o deslizando. <span class="cp-nodb">Sin base de datos propia</span></small></th>
+                    <td data-label="Precio"><span class="cp-quote">A cotizar</span></td>
+                    <td class="cp-cond">Necesita la estructura web · Requiere evaluación</td>
+                    <td class="cp-action"><label class="cp-add"><input type="checkbox"><span>Lo necesito</span></label></td>
                   </tr>
                 </tbody>
                 <tbody>
@@ -358,6 +472,8 @@
               <div class="cp-summary-quote" hidden><p>A cotizar aparte</p><ul></ul><small>No están en el total: te paso su precio con el presupuesto.</small></div>
               <div class="cp-reco" aria-live="polite" hidden></div>
               <p class="cp-disclaimer">Importe estimado, de pago único. El plazo de entrega orientativo es de 5 a 10 días hábiles, según las características del proyecto. Una vez que revise tu solicitud, te confirmaré el presupuesto y el plazo definitivos.</p>
+              <details class="cp-terms"><summary>Qué incluye y qué pasa con los cambios</summary><ul><li>La estructura web incluye 1 ronda de ajustes: una entrega con todas tus observaciones juntas.</li><li>Sumar secciones, páginas o funcionalidades que no están en tu selección es un cambio de alcance: se cotiza aparte.</li><li>Antes de cualquier trabajo extra te paso el precio y el plazo, y lo hago solo si lo aprobás.</li><li>El soporte por mes es opcional y no incluye rediseños, funcionalidades ni páginas nuevas.</li></ul><a class="text-link" href="/terminos/">Leer las condiciones completas <span aria-hidden="true">→</span></a></details>
+              <p class="cp-rate"><small data-rate></small></p>
             </div>
             <div class="cp-summary-foot">
               <div class="cp-summary-total" hidden>
