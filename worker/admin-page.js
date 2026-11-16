@@ -124,7 +124,7 @@ export const adminPage = () => `<!doctype html>
   .side .badge:empty { display: none; }
   .menu-toggle { display: none; }
   @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
+    .layout { grid-template-columns: minmax(0, 1fr); }
     .menu-toggle { display: inline-flex; }
     .side { display: none; max-height: none; position: static; }
     .side.is-open { display: block; }
