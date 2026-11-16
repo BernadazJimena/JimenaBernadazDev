@@ -81,6 +81,37 @@
         return L.join('\n');
     };
 
+    // Propuesta con el diseño de las páginas del cliente (Manrope, lilas de la marca), lista para imprimir o guardar en PDF
+    const proposalHtml = (r) => {
+        const asked = [...r.feats.map((f) => f.name + (req.showHours ? ' · ' + hrs(f.hours) : '')), req.sections ? req.sections + ' secciones' : '', req.pages ? req.pages + ' páginas secundarias' : '', ...[...req.extras].map((x) => EXTRAS[x])].filter(Boolean);
+        const today = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+        const card = (o, i) => '<article class="opt' + (o.key === r.best.key ? ' best' : '') + '">' + (o.key === r.best.key ? '<span class="badge">★ Recomendada</span>' : '')
+            + '<p class="num">Opción ' + (i + 1) + '</p><h3>' + esc(o.name) + '</h3><p class="price">' + ars(o.total) + '</p><p class="usd">' + usd(o.total) + '</p>'
+            + (o.included.length ? '<h4>Incluye</h4><ul>' + o.included.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '')
+            + '<h4>Detalle</h4><table>' + o.lines.map((l) => '<tr><td>' + esc(l[0]) + '</td><td>' + ars(l[1]) + '</td></tr>').join('') + '</table></article>';
+        return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Propuesta' + (req.client ? ' para ' + esc(req.client) : '') + ' · JNB Creative Studio</title>'
+            + '<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"><style>'
+            + '*{box-sizing:border-box}html{background:#f3ebf6}body{color:#211632;font:15px/1.55 Manrope,Arial,sans-serif;margin:0 auto;max-width:960px;padding:28px 20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+            + '.head{align-items:center;background:linear-gradient(135deg,#7543d6,#5d31b8);border-radius:22px;color:#f3ebf6;display:flex;gap:16px;padding:26px 28px}.mark{background:#f3ebf6;border-radius:14px;color:#5d31b8;font-weight:800;padding:10px 12px}'
+            + '.head h1{font-size:26px;line-height:1.15;margin:0}.head p{margin:4px 0 0;opacity:.9}.intro{margin:22px 4px}'
+            + '.box{background:#ecdff4;border-radius:18px;margin:0 0 18px;padding:18px 20px}.box h2{color:#5d31b8;font-size:13px;letter-spacing:.8px;margin:0 0 10px;text-transform:uppercase}'
+            + '.chips{display:flex;flex-wrap:wrap;gap:8px}.chips span{background:#e2d0f0;border-radius:999px;font-size:13px;font-weight:600;padding:5px 12px}'
+            + '.opts{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:18px}.opt{background:#ecdff4;border:2px solid #d9c6e8;border-radius:20px;padding:20px;position:relative;break-inside:avoid}'
+            + '.opt.best{border-color:#7543d6;box-shadow:0 8px 24px rgba(117,67,214,.18)}.badge{background:#7543d6;border-radius:999px;color:#f3ebf6;font-size:12px;font-weight:800;padding:4px 11px;position:absolute;right:14px;top:-12px}'
+            + '.num{color:#625970;font-size:12px;font-weight:700;letter-spacing:.6px;margin:0;text-transform:uppercase}.opt h3{font-size:19px;margin:2px 0 8px}.price{color:#5d31b8;font-size:30px;font-weight:800;line-height:1;margin:0}.usd{color:#1f7a4d;font-weight:800;margin:4px 0 12px}'
+            + '.opt h4{color:#5d31b8;font-size:12px;letter-spacing:.6px;margin:12px 0 6px;text-transform:uppercase}.opt ul{margin:0;padding-left:18px}.opt li{margin:2px 0}.opt table{border-collapse:collapse;font-size:13px;width:100%}.opt td{border-bottom:1px solid #d9c6e8;padding:4px 0}.opt td+td{text-align:right;white-space:nowrap}'
+            + '.reco{background:#e2d0f0;border-left:5px solid #7543d6;border-radius:14px;font-weight:600;margin-bottom:18px;padding:16px 18px}.foot{color:#625970;font-size:13px;text-align:center}.foot strong{color:#5d31b8}'
+            + '@page{margin:12mm}@media print{body{padding:0}}</style></head><body>'
+            + '<header class="head"><span class="mark">JNB</span><div><h1>Propuesta' + (req.client ? ' para ' + esc(req.client) : '') + '</h1><p>JNB Creative Studio · ' + today + '</p></div></header>'
+            + '<p class="intro">¡Gracias por tu consulta! ✨ Te preparé ' + r.opts.length + ' alternativas para lo que necesitás, así podés comparar precio y lo que incluye cada una.</p>'
+            + (asked.length ? '<section class="box"><h2>Lo que pediste</h2><div class="chips">' + asked.map((x) => '<span>' + esc(x) + '</span>').join('') + '</div></section>' : '')
+            + '<div class="opts">' + r.opts.map(card).join('') + '</div>'
+            + '<div class="reco">💡 ' + esc(r.reco) + '</div>'
+            + (req.showHours ? '<section class="box"><h2>Tiempo estimado</h2><p style="margin:0">' + hrs(r.fHours) + ' de desarrollo de las funcionalidades.</p></section>' : '')
+            + '<p class="foot">Importe de pago único. Dólares aproximados, calculados con el dólar MEP vendedor; el valor final se confirma con tu presupuesto.<br><strong>jnbcreativestudio.com.ar</strong> · Instagram @jnbcreativestudio</p>'
+            + '</body></html>';
+    };
+
     const render = () => {
         const el = document.getElementById('m-cotizador');
         if (!el || el.hidden) return;
@@ -122,7 +153,7 @@
             + '<div class="alert">💡 ' + esc(r.reco) + '</div>'
             + '<h4>Propuesta para el cliente</h4><label class="check-line"><input type="checkbox" data-qz-hours' + (req.showHours ? ' checked' : '') + '> Mostrar las horas de desarrollo en la propuesta</label>'
             + '<textarea id="qz-text" rows="12">' + esc(proposalText(r)) + '</textarea>'
-            + '<div class="row"><button type="button" data-qz-copy>Copiar propuesta</button><button type="button" data-qz-print>Imprimir / guardar PDF</button></div></section>';
+            + '<div class="row"><button type="button" data-qz-copy>Copiar propuesta</button><button type="button" class="primary" data-qz-print>Ver propuesta con diseño (PDF)</button></div></section>';
     };
 
     const readReq = (form) => {
@@ -169,8 +200,11 @@
         else if ('qzPrint' in d) {
             const w = window.open('', '_blank');
             if (!w) { panel().toast('Permití las ventanas emergentes para imprimir'); return; }
-            w.document.write('<!doctype html><meta charset="utf-8"><title>Propuesta · JNB Creative Studio</title><style>body{background:#f3ebf6;color:#211632;font:15px/1.6 Arial,sans-serif;padding:32px;white-space:pre-wrap}h1{color:#7543d6;font-size:20px}@page{margin:16mm}</style><h1>JNB Creative Studio</h1>' + esc(document.getElementById('qz-text').value));
-            w.document.close(); w.focus(); w.print();
+            w.document.write(proposalHtml(compare()));
+            w.document.close();
+            w.focus();
+            // Espera a que cargue la tipografía antes de abrir la impresión (ahí se elige "Guardar como PDF")
+            setTimeout(() => w.print(), 700);
         }
     });
 
