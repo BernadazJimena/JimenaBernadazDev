@@ -2,9 +2,9 @@
 // (pago único) y lista aparte lo que se cotiza como adicional. Actualizar acá si cambian los precios.
 (() => {
     const PLANS = {
-        landing: { name: 'Plan Básico · Landing page', price: 111990, days: 10, url: '/planes/#basico' },
-        web: { name: 'Plan Premium · Web a medida', price: 189990, days: 15, url: '/planes/#premium' },
-        tienda: { name: 'Plan Emprendedor · Tienda online', price: 66990, days: 7, url: '/planes/#emprendedor' },
+        landing: { name: 'Plan Básico · Landing page', price: 179990, days: 10, url: '/planes/#basico' },
+        web: { name: 'Plan Premium · Web a medida', price: 269990, days: 15, url: '/planes/#premium' },
+        tienda: { name: 'Plan Emprendedor · Tienda online', price: 94990, days: 7, url: '/planes/#emprendedor' },
     };
     const money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
