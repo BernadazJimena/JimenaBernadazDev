@@ -90,7 +90,8 @@ a.portfolio-image:focus-visible {
     margin-bottom: 2.5rem;
 }
 
-.samples .portfolio-grid {
+.samples .portfolio-grid,
+.samples .blog-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -114,7 +115,8 @@ a.portfolio-image:focus-visible {
 /* Tablet y celular: las miniaturas van en una fila que se desliza, para no alargar el inicio.
    La barra de desplazamiento nativa se oculta: los puntos de abajo indican la posición. */
 @media (max-width: 52rem) {
-    .samples .portfolio-grid {
+    .samples .portfolio-grid,
+    .samples .blog-list {
         display: flex;
         gap: 1rem;
         overflow-x: auto;
@@ -126,12 +128,14 @@ a.portfolio-image:focus-visible {
         mask-image: linear-gradient(to right, transparent, #000 var(--fade-left, 0px), #000 calc(100% - var(--fade-right, 2.25rem)), transparent);
     }
 
-    .samples .portfolio-grid::-webkit-scrollbar {
+    .samples .portfolio-grid::-webkit-scrollbar,
+    .samples .blog-list::-webkit-scrollbar {
         display: none;
     }
 
     /* Celular: una tarjeta entera y un asomo de la siguiente (cerca del 11 % del ancho) */
-    .samples .portfolio-card {
+    .samples .portfolio-card,
+    .samples .blog-card {
         flex: 0 0 calc(89% - 1rem);
         scroll-snap-align: start;
     }
@@ -185,7 +189,8 @@ a.portfolio-image:focus-visible {
 
 /* Tablet (600 a 832 px): dos tarjetas enteras, un asomo de la tercera y flechas anterior / siguiente */
 @media (min-width: 37.5rem) and (max-width: 52rem) {
-    .samples .portfolio-card {
+    .samples .portfolio-card,
+    .samples .blog-card {
         flex-basis: calc((100% - 2rem) / 2.13);
     }
 

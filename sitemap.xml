@@ -313,7 +313,7 @@
   </url>
   <url>
     <loc>https://jnbcreativestudio.com.ar/blog/</loc>
-    <lastmod>2026-11-11</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -326,6 +326,12 @@
   <url>
     <loc>https://jnbcreativestudio.com.ar/blog/tiendanube-o-empretienda/</loc>
     <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://jnbcreativestudio.com.ar/blog/cuanto-cuesta-una-pagina-web/</loc>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
