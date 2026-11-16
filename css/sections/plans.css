@@ -723,7 +723,8 @@
 /* Plan a medida: franja debajo de los tres planes (inicio) */
 .plan-custom-band {
     align-items: center;
-    background: var(--surface);
+    /* Degradé violeta de la paleta, para que se despegue del fondo de la sección */
+    background: linear-gradient(120deg, color-mix(in srgb, var(--blue) 16%, var(--surface)) 0%, var(--surface) 55%, color-mix(in srgb, var(--decoration) 22%, var(--surface)) 100%);
     border: .08rem dashed var(--decoration);
     border-radius: var(--radius);
     display: flex;
@@ -760,4 +761,10 @@
         flex-direction: column;
         text-align: center;
     }
+}
+
+/* Modo oscuro: el degradé va un poco más intenso, como las tarjetas de los planes */
+:root[data-theme="dark"] .plan-custom-band {
+    background: linear-gradient(120deg, #3b2378 0%, #241a40 55%, #2f2058 100%);
+    border-color: #7a55d9;
 }

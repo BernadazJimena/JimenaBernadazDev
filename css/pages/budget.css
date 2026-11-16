@@ -269,3 +269,18 @@
     font-weight: 800;
     margin: 0 0 .4rem;
 }
+
+/* Textos del recuadro "Tu proyecto, a tu manera": sin la sangría de las opciones y con aire debajo del título */
+.budget-custom .budget-desc {
+    margin: 0;
+    padding-left: 0;
+}
+
+.budget-custom .budget-custom-intro {
+    margin: .75rem 0 1rem;
+    max-width: 42rem;
+}
+
+.budget-custom .budget-custom-summary .budget-desc {
+    margin-top: .25rem;
+}
