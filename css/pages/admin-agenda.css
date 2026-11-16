@@ -48,3 +48,28 @@
 #m-cotizador .qz-opt ul.qz-inc li::before { color: var(--ok); content: "✓"; font-weight: 800; left: 0; position: absolute; }
 #m-cotizador .qz-load { align-items: end; background: var(--soft); border-radius: 1rem; display: flex; flex-wrap: wrap; gap: .75rem; margin: 0 0 1rem; padding: .9rem 1rem; }
 #m-cotizador .qz-load p { flex-basis: 100%; margin: 0; }
+/* Cotizador en celulares: tarjetas compactas (casilla junto al nombre, horas y precios como etiquetas de color); al tocar se ve la descripción y los botones */
+@media (max-width: 700px) {
+  #m-cotizador .qz-table thead { display: block; }
+  #m-cotizador .qz-table thead tr { background: none; border: 0; margin: .9rem 0 .4rem; padding: 0; }
+  #m-cotizador .qz-table thead th { display: none; }
+  #m-cotizador .qz-table thead th:first-child { color: var(--accent-ink); display: block; font-size: .78rem; letter-spacing: .06em; padding: 0; text-transform: uppercase; }
+  #m-cotizador .qz-table tbody tr { align-items: center; border-left: 4px solid var(--accent); cursor: pointer; display: flex; flex-wrap: wrap; gap: .35rem .5rem; }
+  #m-cotizador .qz-table tbody tr:has(input:checked) { background: color-mix(in srgb, var(--accent) 16%, var(--soft)); }
+  #m-cotizador .qz-table td::before { display: none !important; }
+  #m-cotizador .qz-table td { padding: 0 !important; width: auto; }
+  #m-cotizador .qz-table td:nth-child(1) input { height: 1.2rem; width: 1.2rem; }
+  #m-cotizador .qz-table td:nth-child(2) { flex: 1 1 calc(100% - 2.2rem); }
+  #m-cotizador .qz-table td:nth-child(2) strong::after { color: var(--muted); content: " ▾"; font-size: .8em; }
+  #m-cotizador .qz-table tr.is-open td:nth-child(2) strong::after { content: " ▴"; }
+  #m-cotizador .qz-table td:nth-child(2) .small, #m-cotizador .qz-table td:nth-child(2) br { display: none; }
+  #m-cotizador .qz-table tr.is-open td:nth-child(2) .small { display: block; margin-top: .2rem; }
+  #m-cotizador .qz-table td:nth-child(3), #m-cotizador .qz-table td:nth-child(4), #m-cotizador .qz-table td:nth-child(5) { border-radius: 999px; font-size: .8rem; font-weight: 700; padding: .15rem .6rem !important; }
+  #m-cotizador .qz-table td:nth-child(3) { background: var(--line); color: var(--text); margin-left: 1.7rem; }
+  #m-cotizador .qz-table td:nth-child(4) { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent-ink); }
+  #m-cotizador .qz-table td:nth-child(5) { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+  #m-cotizador .qz-table td.qz-act { display: none; flex-basis: 100%; margin-left: 1.7rem; }
+  #m-cotizador .qz-table tr.is-open td.qz-act { display: block; }
+  #m-cotizador .qz-table tfoot tr { background: none; border: 0; display: flex; flex-wrap: wrap; gap: .3rem .6rem; font-size: .85rem; margin-bottom: .2rem; padding: .2rem .2rem 0; }
+  #m-cotizador .qz-table tfoot th { color: var(--muted); padding: 0 !important; width: auto; }
+}

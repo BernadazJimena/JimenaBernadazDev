@@ -257,6 +257,9 @@
         else { readReq(e.target); render(); }
     });
     document.addEventListener('click', (e) => {
+        // Celulares: tocar una funcionalidad del catálogo muestra u oculta su descripción y sus botones
+        const row = e.target.closest('#m-cotizador .qz-table tbody tr');
+        if (row && !e.target.closest('button, input, a')) row.classList.toggle('is-open');
         const b = e.target.closest('#m-cotizador button');
         if (!b) return;
         const d = b.dataset;
