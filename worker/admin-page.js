@@ -874,7 +874,12 @@ export const adminPage = () => `<!doctype html>
   const renderBackup = () => {
     $('backup').innerHTML = '<div class="card"><h2>Copia de seguridad</h2>'
       + '<p class="small muted">Descarga un archivo .json con todo lo que guarda el panel: clientes, consultas, presupuestos, proyectos, briefs, pagos, reseñas, cupones e historial. Los archivos que suben los clientes no van en la copia (se descargan desde cada proyecto). Tiene datos privados de tus clientes: guardalo en un lugar seguro.</p>'
-      + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia de seguridad</button></div>';
+      + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia de seguridad</button></div>'
+      + '<details class="card"><summary>⚠ Reiniciar datos en cero</summary>'
+      + '<form id="reset-form"><p class="small muted" style="margin-top:.6rem">Borra clientes, consultas, presupuestos, proyectos, briefs y sus archivos, pagos, cupones, reseñas e historial. Los códigos vuelven a empezar en JNB-CLI-0001. No se tocan los me gusta del blog, el newsletter, el cartel del inicio ni el horario. <strong>No se puede deshacer: descargá antes la copia de seguridad.</strong></p>'
+      + '<label class="check-line"><input type="checkbox" name="faq" checked> También poner en cero los votos y búsquedas de Preguntas frecuentes</label>'
+      + '<label>Para confirmar, escribí REINICIAR<input name="confirm" autocomplete="off" placeholder="REINICIAR"></label>'
+      + '<button style="margin-top:.75rem">Reiniciar datos</button></form></details>';
   };
 
   // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
@@ -1543,6 +1548,16 @@ export const adminPage = () => `<!doctype html>
       try { await api('proyectos', values); } catch (err) { toast('No se pudo crear: revisá el mail'); return; }
       presetClient = '';
       toast('Proyecto creado'); load();
+    } else if (form.id === 'reset-form') {
+      e.preventDefault();
+      if (values.confirm !== 'REINICIAR') { toast('Escribí REINICIAR para confirmar'); return; }
+      if (!confirm('¿Borrar todos los datos de clientes, proyectos, pagos, cupones y reseñas? No se puede deshacer.')) return;
+      try {
+        await api('reiniciar', { confirm: 'REINICIAR' });
+        if (values.faq === 'on') await api('faq/reiniciar', { confirm: 'REINICIAR' });
+      } catch (err) { toast('No se pudo reiniciar'); return; }
+      openClientCode = ''; selected = '';
+      toast('Listo: el panel quedó en cero'); await load(); go('dashboard', '');
     } else if (form.id === 'new-client') {
       e.preventDefault();
       try {

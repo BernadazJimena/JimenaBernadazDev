@@ -398,6 +398,19 @@ export class StudioData extends DurableObject {
     else for (const code of codes) this.sql.exec('UPDATE inquiries SET seen = 1 WHERE code = ?', code);
   }
 
+  // ---- Reiniciar en cero (lo pide Jimena desde Configuración, escribiendo REINICIAR): borra clientes, pedidos, proyectos,
+  // briefs y archivos, pagos, cupones, reseñas e historial, y los códigos vuelven a empezar. Quedan el cartel y el horario.
+  resetAll() {
+    this.ctx.storage.transactionSync(() => {
+      for (const table of ['brief_chunks', 'brief_files', 'briefs', 'payments', 'project_events', 'coupons', 'reviews', 'invitations', 'projects', 'inquiries', 'clients']) {
+        this.sql.exec(`DELETE FROM ${table}`);
+      }
+      this.sql.exec("DELETE FROM settings WHERE key IN ('mailError', 'seqProyecto', 'noDuplicados')");
+      this.sql.exec("DELETE FROM sqlite_sequence WHERE name IN ('clients', 'reviews', 'project_events', 'brief_files', 'payments')");
+    });
+    return true;
+  }
+
   // ---- Copia de seguridad: todas las tablas (los archivos del brief van solo con su nombre y tamaño; se bajan desde cada proyecto)
   backup() {
     const tables = this.sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name != 'brief_chunks' ORDER BY name").toArray();
@@ -1234,6 +1247,12 @@ export async function handleStudio(request, env, ctx) {
 
     if (request.method !== 'POST') return notFound();
     const body = (await readJson(request)) || {};
+
+    if (path === '/api/admin/reiniciar') {
+      if (body.confirm !== 'REINICIAR') return badRequest();
+      await store.resetAll();
+      return json({ ok: true });
+    }
 
     // ---- Clientes
     const clientData = () => ({

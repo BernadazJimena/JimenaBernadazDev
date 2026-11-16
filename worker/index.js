@@ -121,6 +121,12 @@ export class FaqFeedback extends DurableObject {
     question, visitor, lang, helpful ? 1 : 0);
   }
 
+  // Reiniciar en cero (lo pide Jimena desde el panel): votos y búsquedas
+  reset() {
+    this.sql.exec('DELETE FROM votes');
+    this.sql.exec('DELETE FROM searches');
+  }
+
   // Cada búsqueda sin resultado suma una vez; la lista tiene un tope para que nunca crezca sin control.
   search(term, lang) {
     const today = new Date().toISOString().slice(0, 10);
@@ -234,6 +240,14 @@ export default {
       if (!env.ADMIN_CLAVE) return json({ error: 'not found' }, 404);
       if (!isAdmin(request, env)) return json({ error: 'clave' }, 401);
       return json(await env.FAQ_FEEDBACK.get(env.FAQ_FEEDBACK.idFromName('faq')).summary());
+    }
+    if (pathname === '/api/admin/faq/reiniciar' && request.method === 'POST') {
+      if (!env.ADMIN_CLAVE) return json({ error: 'not found' }, 404);
+      if (!isAdmin(request, env)) return json({ error: 'clave' }, 401);
+      const body = await request.json().catch(() => ({}));
+      if (body.confirm !== 'REINICIAR') return json({ error: 'bad request' }, 400);
+      await env.FAQ_FEEDBACK.get(env.FAQ_FEEDBACK.idFromName('faq')).reset();
+      return json({ ok: true });
     }
     if (/^\/api\/(consultas|presupuestos|resenas|proyectos|brief|disponibilidad|cupon|admin)(\/|$)/.test(pathname)) return handleStudio(request, env);
     return env.ASSETS.fetch(request);
