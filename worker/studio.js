@@ -84,6 +84,14 @@ const newCode = (now) => `JNB-${String(now.getUTCFullYear()).slice(2)}${String(n
 // Gestor de tareas: columnas del tablero y prioridades
 const TASK_STATUSES = ['inbox', 'todo', 'doing', 'review', 'done'];
 const TASK_PRIORITIES = ['baja', 'media', 'alta'];
+// Sorteos de Instagram: etapas del ganador (contando desde 0) y la fecha que se guarda la primera vez que llega a cada paso
+const GIVEAWAY_STATUSES = ['borrador', 'activo', 'finalizado'];
+const WINNER_STAGES = ['Ganador anunciado', 'Pendiente de contacto', 'Contactado', 'Brief enviado', 'Brief recibido', 'Material pendiente',
+  'Material recibido', 'Diseño en proceso', 'En revisión', 'Correcciones', 'Finalizado', 'Premio entregado'];
+const WINNER_STAGE_DATES = { 2: 'contacted_at', 3: 'brief_sent_at', 4: 'brief_done_at', 6: 'materials_at', 11: 'delivered_at' };
+const WINNER_MARKS = { contacted_at: 'Contactado', brief_sent_at: 'Brief enviado', brief_done_at: 'Brief completado', materials_at: 'Materiales recibidos', delivered_at: 'Premio entregado' };
+const INSTAGRAM_URL = /^https:\/\/(www\.)?instagram\.com\/[^\s"<>]*$/i;
+const HTTPS_URL = /^https:\/\/[^\s"<>]+$/;
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
 const oneLine = (value, max) => text(value, max).replace(/\s+/g, ' ');
 const isoDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '');
@@ -282,6 +290,74 @@ export class StudioData extends DurableObject {
         .forEach((name, i) => this.sql.exec('INSERT INTO task_categories (name, position) VALUES (?, ?)', name, i));
       this.sql.exec("INSERT INTO settings (key, value) VALUES ('tareasCategorias', '1')");
     }
+    // ---- Sorteos de Instagram (módulo #sorteos del panel). Los ganadores se cargan a mano; nada se conecta con Instagram.
+    // Un sorteo no se borra: se archiva. Etapas del ganador (0 a 11): anunciado, pendiente de contacto, contactado, brief enviado,
+    // brief recibido, material pendiente, material recibido, diseño, revisión, correcciones, finalizado, premio entregado.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS giveaways (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      post TEXT NOT NULL DEFAULT '',
+      url TEXT NOT NULL DEFAULT '',
+      starts TEXT NOT NULL DEFAULT '',
+      ends TEXT NOT NULL DEFAULT '',
+      prize TEXT NOT NULL DEFAULT '',
+      conditions TEXT NOT NULL DEFAULT '',
+      draw_date TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'borrador',
+      archived INTEGER NOT NULL DEFAULT 0,
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL
+    )`);
+    // Usuario de Instagram guardado sin @ y en minúsculas: un mismo usuario no gana dos veces el mismo sorteo
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS giveaway_winners (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      giveaway_id INTEGER NOT NULL REFERENCES giveaways(id),
+      name TEXT NOT NULL,
+      instagram TEXT NOT NULL,
+      profile_url TEXT NOT NULL DEFAULT '',
+      email TEXT NOT NULL DEFAULT '',
+      whatsapp TEXT NOT NULL DEFAULT '',
+      prize TEXT NOT NULL DEFAULT '',
+      plan TEXT NOT NULL DEFAULT '',
+      announced TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      internal_notes TEXT NOT NULL DEFAULT '',
+      stage INTEGER NOT NULL DEFAULT 0,
+      stage_at TEXT NOT NULL DEFAULT '',
+      contacted_at TEXT NOT NULL DEFAULT '',
+      brief_link TEXT NOT NULL DEFAULT '',
+      brief_sent_at TEXT NOT NULL DEFAULT '',
+      brief_done_at TEXT NOT NULL DEFAULT '',
+      materials_at TEXT NOT NULL DEFAULT '',
+      delivered_at TEXT NOT NULL DEFAULT '',
+      msg_congrats TEXT NOT NULL DEFAULT '',
+      msg_brief TEXT NOT NULL DEFAULT '',
+      next_task TEXT NOT NULL DEFAULT '',
+      follow_up TEXT NOT NULL DEFAULT '',
+      task_id INTEGER,
+      client_id INTEGER REFERENCES clients(id),
+      project_token TEXT NOT NULL DEFAULT '',
+      created TEXT NOT NULL,
+      updated TEXT NOT NULL,
+      UNIQUE (giveaway_id, instagram)
+    )`);
+    this.sql.exec('CREATE INDEX IF NOT EXISTS winners_giveaway ON giveaway_winners(giveaway_id)');
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS giveaway_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      winner_id INTEGER NOT NULL REFERENCES giveaway_winners(id),
+      at TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      text TEXT NOT NULL
+    )`);
+    this.sql.exec('CREATE INDEX IF NOT EXISTS giveaway_events_winner ON giveaway_events(winner_id)');
+    // Origen del proyecto ('' = comercial; 'sorteo-instagram' = premio: sin presupuesto, sin pagos y sin cupón al publicar)
+    const giveawayProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
+    if (!giveawayProjectColumns.includes('origin')) this.sql.exec("ALTER TABLE projects ADD COLUMN origin TEXT NOT NULL DEFAULT ''");
+    if (!giveawayProjectColumns.includes('winner_id')) this.sql.exec('ALTER TABLE projects ADD COLUMN winner_id INTEGER');
+    // Tareas creadas desde la ficha de un ganador: quedan vinculadas a él y a su proyecto (una tarea abierta por ganador)
+    const giveawayTaskColumns = this.sql.exec('PRAGMA table_info(tasks)').toArray().map((c) => c.name);
+    if (!giveawayTaskColumns.includes('winner_id')) this.sql.exec('ALTER TABLE tasks ADD COLUMN winner_id INTEGER');
+    if (!giveawayTaskColumns.includes('project')) this.sql.exec("ALTER TABLE tasks ADD COLUMN project TEXT NOT NULL DEFAULT ''");
     this.linkClients();
   }
 
@@ -504,6 +580,100 @@ export class StudioData extends DurableObject {
   }
 
   // ---- Consultas nuevas
+  // ---- Sorteos de Instagram. Nada se borra: los sorteos se archivan y el historial de cada ganador solo suma registros.
+  logWinner(id, icon, text) {
+    this.sql.exec('INSERT INTO giveaway_events (winner_id, at, icon, text) VALUES (?, ?, ?, ?)', id, new Date().toISOString(), icon, text);
+  }
+
+  saveGiveaway(g) {
+    const now = new Date().toISOString();
+    if (g.id) {
+      if (!this.sql.exec('SELECT 1 FROM giveaways WHERE id = ?', g.id).toArray().length) return { error: 'not found' };
+      this.sql.exec(`UPDATE giveaways SET name = ?, post = ?, url = ?, starts = ?, ends = ?, prize = ?, conditions = ?, draw_date = ?, status = ?, updated = ? WHERE id = ?`,
+        g.name, g.post, g.url, g.starts, g.ends, g.prize, g.conditions, g.drawDate, g.status, now, g.id);
+      return { id: g.id };
+    }
+    this.sql.exec(`INSERT INTO giveaways (name, post, url, starts, ends, prize, conditions, draw_date, status, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      g.name, g.post, g.url, g.starts, g.ends, g.prize, g.conditions, g.drawDate, g.status, now, now);
+    return { id: this.sql.exec('SELECT last_insert_rowid() AS id').one().id };
+  }
+
+  // Archivar (o volver a mostrar) solo cambia la marca: ganadores, proyectos e historial quedan como están
+  archiveGiveaway(id, archived) {
+    if (!this.sql.exec('SELECT 1 FROM giveaways WHERE id = ?', id).toArray().length) return { error: 'not found' };
+    this.sql.exec('UPDATE giveaways SET archived = ?, updated = ? WHERE id = ?', archived ? 1 : 0, new Date().toISOString(), id);
+    return { id };
+  }
+
+  // Alta o edición de los datos de un ganador (la etapa se cambia aparte, con su fecha e historial)
+  saveWinner(w) {
+    const now = new Date().toISOString();
+    if (!this.sql.exec('SELECT 1 FROM giveaways WHERE id = ?', w.giveawayId).toArray().length) return { error: 'giveaway' };
+    if (this.sql.exec('SELECT 1 FROM giveaway_winners WHERE giveaway_id = ? AND instagram = ? AND id != ?', w.giveawayId, w.instagram, w.id || 0).toArray().length) return { error: 'duplicate' };
+    if (w.id) {
+      const old = this.sql.exec('SELECT giveaway_id FROM giveaway_winners WHERE id = ?', w.id).toArray()[0];
+      if (!old) return { error: 'not found' };
+      this.sql.exec(`UPDATE giveaway_winners SET giveaway_id = ?, name = ?, instagram = ?, profile_url = ?, email = ?, whatsapp = ?, prize = ?, plan = ?, announced = ?, note = ?, updated = ? WHERE id = ?`,
+        w.giveawayId, w.name, w.instagram, w.profileUrl, w.email, w.whatsapp, w.prize, w.plan, w.announced, w.note, now, w.id);
+      this.logWinner(w.id, '✏️', 'Datos del ganador actualizados');
+      return { id: w.id };
+    }
+    this.sql.exec(`INSERT INTO giveaway_winners (giveaway_id, name, instagram, profile_url, email, whatsapp, prize, plan, announced, note, stage, stage_at, created, updated)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+    w.giveawayId, w.name, w.instagram, w.profileUrl, w.email, w.whatsapp, w.prize, w.plan, w.announced, w.note, now, now, now);
+    const id = this.sql.exec('SELECT last_insert_rowid() AS id').one().id;
+    this.logWinner(id, '🏆', `Ganador anunciado: ${w.prize || 'premio sin cargar'}`);
+    return { id };
+  }
+
+  // Cambio de etapa: guarda la fecha y, la primera vez que llega a ciertas etapas, la fecha de ese paso
+  setWinnerStage(id, stage) {
+    const old = this.sql.exec('SELECT stage FROM giveaway_winners WHERE id = ?', id).toArray()[0];
+    if (!old) return { error: 'not found' };
+    if (old.stage === stage) return { id };
+    const now = new Date().toISOString();
+    this.sql.exec('UPDATE giveaway_winners SET stage = ?, stage_at = ?, updated = ? WHERE id = ?', stage, now, now, id);
+    const mark = WINNER_STAGE_DATES[stage];
+    if (mark) this.sql.exec(`UPDATE giveaway_winners SET ${mark} = ? WHERE id = ? AND ${mark} = ''`, now, id);
+    this.logWinner(id, '📍', `Etapa: ${WINNER_STAGES[stage]}`);
+    return { id };
+  }
+
+  // Seguimiento: notas internas, próxima tarea, fecha de seguimiento, mensajes editados y link del brief
+  trackWinner(id, t) {
+    const old = this.sql.exec('SELECT next_task, follow_up, brief_link FROM giveaway_winners WHERE id = ?', id).toArray()[0];
+    if (!old) return { error: 'not found' };
+    this.sql.exec(`UPDATE giveaway_winners SET internal_notes = ?, next_task = ?, follow_up = ?, msg_congrats = ?, msg_brief = ?, brief_link = ?, updated = ? WHERE id = ?`,
+      t.internalNotes, t.nextTask, t.followUp, t.msgCongrats, t.msgBrief, t.briefLink || old.brief_link, new Date().toISOString(), id);
+    if (t.nextTask && (t.nextTask !== old.next_task || t.followUp !== old.follow_up)) this.logWinner(id, '🗓️', `Próxima tarea: ${t.nextTask}${t.followUp ? ` (${t.followUp})` : ''}`);
+    return { id };
+  }
+
+  // Registrar a mano la fecha de un paso (contacto, brief enviado, completado, materiales, premio entregado)
+  markWinner(id, field, date) {
+    if (!WINNER_MARKS[field]) return { error: 'field' };
+    if (!this.sql.exec('SELECT 1 FROM giveaway_winners WHERE id = ?', id).toArray().length) return { error: 'not found' };
+    this.sql.exec(`UPDATE giveaway_winners SET ${field} = ?, updated = ? WHERE id = ?`, date, new Date().toISOString(), id);
+    this.logWinner(id, '✅', date ? `${WINNER_MARKS[field]}: ${date.slice(0, 10)}` : `${WINNER_MARKS[field]}: fecha quitada`);
+    return { id };
+  }
+
+  giveawaysData() {
+    return {
+      stages: WINNER_STAGES,
+      giveaways: this.sql.exec(`SELECT g.*, (SELECT COUNT(*) FROM giveaway_winners w WHERE w.giveaway_id = g.id) AS winnerCount
+        FROM giveaways g ORDER BY g.archived, g.created DESC`).toArray(),
+      winners: this.sql.exec(`SELECT w.*, g.name AS giveaway_name, c.code AS client_code, p.code AS project_code, p.stage AS project_stage,
+        t.status AS task_status, t.archived AS task_archived
+        FROM giveaway_winners w JOIN giveaways g ON g.id = w.giveaway_id
+        LEFT JOIN clients c ON c.id = w.client_id
+        LEFT JOIN projects p ON p.token = w.project_token AND w.project_token != ''
+        LEFT JOIN tasks t ON t.id = w.task_id
+        ORDER BY w.created DESC`).toArray(),
+      events: this.sql.exec('SELECT winner_id, at, icon, text FROM giveaway_events ORDER BY at DESC, id DESC LIMIT 3000').toArray(),
+    };
+  }
+
   markSeen(codes) {
     if (codes === 'all') this.sql.exec('UPDATE inquiries SET seen = 1 WHERE seen = 0');
     else for (const code of codes) this.sql.exec('UPDATE inquiries SET seen = 1 WHERE code = ?', code);
@@ -513,11 +683,13 @@ export class StudioData extends DurableObject {
   // briefs y archivos, pagos, cupones, reseñas e historial, y los códigos vuelven a empezar. Quedan el cartel y el horario.
   resetAll() {
     this.ctx.storage.transactionSync(() => {
-      for (const table of ['brief_chunks', 'brief_files', 'briefs', 'payments', 'project_events', 'coupons', 'reviews', 'invitations', 'projects', 'inquiries', 'clients']) {
+      for (const table of ['giveaway_events', 'giveaway_winners', 'giveaways', 'brief_chunks', 'brief_files', 'briefs', 'payments', 'project_events', 'coupons', 'reviews', 'invitations', 'projects', 'inquiries', 'clients']) {
         this.sql.exec(`DELETE FROM ${table}`);
       }
+      // Las tareas no se borran, pero dejan de apuntar a ganadores y proyectos que ya no existen
+      this.sql.exec("UPDATE tasks SET winner_id = NULL, project = '' WHERE winner_id IS NOT NULL OR project != ''");
       this.sql.exec("DELETE FROM settings WHERE key IN ('mailError', 'seqProyecto', 'noDuplicados')");
-      this.sql.exec("DELETE FROM sqlite_sequence WHERE name IN ('clients', 'reviews', 'project_events', 'brief_files', 'payments')");
+      this.sql.exec("DELETE FROM sqlite_sequence WHERE name IN ('clients', 'reviews', 'project_events', 'brief_files', 'payments', 'giveaways', 'giveaway_winners', 'giveaway_events')");
     });
     return true;
   }
@@ -1319,6 +1491,7 @@ export async function handleStudio(request, env, ctx) {
       data.hours = await store.hours();
       data.mailReady = Boolean(cleanEnv(env.RESEND_API_KEY) && cleanEnv(env.MAIL_FROM));
       data.mailError = await store.mailError();
+      data.sorteos = await store.giveawaysData();
       return json(data);
     }
 
@@ -1398,6 +1571,84 @@ export async function handleStudio(request, env, ctx) {
         ok = await store.saveTaskCategories(list);
       } else return badRequest();
       return ok ? json(await store.tasksData()) : notFound();
+    }
+
+    // ---- Sorteos de Instagram (sin conexión con Instagram: todo se carga a mano)
+    if (path === '/api/admin/sorteos') {
+      let saved;
+      if (body.action === 'save') {
+        const g = body.giveaway || {};
+        const giveaway = {
+          id: Number(g.id) || 0,
+          name: oneLine(g.name, 120),
+          post: text(g.post, 500),
+          url: oneLine(g.url, 300),
+          starts: isoDate(g.starts),
+          ends: isoDate(g.ends),
+          prize: text(g.prize, 500),
+          conditions: text(g.conditions, 4000),
+          drawDate: isoDate(g.drawDate),
+          status: GIVEAWAY_STATUSES.includes(g.status) ? g.status : 'borrador',
+        };
+        if (!giveaway.name || (giveaway.url && !INSTAGRAM_URL.test(giveaway.url))) return badRequest();
+        if (giveaway.starts && giveaway.ends && giveaway.ends < giveaway.starts) return badRequest();
+        saved = await store.saveGiveaway(giveaway);
+      } else if (body.action === 'archive') {
+        saved = await store.archiveGiveaway(Number(body.id) || 0, body.archived !== false);
+      } else return badRequest();
+      if (saved.error === 'not found') return notFound();
+      return json({ ...saved, ...(await store.giveawaysData()) });
+    }
+
+    if (path === '/api/admin/sorteos/ganadores') {
+      const id = Number(body.id) || 0;
+      let saved;
+      if (body.action === 'save') {
+        const w = body.winner || {};
+        const instagram = oneLine(w.instagram, 40).replace(/^@/, '').toLowerCase();
+        const winner = {
+          id: Number(w.id) || 0,
+          giveawayId: Number(w.giveawayId) || 0,
+          name: oneLine(w.name, 100),
+          instagram,
+          profileUrl: oneLine(w.profileUrl, 300) || (instagram ? `https://www.instagram.com/${instagram}/` : ''),
+          email: oneLine(w.email, 160),
+          whatsapp: oneLine(w.whatsapp, 40),
+          prize: oneLine(w.prize, 200),
+          plan: ['premium', 'basico', 'emprendedor'].includes(w.plan) ? w.plan : '',
+          announced: isoDate(w.announced),
+          note: text(w.note, 2000),
+        };
+        if (!winner.name || !/^[a-z0-9._]{1,30}$/.test(instagram) || !winner.giveawayId || !INSTAGRAM_URL.test(winner.profileUrl)) return badRequest();
+        if (winner.email) {
+          if (!normEmail(winner.email)) return badRequest();
+          winner.email = normEmail(winner.email);
+        }
+        if (winner.whatsapp && !/^\+?[0-9 ()-]{6,25}$/.test(winner.whatsapp)) return badRequest();
+        saved = await store.saveWinner(winner);
+      } else if (body.action === 'stage') {
+        const stage = Number(body.stage);
+        if (!Number.isInteger(stage) || stage < 0 || stage >= WINNER_STAGES.length) return badRequest();
+        saved = await store.setWinnerStage(id, stage);
+      } else if (body.action === 'track') {
+        const briefLink = oneLine(body.briefLink, 300);
+        if (briefLink && !HTTPS_URL.test(briefLink)) return badRequest();
+        saved = await store.trackWinner(id, {
+          internalNotes: text(body.internalNotes, 4000),
+          nextTask: oneLine(body.nextTask, 200),
+          followUp: isoDate(body.followUp),
+          msgCongrats: text(body.msgCongrats, 2000),
+          msgBrief: text(body.msgBrief, 2000),
+          briefLink,
+        });
+      } else if (body.action === 'mark') {
+        const date = body.date === '' ? '' : (isoDate(body.date) || new Date().toISOString().slice(0, 10));
+        saved = await store.markWinner(id, String(body.field || ''), date);
+      } else return badRequest();
+      if (saved.error === 'not found' || saved.error === 'giveaway') return notFound();
+      if (saved.error === 'duplicate') return json(saved, 409);
+      if (saved.error) return badRequest();
+      return json({ ...saved, ...(await store.giveawaysData()) });
     }
 
     if (path === '/api/admin/reiniciar') {

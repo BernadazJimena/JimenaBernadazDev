@@ -1,0 +1,35 @@
+/* Sorteos de Instagram en el panel (js/admin-sorteos.js). Usa los colores del panel (--card, --line, --accent...). */
+#m-sorteos .sg-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+#m-sorteos .sg-filters input { flex: 1 1 14rem; }
+#m-sorteos .sg-filters select { flex: 0 1 13rem; }
+#m-sorteos .sg-table { overflow-x: auto; }
+#m-sorteos .sg-table tr[data-sg-open] { cursor: pointer; }
+#m-sorteos .sg-table tr[data-sg-open]:hover td { background: var(--soft); }
+#m-sorteos .sg-archived td { opacity: .65; }
+#m-sorteos .sg-actions { white-space: nowrap; }
+#m-sorteos .sg-actions button + button { margin-left: .3rem; }
+#m-sorteos .sg-tag { border-radius: 999px; display: inline-block; font-size: .75rem; font-weight: 700; padding: .12rem .55rem; white-space: nowrap; }
+#m-sorteos .sg-warn { background: #f6e1bd; color: #6b3d00; }
+#m-sorteos .sg-info { background: #dcd2f7; color: #3f2580; }
+#m-sorteos .sg-dev { background: #cfe0fb; color: #1d4180; }
+#m-sorteos .sg-ok { background: #cdebdc; color: #0f5534; }
+#m-sorteos .sg-muted { background: var(--soft); color: var(--muted); }
+#m-sorteos .sg-late { color: #b3261e; font-weight: 700; }
+#m-sorteos .sg-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); margin-top: 1rem; }
+#m-sorteos .sg-grid .card { margin: 0; }
+#m-sorteos .sg-field { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: .5rem; grid-template-columns: 6.5rem 1fr auto; padding: .35rem 0; }
+#m-sorteos .sg-field span:nth-child(2) { overflow-wrap: anywhere; }
+#m-sorteos .sg-copy { font-size: .8rem; padding: .2rem .55rem; }
+#m-sorteos .sg-marks { list-style: none; margin: 1rem 0 0; padding: 0; }
+#m-sorteos .sg-marks li { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: .5rem; grid-template-columns: 1fr auto auto; padding: .35rem 0; }
+#m-sorteos textarea { width: 100%; }
+@media (prefers-color-scheme: dark) {
+  #m-sorteos .sg-warn { background: #4a3413; color: #f6d39a; }
+  #m-sorteos .sg-info { background: #3a2c66; color: #d9ccff; }
+  #m-sorteos .sg-dev { background: #1f3358; color: #c4d8fb; }
+  #m-sorteos .sg-ok { background: #173f2c; color: #a8e4c6; }
+  #m-sorteos .sg-late { color: #ff8a80; }
+}
+@media (max-width: 640px) {
+  #m-sorteos .sg-field { grid-template-columns: 5.5rem 1fr auto; }
+}
