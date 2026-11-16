@@ -52,8 +52,8 @@
             // Lo que traen todas las opciones (planes y estructura mínima): así no parece que alguna no lo incluye.
             // Rondas de ajustes: 2 en la estructura a medida y el Básico, 3 en el Premium (extraBenefits 'rounds3').
             const benefits = plan ? plan.extraBenefits || [] : [];
-            // El mail en el contacto de los planes figura "a confirmar" (pending en custom-plan.js): no se promete
-            const COMMON = [plan && (plan.pending || []).includes('mail') ? 'Contacto con botón de WhatsApp y redes' : 'Contacto con botón de WhatsApp, redes y mail', 'Adaptada a celulares y SEO básico', 'Publicación, hosting sin costo y ayuda con el dominio', benefits.includes('rounds3') ? '3 rondas de ajustes' : '2 rondas de ajustes'];
+            // El mail del contacto es la casilla que ya tiene el cliente (ej. @gmail), no un mail con dominio propio (confirmado por Jimena)
+            const COMMON = ['Contacto con botón de WhatsApp, redes y mail (tu casilla actual, por ejemplo @gmail; no es un mail con dominio propio)', 'Adaptada a celulares y SEO básico', 'Publicación, hosting sin costo y ayuda con el dominio', benefits.includes('rounds3') ? '3 rondas de ajustes' : '2 rondas de ajustes'];
             const included = plan ? [plan.sections + ' secciones', plan.pages ? plan.pages + ' páginas secundarias' : '', ...plan.includes.map((x) => EXTRAS[x]), ...COMMON, ...benefits.filter((b) => b !== 'rounds3').map((b) => BENEFITS[b])].filter(Boolean)
                 // Estructura web mínima (como la describe /plan-a-medida/): portada y contacto, sin secciones de contenido
                 : (base ? ['Portada de presentación', ...COMMON] : []);

@@ -45,20 +45,20 @@
         // PENDIENTE: confirmar si la landing incluye mapa y botón de agenda como el Básico.
         emprendedorLanding: {
             type: 'web+store', price: pair(A.basico + A.storeAddOn), anchor: 'emprendedor', langs: ['es', 'pt'],
-            sections: 5, minSections: 5, pages: 0, includes: [], pending: ['mail', 'map', 'agenda'], extraBenefits: [],
+            sections: 5, minSections: 5, pages: 0, includes: [], pending: ['map', 'agenda'], extraBenefits: [],
         },
         basico: {
             type: 'web', price: pair(A.basico), anchor: 'basico', langs: ['es', 'en', 'pt'],
             sections: 5, minSections: 5, pages: 0, includes: ['map', 'agenda'],
             // Modo claro / oscuro y abierto / cerrado: adicionales del Básico. Páginas secundarias: se cotizan aparte (precio de lista).
             // PENDIENTE: el plan menciona WhatsApp y redes, pero no el mail en el contacto.
-            pending: ['mail'], extraBenefits: [],
+            pending: [], extraBenefits: [],
         },
         premium: {
             type: 'web', price: pair(A.premium), anchor: 'premium', langs: ['es', 'en', 'pt'],
             sections: 10, minSections: 6, pages: 4, includes: ['map', 'agenda', 'dark', 'hours'], availability: true,
             // PENDIENTE: igual que el Básico, el mail en el contacto no está especificado.
-            pending: ['mail'], extraBenefits: ['rounds3', 'support30', 'design'],
+            pending: [], extraBenefits: ['rounds3', 'support30', 'design'],
         },
     };
     // El cotizador del panel (js/admin-cotizador.js) compara con estos mismos planes
