@@ -113,22 +113,67 @@ export const adminPage = () => `<!doctype html>
   .check-line { align-items: center; display: flex; font-size: .9rem; gap: .5rem; margin: .75rem 0; }
   .check-line input { accent-color: var(--accent); width: auto; }
   .price-row { display: grid; gap: .5rem; grid-template-columns: 7.5rem 1fr; }
-  /* Menú lateral: cada módulo en su propio panel */
-  .layout { align-items: start; display: grid; gap: 1.5rem; grid-template-columns: 14.5rem minmax(0, 1fr); }
-  .side { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; display: block; margin: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding: .6rem; position: sticky; top: 1rem; }
-  .side-group { color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .08em; margin: .9rem .6rem .3rem; text-transform: uppercase; }
-  .side a { align-items: center; border-radius: 999px; color: var(--text); display: flex; font-size: .9rem; font-weight: 700; gap: .5rem; justify-content: space-between; padding: .42rem .75rem; text-decoration: none; }
-  .side a:hover { background: var(--soft); color: var(--accent-ink); }
-  .side a[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
-  .side a[aria-current="page"] .badge { background: var(--on-accent); color: var(--accent); }
+  /* Menú lateral: fijo a la izquierda, con su propio desplazamiento; se puede contraer (solo íconos) */
+  :root { --side-w: 14.25rem; --side-bg: color-mix(in srgb, var(--card) 62%, var(--bg)); }
+  html.side-collapsed { --side-w: 4.5rem; }
+  .wrap:has(#app:not([hidden])) { margin: 0; max-width: none; padding: 1.25rem 2rem 4rem calc(var(--side-w) + 2rem); transition: padding-left .22s ease; }
+  #app main { margin: 0 auto; max-width: 66rem; }
+  .side { background: var(--side-bg); border-right: 1px solid var(--line); bottom: 0; display: flex; flex-direction: column; left: 0; margin: 0; position: fixed; top: 0; transition: width .22s ease, transform .22s ease; width: var(--side-w); z-index: 30; }
+  .side-head { align-items: center; display: flex; gap: .6rem; min-height: 4rem; overflow: hidden; padding: 1rem 1rem .75rem; white-space: nowrap; }
+  .side-head .mark { flex-shrink: 0; }
+  .side-title { display: flex; flex-direction: column; line-height: 1.2; transition: opacity .15s ease; }
+  .side-title strong { font-size: .92rem; }
+  .side-title span { color: var(--muted); font-size: .72rem; font-weight: 600; }
+  .side-scroll { display: block; flex: 1; margin: 0; overflow-x: hidden; overflow-y: auto; padding: .25rem .5rem 1rem; scrollbar-color: var(--line) transparent; scrollbar-width: thin; }
+  .side-group { color: var(--muted); font-size: .66rem; font-weight: 800; letter-spacing: .11em; margin: 1.1rem .7rem .35rem; opacity: .75; overflow: hidden; text-transform: uppercase; white-space: nowrap; }
+  .side-group:first-child { margin-top: .25rem; }
+  .side a { align-items: center; border-radius: .6rem; color: var(--muted); display: flex; font-size: .875rem; font-weight: 600; gap: .65rem; margin: .1rem 0; overflow: hidden; padding: .5rem .6rem; position: relative; text-decoration: none; transition: background .15s ease, color .15s ease; white-space: nowrap; }
+  .side a:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--text); }
+  .side a:focus-visible, .side-foot button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .side a[aria-current="page"] { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text); }
+  .side a[aria-current="page"] .ico { color: var(--accent-ink); }
+  .ico { fill: none; flex-shrink: 0; height: 1.15rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 1.15rem; }
+  .side-label { flex: 1; overflow: hidden; text-overflow: ellipsis; transition: opacity .15s ease; }
+  .side .badge { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent-ink); font-size: .66rem; line-height: 1.5; margin: 0; min-width: 1.2rem; padding: 0 .4rem; text-align: center; }
   .side .badge:empty { display: none; }
-  .menu-toggle { display: none; }
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: minmax(0, 1fr); }
+  .side-foot { border-top: 1px solid var(--line); padding: .6rem; }
+  .side-foot button { align-items: center; background: none; border: 0; border-radius: .6rem; color: var(--muted); display: flex; font-size: .85rem; font-weight: 600; gap: .7rem; overflow: hidden; padding: .5rem .65rem; white-space: nowrap; width: 100%; }
+  .side-foot button:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--text); }
+  html.side-collapsed .side-foot .ico { transform: scaleX(-1); }
+  .side-close { display: none; }
+  /* Contraída: solo íconos; las categorías pasan a ser una línea fina y los contadores, un número chico sobre el ícono */
+  html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 0; }
+  html.side-collapsed .side-head { justify-content: center; padding-left: 0; padding-right: 0; }
+  html.side-collapsed .side-title { width: 0; }
+  html.side-collapsed .side-group { background: var(--line); height: 1px; margin: .7rem .55rem; opacity: 1; padding: 0; text-indent: -999px; }
+  html.side-collapsed .side a, html.side-collapsed .side-foot button { gap: 0; justify-content: center; padding: .55rem 0; }
+  html.side-collapsed .side a .side-label, html.side-collapsed .side-foot .side-label { flex: 0; width: 0; }
+  html.side-collapsed .side .badge { font-size: .58rem; left: 50%; line-height: 1.35; min-width: 1rem; padding: 0 .25rem; position: absolute; top: .1rem; }
+  .side-tip { background: var(--text); border-radius: .45rem; color: var(--bg); font-size: .8rem; font-weight: 700; padding: .3rem .6rem; pointer-events: none; position: fixed; transform: translateY(-50%); white-space: nowrap; z-index: 40; }
+  .menu-toggle { align-items: center; display: none; gap: .4rem; }
+  .menu-toggle .ico { height: 1rem; width: 1rem; }
+  .top-brand { display: none; }
+  .side-backdrop { display: none; }
+  /* Celular: la barra es un panel que se abre con el botón Menú y se cierra al elegir una sección */
+  @media (max-width: 767px) {
+    html, html.side-collapsed { --side-w: 0px; }
+    .wrap:has(#app:not([hidden])) { padding: 1rem 1rem 4rem; }
+    .side { box-shadow: 0 0 2rem rgba(16, 11, 29, .45); transform: translateX(-105%); width: min(17rem, 85vw); }
+    .side.is-open { transform: none; }
+    html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 1; }
+    html.side-collapsed .side-title { width: auto; }
+    html.side-collapsed .side-head { justify-content: flex-start; padding: 1rem 1rem .75rem; }
+    html.side-collapsed .side-group { background: none; height: auto; margin: 1.1rem .7rem .35rem; opacity: .75; text-indent: 0; }
+    html.side-collapsed .side a { gap: .7rem; justify-content: flex-start; padding: .5rem .65rem; }
+    html.side-collapsed .side a .side-label { flex: 1; width: auto; }
+    html.side-collapsed .side .badge { font-size: .66rem; position: static; }
+    .side-foot { display: none; }
+    .side-close { background: none; border: 0; color: var(--muted); display: inline-flex; margin-left: auto; padding: .35rem; }
+    .side.is-open + .side-backdrop { background: rgba(16, 11, 29, .5); display: block; inset: 0; position: fixed; z-index: 25; }
     .menu-toggle { display: inline-flex; }
-    .side { display: none; max-height: none; position: static; }
-    .side.is-open { display: block; }
+    .top-brand { display: flex; }
   }
+  @media (prefers-reduced-motion: reduce) { .side, .wrap { transition: none !important; } }
   .module-intro { color: var(--muted); margin: -.4rem 0 1rem; }
   .stats { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin-bottom: 1.25rem; }
   .stat { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; color: var(--text); display: block; padding: .9rem 1rem; text-decoration: none; }
@@ -155,7 +200,8 @@ export const adminPage = () => `<!doctype html>
   .table-wrap { overflow-x: auto; }
   [hidden] { display: none !important; }
 </style></head>
-<body><div class="wrap">
+<body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol></svg>
+<div class="wrap">
   <form class="card login" id="login" hidden>
     <div class="brand" style="margin-bottom:.75rem"><span class="mark">JNB</span> Panel</div>
     <label>Clave del panel<input type="password" id="key" autocomplete="current-password" required></label>
@@ -165,29 +211,36 @@ export const adminPage = () => `<!doctype html>
 
   <div id="app" hidden>
     <header>
-      <div class="brand"><span class="mark">JNB</span><h1>Panel</h1></div>
-      <div class="row"><button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="side">☰ Menú</button><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
+      <div class="row"><button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="side"><svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>Menú</button><div class="brand top-brand"><span class="mark">JNB</span><h1>Panel</h1></div></div>
+      <div class="row"><a class="btn" href="/" target="_blank">Ver el sitio ↗</a><button id="logout">Salir</button></div>
     </header>
     <div class="layout">
-      <nav class="side" id="side" aria-label="Secciones del panel">
-        <a href="#dashboard" data-mod="dashboard"><span>🏠 Dashboard</span></a>
-        <p class="side-group">Comercial</p>
-        <a href="#clientes" data-mod="clientes"><span>👤 Clientes</span><span class="badge" id="n-clientes"></span></a>
-        <a href="#proyectos" data-mod="proyectos"><span>📁 Proyectos</span><span class="badge" id="n-proyectos"></span></a>
-        <a href="#consultas" data-mod="consultas"><span>✉️ Consultas</span><span class="badge" id="n-consultas"></span></a>
-        <a href="#presupuestos" data-mod="presupuestos"><span>💬 Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
-        <a href="#pagos" data-mod="pagos"><span>💳 Pagos</span><span class="badge" id="n-pagos"></span></a>
-        <p class="side-group">Después de la entrega</p>
-        <a href="#resenas" data-mod="resenas"><span>⭐ Reseñas</span><span class="badge" id="n-resenas"></span></a>
-        <a href="#cupones" data-mod="cupones"><span>🎁 Cupones</span><span class="badge" id="n-cupones"></span></a>
-        <p class="side-group">Sitio web</p>
-        <a href="#cartel" data-mod="cartel"><span>📣 Cartel del inicio</span></a>
-        <a href="#horario" data-mod="horario"><span>🕘 Horario de atención</span></a>
-        <a href="#faq" data-mod="faq"><span>❓ Preguntas frecuentes</span></a>
-        <a href="#newsletter" data-mod="newsletter"><span>📰 Newsletter</span><span class="badge" id="n-newsletter"></span></a>
-        <p class="side-group">Ajustes</p>
-        <a href="#config" data-mod="config"><span>⚙️ Configuración</span><span class="badge" id="n-config"></span></a>
-      </nav>
+      <aside class="side" id="side">
+        <div class="side-head"><span class="mark">JNB</span><span class="side-title"><strong>JNB Creative Studio</strong><span>Panel de administración</span></span><button type="button" class="side-close" id="side-close" aria-label="Cerrar el menú"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+        <nav class="side-scroll" aria-label="Secciones del panel">
+          <p class="side-group">General</p>
+          <a href="#dashboard" data-mod="dashboard"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Dashboard</span></a>
+          <p class="side-group">Comercial</p>
+          <a href="#clientes" data-mod="clientes"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span class="side-label">Clientes</span><span class="badge" id="n-clientes"></span></a>
+          <a href="#proyectos" data-mod="proyectos"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="side-label">Proyectos</span><span class="badge" id="n-proyectos"></span></a>
+          <a href="#consultas" data-mod="consultas"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><span class="side-label">Consultas</span><span class="badge" id="n-consultas"></span></a>
+          <a href="#presupuestos" data-mod="presupuestos"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
+          <a href="#pagos" data-mod="pagos"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Pagos</span><span class="badge" id="n-pagos"></span></a>
+          <p class="side-group">Postventa</p>
+          <a href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
+          <a href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
+          <p class="side-group">Sitio web</p>
+          <a href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
+          <a href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
+          <a href="#faq" data-mod="faq"><svg class="ico" aria-hidden="true"><use href="#i-help"/></svg><span class="side-label">Preguntas frecuentes</span></a>
+          <a href="#newsletter" data-mod="newsletter"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg><span class="side-label">Newsletter</span><span class="badge" id="n-newsletter"></span></a>
+          <p class="side-group">Configuración</p>
+          <a href="#config" data-mod="config"><svg class="ico" aria-hidden="true"><use href="#i-settings"/></svg><span class="side-label">Configuración</span><span class="badge" id="n-config"></span></a>
+        </nav>
+        <div class="side-foot"><button type="button" id="side-collapse" aria-expanded="true"><svg class="ico" aria-hidden="true"><use href="#i-panel"/></svg><span class="side-label">Contraer menú</span></button></div>
+      </aside>
+      <div class="side-backdrop" id="side-backdrop"></div>
+      <div class="side-tip" id="side-tip" role="tooltip" hidden></div>
       <main>
         <section class="module" id="m-dashboard"></section>
         <section class="module" id="m-clientes" hidden></section>
@@ -1203,6 +1256,37 @@ export const adminPage = () => `<!doctype html>
     const open = $('side').classList.toggle('is-open');
     $('menu-toggle').setAttribute('aria-expanded', String(open));
   });
+  const closeSide = () => { $('side').classList.remove('is-open'); $('menu-toggle').setAttribute('aria-expanded', 'false'); };
+  $('side-close').addEventListener('click', closeSide);
+  $('side-backdrop').addEventListener('click', closeSide);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSide(); });
+  // Menú contraído (solo íconos): se recuerda en este navegador; en tablet arranca contraído si nunca se eligió
+  const setCollapsed = (on, remember) => {
+    document.documentElement.classList.toggle('side-collapsed', on);
+    $('side-collapse').setAttribute('aria-expanded', String(!on));
+    $('side-collapse').querySelector('.side-label').textContent = on ? 'Expandir menú' : 'Contraer menú';
+    if (remember) { try { localStorage.setItem('jnb-admin-menu', on ? 'contraido' : 'expandido'); } catch (err) {} }
+  };
+  let savedMenu = null;
+  try { savedMenu = localStorage.getItem('jnb-admin-menu'); } catch (err) {}
+  setCollapsed(savedMenu ? savedMenu === 'contraido' : (innerWidth >= 768 && innerWidth < 1100), false);
+  $('side-collapse').addEventListener('click', () => { setCollapsed(!document.documentElement.classList.contains('side-collapsed'), true); $('side-tip').hidden = true; });
+  // Con el menú contraído, el nombre de cada sección aparece al pasar el cursor (o al llegar con el teclado)
+  const showTip = (e) => {
+    const item = e.target.closest('#side a, #side-collapse');
+    if (!item || !document.documentElement.classList.contains('side-collapsed') || innerWidth < 768) { $('side-tip').hidden = true; return; }
+    const r = item.getBoundingClientRect();
+    const badge = item.querySelector('.badge');
+    $('side-tip').textContent = item.querySelector('.side-label').textContent + (badge && badge.textContent ? ' · ' + badge.textContent : '');
+    $('side-tip').style.top = (r.top + r.height / 2) + 'px';
+    $('side-tip').style.left = (r.right + 10) + 'px';
+    $('side-tip').hidden = false;
+  };
+  $('side').addEventListener('mouseover', showTip);
+  $('side').addEventListener('focusin', showTip);
+  $('side').addEventListener('mouseleave', () => { $('side-tip').hidden = true; });
+  $('side').addEventListener('focusout', () => { $('side-tip').hidden = true; });
+  document.querySelector('.side-scroll').addEventListener('scroll', () => { $('side-tip').hidden = true; });
 
   // Abrir o cerrar la ficha de un cliente (una a la vez); la dirección cambia a #clientes/JNB-CLI-0001
   document.addEventListener('toggle', (e) => {
