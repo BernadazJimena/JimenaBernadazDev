@@ -223,57 +223,71 @@ export const adminPage = () => `<!doctype html>
   .feed li { align-items: flex-start; border-bottom: 1px solid var(--line); display: grid; gap: .6rem; grid-template-columns: 2rem 1fr; padding: .55rem 0; }
   .feed li:last-child { border-bottom: 0; }
   /* Dashboard */
-  #m-dashboard .card { border-radius: 1.1rem; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 7%, transparent); }
+  #m-dashboard { --sh: rgb(33 22 50 / .07); --sh-hover: rgb(93 49 184 / .22); --hi: transparent; }
+  @media (prefers-color-scheme: dark) { #m-dashboard { --sh: rgb(0 0 0 / .32); --sh-hover: rgb(0 0 0 / .5); --hi: rgb(255 255 255 / .035); } }
+  #m-dashboard .card { border-radius: 1.15rem; box-shadow: inset 0 1px 0 var(--hi), 0 1px 2px var(--sh), 0 8px 24px -16px var(--sh); padding: 1.15rem 1.25rem; }
   #m-dashboard .alert { margin-bottom: .75rem; }
-  .dash-head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: .6rem 1rem; justify-content: space-between; margin-bottom: 1.1rem; }
-  .dash-kicker { color: var(--accent-ink); font-size: .7rem; font-weight: 800; letter-spacing: .1em; margin: 0 0 .2rem; text-transform: uppercase; }
-  .dash-hello { font-size: 1.55rem; letter-spacing: -.015em; line-height: 1.2; margin: 0; }
-  .dash-sub { color: var(--muted); margin: .25rem 0 0; }
-  .dash-date { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 999px; display: inline-flex; font-size: .85rem; font-weight: 700; gap: .45rem; margin: 0; padding: .4rem .9rem; }
+  .dash-head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; justify-content: space-between; margin: .35rem 0 1.4rem; }
+  .dash-kicker { color: var(--accent-ink); font-size: .7rem; font-weight: 800; letter-spacing: .12em; margin: 0 0 .3rem; text-transform: uppercase; }
+  .dash-hello { font-size: 1.65rem; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+  .dash-sub { color: var(--muted); font-size: .92rem; margin: .35rem 0 0; }
+  .dash-date { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 999px; box-shadow: inset 0 1px 0 var(--hi), 0 1px 2px var(--sh); color: var(--muted); display: inline-flex; font-size: .85rem; gap: .5rem; margin: 0 0 .15rem; padding: .45rem .95rem .45rem .8rem; }
+  .dash-date strong { color: var(--text); }
   .dash-date .ico { color: var(--accent-ink); height: 1rem; width: 1rem; }
   #m-dashboard .stats { gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: .75rem; }
-  #m-dashboard .stat { align-items: center; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 7%, transparent); display: grid; gap: .75rem; grid-template-columns: 2.4rem minmax(0, 1fr); padding: .85rem .95rem; transition: border-color .15s, box-shadow .15s, transform .15s; }
-  #m-dashboard .stat:hover { border-color: var(--accent); box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--accent) 55%, transparent); transform: translateY(-1px); }
-  .stat-ico { align-items: center; background: color-mix(in srgb, var(--accent) 15%, transparent); border-radius: .75rem; color: var(--accent-ink); display: flex; height: 2.4rem; justify-content: center; width: 2.4rem; }
-  .stat-body { min-width: 0; }
-  #m-dashboard .stat-n { font-size: 1.55rem; letter-spacing: -.02em; }
-  #m-dashboard .stat-l { color: var(--text); font-size: .82rem; }
-  .stat-x { color: var(--muted); display: block; font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #m-dashboard .stat { align-items: center; border-radius: 1.05rem; box-shadow: inset 0 1px 0 var(--hi), 0 1px 2px var(--sh); display: grid; gap: .85rem; grid-template-columns: 2.5rem minmax(0, 1fr); min-height: 5.4rem; padding: .85rem 1rem; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+  #m-dashboard .stat:hover { border-color: color-mix(in srgb, var(--accent) 70%, var(--line)); box-shadow: inset 0 1px 0 var(--hi), 0 10px 24px -14px var(--sh-hover); color: var(--text); transform: translateY(-2px); }
+  #m-dashboard .stat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .stat-ico { align-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: .8rem; color: var(--accent-ink); display: flex; height: 2.5rem; justify-content: center; transition: background .2s ease; width: 2.5rem; }
+  #m-dashboard .stat:hover .stat-ico { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+  .stat-body { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+  #m-dashboard .stat-n { font-size: 1.55rem; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1.05; }
+  #m-dashboard .stat-l { color: var(--text); font-size: .82rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stat-x { color: var(--muted); display: block; font-size: .74rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .dash-cols { align-items: start; display: grid; gap: .75rem; }
-  @media (min-width: 1100px) { .dash-cols { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); } }
+  @media (min-width: 1100px) { .dash-cols { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } }
   .dash-cols .card { margin: 0; }
-  .dash-card-head { align-items: baseline; display: flex; gap: .5rem; justify-content: space-between; margin-bottom: .75rem; }
-  .dash-card-head h2 { margin: 0; }
-  .ag-group + .ag-group { border-top: 1px solid var(--line); margin-top: .7rem; padding-top: .7rem; }
-  .ag-group h3 { align-items: center; color: var(--muted); display: flex; font-size: .72rem; gap: .45rem; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
+  .dash-card-head { align-items: center; border-bottom: 1px solid var(--line); display: flex; gap: .5rem; justify-content: space-between; margin: 0 0 .85rem; padding-bottom: .75rem; }
+  .dash-card-head h2 { font-size: 1.02rem; letter-spacing: -.01em; margin: 0; }
+  .dash-card-head .small { background: var(--soft); border-radius: 999px; font-size: .74rem; font-weight: 700; padding: .1rem .6rem; }
+  .ag-group + .ag-group { margin-top: 1rem; }
+  .ag-group h3 { align-items: center; color: var(--muted); display: flex; font-size: .7rem; gap: .45rem; letter-spacing: .1em; margin: 0 0 .35rem; padding: 0 .6rem; text-transform: uppercase; }
   .ag-group.is-late h3 { color: var(--warn); } .ag-group.is-today h3 { color: var(--accent-ink); }
-  .ag-count { background: var(--soft); border-radius: 999px; color: var(--text); font-size: .7rem; letter-spacing: 0; padding: 0 .5rem; }
-  .ag-empty { color: var(--muted); font-size: .85rem; margin: 0; padding: .1rem 0 .1rem 1.1rem; }
+  .ag-count { background: var(--soft); border-radius: 999px; color: var(--text); font-size: .68rem; letter-spacing: 0; line-height: 1.5; padding: 0 .45rem; }
+  .ag-empty { color: var(--muted); font-size: .84rem; margin: 0; padding: .2rem .6rem .2rem 1.85rem; }
   .today-list { list-style: none; margin: 0; padding: 0; }
-  .today-item { align-items: center; background: transparent; border: 1px solid transparent; border-radius: .75rem; display: grid; font-weight: 400; gap: .15rem .75rem; grid-template-columns: .5rem minmax(0, 1fr) auto; margin: 0 0 .15rem; padding: .5rem .6rem; text-align: left; transition: background .15s, border-color .15s; width: 100%; }
-  .today-item:hover { background: var(--soft); border-color: var(--line); color: var(--text); }
-  .today-dot { background: var(--muted); border-radius: 50%; height: .5rem; opacity: .5; width: .5rem; }
-  .is-late .today-dot { background: #f2b45c; opacity: 1; } .is-today .today-dot { background: var(--accent); opacity: 1; }
-  .today-body { min-width: 0; }
-  .today-sec { color: var(--accent-ink); display: block; font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-  .today-text { display: block; font-weight: 700; overflow-wrap: anywhere; }
-  .today-meta { align-items: center; display: flex; gap: .5rem; white-space: nowrap; }
-  .today-when { color: var(--muted); font-size: .8rem; }
+  .today-list li + li { margin-top: .1rem; }
+  .today-item { align-items: center; background: transparent; border: 1px solid transparent; border-radius: .8rem; display: grid; font-weight: 400; gap: .15rem .85rem; grid-template-columns: .5rem minmax(0, 1fr) 3.6rem 9.5rem; margin: 0; padding: .6rem; text-align: left; transition: background .18s ease, border-color .18s ease, box-shadow .18s ease; width: 100%; }
+  .today-item:hover { background: color-mix(in srgb, var(--accent) 7%, var(--card)); border-color: var(--line); box-shadow: 0 1px 2px var(--sh); color: var(--text); }
+  .today-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .today-dot { background: var(--muted); border-radius: 50%; height: .5rem; opacity: .45; width: .5rem; }
+  .is-late .today-dot { background: #f2b45c; box-shadow: 0 0 0 3px color-mix(in srgb, #f2b45c 22%, transparent); opacity: 1; }
+  .is-today .today-dot { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); opacity: 1; }
+  .today-body { display: flex; flex-direction: column; gap: .12rem; min-width: 0; }
+  .today-text { font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+  .today-sec { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .03em; }
+  .today-meta { display: contents; }
+  .today-when { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .today-item .chip { justify-self: end; line-height: 1.35; text-align: center; }
+  .dash-activity .dash-card-head { margin-bottom: 1rem; }
   .dash-tl { list-style: none; margin: 0; padding: 0; }
-  .dash-tl li { display: grid; gap: .7rem; grid-template-columns: 2rem minmax(0, 1fr); padding-bottom: .85rem; position: relative; }
-  .dash-tl li::before { background: var(--line); bottom: 0; content: ''; left: calc(1rem - 1px); position: absolute; top: 2.15rem; width: 2px; }
+  .dash-tl li { display: grid; gap: .75rem; grid-template-columns: 1.9rem minmax(0, 1fr); padding-bottom: .9rem; position: relative; }
+  .dash-tl li::before { background: var(--line); bottom: .15rem; content: ''; left: calc(.95rem - 1px); position: absolute; top: 2.1rem; width: 2px; }
   .dash-tl li:last-child { padding-bottom: 0; } .dash-tl li:last-child::before { display: none; }
-  .dash-tl-icon { align-items: center; background: var(--soft); border: 1px solid var(--line); border-radius: 50%; display: flex; font-size: .85rem; height: 2rem; justify-content: center; width: 2rem; }
-  .dash-tl p { margin: 0; overflow-wrap: anywhere; } .dash-tl li > div { padding-top: .2rem; }
-  .dash-tl-meta { color: var(--muted); font-size: .78rem; }
-  .dash-tl .link-btn { font-size: .78rem; font-weight: 700; text-decoration: none; } .dash-tl .link-btn:hover { text-decoration: underline; }
-  @media (max-width: 900px) { #m-dashboard .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .dash-tl-icon { align-items: center; background: var(--soft); border: 1px solid var(--line); border-radius: 50%; display: flex; font-size: .8rem; height: 1.9rem; justify-content: center; width: 1.9rem; }
+  .dash-tl p { line-height: 1.4; margin: 0; overflow-wrap: anywhere; } .dash-tl li > div { padding-top: .15rem; }
+  .dash-tl .dash-tl-meta { color: var(--muted); font-size: .76rem; margin-top: .15rem; }
+  .dash-tl .link-btn { font-size: .76rem; font-weight: 700; text-decoration: none; transition: color .15s ease; } .dash-tl .link-btn:hover { color: var(--accent); text-decoration: underline; }
+  @media (max-width: 1000px) { #m-dashboard .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 640px) {
-    .dash-hello { font-size: 1.3rem; }
-    #m-dashboard .stats { gap: .5rem; } #m-dashboard .stat { align-items: start; gap: .45rem; grid-template-columns: minmax(0, 1fr); padding: .7rem .75rem; }
-    .stat-ico { border-radius: .6rem; height: 1.85rem; width: 1.85rem; } .stat-ico .ico { height: 1rem; width: 1rem; } #m-dashboard .stat-n { font-size: 1.3rem; }
+    .dash-head { margin: .1rem 0 1.1rem; } .dash-hello { font-size: 1.35rem; }
+    #m-dashboard .card { padding: 1rem; }
+    #m-dashboard .stats { gap: .5rem; } #m-dashboard .stat { align-items: start; gap: .5rem; grid-template-columns: minmax(0, 1fr); min-height: 0; padding: .75rem .8rem; }
+    .stat-ico { border-radius: .65rem; height: 1.9rem; width: 1.9rem; } .stat-ico .ico { height: 1rem; width: 1rem; } #m-dashboard .stat-n { font-size: 1.35rem; }
+    #m-dashboard .stat-l { white-space: normal; }
     .dash-card-head .small { display: none; }
-    .today-item { grid-template-columns: .5rem minmax(0, 1fr); } .today-meta { flex-wrap: wrap; grid-column: 2; white-space: normal; }
+    .today-item { grid-template-columns: .5rem minmax(0, 1fr); padding: .6rem .5rem; } .today-meta { align-items: center; display: flex; flex-wrap: wrap; gap: .4rem .6rem; grid-column: 2; }
+    .today-when { text-align: left; } .today-item .chip { justify-self: start; }
   }
   .money-ok { color: var(--ok); font-weight: 800; } .money-warn { color: var(--warn); font-weight: 800; }
   .table-wrap { overflow-x: auto; }
@@ -1060,7 +1074,7 @@ export const adminPage = () => `<!doctype html>
     const next = items.filter((x) => x.date && daysTo(x.date) > 0);
     const row = (x) => '<li><button type="button" class="today-item" ' + (x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
       + '<span class="today-dot" aria-hidden="true"></span>'
-      + '<span class="today-body"><span class="today-sec">' + esc(x.section) + '</span><span class="today-text">' + esc(x.text) + '</span></span>'
+      + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + esc(x.section) + '</span></span>'
       + '<span class="today-meta"><span class="today-when">' + (x.date ? shortDay(x.date) : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
     const group = (cls, title, list, empty) => '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3>'
       + (list.length ? '<ul class="today-list">' + list.map(row).join('') + '</ul>' : '<p class="ag-empty">' + empty + '</p>') + '</div>';
@@ -1068,7 +1082,7 @@ export const adminPage = () => `<!doctype html>
     if (head) {
       head.innerHTML = '<div><p class="dash-kicker">Resumen</p><h2 class="dash-hello">' + greeting() + ', Jimena</h2>'
         + '<p class="dash-sub">' + (late.length || today.length ? (late.length ? late.length + (late.length === 1 ? ' vencido' : ' vencidos') + (today.length ? ' y ' : '') : '') + (today.length ? today.length + ' para hoy' : '') + '.' : 'Todo al día por hoy.') + '</p></div>'
-        + '<p class="dash-date"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>' + todayLong() + '</p>';
+        + '<p class="dash-date"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span><strong>' + todayLong().replace(', ', '</strong> · ') + '</span></p>';
     }
     box.innerHTML = '<div class="dash-card-head"><h2>Agenda y próximos vencimientos</h2><span class="small muted">' + items.length + ' en total</span></div>'
       + group('is-late', 'Vencidos', late, 'Nada vencido.')
@@ -1111,7 +1125,7 @@ export const adminPage = () => `<!doctype html>
       + stat(newCount('consulta') || !newCount('presupuesto') ? 'consultas' : 'presupuestos', unseen, 'Consultas nuevas', unseen ? 'Sin ver todavía' : '', newCount('consulta') ? ' data-seen-filter="nuevas"' : '', 'mail')
       + '</div>'
       + '<div class="dash-cols"><section class="card dash-agenda" id="dash-today"></section>'
-      + '<section class="card dash-activity"><div class="dash-card-head"><h2>Actividad reciente</h2></div>' + (feed.length ? '<ol class="dash-tl">' + feed.map((it) => '<li><span class="dash-tl-icon" aria-hidden="true">' + it.icon + '</span><div><p><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="dash-tl-meta">' + date(it.at) + ' · <button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ol>' : '<p class="empty">Todavía no hay movimientos.</p>') + '</section></div>';
+      + '<section class="card dash-activity"><div class="dash-card-head"><h2>Actividad reciente</h2></div>' + (feed.length ? '<ol class="dash-tl">' + feed.map((it) => '<li><span class="dash-tl-icon" aria-hidden="true">' + it.icon + '</span><div><p><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="dash-tl-meta" title="' + esc(date(it.at)) + '">' + new Date(it.at).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '') + ' ·<button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ol>' : '<p class="empty">Todavía no hay movimientos.</p>') + '</section></div>';
     renderToday();
   };
 
