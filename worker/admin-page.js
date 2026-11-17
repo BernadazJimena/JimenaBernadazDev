@@ -222,6 +222,13 @@ export const adminPage = () => `<!doctype html>
   .feed { list-style: none; margin: 0; padding: 0; }
   .feed li { align-items: flex-start; border-bottom: 1px solid var(--line); display: grid; gap: .6rem; grid-template-columns: 2rem 1fr; padding: .55rem 0; }
   .feed li:last-child { border-bottom: 0; }
+  .today-date { color: var(--muted); font-weight: 700; margin: -.35rem 0 .9rem; }
+  .today-h { font-size: .95rem; margin: .9rem 0 .45rem; }
+  .today-list { list-style: none; margin: 0; padding: 0; }
+  .today-item { align-items: center; background: var(--bg); border-radius: .8rem; display: grid; gap: .2rem .8rem; grid-template-columns: 10.5rem 1fr auto; margin-bottom: .4rem; padding: .55rem .8rem; text-align: left; width: 100%; }
+  .today-sec { color: var(--accent-ink); font-size: .72rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  .today-meta { white-space: nowrap; }
+  @media (max-width: 640px) { .today-item { grid-template-columns: 1fr; } .today-meta { white-space: normal; } }
   .money-ok { color: var(--ok); font-weight: 800; } .money-warn { color: var(--warn); font-weight: 800; }
   .table-wrap { overflow-x: auto; }
   [hidden] { display: none !important; }
@@ -434,7 +441,7 @@ export const adminPage = () => `<!doctype html>
     $('login').hidden = true; $('app').hidden = false;
     render();
     applyRoute();
-    if (window.JNBTasks) window.JNBTasks.refresh();
+    if (window.JNBTasks) window.JNBTasks.refresh().then(renderToday);
     if (window.JNBGiveaways) window.JNBGiveaways.refresh();
     if (window.JNBAgenda) window.JNBAgenda.refresh();
   };
@@ -948,6 +955,73 @@ export const adminPage = () => `<!doctype html>
       : '<p class="empty">Todavía no subió archivos en sus briefs.</p>';
   };
 
+  // ---- Dashboard: fecha de hoy y pendientes del día.
+  // Lee lo que ya calcula cada módulo (tareas, pagos, plazos, cupones, presupuestos...); no guarda nada aparte.
+  const SOON_DAYS = 7;
+  const todayLong = () => { const s = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Argentina/Buenos_Aires' }); return s.charAt(0).toUpperCase() + s.slice(1); };
+  const daysTo = (iso) => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(todayIso() + 'T12:00:00Z')) / 86400000);
+  const whenText = (n) => (n < -1 ? 'Vencido hace ' + (-n) + ' días' : n === -1 ? 'Venció ayer' : n === 0 ? 'Vence hoy' : n === 1 ? 'Vence mañana' : 'Vence en ' + n + ' días');
+  const todayItems = () => {
+    const out = [];
+    // Con fecha: urgente si venció o vence hoy; próximo si vence dentro de SOON_DAYS; más adelante no se muestra
+    const dated = (it, iso, noPast) => {
+      const n = daysTo(iso);
+      if (n > SOON_DAYS || (noPast && n < 0)) return;
+      out.push(Object.assign({ state: it.stateFn ? it.stateFn(n) : whenText(n) }, it, { date: iso, urgent: n <= 0, tone: n < 0 ? 'late' : n === 0 ? 'warn' : '' }));
+    };
+    const undated = (it, urgent) => out.push(Object.assign(it, { date: '', urgent, tone: urgent ? 'warn' : '' }));
+    // Gestor de tareas: las que no están completadas ni archivadas y tienen fecha límite
+    const tasks = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
+    (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas' }, t.due.slice(0, 10)));
+    // Pagos sin acreditar con vencimiento
+    (data.payments || []).filter((y) => !y.paid && y.due).forEach((y) => { const c = clientById(y.clientId); dated({ section: 'Pagos', text: [y.concept || 'Pago', money(y.currency, y.amount), c && c.name].filter(Boolean).join(' · '), go: 'pagos', openCode: y.projectCode || '' }, y.due.slice(0, 10)); });
+    // Plazos y vencimientos (js/admin-agenda.js)
+    const ag = window.JNBAgenda && window.JNBAgenda.items ? window.JNBAgenda.items() : null;
+    if (ag) {
+      ag.deliveries.filter((x) => x.left <= 5).forEach((x) => out.push({ section: 'Proyectos', text: 'Entrega de ' + x.p.code + ' · ' + clientName(x.p) + ' (' + x.p.project + ')', go: 'proyectos/' + x.p.code, date: x.due, urgent: x.left <= 0, tone: x.left < 0 ? 'late' : x.left === 0 ? 'warn' : '', state: x.text }));
+      ag.dues.forEach((x) => {
+        if (x.renewal) dated({ section: 'Plazos y vencimientos', text: [x.kind, x.who !== '—' && x.who, x.detail].filter(Boolean).join(' · '), go: 'agenda' }, x.date);
+        else if (x.kind === 'Cupón por vencer') dated({ section: 'Cupones', text: 'Cupón de ' + x.who + ' · ' + x.detail, go: 'cupones' }, x.date, true);
+        else dated({ section: 'Sorteos de Instagram', text: x.kind + ' · ' + x.who, go: 'sorteos' }, x.date, true);
+      });
+      ag.quotes.forEach((x) => undated({ section: 'Presupuestos', text: 'Seguimiento de la propuesta: ' + x.q.name + ' · ' + (x.q.plan || 'Presupuesto'), state: (x.followed ? 'Último seguimiento hace ' : 'Enviada hace ') + x.days + ' días', go: 'agenda' }, x.days >= 10));
+    }
+    // Revisión del cliente en curso (4 días hábiles)
+    data.projects.filter((p) => p.stage < 4 && p.reviewSent && !p.reviewDone && p.reviewUntil).forEach((p) => dated({ section: 'Proyectos', text: 'Revisión del cliente (ronda ' + Math.max(p.reviewRound || 0, 1) + ') · ' + p.code + ' · ' + clientName(p), go: 'agenda', stateFn: (n) => (n < 0 ? 'Terminó su plazo: seguí' : n === 0 ? 'Revisa hasta hoy' : 'Revisa hasta el ' + day(p.reviewUntil)) }, p.reviewUntil.slice(0, 10)));
+    // Briefs editados después de enviarlos
+    data.projects.filter((p) => p.briefEditUnseen).forEach((p) => undated({ section: 'Proyectos', text: 'Revisar los cambios del brief · ' + p.code + ' · ' + clientName(p), state: 'Brief editado', go: 'proyectos/' + p.code }, true));
+    // Sorteos: seguimientos de ganadores con fecha
+    ((data.sorteos || {}).winners || []).filter((w) => w.follow_up && w.stage < 11).forEach((w) => dated({ section: 'Sorteos de Instagram', text: (w.next_task || 'Seguimiento') + ' · ' + w.name, go: 'sorteos' }, w.follow_up.slice(0, 10)));
+    // Consultas sin leer y presupuestos por preparar
+    data.inquiries.filter((q) => q.kind === 'consulta' && !q.seen).forEach((q) => undated({ section: 'Consultas', text: 'Responder la consulta de ' + q.name, state: 'Sin leer', go: 'consultas' }, true));
+    data.inquiries.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).forEach((q) => undated({ section: 'Presupuestos', text: 'Preparar la propuesta: ' + q.name + (q.plan ? ' · ' + q.plan : ''), state: q.seen ? STATUS[q.status] : 'Nuevo', go: 'presupuestos/' + q.code }, !q.seen));
+    // Reseñas por aprobar y mails con error
+    const rv = (data.reviews || []).filter((r) => r.status === 'pendiente').length;
+    if (rv) undated({ section: 'Reseñas', text: rv + (rv === 1 ? ' reseña espera' : ' reseñas esperan') + ' tu aprobación', state: 'Pendiente', go: 'resenas' }, false);
+    if (data.mailError) undated({ section: 'Configuración', text: 'Los mails al cliente dieron error', state: 'Revisar', go: 'config' }, true);
+    const key = (x) => x.date || '9999';
+    return out.sort((a, b) => (b.urgent - a.urgent) || (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+  };
+  const renderToday = () => {
+    const box = $('dash-today');
+    if (!box || !data) return;
+    const items = todayItems();
+    const row = (x) => '<li><button type="button" class="today-item" ' + (x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
+      + '<span class="today-sec">' + esc(x.section) + '</span><span class="today-text">' + esc(x.text) + '</span>'
+      + '<span class="today-meta"><span class="small muted">' + (x.date ? day(x.date) : 'Sin fecha límite') + '</span> <span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
+    const group = (title, list) => (list.length ? '<h3 class="today-h">' + title + ' (' + list.length + ')</h3><ul class="today-list">' + list.map(row).join('') + '</ul>' : '');
+    const urgent = items.filter((x) => x.urgent);
+    const soon = items.filter((x) => !x.urgent);
+    box.innerHTML = '<p class="today-date">📅 ' + todayLong() + '</p>'
+      + '<div class="card"><h2>Pendientes del día</h2>'
+      + (items.length ? group('🔴 Urgente', urgent) + group('🕒 Próximos a vencer y para seguir', soon) : '<p class="empty">No hay nada pendiente: todo al día.</p>')
+      + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '')
+      + '</div>';
+  };
+  // Se actualiza solo: cada minuto mientras el Dashboard está a la vista (cambia el día, vence algo) y al volver a la pestaña
+  setInterval(() => { if (route.mod === 'dashboard' && !document.hidden) renderToday(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && route.mod === 'dashboard') renderToday(); });
+
   // ---- Dashboard: resumen general con datos reales
   const renderDashboard = () => {
     const P = data.projects;
@@ -966,6 +1040,7 @@ export const adminPage = () => `<!doctype html>
       ...data.inquiries.map((q) => ({ at: q.created, icon: q.kind === 'presupuesto' ? '📩' : '✉️', text: (q.kind === 'presupuesto' ? 'Pidió presupuesto' : 'Nueva consulta') + (q.plan ? ': ' + q.plan : ''), who: q.name, go: q.kind === 'presupuesto' ? 'presupuestos/' + q.code : 'consultas' })),
     ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 12);
     $('m-dashboard').innerHTML = '<h2>Resumen</h2>'
+      + '<div id="dash-today"></div>'
       + (edited.length ? '<div class="alert">⚠ ' + edited.length + ' ' + (edited.length === 1 ? 'cliente editó su brief' : 'clientes editaron su brief') + ' después de enviarlo: ' + edited.map((p) => '<button type="button" class="link-btn" data-open="' + esc(p.token) + '">' + esc(clientName(p)) + '</button>').join(', ') + '.</div>' : '')
       + (dups.length ? '<div class="alert">🔎 Hay ' + dups.length + ' ' + (dups.length === 1 ? 'posible cliente duplicado' : 'posibles clientes duplicados') + ' para revisar. <a href="#clientes">Ver en Clientes</a></div>' : '')
       + '<div class="stats">'
@@ -979,6 +1054,7 @@ export const adminPage = () => `<!doctype html>
       + stat(newCount('consulta') || !newCount('presupuesto') ? 'consultas' : 'presupuestos', unseen, 'Consultas nuevas', unseen ? 'Sin ver todavía' : '', newCount('consulta') ? ' data-seen-filter="nuevas"' : '')
       + '</div>'
       + '<div class="card"><h2>Actividad reciente</h2>' + (feed.length ? '<ul class="feed">' + feed.map((it) => '<li><span class="tl-icon">' + it.icon + '</span><div><p style="margin:0"><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="small muted" style="margin:0">' + date(it.at) + ' · <button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ul>' : '<p class="empty">Todavía no hay movimientos.</p>') + '</div>';
+    renderToday();
   };
 
   // ---- Copia de seguridad (en Configuración)
@@ -1021,6 +1097,8 @@ export const adminPage = () => `<!doctype html>
       if (route.id !== openClientCode) { clientSub = 'datos'; jumpToClient = true; }
       openClientCode = route.id;
       renderClients();
+    } else if (route.mod === 'dashboard') {
+      renderToday();
     } else if (route.mod === 'tareas') {
       if (window.JNBTasks) window.JNBTasks.show();
     } else if (route.mod === 'sorteos') {

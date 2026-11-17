@@ -268,5 +268,13 @@
     window.JNBAgenda = {
         show(mod) { current = mod; render(); badge(); },
         refresh() { badge(); const el = document.getElementById('m-' + current); if (el && !el.hidden) render(); },
+        // Para los pendientes del día del Dashboard: los mismos cálculos de este módulo
+        items() {
+            return {
+                deliveries: deadlines().filter((x) => x.left !== null && !x.p.reviewSent).map((x) => ({ p: x.p, due: x.due, left: x.left, text: deliveryText(x) })),
+                dues: dueItems(),
+                quotes: waitingQuotes(),
+            };
+        },
     };
 })();

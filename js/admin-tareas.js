@@ -522,5 +522,7 @@
         // Se llama al entrar al panel (para el número de vencidas del menú) y al abrir el módulo
         refresh: () => { bind(); return refresh(); },
         show: () => { bind(); if (!loaded) refresh(); else render(); },
+        // Para los pendientes del día del Dashboard (null mientras no se cargaron)
+        list: () => (loaded ? state.tasks : null),
     };
 })();
