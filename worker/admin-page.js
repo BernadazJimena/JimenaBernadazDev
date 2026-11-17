@@ -222,13 +222,59 @@ export const adminPage = () => `<!doctype html>
   .feed { list-style: none; margin: 0; padding: 0; }
   .feed li { align-items: flex-start; border-bottom: 1px solid var(--line); display: grid; gap: .6rem; grid-template-columns: 2rem 1fr; padding: .55rem 0; }
   .feed li:last-child { border-bottom: 0; }
-  .today-date { color: var(--muted); font-weight: 700; margin: -.35rem 0 .9rem; }
-  .today-h { font-size: .95rem; margin: .9rem 0 .45rem; }
+  /* Dashboard */
+  #m-dashboard .card { border-radius: 1.1rem; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 7%, transparent); }
+  #m-dashboard .alert { margin-bottom: .75rem; }
+  .dash-head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: .6rem 1rem; justify-content: space-between; margin-bottom: 1.1rem; }
+  .dash-kicker { color: var(--accent-ink); font-size: .7rem; font-weight: 800; letter-spacing: .1em; margin: 0 0 .2rem; text-transform: uppercase; }
+  .dash-hello { font-size: 1.55rem; letter-spacing: -.015em; line-height: 1.2; margin: 0; }
+  .dash-sub { color: var(--muted); margin: .25rem 0 0; }
+  .dash-date { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 999px; display: inline-flex; font-size: .85rem; font-weight: 700; gap: .45rem; margin: 0; padding: .4rem .9rem; }
+  .dash-date .ico { color: var(--accent-ink); height: 1rem; width: 1rem; }
+  #m-dashboard .stats { gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: .75rem; }
+  #m-dashboard .stat { align-items: center; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 7%, transparent); display: grid; gap: .75rem; grid-template-columns: 2.4rem minmax(0, 1fr); padding: .85rem .95rem; transition: border-color .15s, box-shadow .15s, transform .15s; }
+  #m-dashboard .stat:hover { border-color: var(--accent); box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--accent) 55%, transparent); transform: translateY(-1px); }
+  .stat-ico { align-items: center; background: color-mix(in srgb, var(--accent) 15%, transparent); border-radius: .75rem; color: var(--accent-ink); display: flex; height: 2.4rem; justify-content: center; width: 2.4rem; }
+  .stat-body { min-width: 0; }
+  #m-dashboard .stat-n { font-size: 1.55rem; letter-spacing: -.02em; }
+  #m-dashboard .stat-l { color: var(--text); font-size: .82rem; }
+  .stat-x { color: var(--muted); display: block; font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-cols { align-items: start; display: grid; gap: .75rem; }
+  @media (min-width: 1100px) { .dash-cols { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); } }
+  .dash-cols .card { margin: 0; }
+  .dash-card-head { align-items: baseline; display: flex; gap: .5rem; justify-content: space-between; margin-bottom: .75rem; }
+  .dash-card-head h2 { margin: 0; }
+  .ag-group + .ag-group { border-top: 1px solid var(--line); margin-top: .7rem; padding-top: .7rem; }
+  .ag-group h3 { align-items: center; color: var(--muted); display: flex; font-size: .72rem; gap: .45rem; letter-spacing: .08em; margin: 0 0 .35rem; text-transform: uppercase; }
+  .ag-group.is-late h3 { color: var(--warn); } .ag-group.is-today h3 { color: var(--accent-ink); }
+  .ag-count { background: var(--soft); border-radius: 999px; color: var(--text); font-size: .7rem; letter-spacing: 0; padding: 0 .5rem; }
+  .ag-empty { color: var(--muted); font-size: .85rem; margin: 0; padding: .1rem 0 .1rem 1.1rem; }
   .today-list { list-style: none; margin: 0; padding: 0; }
-  .today-item { align-items: center; background: var(--bg); border-radius: .8rem; display: grid; gap: .2rem .8rem; grid-template-columns: 10.5rem 1fr auto; margin-bottom: .4rem; padding: .55rem .8rem; text-align: left; width: 100%; }
-  .today-sec { color: var(--accent-ink); font-size: .72rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
-  .today-meta { white-space: nowrap; }
-  @media (max-width: 640px) { .today-item { grid-template-columns: 1fr; } .today-meta { white-space: normal; } }
+  .today-item { align-items: center; background: transparent; border: 1px solid transparent; border-radius: .75rem; display: grid; font-weight: 400; gap: .15rem .75rem; grid-template-columns: .5rem minmax(0, 1fr) auto; margin: 0 0 .15rem; padding: .5rem .6rem; text-align: left; transition: background .15s, border-color .15s; width: 100%; }
+  .today-item:hover { background: var(--soft); border-color: var(--line); color: var(--text); }
+  .today-dot { background: var(--muted); border-radius: 50%; height: .5rem; opacity: .5; width: .5rem; }
+  .is-late .today-dot { background: #f2b45c; opacity: 1; } .is-today .today-dot { background: var(--accent); opacity: 1; }
+  .today-body { min-width: 0; }
+  .today-sec { color: var(--accent-ink); display: block; font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+  .today-text { display: block; font-weight: 700; overflow-wrap: anywhere; }
+  .today-meta { align-items: center; display: flex; gap: .5rem; white-space: nowrap; }
+  .today-when { color: var(--muted); font-size: .8rem; }
+  .dash-tl { list-style: none; margin: 0; padding: 0; }
+  .dash-tl li { display: grid; gap: .7rem; grid-template-columns: 2rem minmax(0, 1fr); padding-bottom: .85rem; position: relative; }
+  .dash-tl li::before { background: var(--line); bottom: 0; content: ''; left: calc(1rem - 1px); position: absolute; top: 2.15rem; width: 2px; }
+  .dash-tl li:last-child { padding-bottom: 0; } .dash-tl li:last-child::before { display: none; }
+  .dash-tl-icon { align-items: center; background: var(--soft); border: 1px solid var(--line); border-radius: 50%; display: flex; font-size: .85rem; height: 2rem; justify-content: center; width: 2rem; }
+  .dash-tl p { margin: 0; overflow-wrap: anywhere; } .dash-tl li > div { padding-top: .2rem; }
+  .dash-tl-meta { color: var(--muted); font-size: .78rem; }
+  .dash-tl .link-btn { font-size: .78rem; font-weight: 700; text-decoration: none; } .dash-tl .link-btn:hover { text-decoration: underline; }
+  @media (max-width: 900px) { #m-dashboard .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) {
+    .dash-hello { font-size: 1.3rem; }
+    #m-dashboard .stats { gap: .5rem; } #m-dashboard .stat { align-items: start; gap: .45rem; grid-template-columns: minmax(0, 1fr); padding: .7rem .75rem; }
+    .stat-ico { border-radius: .6rem; height: 1.85rem; width: 1.85rem; } .stat-ico .ico { height: 1rem; width: 1rem; } #m-dashboard .stat-n { font-size: 1.3rem; }
+    .dash-card-head .small { display: none; }
+    .today-item { grid-template-columns: .5rem minmax(0, 1fr); } .today-meta { flex-wrap: wrap; grid-column: 2; white-space: normal; }
+  }
   .money-ok { color: var(--ok); font-weight: 800; } .money-warn { color: var(--warn); font-weight: 800; }
   .table-wrap { overflow-x: auto; }
   [hidden] { display: none !important; }
@@ -1002,21 +1048,33 @@ export const adminPage = () => `<!doctype html>
     const key = (x) => x.date || '9999';
     return out.sort((a, b) => (b.urgent - a.urgent) || (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
   };
+  const greeting = () => { const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' })) % 24; return h >= 5 && h < 12 ? 'Buen día' : h >= 12 && h < 20 ? 'Buenas tardes' : 'Buenas noches'; };
+  const shortDay = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }).replace('.', '');
   const renderToday = () => {
     const box = $('dash-today');
     if (!box || !data) return;
     const items = todayItems();
+    // Vencidos (fecha pasada) · Hoy (vence hoy o sin fecha, para atender ya) · Próximos 7 días
+    const late = items.filter((x) => x.date && daysTo(x.date) < 0);
+    const today = items.filter((x) => !x.date || daysTo(x.date) === 0).sort((a, b) => (Boolean(b.date) - Boolean(a.date)) || (b.urgent - a.urgent));
+    const next = items.filter((x) => x.date && daysTo(x.date) > 0);
     const row = (x) => '<li><button type="button" class="today-item" ' + (x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
-      + '<span class="today-sec">' + esc(x.section) + '</span><span class="today-text">' + esc(x.text) + '</span>'
-      + '<span class="today-meta"><span class="small muted">' + (x.date ? day(x.date) : 'Sin fecha límite') + '</span> <span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
-    const group = (title, list) => (list.length ? '<h3 class="today-h">' + title + ' (' + list.length + ')</h3><ul class="today-list">' + list.map(row).join('') + '</ul>' : '');
-    const urgent = items.filter((x) => x.urgent);
-    const soon = items.filter((x) => !x.urgent);
-    box.innerHTML = '<p class="today-date">📅 ' + todayLong() + '</p>'
-      + '<div class="card"><h2>Pendientes del día</h2>'
-      + (items.length ? group('🔴 Urgente', urgent) + group('🕒 Próximos a vencer y para seguir', soon) : '<p class="empty">No hay nada pendiente: todo al día.</p>')
-      + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '')
-      + '</div>';
+      + '<span class="today-dot" aria-hidden="true"></span>'
+      + '<span class="today-body"><span class="today-sec">' + esc(x.section) + '</span><span class="today-text">' + esc(x.text) + '</span></span>'
+      + '<span class="today-meta"><span class="today-when">' + (x.date ? shortDay(x.date) : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
+    const group = (cls, title, list, empty) => '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3>'
+      + (list.length ? '<ul class="today-list">' + list.map(row).join('') + '</ul>' : '<p class="ag-empty">' + empty + '</p>') + '</div>';
+    const head = $('dash-head');
+    if (head) {
+      head.innerHTML = '<div><p class="dash-kicker">Resumen</p><h2 class="dash-hello">' + greeting() + ', Jimena</h2>'
+        + '<p class="dash-sub">' + (late.length || today.length ? (late.length ? late.length + (late.length === 1 ? ' vencido' : ' vencidos') + (today.length ? ' y ' : '') : '') + (today.length ? today.length + ' para hoy' : '') + '.' : 'Todo al día por hoy.') + '</p></div>'
+        + '<p class="dash-date"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>' + todayLong() + '</p>';
+    }
+    box.innerHTML = '<div class="dash-card-head"><h2>Agenda y próximos vencimientos</h2><span class="small muted">' + items.length + ' en total</span></div>'
+      + group('is-late', 'Vencidos', late, 'Nada vencido.')
+      + group('is-today', 'Hoy', today, 'Nada para hoy.')
+      + group('is-next', 'Próximos 7 días', next, 'Nada en los próximos 7 días.')
+      + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '');
   };
   // Se actualiza solo: cada minuto mientras el Dashboard está a la vista (cambia el día, vence algo) y al volver a la pestaña
   setInterval(() => { if (route.mod === 'dashboard' && !document.hidden) renderToday(); }, 60000);
@@ -1030,7 +1088,7 @@ export const adminPage = () => `<!doctype html>
     const quotesWaiting = data.inquiries.filter((q) => q.kind === 'presupuesto' && q.status === 'enviado').length;
     const unpaid = (data.payments || []).filter((y) => !y.paid);
     const unseen = data.inquiries.filter((q) => !q.seen).length;
-    const stat = (href, n, label, extra, attrs) => '<a class="stat" href="#' + href + '"' + (attrs || '') + '><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="small muted">' + extra + '</span>' : '') + '</a>';
+    const stat = (href, n, label, extra, attrs, icon) => '<a class="stat" href="#' + href + '"' + (attrs || '') + '><span class="stat-ico"><svg class="ico" aria-hidden="true"><use href="#i-' + icon + '"/></svg></span><span class="stat-body"><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="stat-x">' + extra + '</span>' : '') + '</span></a>';
     const edited = P.filter((p) => p.briefEditUnseen);
     const dups = duplicates();
     // Actividad reciente: movimientos de los proyectos y pedidos nuevos
@@ -1039,21 +1097,21 @@ export const adminPage = () => `<!doctype html>
       ...(data.events || []).filter((e) => byToken.has(e.project)).map((e) => { const p = byToken.get(e.project); return { at: e.at, icon: e.icon, text: e.text, who: clientName(p), go: 'proyectos/' + (p.code || '') }; }),
       ...data.inquiries.map((q) => ({ at: q.created, icon: q.kind === 'presupuesto' ? '📩' : '✉️', text: (q.kind === 'presupuesto' ? 'Pidió presupuesto' : 'Nueva consulta') + (q.plan ? ': ' + q.plan : ''), who: q.name, go: q.kind === 'presupuesto' ? 'presupuestos/' + q.code : 'consultas' })),
     ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 12);
-    $('m-dashboard').innerHTML = '<h2>Resumen</h2>'
-      + '<div id="dash-today"></div>'
+    $('m-dashboard').innerHTML = '<header class="dash-head" id="dash-head"></header>'
       + (edited.length ? '<div class="alert">⚠ ' + edited.length + ' ' + (edited.length === 1 ? 'cliente editó su brief' : 'clientes editaron su brief') + ' después de enviarlo: ' + edited.map((p) => '<button type="button" class="link-btn" data-open="' + esc(p.token) + '">' + esc(clientName(p)) + '</button>').join(', ') + '.</div>' : '')
       + (dups.length ? '<div class="alert">🔎 Hay ' + dups.length + ' ' + (dups.length === 1 ? 'posible cliente duplicado' : 'posibles clientes duplicados') + ' para revisar. <a href="#clientes">Ver en Clientes</a></div>' : '')
       + '<div class="stats">'
-      + stat('clientes', (data.clients || []).length, 'Clientes')
-      + stat('proyectos', P.length, 'Proyectos', '', ' data-stage-filter=""')
-      + stat('proyectos', inGroup('pendiente'), 'Proyectos pendientes', 'Reserva y materiales', ' data-stage-filter="pendiente"')
-      + stat('proyectos', inGroup('desarrollo'), 'En desarrollo', 'Diseño y revisión', ' data-stage-filter="desarrollo"')
-      + stat('proyectos', inGroup('publicado'), 'Publicados', '', ' data-stage-filter="publicado"')
-      + stat('presupuestos', quotesToDo, 'Presupuestos pendientes', quotesWaiting ? quotesWaiting + ' esperando respuesta' : '', ' data-quote-filter="pendientes"')
-      + stat('pagos', unpaid.length, 'Pagos pendientes', unpaid.length ? sumBy(unpaid) : '', ' data-pay-filter="pendientes"')
-      + stat(newCount('consulta') || !newCount('presupuesto') ? 'consultas' : 'presupuestos', unseen, 'Consultas nuevas', unseen ? 'Sin ver todavía' : '', newCount('consulta') ? ' data-seen-filter="nuevas"' : '')
+      + stat('clientes', (data.clients || []).length, 'Clientes', '', '', 'users')
+      + stat('proyectos', P.length, 'Proyectos', '', ' data-stage-filter=""', 'folder')
+      + stat('proyectos', inGroup('pendiente'), 'Proyectos pendientes', 'Reserva y materiales', ' data-stage-filter="pendiente"', 'clock')
+      + stat('proyectos', inGroup('desarrollo'), 'En desarrollo', 'Diseño y revisión', ' data-stage-filter="desarrollo"', 'kanban')
+      + stat('proyectos', inGroup('publicado'), 'Publicados', '', ' data-stage-filter="publicado"', 'star')
+      + stat('presupuestos', quotesToDo, 'Presupuestos pendientes', quotesWaiting ? quotesWaiting + ' esperando respuesta' : '', ' data-quote-filter="pendientes"', 'file')
+      + stat('pagos', unpaid.length, 'Pagos pendientes', unpaid.length ? sumBy(unpaid) : '', ' data-pay-filter="pendientes"', 'card')
+      + stat(newCount('consulta') || !newCount('presupuesto') ? 'consultas' : 'presupuestos', unseen, 'Consultas nuevas', unseen ? 'Sin ver todavía' : '', newCount('consulta') ? ' data-seen-filter="nuevas"' : '', 'mail')
       + '</div>'
-      + '<div class="card"><h2>Actividad reciente</h2>' + (feed.length ? '<ul class="feed">' + feed.map((it) => '<li><span class="tl-icon">' + it.icon + '</span><div><p style="margin:0"><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="small muted" style="margin:0">' + date(it.at) + ' · <button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ul>' : '<p class="empty">Todavía no hay movimientos.</p>') + '</div>';
+      + '<div class="dash-cols"><section class="card dash-agenda" id="dash-today"></section>'
+      + '<section class="card dash-activity"><div class="dash-card-head"><h2>Actividad reciente</h2></div>' + (feed.length ? '<ol class="dash-tl">' + feed.map((it) => '<li><span class="dash-tl-icon" aria-hidden="true">' + it.icon + '</span><div><p><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="dash-tl-meta">' + date(it.at) + ' · <button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ol>' : '<p class="empty">Todavía no hay movimientos.</p>') + '</section></div>';
     renderToday();
   };
 
