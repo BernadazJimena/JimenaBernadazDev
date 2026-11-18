@@ -265,6 +265,15 @@ const MK = {
   } },
 };
 // Valida y limpia un registro de marketing; devuelve null si falta lo obligatorio o una fecha/hora no es válida
+// Artículos del blog de noviembre 2026 para el plan editorial: [fecha, slug, título, meta descripción, palabras clave, estado]
+const MK_SEED = [
+  ['2026-11-11', 'tiendanube-o-empretienda', 'Tiendanube o Empretienda: cómo elegir la plataforma para tu tienda online', 'Comparamos Tiendanube y Empretienda: costos, comisiones, medios de pago, envíos y diseño, para que elijas la plataforma que mejor va con tu negocio.', 'Tiendanube, Empretienda, tienda online, comparativa, plataforma de ecommerce', 'publicado'],
+  ['2026-11-16', 'cuanto-cuesta-una-pagina-web', '¿Cuánto cuesta una página web en Argentina en 2026?', 'Qué define el precio de una página web, qué costos aparte tenés que considerar y un estimador para calcular cuánto saldría la tuya.', 'cuánto cuesta una página web, precio página web Argentina, costo landing page, precio tienda online', 'publicado'],
+  ['2026-11-18', 'tienda-online-ventas-fin-de-ano', 'Cómo preparar tu tienda online para las ventas de fin de año', 'Una checklist práctica para preparar tu tienda online antes de Black Friday, Navidad y Reyes: productos, precios, envíos y pruebas.', 'tienda online fin de año, ventas navidad tienda online, Black Friday tienda online, checklist tienda online', 'listo'],
+  ['2026-11-23', 'web-profesional-independiente', 'Qué tiene que tener la web de un profesional independiente', 'Los 10 elementos que no pueden faltar en la web de un profesional independiente, y un test para saber si la tuya los cumple.', 'web profesional independiente, página web para profesionales, qué debe tener una página web, web para psicólogos abogados nutricionistas', 'listo'],
+  ['2026-11-25', 'instagram-o-pagina-web', '¿Alcanza con Instagram o necesito una página web?', 'Qué te da Instagram, qué te da una página web y por qué lo ideal suele ser usarlos juntos. Con una pregunta para saber qué te conviene hoy.', 'Instagram o página web, necesito una página web, web para emprendedores, Instagram para negocios', 'listo'],
+  ['2026-11-30', 'errores-de-diseno-web', '5 errores de diseño que hacen que una web no genere confianza', 'Los errores de diseño más comunes que alejan a los clientes de una web, cómo detectarlos y cómo resolverlos. Con un ejemplo de antes y después.', 'errores de diseño web, web que genere confianza, diseño web profesional, mejorar página web', 'listo'],
+];
 const mkClean = (kind, raw) => {
   const spec = MK[kind];
   if (!spec || !raw || typeof raw !== 'object') return null;
@@ -628,6 +637,18 @@ export class StudioData extends DurableObject {
         created TEXT NOT NULL,
         updated TEXT NOT NULL
       )`);
+    }
+    // Plan editorial: los artículos de noviembre 2026 (ya escritos y programados) se cargan una sola vez; después se editan desde el panel
+    if (!this.sql.exec("SELECT 1 FROM settings WHERE key = 'marketingSeed'").toArray().length) {
+      const now = new Date().toISOString();
+      for (const [date, slug, title, meta, keywords, status] of MK_SEED) {
+        const [keyword, ...rest] = keywords.split(', ');
+        const done = status === 'publicado';
+        this.sql.exec(`INSERT INTO mk_articles (date, title, summary, keyword, keywords, meta, status, url, notes, created, updated)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, date, title, meta, keyword, rest.join(', '), meta, status,
+          done ? `https://jnbcreativestudio.com.ar/blog/${slug}/` : '', done ? '' : `Ya escrito: se publica solo ese día a las 9:00 (rama articulo-${slug}).`, now, now);
+      }
+      this.sql.exec("INSERT INTO settings (key, value) VALUES ('marketingSeed', '1')");
     }
     this.linkClients();
   }

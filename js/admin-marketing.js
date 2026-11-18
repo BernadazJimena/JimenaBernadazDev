@@ -16,8 +16,8 @@
     const dow = (iso) => new Date(iso + 'T12:00:00Z').getUTCDay(); // 0 = domingo
     const fdate = (iso) => (iso ? WEEK_LONG[dow(iso)] + ' ' + Number(iso.slice(8)) + ' de ' + MONTHS[Number(iso.slice(5, 7)) - 1] : 'Sin fecha');
     const fshort = (iso) => (iso ? Number(iso.slice(8)) + '/' + Number(iso.slice(5, 7)) + '/' + iso.slice(2, 4) : 'Sin fecha');
-    // Días del blog: lunes y martes (getUTCDay: 1 y 2)
-    const BLOG_DAYS = [1, 2];
+    // Días del blog: lunes y miércoles (getUTCDay: 1 y 3)
+    const BLOG_DAYS = [1, 3];
 
     // ---- Opciones de cada tipo (las mismas claves que valida el servidor en MK, worker/studio.js)
     const POST_STATUS = { idea: 'Idea', pendiente: 'Pendiente de planificación', preparacion: 'En preparación', listo: 'Listo para publicar', publicado: 'Publicado' };
@@ -140,7 +140,7 @@
         return '<div class="mk-stats">' + stat(c.pending, 'Publicaciones pendientes', 'redes') + stat(c.ready, 'Listas para publicar', 'redes')
             + stat(c.month, 'Artículos del blog en ' + MONTHS[Number(thisMonth().slice(5)) - 1], 'blog') + stat(c.ideas, 'Ideas pendientes de desarrollar', 'ideas') + '</div>'
             + '<div class="mk-sections">' + section('calendario', '🗓️', 'Calendario de contenidos', 'Instagram y blog en una misma vista')
-            + section('redes', '📸', 'Redes sociales', 'Publicaciones de Instagram') + section('blog', '✍️', 'Plan editorial del blog', 'Lunes y martes de cada mes')
+            + section('redes', '📸', 'Redes sociales', 'Publicaciones de Instagram') + section('blog', '✍️', 'Plan editorial del blog', 'Lunes y miércoles de cada mes')
             + section('ideas', '💡', 'Banco de ideas', 'Ideas para convertir en contenido') + '</div>'
             + '<div class="card"><h3>Próximos 14 días</h3>' + (next.length ? '<ul class="mk-list">' + next.map(({ kind, r }) => '<li>' + chip(kind, r) + '<span class="small muted">' + esc(fdate(r.date)) + '</span>' + statusTag(r.status, kind === 'post' ? POST_STATUS : ART_STATUS) + '</li>').join('') + '</ul>' : '<p class="empty">No hay contenidos programados para los próximos 14 días.</p>') + '</div>';
     };
