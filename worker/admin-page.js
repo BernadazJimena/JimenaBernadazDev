@@ -1,5 +1,6 @@
 // Panel privado de Jimena (/api/admin). La página se carga sin datos; los datos llegan solo con la clave ADMIN_CLAVE,
-// que se escribe una vez y queda guardada en esta pestaña (sessionStorage) hasta cerrarla.
+// que se escribe una vez en /api/admin/login: el servidor abre una sesión en una cookie HttpOnly (el JavaScript no la ve).
+// La sesión se cierra sola tras 2 horas sin uso o 12 horas en total, o con "Salir".
 
 export const adminPage = () => `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -400,7 +401,7 @@ export const adminPage = () => `<!doctype html>
         <section class="module" id="m-horario" hidden><div id="hours"></div></section>
         <section class="module" id="m-faq" hidden><div id="tab-faq"></div></section>
         <section class="module" id="m-newsletter" hidden><div id="tab-newsletter"></div></section>
-        <section class="module" id="m-config" hidden><h2>Configuración</h2><div id="mail-check"></div><div id="backup"></div></section>
+        <section class="module" id="m-config" hidden><h2>Configuración</h2><div id="mail-check"></div><div id="backup"></div><div id="security"></div></section>
       </main>
     </div>
   </div>
@@ -511,8 +512,9 @@ export const adminPage = () => `<!doctype html>
     b.disabled = true;
     try { const r = await api('proyectos/' + b.dataset.pqCreate + '/presupuesto', { action: 'create' }); toast('Presupuesto ' + r.code + ' creado: cargá la propuesta'); load(); } catch (err) { toast('No se pudo crear'); b.disabled = false; }
   });
-  let key = '';
-  try { key = sessionStorage.getItem('jnb-admin') || ''; } catch (e) {}
+  // La clave ya no se guarda en el navegador (antes quedaba en sessionStorage): se borra lo que haya quedado
+  try { sessionStorage.removeItem('jnb-admin'); } catch (e) {}
+  let signedIn = false;
   let data = null;
   let route = { mod: 'dashboard', id: '' };
 
@@ -521,9 +523,9 @@ export const adminPage = () => `<!doctype html>
 
   const api = async (path, body) => {
     const res = await fetch('/api/admin/' + path, body === undefined
-      ? { headers: { 'x-clave': key } }
-      : { method: 'POST', headers: { 'x-clave': key, 'content-type': 'application/json' }, body: JSON.stringify(body) });
-    if (res.status === 401) { showLogin(true); throw new Error('clave'); }
+      ? { credentials: 'same-origin' }
+      : { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.status === 401) { showLogin(false, signedIn ? 'Tu sesión se cerró (venció o se cerró desde otro lado). Entrá de nuevo.' : ''); signedIn = false; throw new Error('clave'); }
     if (!res.ok) throw new Error(res.status);
     return res.headers.get('content-type')?.includes('json') ? res.json() : res.text();
   };
@@ -532,12 +534,13 @@ export const adminPage = () => `<!doctype html>
   // Sorteos (js/admin-sorteos.js) además lee los datos ya cargados y navega con go()
   window.JNBPanel = { api: (path, body) => api(path, body), toast: (msg) => toast(msg), data: () => data, go: (mod, id) => go(mod, id), reload: () => load() };
 
-  const showLogin = (wrong) => { $('app').hidden = true; $('login').hidden = false; $('login-error').hidden = !wrong; $('key').focus(); };
+  const showLogin = (wrong, msg) => { data = null; $('app').hidden = true; $('login').hidden = false; $('login-error').textContent = msg || 'La clave no es correcta.'; $('login-error').hidden = !wrong && !msg; $('key').value = ''; $('key').focus(); };
 
   const load = async () => {
     data = await api('datos');
     try { data.faq = await api('faq'); } catch (e) { data.faq = null; }
     try { data.newsletter = await api('newsletter'); } catch (e) { data.newsletter = null; }
+    signedIn = true;
     $('login').hidden = true; $('app').hidden = false;
     render();
     applyRoute();
@@ -1205,6 +1208,29 @@ export const adminPage = () => `<!doctype html>
     renderToday();
   };
 
+  // ---- Seguridad (en Configuración): accesos, intentos fallidos, pedidos bloqueados y cambios del panel
+  const SEC_LABEL = { 'login-ok': 'Entrada al panel', 'login-fallido': 'Clave equivocada', 'login-bloqueado': 'Entrada bloqueada (demasiados intentos)', logout: 'Salida del panel', 'logout-todas': 'Se cerraron todas las sesiones', 'sin-sesion': 'Pedido al panel sin sesión', 'sesion-invalida': 'Sesión vencida o inválida', 'csrf-bloqueado': 'Pedido desde otro sitio bloqueado', 'limite-pedidos': 'Límite de pedidos alcanzado', 'cambio-admin': 'Cambio en el panel', 'faq-resumen-fallido': 'Clave equivocada (resumen de preguntas)' };
+  const SEC_WARN = new Set(['login-fallido', 'login-bloqueado', 'csrf-bloqueado', 'limite-pedidos', 'faq-resumen-fallido']);
+  const renderSecurity = async () => {
+    const box = $('security');
+    if (!box) return;
+    let r;
+    try { r = await api('seguridad?n=150'); } catch (e) { box.innerHTML = ''; return; }
+    const when = (ms) => new Date(ms).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', dateStyle: 'short', timeStyle: 'short' });
+    const warn24 = r.last24h.filter((x) => SEC_WARN.has(x.event)).reduce((n, x) => n + x.n, 0);
+    box.innerHTML = '<details class="card"><summary>🔒 Seguridad: ' + (warn24 ? '<span class="chip warn">' + warn24 + ' alertas en 24 h</span>' : '<span class="chip ok">sin alertas en 24 h</span>') + '</summary>'
+      + '<p class="small muted" style="margin-top:.6rem">Sesiones abiertas: ' + r.sessions.length + '. Cada sesión se cierra sola tras 2 horas sin uso (12 horas como máximo). No se guardan claves ni datos de formularios.</p>'
+      + '<button type="button" id="sec-close-all">Cerrar todas las sesiones</button>'
+      + '<div class="table-wrap" style="margin-top:.75rem"><table><thead><tr><th>Fecha</th><th>Evento</th><th>Ruta</th><th>IP</th><th>Detalle</th></tr></thead><tbody>'
+      + (r.events.map((ev) => '<tr><td>' + esc(when(ev.at)) + '</td><td>' + (SEC_WARN.has(ev.event) ? '⚠ ' : '') + esc(SEC_LABEL[ev.event] || ev.event) + '</td><td class="small">' + esc(ev.method + ' ' + ev.path) + '</td><td class="small">' + esc(ev.ip) + '</td><td class="small">' + esc(ev.detail) + '</td></tr>').join('') || '<tr><td colspan="5">Todavía no hay eventos.</td></tr>')
+      + '</tbody></table></div></details>';
+    $('sec-close-all').addEventListener('click', async () => {
+      if (!confirm('¿Cerrar todas las sesiones del panel (también esta)?')) return;
+      try { await api('cerrar-todas', {}); } catch (e) {}
+      showLogin(false);
+    });
+  };
+
   // ---- Copia de seguridad (en Configuración)
   const renderBackup = () => {
     $('backup').innerHTML = '<div class="card"><h2>Copia de seguridad</h2>'
@@ -1373,7 +1399,7 @@ export const adminPage = () => `<!doctype html>
       for (let k = 0; k < briefFiles.length; k += 1) {
         const f = briefFiles[k];
         btn.textContent = 'Preparando ' + (k + 1) + ' de ' + briefFiles.length + '...';
-        const res = await fetch('/api/admin/archivo/' + f.id, { headers: { 'x-clave': key } });
+        const res = await fetch('/api/admin/archivo/' + f.id, { credentials: 'same-origin' });
         if (!res.ok) throw new Error(res.status);
         let name = f.name;
         while (used.has(name)) name = (k + 1) + '-' + name;
@@ -1579,17 +1605,28 @@ export const adminPage = () => `<!doctype html>
         + '</tbody></table>' : '<p class="empty">Todavía no salió ningún aviso. Los artículos que ya estaban publicados no se avisan; sale uno con cada artículo nuevo.</p>');
   };
 
-  const render = () => { renderAvailability(); renderHours(); renderMailCheck(); renderBackup(); renderInquiries(); renderReviews(); renderProjects(); renderClients(); renderPayments(); renderCoupons(); renderFaq(); renderNewsletter(); renderDashboard(); };
+  const render = () => { renderAvailability(); renderHours(); renderMailCheck(); renderBackup(); renderSecurity(); renderInquiries(); renderReviews(); renderProjects(); renderClients(); renderPayments(); renderCoupons(); renderFaq(); renderNewsletter(); renderDashboard(); };
   const RENDER = { clientes: renderClients, proyectos: renderProjects, consultas: renderInquiries, presupuestos: renderInquiries, pagos: renderPayments };
 
   // ---- Acciones
   $('login').addEventListener('submit', async (e) => {
     e.preventDefault();
-    key = $('key').value.trim();
-    try { sessionStorage.setItem('jnb-admin', key); } catch (err) {}
-    load().catch(() => {});
+    const btn = $('login').querySelector('button');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/admin/login', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ clave: $('key').value.trim() }) });
+      if (res.status === 429) {
+        const r = await res.json().catch(() => ({}));
+        showLogin(false, 'Demasiados intentos. Probá de nuevo en ' + Math.max(1, Math.ceil((r.retry || 900) / 60)) + ' minutos.');
+      } else if (!res.ok) showLogin(true);
+      else { $('key').value = ''; await load(); }
+    } catch (err) { showLogin(false, 'No se pudo conectar. Probá de nuevo.'); }
+    btn.disabled = false;
   });
-  $('logout').addEventListener('click', () => { key = ''; try { sessionStorage.removeItem('jnb-admin'); } catch (e) {} showLogin(false); });
+  $('logout').addEventListener('click', async () => {
+    try { await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' }); } catch (e) {}
+    showLogin(false);
+  });
 
   // Búsquedas y filtros: se aplican mientras escribís, vuelven a la página 1 y el cursor queda donde estaba
   const applyFilter = (el) => {
@@ -1711,7 +1748,7 @@ export const adminPage = () => `<!doctype html>
       const btn = $('backup-btn');
       btn.disabled = true;
       try {
-        const res = await fetch('/api/admin/copia', { headers: { 'x-clave': key } });
+        const res = await fetch('/api/admin/copia', { credentials: 'same-origin' });
         if (!res.ok) throw new Error(res.status);
         const a = document.createElement('a');
         a.href = URL.createObjectURL(await res.blob());
@@ -1762,7 +1799,7 @@ export const adminPage = () => `<!doctype html>
     if (fileBtn) {
       fileBtn.disabled = true;
       try {
-        const res = await fetch('/api/admin/archivo/' + fileBtn.dataset.file, { headers: { 'x-clave': key } });
+        const res = await fetch('/api/admin/archivo/' + fileBtn.dataset.file, { credentials: 'same-origin' });
         if (!res.ok) throw new Error(res.status);
         const blob = await res.blob();
         const a = document.createElement('a');
@@ -1947,7 +1984,8 @@ export const adminPage = () => `<!doctype html>
     }
   });
 
-  if (key) load().catch(() => {}); else showLogin(false);
+  // Si ya hay una sesión abierta entra directo; si no (o venció), pide la clave
+  load().catch(() => { if ($('login').hidden) showLogin(false); });
 })();
 </script>
 </body></html>`;

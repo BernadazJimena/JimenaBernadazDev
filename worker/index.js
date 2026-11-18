@@ -10,7 +10,7 @@
 // así un mismo navegador no suma dos veces el mismo artículo. No se guarda la IP ni nada personal.
 
 import { DurableObject } from 'cloudflare:workers';
-import { handleStudio, isAdmin, weeklyBackup } from './studio.js';
+import { handleStudio, isAdmin, weeklyBackup, adminGate, ipBucket, logSecurity } from './studio.js';
 import { handleNewsletter, notifyNewArticles } from './newsletter.js';
 
 export { StudioData } from './studio.js';
@@ -19,9 +19,9 @@ export { Newsletter } from './newsletter.js';
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VISITOR = /^[a-zA-Z0-9-]{16,64}$/;
 
-const json = (data, status = 200) => new Response(JSON.stringify(data), {
+const json = (data, status = 200, retry = 0) => new Response(JSON.stringify(data), {
   status,
-  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...(retry ? { 'retry-after': String(retry) } : {}) },
 });
 
 export class BlogLikes extends DurableObject {
@@ -200,9 +200,20 @@ async function handleFaq(request, env) {
   if (request.method === 'GET' && url.pathname === '/api/faq') return json({ ok: true });
 
   // La página de números solo existe si en Cloudflare está cargada la clave FAQ_RESUMEN_CLAVE.
+  // (Los mismos números están en el panel, pestaña Preguntas frecuentes.) Los intentos con clave equivocada cuentan como login fallido.
   if (request.method === 'GET' && url.pathname === '/api/faq/resumen') {
     const key = env.FAQ_RESUMEN_CLAVE;
-    if (!key || url.searchParams.get('clave') !== key) return json({ error: 'not found' }, 404);
+    if (!key) return json({ error: 'not found' }, 404);
+    const studio = env.STUDIO.get(env.STUDIO.idFromName('studio'));
+    const bucket = await ipBucket('login-fail', request);
+    if (await studio.loginBlocked(bucket)) return json({ error: 'too many' }, 429);
+    const given = new TextEncoder().encode(url.searchParams.get('clave') || '');
+    const real = new TextEncoder().encode(key);
+    if (given.length !== real.length || !crypto.subtle.timingSafeEqual(given, real)) {
+      await studio.loginFailed(bucket);
+      await logSecurity(env, request, 'faq-resumen-fallido');
+      return json({ error: 'not found' }, 404);
+    }
     return new Response(summaryPage(await store.summary()), {
       headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },
     });
@@ -229,9 +240,58 @@ async function handleFaq(request, env) {
   return json({ error: 'not found' }, 404);
 }
 
-export default {
-  async fetch(request, env) {
-    const { pathname } = new URL(request.url);
+// ---- Seguridad de /api
+// Límite de pedidos por IP (la IP se guarda cifrada) para que nadie pueda abusar de los formularios ni probar links al azar.
+//   [ruta, métodos, nombre, máximo, ventana en segundos]
+const LIMITS = [
+  [/^\/api\/consultas$/, 'POST', 'consultas', 8, 600],
+  [/^\/api\/newsletter$/, 'POST', 'newsletter', 6, 600],
+  [/^\/api\/resenas\/invitacion\//, 'POST', 'resenas', 10, 600],
+  [/^\/api\/presupuestos\/[^/]+\/elegir$/, 'POST', 'elegir', 15, 600],
+  [/^\/api\/brief\//, 'POST DELETE', 'brief', 300, 600],
+  [/^\/api\/cupon\//, 'GET', 'cupon', 40, 600],
+  [/^\/api\/(likes|faq)\//, 'POST', 'votos', 80, 600],
+  [/^\/api\/(presupuestos|proyectos|brief|resenas\/invitacion|newsletter\/baja)\/[^/]+$/, 'GET', 'links', 150, 600],
+];
+
+async function rateLimit(request, env, pathname) {
+  const rule = LIMITS.find(([re, methods]) => re.test(pathname) && methods.split(' ').includes(request.method));
+  if (!rule) return null;
+  const [, , name, max, seconds] = rule;
+  const studio = env.STUDIO.get(env.STUDIO.idFromName('studio'));
+  const hit = await studio.rateHit(await ipBucket(`rl-${name}`, request), max, seconds * 1000);
+  if (hit.ok) return null;
+  if (hit.retry > seconds - 60) await logSecurity(env, request, 'limite-pedidos', name); // se anota una vez por ráfaga, no cada pedido
+  return json({ error: 'too many' }, 429, hit.retry);
+}
+
+// Cabeceras de seguridad para todas las respuestas de /api (las páginas del sitio las toman de _headers)
+function secure(response) {
+  const res = new Response(response.body, response);
+  const h = res.headers;
+  h.set('x-content-type-options', 'nosniff');
+  h.set('strict-transport-security', 'max-age=31536000');
+  if (!h.has('x-frame-options')) h.set('x-frame-options', 'DENY');
+  if (!h.has('referrer-policy')) h.set('referrer-policy', 'strict-origin-when-cross-origin');
+  if (!h.has('content-security-policy') && !(h.get('content-type') || '').includes('text/html')) h.set('content-security-policy', "default-src 'none'; frame-ancestors 'none'");
+  h.set('cross-origin-resource-policy', 'same-origin');
+  return res;
+}
+
+async function route(request, env) {
+  const { pathname } = new URL(request.url);
+  // Todo /api/admin/* pasa primero por acá: sin sesión válida no llega a ninguna función del panel
+  if (pathname.startsWith('/api/admin/')) {
+    const blocked = await adminGate(request, env);
+    if (blocked) return blocked;
+  } else {
+    const limited = await rateLimit(request, env, pathname);
+    if (limited) return limited;
+  }
+  return api(request, env, pathname);
+}
+
+async function api(request, env, pathname) {
     if (pathname === '/api/likes' || pathname.startsWith('/api/likes/')) return handleLikes(request, env);
     if (pathname === '/api/faq' || pathname.startsWith('/api/faq/')) return handleFaq(request, env);
     if (/^\/api\/(admin\/)?newsletter(\/|$)/.test(pathname)) return handleNewsletter(request, env);
@@ -250,7 +310,21 @@ export default {
       return json({ ok: true });
     }
     if (/^\/api\/(consultas|presupuestos|resenas|proyectos|brief|disponibilidad|cupon|admin)(\/|$)/.test(pathname)) return handleStudio(request, env);
+    if (pathname.startsWith('/api/')) return json({ error: 'not found' }, 404);
     return env.ASSETS.fetch(request);
+}
+
+export default {
+  async fetch(request, env) {
+    const { pathname } = new URL(request.url);
+    if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+    try {
+      return secure(await route(request, env));
+    } catch (err) {
+      // Sin detalles internos para el navegador; el error queda en los registros de Cloudflare
+      console.error('api error', pathname, err && err.stack);
+      return secure(json({ error: 'server' }, 500));
+    }
   },
 
   // Una vez por hora (wrangler.jsonc → triggers): si se publicó un artículo nuevo, avisa a los suscriptores del blog

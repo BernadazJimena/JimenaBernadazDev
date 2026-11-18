@@ -1,5 +1,11 @@
 # Cabeceras de seguridad para todo el sitio (Cloudflare las aplica al publicar)
+# Las respuestas de /api/* (panel incluido) las arma el Worker (worker/index.js y worker/studio.js).
+# CSP: solo se cargan recursos del propio sitio, Google Fonts, cdnjs (html2pdf / JSZip) y el formulario de Web3Forms.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.web3forms.com https://cloudflareinsights.com; frame-src 'self' blob: data:; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com; frame-ancestors 'none'; upgrade-insecure-requests

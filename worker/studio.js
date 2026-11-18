@@ -38,6 +38,16 @@ const STAGES = 5;                    // etapas del seguimiento (los nombres est�
 const MAX_BRIEF_FILES = 30;                 // archivos por brief
 const MAX_FILE_BYTES = 8 * 1024 * 1024;     // 8 MB por archivo
 const MAX_BRIEF_BYTES = 60 * 1024 * 1024;   // 60 MB por brief
+// Seguridad del panel
+const SESSION_MAX_MS = 12 * 60 * 60 * 1000;  // una sesión dura como mucho 12 horas
+const SESSION_IDLE_MS = 2 * 60 * 60 * 1000;  // y se cierra sola tras 2 horas sin usar el panel
+const LOGIN_MAX_PER_IP = 5;                  // intentos fallidos por IP...
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;      // ...cada 15 minutos
+const LOGIN_MAX_GLOBAL = 30;                 // intentos fallidos de todo el mundo por hora (frena ataques desde muchas IP)
+const SECURITY_LOG_DAYS = 90;
+const SECURITY_LOG_MAX = 5000;
+const ADMIN_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+  + "font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 const CHUNK = 1024 * 1024;
 // Archivos que se pueden subir al brief: imágenes, PDF, documentos, planillas y comprimidos (se mira la extensión)
 const FILE_EXT = /\.(png|jpe?g|webp|gif|svg|heic|heif|pdf|docx?|xlsx?|pptx|odt|ods|txt|csv|zip)$/i;
@@ -67,9 +77,9 @@ const diffSummary = (before, after) => {
   return changes.slice(0, 100);
 }; // estados del presupuesto en los que el cliente ve la propuesta
 
-const json = (data, status = 200) => new Response(JSON.stringify(data), {
+const json = (data, status = 200, extra = {}) => new Response(JSON.stringify(data), {
   status,
-  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra },
 });
 const notFound = () => json({ error: 'not found' }, 404);
 const badRequest = () => json({ error: 'bad request' }, 400);
@@ -650,7 +660,104 @@ export class StudioData extends DurableObject {
       }
       this.sql.exec("INSERT INTO settings (key, value) VALUES ('marketingSeed', '1')");
     }
+    // ---- Seguridad: sesiones del panel, límites de pedidos y registro de eventos
+    // De la sesión solo se guarda el hash del token (si alguien leyera la base, no podría entrar con eso).
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS admin_sessions (
+      hash TEXT PRIMARY KEY, key_tag TEXT NOT NULL, created INTEGER NOT NULL, last INTEGER NOT NULL, expires INTEGER NOT NULL, agent TEXT NOT NULL DEFAULT ''
+    )`);
+    this.sql.exec('CREATE TABLE IF NOT EXISTS rate_limits (bucket TEXT PRIMARY KEY, count INTEGER NOT NULL, reset INTEGER NOT NULL)');
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS security_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, event TEXT NOT NULL, ip TEXT NOT NULL DEFAULT '', method TEXT NOT NULL DEFAULT '', path TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT ''
+    )`);
     this.linkClients();
+  }
+
+  // ---- Seguridad
+  // Cuenta pedidos por "balde" (tipo de pedido + IP cifrada) dentro de una ventana de tiempo.
+  rateHit(bucket, max, windowMs) {
+    const now = Date.now();
+    const row = this.sql.exec('SELECT count, reset FROM rate_limits WHERE bucket = ?', bucket).toArray()[0];
+    if (!row || row.reset <= now) {
+      this.sql.exec('INSERT OR REPLACE INTO rate_limits (bucket, count, reset) VALUES (?, 1, ?)', bucket, now + windowMs);
+      if (Math.random() < 0.02) this.sql.exec('DELETE FROM rate_limits WHERE reset <= ?', now);
+      return { ok: true };
+    }
+    if (row.count >= max) return { ok: false, retry: Math.ceil((row.reset - now) / 1000) };
+    this.sql.exec('UPDATE rate_limits SET count = count + 1 WHERE bucket = ?', bucket);
+    return { ok: true };
+  }
+
+  // Cuántos intentos fallidos lleva una IP (y todo el sitio) antes de probar la clave
+  loginBlocked(ipBucket) {
+    const now = Date.now();
+    for (const [bucket, max] of [[ipBucket, LOGIN_MAX_PER_IP], ['login-fail:all', LOGIN_MAX_GLOBAL]]) {
+      const row = this.sql.exec('SELECT count, reset FROM rate_limits WHERE bucket = ?', bucket).toArray()[0];
+      if (row && row.reset > now && row.count >= max) return Math.ceil((row.reset - now) / 1000);
+    }
+    return 0;
+  }
+
+  loginFailed(ipBucket) {
+    this.rateHit(ipBucket, Infinity, LOGIN_WINDOW_MS);
+    this.rateHit('login-fail:all', Infinity, 60 * 60 * 1000);
+  }
+
+  loginCleared(ipBucket) {
+    this.sql.exec('DELETE FROM rate_limits WHERE bucket = ?', ipBucket);
+  }
+
+  createSession(hash, keyTag, agent) {
+    const now = Date.now();
+    this.sql.exec('DELETE FROM admin_sessions WHERE expires <= ? OR last <= ?', now, now - SESSION_IDLE_MS);
+    this.sql.exec('INSERT INTO admin_sessions (hash, key_tag, created, last, expires, agent) VALUES (?, ?, ?, ?, ?, ?)',
+      hash, keyTag, now, now, now + SESSION_MAX_MS, String(agent || '').slice(0, 160));
+    return { expires: now + SESSION_MAX_MS };
+  }
+
+  // Una sesión sirve si no venció, no estuvo inactiva demasiado tiempo y la clave del panel no cambió desde que se abrió.
+  checkSession(hash, keyTag) {
+    const now = Date.now();
+    const row = this.sql.exec('SELECT key_tag, last, expires FROM admin_sessions WHERE hash = ?', hash).toArray()[0];
+    if (!row) return { ok: false, reason: 'missing' };
+    if (row.key_tag !== keyTag || row.expires <= now || row.last <= now - SESSION_IDLE_MS) {
+      this.sql.exec('DELETE FROM admin_sessions WHERE hash = ?', hash);
+      return { ok: false, reason: row.key_tag !== keyTag ? 'key-changed' : 'expired' };
+    }
+    if (now - row.last > 60 * 1000) this.sql.exec('UPDATE admin_sessions SET last = ? WHERE hash = ?', now, hash);
+    return { ok: true, expires: Math.min(row.expires, now + SESSION_IDLE_MS) };
+  }
+
+  endSession(hash) {
+    this.sql.exec('DELETE FROM admin_sessions WHERE hash = ?', hash);
+  }
+
+  endAllSessions() {
+    this.sql.exec('DELETE FROM admin_sessions');
+  }
+
+  activeSessions() {
+    const now = Date.now();
+    return this.sql.exec('SELECT created, last, expires, agent FROM admin_sessions WHERE expires > ? AND last > ? ORDER BY last DESC', now, now - SESSION_IDLE_MS).toArray();
+  }
+
+  // Registro de eventos de seguridad. Nunca se guardan claves, tokens ni datos de formularios.
+  securityEvent(event, ip, method, path, detail) {
+    const now = Date.now();
+    this.sql.exec('INSERT INTO security_log (at, event, ip, method, path, detail) VALUES (?, ?, ?, ?, ?, ?)',
+      now, String(event).slice(0, 40), String(ip || '').slice(0, 64), String(method || '').slice(0, 10), String(path || '').slice(0, 160), String(detail || '').slice(0, 200));
+    if (Math.random() < 0.05) {
+      this.sql.exec('DELETE FROM security_log WHERE at < ?', now - SECURITY_LOG_DAYS * DAY);
+      this.sql.exec('DELETE FROM security_log WHERE id <= (SELECT MAX(id) FROM security_log) - ?', SECURITY_LOG_MAX);
+    }
+  }
+
+  securityLog(limit = 300) {
+    const since = Date.now() - DAY;
+    return {
+      events: this.sql.exec('SELECT at, event, ip, method, path, detail FROM security_log ORDER BY id DESC LIMIT ?', Math.min(Number(limit) || 300, 1000)).toArray(),
+      last24h: this.sql.exec('SELECT event, COUNT(*) AS n FROM security_log WHERE at > ? GROUP BY event ORDER BY n DESC', since).toArray(),
+      sessions: this.activeSessions(),
+    };
   }
 
   // ---- Clientes
@@ -1880,15 +1987,122 @@ async function sendAnyMail(env, to, mail) {
   return (await resendSend(env, to, mail)).ok;
 }
 
-// La clave del panel se compara sin dar pistas por el tiempo de respuesta.
-export function isAdmin(request, env) {
-  const key = env.ADMIN_CLAVE;
-  const given = request.headers.get('x-clave') || '';
+// ---- Acceso al panel
+// La clave ADMIN_CLAVE se escribe una sola vez en /api/admin/login. Si es correcta, el servidor abre una sesión
+// y la guarda en una cookie HttpOnly (el JavaScript de la página no la puede leer), Secure y SameSite=Strict.
+// Cada pedido a /api/admin/* lo valida index.js con adminGate() antes de llegar a cualquier función del panel.
+const verifiedAdmin = new WeakSet();
+export function isAdmin(request) {
+  return verifiedAdmin.has(request);
+}
+
+const sha256 = async (text) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
+  .map((b) => b.toString(16).padStart(2, '0')).join('');
+
+// Compara las dos claves por su hash: mismo largo siempre y sin pistas por el tiempo de respuesta.
+async function keyMatches(given, key) {
   if (!key || !given) return false;
-  const a = new TextEncoder().encode(key);
-  const b = new TextEncoder().encode(given);
-  if (a.length !== b.length) return false;
-  return crypto.subtle.timingSafeEqual(a, b);
+  const [a, b] = await Promise.all([sha256(`jnb-key:${given}`), sha256(`jnb-key:${key}`)]);
+  return crypto.subtle.timingSafeEqual(new TextEncoder().encode(a), new TextEncoder().encode(b));
+}
+
+const keyTag = async (env) => (await sha256(`jnb-tag:${env.ADMIN_CLAVE}`)).slice(0, 16);
+export const clientIp = (request) => request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip') || 'local';
+export const ipBucket = async (prefix, request) => `${prefix}:${(await sha256(`jnb-ip:${clientIp(request)}`)).slice(0, 20)}`;
+const studioStore = (env) => env.STUDIO.get(env.STUDIO.idFromName('studio'));
+
+export async function logSecurity(env, request, event, detail = '') {
+  try {
+    const url = new URL(request.url);
+    await studioStore(env).securityEvent(event, clientIp(request), request.method, url.pathname, detail);
+  } catch (err) { console.error('security log', err && err.message); } // el registro nunca frena un pedido
+}
+
+const cookieName = (url) => (url.protocol === 'https:' ? '__Host-jnb_admin' : 'jnb_admin');
+function sessionCookie(url, value, maxAge) {
+  return `${cookieName(url)}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${url.protocol === 'https:' ? '; Secure' : ''}`;
+}
+function readCookie(request, name) {
+  for (const part of (request.headers.get('cookie') || '').split(';')) {
+    const i = part.indexOf('=');
+    if (i > 0 && part.slice(0, i).trim() === name) return part.slice(i + 1).trim();
+  }
+  return '';
+}
+
+// Pedidos que cambian algo: solo se aceptan si vienen de una página del mismo sitio (contra CSRF).
+function sameOrigin(request) {
+  const site = request.headers.get('sec-fetch-site');
+  if (site) return site === 'same-origin';
+  const origin = request.headers.get('origin');
+  return Boolean(origin) && origin === new URL(request.url).origin;
+}
+
+const SESSION_TOKEN = /^[A-Za-z0-9]{43}$/;
+
+// Devuelve una Response si el pedido no puede seguir; null si es de Jimena con una sesión válida.
+export async function adminGate(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+  if (!env.ADMIN_CLAVE) return notFound();
+  const store = studioStore(env);
+  const changes = request.method !== 'GET' && request.method !== 'HEAD';
+
+  if (changes && !sameOrigin(request)) {
+    await logSecurity(env, request, 'csrf-bloqueado');
+    return json({ error: 'forbidden' }, 403);
+  }
+
+  // Entrar con la clave
+  if (path === '/api/admin/login') {
+    if (request.method !== 'POST') return notFound();
+    const bucket = await ipBucket('login-fail', request);
+    const wait = await store.loginBlocked(bucket);
+    if (wait) {
+      await logSecurity(env, request, 'login-bloqueado', `espera ${wait}s`);
+      return json({ error: 'too many', retry: wait }, 429, { 'retry-after': String(wait) });
+    }
+    const body = await readJson(request);
+    const given = body && typeof body.clave === 'string' ? body.clave.slice(0, 512) : '';
+    if (!(await keyMatches(given, env.ADMIN_CLAVE))) {
+      await store.loginFailed(bucket);
+      await logSecurity(env, request, 'login-fallido');
+      return json({ error: 'clave' }, 401);
+    }
+    await store.loginCleared(bucket);
+    const token = randomFrom(ALNUM, 43);
+    const agent = request.headers.get('user-agent') || '';
+    const { expires } = await store.createSession(await sha256(token), await keyTag(env), agent);
+    await logSecurity(env, request, 'login-ok', agent.slice(0, 120));
+    return json({ ok: true, expires }, 200, { 'set-cookie': sessionCookie(url, token, Math.floor(SESSION_MAX_MS / 1000)) });
+  }
+
+  const token = readCookie(request, cookieName(url));
+  const hash = SESSION_TOKEN.test(token) ? await sha256(token) : '';
+
+  if (path === '/api/admin/logout') {
+    if (request.method !== 'POST') return notFound();
+    if (hash) await store.endSession(hash);
+    await logSecurity(env, request, 'logout');
+    return json({ ok: true }, 200, { 'set-cookie': sessionCookie(url, '', 0) });
+  }
+
+  const session = hash ? await store.checkSession(hash, await keyTag(env)) : { ok: false, reason: token ? 'invalid' : 'none' };
+  if (!session.ok) {
+    await logSecurity(env, request, session.reason === 'none' ? 'sin-sesion' : 'sesion-invalida', session.reason);
+    return json({ error: 'clave' }, 401, token ? { 'set-cookie': sessionCookie(url, '', 0) } : {});
+  }
+  verifiedAdmin.add(request);
+  if (path === '/api/admin/sesion' && request.method === 'GET') return json({ ok: true, expires: session.expires });
+  if (path === '/api/admin/cerrar-todas' && request.method === 'POST') {
+    await store.endAllSessions();
+    await logSecurity(env, request, 'logout-todas');
+    return json({ ok: true }, 200, { 'set-cookie': sessionCookie(url, '', 0) });
+  }
+  if (path === '/api/admin/seguridad' && request.method === 'GET') return json(await store.securityLog(url.searchParams.get('n')));
+  // Cambios del panel: se anota qué ruta se tocó (sin el contenido)
+  if (changes) await logSecurity(env, request, 'cambio-admin');
+  return null;
 }
 
 async function readJson(request) {
@@ -2068,6 +2282,8 @@ export async function handleStudio(request, env, ctx) {
         'x-robots-tag': 'noindex, nofollow',
         'x-frame-options': 'DENY',
         'referrer-policy': 'no-referrer',
+        // El panel solo habla con este sitio: si algo malicioso llegara a correr en la página, no puede mandar datos afuera
+        'content-security-policy': ADMIN_CSP,
       },
     });
   }
@@ -2091,6 +2307,8 @@ export async function handleStudio(request, env, ctx) {
           'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(file.name)}`,
           'cache-control': 'no-store',
           'x-content-type-options': 'nosniff',
+          // Si el archivo fuera una página o un SVG con código, el navegador no lo ejecuta
+          'content-security-policy': "default-src 'none'; sandbox",
         },
       });
     }
