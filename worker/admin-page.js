@@ -281,6 +281,7 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .today-sec { color: var(--muted); font-size: .74rem; }
   #m-dashboard .today-meta { display: contents; }
   #m-dashboard .today-when { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; text-align: left; white-space: nowrap; }
+  #m-dashboard .today-when.has-time { color: var(--accent-ink); font-weight: 700; }
   #m-dashboard .today-item .chip { background: var(--soft); color: var(--muted); font-size: .7rem; font-weight: 700; justify-self: start; line-height: 1.4; max-width: 100%; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
   #m-dashboard .today-item .chip.warn { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-ink); }
   #m-dashboard .today-item .chip.alert-chip { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
@@ -1075,7 +1076,7 @@ export const adminPage = () => `<!doctype html>
     const undated = (it, urgent) => out.push(Object.assign(it, { date: '', urgent, tone: urgent ? 'warn' : '' }));
     // Gestor de tareas: las que no están completadas ni archivadas y tienen fecha límite
     const tasks = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
-    (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas' }, t.due.slice(0, 10)));
+    (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas', time: t.due_time || '' }, t.due.slice(0, 10)));
     // Pagos sin acreditar con vencimiento
     (data.payments || []).filter((y) => !y.paid && y.due).forEach((y) => { const c = clientById(y.clientId); dated({ section: 'Pagos', text: [y.concept || 'Pago', money(y.currency, y.amount), c && c.name].filter(Boolean).join(' · '), go: 'pagos', openCode: y.projectCode || '' }, y.due.slice(0, 10)); });
     // Plazos y vencimientos (js/admin-agenda.js)
@@ -1102,7 +1103,8 @@ export const adminPage = () => `<!doctype html>
     const rv = (data.reviews || []).filter((r) => r.status === 'pendiente').length;
     if (rv) undated({ section: 'Reseñas', text: rv + (rv === 1 ? ' reseña espera' : ' reseñas esperan') + ' tu aprobación', state: 'Pendiente', go: 'resenas' }, false);
     if (data.mailError) undated({ section: 'Configuración', text: 'Los mails al cliente dieron error', state: 'Revisar', go: 'config' }, true);
-    const key = (x) => x.date || '9999';
+    // A igual fecha, las tareas con horario van primero y por hora
+    const key = (x) => (x.date ? x.date + ' ' + (x.time || '~') : '9999');
     return out.sort((a, b) => (b.urgent - a.urgent) || (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
   };
   const TZ = 'America/Argentina/Buenos_Aires';
@@ -1143,7 +1145,7 @@ export const adminPage = () => `<!doctype html>
     const row = (x) => '<li><button type="button" class="today-item" ' + (x.rec ? 'data-mk-rec="' + esc(x.rec) + '"' : x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
       + '<span class="today-dot" aria-hidden="true"></span>'
       + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + esc(x.section) + '</span></span>'
-      + '<span class="today-meta"><span class="today-when">' + (x.date ? shortDay(x.date) : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
+      + '<span class="today-meta"><span class="today-when' + (x.time ? ' has-time' : '') + '">' + (x.date ? shortDay(x.date) + (x.time ? ' · ' + esc(x.time) + ' hs' : '') : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
     // Solo se muestran los grupos con avisos; si no hay ninguno, un estado vacío
     const group = (cls, title, list) => (list.length ? '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3><ul class="today-list">' + list.map(row).join('') + '</ul></div>' : '');
     const allClear = (title, text) => '<div class="dash-empty dash-clear"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><p>' + title + '</p><span>' + text + '</span></div>';

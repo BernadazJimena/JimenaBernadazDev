@@ -102,6 +102,7 @@ button.task-stat:disabled:hover { border-color: var(--line); }
 .task-card-foot { align-items: center; color: var(--muted); display: flex; font-size: .74rem; font-weight: 700; gap: .5rem; justify-content: space-between; }
 .task-date, .task-subcount { align-items: center; display: inline-flex; gap: .3rem; white-space: nowrap; }
 .task-date.overdue { background: color-mix(in srgb, var(--warn) 16%, transparent); border-radius: 999px; color: var(--warn); padding: .1rem .5rem; }
+.task-date.has-time:not(.overdue) { color: var(--accent-ink); }
 .task-subcount.complete { color: var(--ok); }
 .task-card.is-overdue { border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
 
@@ -137,6 +138,14 @@ button.task-stat:disabled:hover { border-color: var(--line); }
 .task-form-foot { border-top: 1px solid var(--line); flex-wrap: wrap; }
 .task-form-body { display: grid; gap: .85rem; overflow-y: auto; padding: 1rem 1.1rem; }
 .task-form-grid { display: grid; gap: .7rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Fecha y hora juntas en una fila completa; la hora son dos listas (00–23 y minutos) para que siempre sea 24 h */
+.task-when { display: grid; gap: .7rem; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.task-time { display: grid; font-size: .85rem; font-weight: 700; gap: .25rem; }
+.task-time .muted { font-weight: 400; }
+.task-time-row { align-items: center; display: flex; gap: .35rem; }
+.task-time-row select { flex: 1; min-width: 0; }
+.task-when-detail { align-items: center; color: var(--muted); display: flex; font-size: .85rem; font-weight: 700; gap: .4rem; margin: 0; }
+.task-when-detail.has-time { color: var(--accent-ink); }
 .task-icon-btn { align-items: center; display: inline-flex; flex-shrink: 0; height: 2rem; justify-content: center; padding: 0; width: 2rem; }
 
 .task-subs { border: 1px solid var(--line); border-radius: .8rem; margin: 0; padding: .6rem .8rem .8rem; }

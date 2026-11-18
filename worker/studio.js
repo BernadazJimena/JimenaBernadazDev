@@ -582,6 +582,8 @@ export class StudioData extends DurableObject {
     const giveawayTaskColumns = this.sql.exec('PRAGMA table_info(tasks)').toArray().map((c) => c.name);
     if (!giveawayTaskColumns.includes('winner_id')) this.sql.exec('ALTER TABLE tasks ADD COLUMN winner_id INTEGER');
     if (!giveawayTaskColumns.includes('project')) this.sql.exec("ALTER TABLE tasks ADD COLUMN project TEXT NOT NULL DEFAULT ''");
+    // Hora opcional de la tarea (HH:MM, 24 h). '' = solo fecha; las tareas anteriores quedan así
+    if (!giveawayTaskColumns.includes('due_time')) this.sql.exec("ALTER TABLE tasks ADD COLUMN due_time TEXT NOT NULL DEFAULT ''");
     // Fecha en que llegó todo el material del proyecto: desde ahí corre el plazo de entrega (se completa sola al pasar a Diseño)
     const agendaProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
     // Adicionales pedidos en un proyecto creado desde el panel (módulo Brief): el brief suma sus preguntas
@@ -914,18 +916,19 @@ export class StudioData extends DurableObject {
     const now = new Date().toISOString();
     const category = t.category && this.sql.exec('SELECT 1 FROM task_categories WHERE id = ?', t.category).toArray().length ? t.category : null;
     const subtasks = JSON.stringify(t.subtasks);
+    const dueTime = t.due ? (t.due_time || '') : '';
     if (t.id) {
       const old = this.sql.exec('SELECT status, done_at FROM tasks WHERE id = ?', t.id).toArray()[0];
       if (!old) return false;
       const doneAt = t.status === 'done' ? (old.status === 'done' ? old.done_at : now) : '';
-      this.sql.exec(`UPDATE tasks SET title = ?, description = ?, category = ?, priority = ?, status = ?, due = ?, notes = ?, subtasks = ?,
-        updated = ?, done_at = ? WHERE id = ?`, t.title, t.description, category, t.priority, t.status, t.due, t.notes, subtasks, now, doneAt, t.id);
+      this.sql.exec(`UPDATE tasks SET title = ?, description = ?, category = ?, priority = ?, status = ?, due = ?, due_time = ?, notes = ?, subtasks = ?,
+        updated = ?, done_at = ? WHERE id = ?`, t.title, t.description, category, t.priority, t.status, t.due, dueTime, t.notes, subtasks, now, doneAt, t.id);
       if (old.status !== t.status) this.sql.exec('UPDATE tasks SET position = ? WHERE id = ?', this.lastTaskPosition(t.status) + 1, t.id);
       return true;
     }
-    this.sql.exec(`INSERT INTO tasks (title, description, category, priority, status, position, due, notes, subtasks, created, updated, done_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, t.title, t.description, category, t.priority, t.status,
-    this.lastTaskPosition(t.status) + 1, t.due, t.notes, subtasks, now, now, t.status === 'done' ? now : '');
+    this.sql.exec(`INSERT INTO tasks (title, description, category, priority, status, position, due, due_time, notes, subtasks, created, updated, done_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, t.title, t.description, category, t.priority, t.status,
+    this.lastTaskPosition(t.status) + 1, t.due, dueTime, t.notes, subtasks, now, now, t.status === 'done' ? now : '');
     return true;
   }
 
@@ -2428,6 +2431,7 @@ export async function handleStudio(request, env, ctx) {
           priority: TASK_PRIORITIES.includes(t.priority) ? t.priority : 'media',
           status: TASK_STATUSES.includes(t.status) ? t.status : 'inbox',
           due: /^\d{4}-\d{2}-\d{2}$/.test(t.due || '') ? t.due : '',
+          due_time: /^([01]\d|2[0-3]):[0-5]\d$/.test(t.due_time || '') ? t.due_time : '',
           notes: text(t.notes, 4000),
           subtasks: (Array.isArray(t.subtasks) ? t.subtasks : []).slice(0, 100)
             .map((x) => ({ text: text(x && x.text, 300), done: Boolean(x && x.done) })).filter((x) => x.text),

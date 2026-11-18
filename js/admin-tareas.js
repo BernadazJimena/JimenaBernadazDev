@@ -22,6 +22,7 @@
         archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/></svg>',
         filter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4"/></svg>',
         plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+        clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
         list: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
     };
     let filtersOpen = false;
@@ -45,6 +46,10 @@
         return d.toISOString().slice(0, 10);
     };
     const fmtDate = (iso) => (iso ? iso.slice(0, 10).split('-').reverse().join('/') : '');
+    // Fecha con hora opcional: "18/11/2026 · 16:00 hs" (o solo la fecha si la tarea no tiene horario)
+    const fmtWhen = (t) => (t.due ? `${fmtDate(t.due)}${t.due_time ? ` · ${t.due_time} hs` : ''}` : '');
+    const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
     const isOverdue = (t) => Boolean(t.due) && t.due < today() && t.status !== 'done';
     const categoryName = (id) => state.categories.find((c) => c.id === id)?.name || '';
     const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -93,7 +98,7 @@
         const prio = PRIORITIES.find((p) => p.id === t.priority)?.name || '';
         const pct = subs.length ? Math.round((doneSubs / subs.length) * 100) : 0;
         return `<article class="task-card prio-${esc(t.priority)}${overdue ? ' is-overdue' : ''}${t.status === 'done' ? ' is-done' : ''}" draggable="true" data-id="${t.id}" tabindex="0"
-            aria-label="${esc(t.title)}. Prioridad ${esc(prio.toLowerCase())}${t.due ? `. Vence el ${fmtDate(t.due)}` : ''}${overdue ? ', vencida' : ''}">
+            aria-label="${esc(t.title)}. Prioridad ${esc(prio.toLowerCase())}${t.due ? `. Vence el ${fmtWhen(t)}` : ''}${overdue ? ', vencida' : ''}">
             <div class="task-card-top">
                 <span class="task-cat" title="${esc(cat || 'Sin categoría')}">${cat ? esc(cat) : 'Sin categoría'}</span>
                 <span class="task-prio" title="Prioridad ${esc(prio.toLowerCase())}"><i aria-hidden="true"></i>${esc(prio)}</span>
@@ -102,7 +107,7 @@
             ${t.description ? `<p class="task-desc">${esc(t.description)}</p>` : ''}
             ${subs.length ? `<div class="task-progress" title="Subtareas: ${doneSubs} de ${subs.length}"><span style="width:${pct}%"></span></div>` : ''}
             ${t.due || subs.length ? `<div class="task-card-foot">
-                ${t.due ? `<span class="task-date${overdue ? ' overdue' : ''}" title="Fecha límite">${ICON.calendar}${overdue ? 'Vencida · ' : ''}${fmtDate(t.due).slice(0, 5)}</span>` : '<span></span>'}
+                ${t.due ? `<span class="task-date${overdue ? ' overdue' : ''}${t.due_time ? ' has-time' : ''}" title="${t.due_time ? 'Fecha y hora' : 'Fecha límite (sin horario)'}">${t.due_time ? ICON.clock : ICON.calendar}${overdue ? 'Vencida · ' : ''}${fmtWhen(t)}</span>` : '<span></span>'}
                 ${subs.length ? `<span class="task-subcount${doneSubs === subs.length ? ' complete' : ''}">${ICON.check}${doneSubs}/${subs.length}</span>` : ''}
             </div>` : ''}
         </article>`;
@@ -155,7 +160,8 @@
     </div>`;
 
     const RANK = { alta: 0, media: 1, baja: 2 };
-    const byUrgency = (x, y) => ((x.due || '9999').localeCompare(y.due || '9999')) || ((RANK[x.priority] ?? 1) - (RANK[y.priority] ?? 1)) || (x.position - y.position);
+    // A igual fecha, primero las que tienen horario (por hora) y después las de todo el día
+    const byUrgency = (x, y) => (`${x.due || '9999'} ${x.due_time || '~'}`.localeCompare(`${y.due || '9999'} ${y.due_time || '~'}`)) || ((RANK[x.priority] ?? 1) - (RANK[y.priority] ?? 1)) || (x.position - y.position);
 
     const boardHtml = (active) => `${tabsHtml(active)}<div class="task-board" role="list" data-active="${mobileCol}">
         ${COLUMNS.map((col) => {
@@ -244,7 +250,8 @@
     </li>`;
 
     const openEditor = (task) => {
-        const t = task || { id: 0, title: '', description: '', category: null, priority: 'media', status: 'inbox', due: '', notes: '', subtasks: [], created: '' };
+        const t = task || { id: 0, title: '', description: '', category: null, priority: 'media', status: 'inbox', due: '', due_time: '', notes: '', subtasks: [], created: '' };
+        const [hh, mm] = (t.due_time || '').split(':');
         const d = dialog();
         d.innerHTML = `<form method="dialog" class="task-form">
             <div class="task-form-head">
@@ -259,7 +266,15 @@
                         ${state.categories.map((c) => `<option value="${c.id}"${c.id === t.category ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
                     <label>Prioridad<select name="priority">${PRIORITIES.map((p) => `<option value="${p.id}"${p.id === t.priority ? ' selected' : ''}>${p.name}</option>`).join('')}</select></label>
                     <label>Columna<select name="status">${COLUMNS.map((c) => `<option value="${c.id}"${c.id === t.status ? ' selected' : ''}>${c.name}</option>`).join('')}</select></label>
-                    <label>Fecha límite<input type="date" name="due" value="${esc(t.due)}"></label>
+                    <div class="task-when">
+                        <label>Fecha límite<input type="date" name="due" value="${esc(t.due)}"></label>
+                        <div class="task-time" role="group" aria-labelledby="task-time-label">
+                            <span id="task-time-label">Hora <span class="muted">(opcional, 24 h)</span></span>
+                            <div class="task-time-row"><select name="due_hour" aria-label="Hora"><option value="">Sin horario</option>${HOURS.map((h) => `<option value="${h}"${h === hh ? ' selected' : ''}>${h}</option>`).join('')}</select>
+                            <span aria-hidden="true">:</span>
+                            <select name="due_min" aria-label="Minutos">${MINUTES.concat(mm && !MINUTES.includes(mm) ? [mm] : []).map((m) => `<option value="${m}"${m === (mm || '00') ? ' selected' : ''}>${m}</option>`).join('')}</select></div>
+                        </div>
+                    </div>
                 </div>
                 <fieldset class="task-subs">
                     <legend>Subtareas</legend>
@@ -267,6 +282,7 @@
                     <div class="task-sub-add"><input type="text" maxlength="300" placeholder="Agregar una subtarea y apretar Enter" aria-label="Nueva subtarea"><button type="button" data-act="sub-add">Agregar</button></div>
                 </fieldset>
                 <label>Notas<textarea name="notes" maxlength="4000" rows="3">${esc(t.notes)}</textarea></label>
+                ${t.due ? `<p class="task-when-detail${t.due_time ? ' has-time' : ''}">${t.due_time ? ICON.clock : ICON.calendar}Vence el ${fmtDate(t.due)} · ${t.due_time ? `${esc(t.due_time)} hs` : 'Sin horario'}</p>` : ''}
                 ${t.created ? `<p class="small muted">Creada el ${fmtDate(t.created)}${t.done_at ? ` · Completada el ${fmtDate(t.done_at)}` : ''}${t.archived ? ' · Archivada' : ''}</p>` : ''}
             </div>
             <div class="task-form-foot">
@@ -295,6 +311,7 @@
             priority: val('priority'),
             status: val('status'),
             due: val('due'),
+            due_time: val('due_hour') ? `${val('due_hour')}:${val('due_min') || '00'}` : '',
             notes: val('notes'),
             subtasks: [...f.querySelectorAll('.task-sub')].map((li) => ({
                 text: li.querySelector('input[type="text"]').value.trim(),
@@ -514,6 +531,7 @@
             }
             const task = readEditor();
             if (!task.title) { form.elements.title.focus(); return; }
+            if (task.due_time && !task.due) { panel().toast('Elegí una fecha para poder guardar la hora'); form.elements.due.focus(); return; }
             if (await call({ action: 'save', task })) { d.close(); panel().toast(task.id ? 'Tarea guardada' : 'Tarea creada'); }
         });
     };
