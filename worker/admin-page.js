@@ -224,96 +224,102 @@ export const adminPage = () => `<!doctype html>
   .feed li { align-items: flex-start; border-bottom: 1px solid var(--line); display: grid; gap: .6rem; grid-template-columns: 2rem 1fr; padding: .55rem 0; }
   .feed li:last-child { border-bottom: 0; }
   /* Dashboard: todo queda dentro de #m-dashboard (.stat, .stats y .feed también los usa Sorteos) */
-  #m-dashboard { --sh: rgb(33 22 50 / .06); --sh-2: rgb(33 22 50 / .12); --hi: transparent; --lvl: color-mix(in srgb, var(--bg) 50%, var(--card)); --r: 1rem; }
-  @media (prefers-color-scheme: dark) { #m-dashboard { --sh: rgb(0 0 0 / .3); --sh-2: rgb(0 0 0 / .5); --hi: rgb(255 255 255 / .04); } }
-  #m-dashboard .card { border-radius: var(--r); box-shadow: inset 0 1px 0 var(--hi), 0 1px 2px var(--sh); padding: 1.1rem 1.2rem 1.2rem; }
+  #m-dashboard { --lvl: color-mix(in srgb, var(--bg) 45%, var(--card)); --r: 1rem; --ease: cubic-bezier(.2, .7, .2, 1); --hair: color-mix(in srgb, var(--line) 75%, transparent); }
+  #m-dashboard .card { border-color: var(--hair); border-radius: var(--r); box-shadow: none; padding: 1.2rem 1.3rem 1.3rem; }
   #m-dashboard .alert { margin-bottom: .75rem; }
-  /* Encabezado */
-  #m-dashboard .dash-head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: .85rem 1.5rem; justify-content: space-between; margin: .75rem 0 1.5rem; padding: 0 .15rem; }
-  #m-dashboard .dash-kicker { color: var(--accent-ink); font-size: .7rem; font-weight: 800; letter-spacing: .12em; margin: 0 0 .35rem; text-transform: uppercase; }
-  #m-dashboard .dash-hello { font-size: 1.75rem; font-weight: 800; letter-spacing: -.025em; line-height: 1.15; margin: 0; }
-  #m-dashboard .dash-sub { color: var(--muted); font-size: .92rem; margin: .4rem 0 0; }
-  #m-dashboard .dash-date { align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 999px; box-shadow: inset 0 1px 0 var(--hi), 0 1px 2px var(--sh); color: var(--muted); display: inline-flex; font-size: .85rem; gap: .5rem; margin: 0 0 .1rem; padding: .45rem 1rem .45rem .8rem; }
-  #m-dashboard .dash-date strong { color: var(--text); }
-  #m-dashboard .dash-date .ico { color: var(--accent-ink); height: 1rem; width: 1rem; }
-  /* Indicadores: número arriba (protagonista), título y detalle debajo, ícono a la derecha */
-  #m-dashboard .stats { gap: .75rem; grid-auto-rows: 1fr; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 1rem; }
-  #m-dashboard .stat { align-items: start; border-radius: var(--r); box-shadow: inset 0 1px 0 var(--hi), 0 1px 2px var(--sh); display: grid; gap: .75rem; grid-template-areas: "body ico"; grid-template-columns: minmax(0, 1fr) auto; min-height: 6.6rem; padding: 1rem 1.05rem 1rem 1.15rem; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
-  #m-dashboard .stat:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: inset 0 1px 0 var(--hi), 0 10px 24px -14px var(--sh-2); color: var(--text); transform: translateY(-1px); }
-  #m-dashboard .stat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  #m-dashboard .stat-ico { align-items: center; background: color-mix(in srgb, var(--accent) 13%, transparent); border-radius: .65rem; color: var(--accent-ink); display: flex; grid-area: ico; height: 2.1rem; justify-content: center; transition: background .2s ease; width: 2.1rem; }
-  #m-dashboard .stat-ico .ico { height: 1.05rem; width: 1.05rem; }
-  #m-dashboard .stat:hover .stat-ico { background: color-mix(in srgb, var(--accent) 22%, transparent); }
-  #m-dashboard .stat-body { display: flex; flex-direction: column; grid-area: body; min-width: 0; }
-  #m-dashboard .stat-n { color: var(--text); font-size: 2rem; font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
-  #m-dashboard .stat-l { color: var(--text); font-size: .84rem; font-weight: 700; line-height: 1.3; margin-top: .5rem; }
-  #m-dashboard .stat-x { color: var(--muted); font-size: .76rem; line-height: 1.3; margin-top: .15rem; }
-  /* Columnas: agenda y actividad */
-  #m-dashboard .dash-cols { align-items: start; display: grid; gap: .75rem; }
+  /* Encabezado: saludo, fecha y hora en vivo */
+  #m-dashboard .dash-head { align-items: flex-end; display: flex; flex-wrap: wrap; gap: .75rem 2rem; justify-content: space-between; margin: .9rem 0 1.6rem; padding: 0 .15rem; }
+  #m-dashboard .dash-hello { font-size: 1.85rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin: 0; }
+  #m-dashboard .dash-date-full { color: var(--text); font-size: 1rem; font-weight: 500; margin: .45rem 0 0; opacity: .85; }
+  #m-dashboard .dash-sub { color: var(--muted); font-size: .86rem; margin: .2rem 0 0; }
+  #m-dashboard .dash-clock { color: var(--accent-ink); font-size: 2.1rem; font-variant-numeric: tabular-nums; font-weight: 300; letter-spacing: .02em; line-height: 1; }
+  /* Resumen: una sola franja con los indicadores (los que están en cero quedan apagados) */
+  #m-dashboard .stats { background: var(--card); border: 1px solid var(--hair); border-radius: var(--r); gap: 0; grid-template-columns: repeat(8, minmax(0, 1fr)); margin: 0 0 .9rem; overflow: hidden; }
+  #m-dashboard .stat { background: transparent; border: 0; border-radius: 0; display: grid; gap: .1rem .5rem; grid-template-areas: "ico" "n" "l" "x"; grid-template-columns: minmax(0, 1fr); min-height: 0; padding: .9rem 1rem; position: relative; transition: background .25s var(--ease); }
+  #m-dashboard .stat + .stat::before { background: var(--hair); bottom: 22%; content: ''; left: 0; position: absolute; top: 22%; width: 1px; }
+  #m-dashboard .stat:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--text); }
+  #m-dashboard .stat:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #m-dashboard .stat-ico { color: var(--accent-ink); display: flex; grid-area: ico; margin-bottom: .35rem; opacity: .8; }
+  #m-dashboard .stat-ico .ico { height: 1rem; width: 1rem; }
+  #m-dashboard .stat-body { display: contents; }
+  #m-dashboard .stat-n { color: var(--text); font-size: 1.55rem; font-variant-numeric: tabular-nums; font-weight: 800; grid-area: n; letter-spacing: -.03em; line-height: 1.05; }
+  #m-dashboard .stat-l { color: var(--muted); font-size: .76rem; font-weight: 600; grid-area: l; line-height: 1.3; }
+  #m-dashboard .stat-x { color: var(--muted); font-size: .7rem; grid-area: x; line-height: 1.3; opacity: .85; }
+  #m-dashboard .stat.is-zero .stat-n { color: var(--muted); font-weight: 600; opacity: .6; }
+  #m-dashboard .stat.is-zero .stat-ico { opacity: .45; }
+  /* Columnas: atención y actividad; Marketing debajo a todo el ancho */
+  #m-dashboard .dash-cols { align-items: start; display: grid; gap: .9rem; }
   @media (min-width: 1100px) { #m-dashboard .dash-cols { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); } }
   #m-dashboard .dash-cols .card { margin: 0; }
-  #m-dashboard .dash-mk { margin: .75rem 0 0; }
+  #m-dashboard .dash-mk { margin: .9rem 0 0; }
   #m-dashboard .dash-card-head { align-items: center; display: flex; gap: .5rem; justify-content: space-between; margin: 0 0 1rem; min-height: 1.6rem; }
   #m-dashboard .dash-card-head h2 { font-size: 1rem; letter-spacing: -.01em; margin: 0; }
   #m-dashboard .dash-card-head .small { background: var(--soft); border-radius: 999px; font-size: .74rem; font-weight: 700; padding: .1rem .6rem; }
-  /* Agenda: cada grupo es una lista con filas separadas; color semántico solo en el título, la barra y el estado */
+  #m-dashboard .dash-more { font-size: .8rem; font-weight: 700; text-decoration: none; transition: color .2s var(--ease); }
+  #m-dashboard .dash-more:hover { color: var(--accent); }
+  /* Grupos de avisos: color solo en el título, la barra lateral y el estado. Urgente en tono cálido, informativo apagado */
   #m-dashboard .ag-group + .ag-group { margin-top: 1.1rem; }
-  #m-dashboard .ag-group h3 { align-items: center; color: var(--muted); display: flex; font-size: .7rem; gap: .5rem; letter-spacing: .1em; margin: 0 0 .5rem; text-transform: uppercase; }
-  #m-dashboard .ag-group h3::before { background: currentColor; border-radius: 50%; content: ''; height: .45rem; opacity: .6; width: .45rem; }
+  #m-dashboard .ag-group h3 { align-items: center; color: var(--muted); display: flex; font-size: .68rem; gap: .5rem; letter-spacing: .1em; margin: 0 0 .4rem; text-transform: uppercase; }
+  #m-dashboard .ag-group h3::before { background: currentColor; border-radius: 50%; content: ''; height: .42rem; opacity: .6; width: .42rem; }
   #m-dashboard .ag-group.is-late h3 { color: var(--warn); } #m-dashboard .ag-group.is-today h3 { color: var(--accent-ink); }
   #m-dashboard .ag-group.is-late h3::before, #m-dashboard .ag-group.is-today h3::before { opacity: 1; }
-  #m-dashboard .ag-count { background: var(--soft); border-radius: 999px; color: var(--text); font-size: .68rem; letter-spacing: 0; line-height: 1.55; padding: 0 .45rem; }
-  #m-dashboard .ag-empty { border: 1px dashed var(--line); border-radius: .8rem; color: var(--muted); font-size: .84rem; margin: 0; padding: .55rem .85rem; }
-  #m-dashboard .today-list { background: var(--lvl); border: 1px solid var(--line); border-radius: .8rem; list-style: none; margin: 0; overflow: hidden; padding: 0; }
-  #m-dashboard .today-list li + li { border-top: 1px solid var(--line); }
-  #m-dashboard .today-item { align-items: center; background: transparent; border: 0; border-radius: 0; display: grid; font-weight: 400; gap: .15rem .9rem; grid-template-columns: 3px minmax(0, 1fr) 4rem 9.5rem; margin: 0; padding: .6rem .85rem .6rem 0; text-align: left; transition: background .15s ease; width: 100%; }
-  #m-dashboard .today-item:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--text); }
+  #m-dashboard .ag-count { background: var(--soft); border-radius: 999px; color: var(--text); font-size: .66rem; letter-spacing: 0; line-height: 1.55; padding: 0 .45rem; }
+  #m-dashboard .today-list { list-style: none; margin: 0; padding: 0; }
+  #m-dashboard .today-list li + li { border-top: 1px solid var(--hair); }
+  #m-dashboard .today-item { align-items: center; background: transparent; border: 0; border-radius: .6rem; display: grid; font-weight: 400; gap: .15rem .9rem; grid-template-columns: 3px minmax(0, 1fr) auto auto; margin: 0; padding: .6rem .6rem .6rem 0; text-align: left; transition: background .2s var(--ease); width: 100%; }
+  #m-dashboard .today-item:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); color: var(--text); }
   #m-dashboard .today-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-  #m-dashboard .today-dot { align-self: stretch; background: transparent; border-radius: 0 3px 3px 0; margin: -.6rem 0; }
+  #m-dashboard .today-dot { align-self: stretch; background: transparent; border-radius: 3px; margin: .1rem 0; }
   #m-dashboard .is-late .today-dot { background: var(--warn); } #m-dashboard .is-today .today-dot { background: var(--accent); }
+  #m-dashboard .is-next .today-dot { background: var(--line); }
   #m-dashboard .today-body { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
-  #m-dashboard .today-text { font-size: .9rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
-  #m-dashboard .today-sec { color: var(--muted); font-size: .74rem; font-weight: 600; }
+  #m-dashboard .today-text { font-size: .9rem; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+  #m-dashboard .is-next .today-text { font-weight: 500; }
+  #m-dashboard .today-sec { color: var(--muted); font-size: .74rem; }
   #m-dashboard .today-meta { display: contents; }
-  #m-dashboard .today-when { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-  #m-dashboard .today-item .chip { background: var(--soft); color: var(--muted); font-size: .72rem; justify-self: end; line-height: 1.35; text-align: center; }
+  #m-dashboard .today-when { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  #m-dashboard .today-item .chip { background: var(--soft); color: var(--muted); font-size: .7rem; font-weight: 700; justify-self: end; line-height: 1.4; text-align: center; white-space: nowrap; }
   #m-dashboard .today-item .chip.warn { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-ink); }
   #m-dashboard .today-item .chip.alert-chip { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
-  /* Actividad reciente: línea de tiempo y estado vacío */
+  /* Actividad reciente: línea de tiempo y estados vacíos */
   #m-dashboard .dash-tl { list-style: none; margin: 0; padding: 0; }
   #m-dashboard .dash-tl li { display: grid; gap: .75rem; grid-template-columns: 2rem minmax(0, 1fr); padding-bottom: 1rem; position: relative; }
-  #m-dashboard .dash-tl li::before { background: var(--line); bottom: .2rem; content: ''; left: calc(1rem - 1px); position: absolute; top: 2.2rem; width: 2px; }
+  #m-dashboard .dash-tl li::before { background: var(--line); bottom: .2rem; content: ''; left: calc(1rem - 1px); position: absolute; top: 2.2rem; width: 1px; }
   #m-dashboard .dash-tl li:last-child { padding-bottom: 0; } #m-dashboard .dash-tl li:last-child::before { display: none; }
-  #m-dashboard .dash-tl-icon { align-items: center; background: var(--lvl); border: 1px solid var(--line); border-radius: 50%; display: flex; font-size: .82rem; height: 2rem; justify-content: center; width: 2rem; }
+  #m-dashboard .dash-tl-icon { align-items: center; background: var(--lvl); border-radius: 50%; display: flex; font-size: .82rem; height: 2rem; justify-content: center; width: 2rem; }
   #m-dashboard .dash-tl li > div { padding-top: .2rem; }
   #m-dashboard .dash-tl p { font-size: .9rem; line-height: 1.4; margin: 0; overflow-wrap: anywhere; }
   #m-dashboard .dash-tl .dash-tl-meta { color: var(--muted); font-size: .76rem; margin-top: .15rem; }
-  #m-dashboard .dash-tl .link-btn { font-size: .76rem; font-weight: 700; text-decoration: none; transition: color .15s ease; }
+  #m-dashboard .dash-tl .link-btn { font-size: .76rem; font-weight: 700; text-decoration: none; transition: color .2s var(--ease); }
   #m-dashboard .dash-tl .link-btn:hover { color: var(--accent); text-decoration: underline; }
-  #m-dashboard .dash-empty { align-items: center; background: var(--lvl); border: 1px dashed var(--line); border-radius: .8rem; display: flex; flex-direction: column; gap: .3rem; padding: 1.4rem 1rem; text-align: center; }
-  #m-dashboard .dash-empty .ico { background: color-mix(in srgb, var(--accent) 13%, transparent); border-radius: 50%; box-sizing: content-box; color: var(--accent-ink); height: 1.2rem; margin-bottom: .2rem; padding: .5rem; width: 1.2rem; }
+  #m-dashboard .dash-empty { align-items: center; background: var(--lvl); border-radius: .85rem; display: flex; flex-direction: column; gap: .3rem; padding: 1.5rem 1rem; text-align: center; }
+  #m-dashboard .dash-empty .ico { background: color-mix(in srgb, var(--accent) 13%, transparent); border-radius: 50%; box-sizing: content-box; color: var(--accent-ink); height: 1.1rem; margin-bottom: .25rem; padding: .5rem; width: 1.1rem; }
   #m-dashboard .dash-empty p { font-weight: 700; margin: 0; }
-  #m-dashboard .dash-empty span { color: var(--muted); font-size: .8rem; }
-  /* Tablet y celular */
-  @media (max-width: 1000px) { #m-dashboard .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  #m-dashboard .dash-empty span { color: var(--muted); font-size: .8rem; max-width: 26rem; }
+  #m-dashboard .dash-clear { padding: 1.1rem 1rem; }
+  @media (prefers-reduced-motion: reduce) { #m-dashboard * { transition: none !important; } }
+  /* Tablet: resumen en dos filas de cuatro */
+  @media (max-width: 1250px) {
+    #m-dashboard .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #m-dashboard .stat:nth-child(4n + 1)::before { display: none; }
+    #m-dashboard .stat:nth-child(n + 5) { border-top: 1px solid var(--hair); }
+  }
+  /* Celular: hora arriba, resumen en dos columnas (número e ícono en la misma fila) */
   @media (max-width: 640px) {
-    /* Encabezado: menos aire, fecha más chica en su propia línea */
-    #m-dashboard .dash-head { gap: .6rem; margin: .1rem 0 .9rem; } #m-dashboard .dash-kicker { margin-bottom: .2rem; }
-    #m-dashboard .dash-hello { font-size: 1.35rem; } #m-dashboard .dash-sub { font-size: .88rem; margin-top: .2rem; }
-    #m-dashboard .dash-date { font-size: .8rem; gap: .4rem; padding: .35rem .8rem .35rem .65rem; }
-    #m-dashboard .card { padding: .9rem; }
-    /* Indicadores: número e ícono en la misma fila; título y detalle debajo, a todo el ancho */
-    #m-dashboard .stats { gap: .5rem; margin-bottom: .75rem; }
-    #m-dashboard .stat { align-content: start; column-gap: .5rem; grid-template-areas: "n ico" "l l" "x x"; grid-template-columns: minmax(0, 1fr) auto; min-height: 0; padding: .7rem .75rem .75rem .85rem; row-gap: 0; }
-    #m-dashboard .stat-body { display: contents; }
-    #m-dashboard .stat-n { align-self: center; font-size: 1.6rem; grid-area: n; } #m-dashboard .stat-l { grid-area: l; margin-top: .35rem; } #m-dashboard .stat-x { grid-area: x; }
-    #m-dashboard .stat-ico { height: 1.85rem; width: 1.85rem; } #m-dashboard .stat-ico .ico { height: .95rem; width: .95rem; }
-    /* Agenda y actividad: espacios verticales más cortos */
-    #m-dashboard .dash-card-head { margin-bottom: .75rem; } #m-dashboard .dash-card-head .small { display: none; }
-    #m-dashboard .ag-group + .ag-group { margin-top: .8rem; } #m-dashboard .ag-group h3 { margin-bottom: .4rem; }
-    #m-dashboard .ag-empty { padding: .45rem .75rem; }
-    #m-dashboard .today-item { grid-template-columns: 3px minmax(0, 1fr); padding: .5rem .7rem .55rem 0; }
-    #m-dashboard .today-dot { margin: -.5rem 0 -.55rem; }
+    #m-dashboard .dash-head { align-items: flex-start; flex-direction: column-reverse; gap: .35rem; margin: .2rem 0 1rem; }
+    #m-dashboard .dash-hello { font-size: 1.4rem; } #m-dashboard .dash-date-full { font-size: .92rem; margin-top: .3rem; }
+    #m-dashboard .dash-clock { font-size: 1.35rem; }
+    #m-dashboard .card { padding: .95rem; }
+    #m-dashboard .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: .75rem; }
+    #m-dashboard .stat { grid-template-areas: "n ico" "l l" "x x"; grid-template-columns: minmax(0, 1fr) auto; padding: .7rem .8rem; }
+    #m-dashboard .stat-ico { margin: 0; }
+    #m-dashboard .stat:nth-child(4n + 1)::before { display: block; }
+    #m-dashboard .stat:nth-child(odd)::before { display: none; }
+    #m-dashboard .stat:nth-child(n + 3) { border-top: 1px solid var(--hair); }
+    #m-dashboard .stat-n { font-size: 1.35rem; }
+    #m-dashboard .dash-card-head { margin-bottom: .7rem; }
+    #m-dashboard .ag-group + .ag-group { margin-top: .85rem; }
+    #m-dashboard .today-item { grid-template-columns: 3px minmax(0, 1fr); padding: .5rem .5rem .55rem 0; }
     #m-dashboard .today-meta { align-items: center; display: flex; flex-wrap: wrap; gap: .3rem .6rem; grid-column: 2; padding-top: .15rem; }
     #m-dashboard .today-when { text-align: left; } #m-dashboard .today-item .chip { justify-self: start; }
     #m-dashboard .dash-tl li { padding-bottom: .8rem; } #m-dashboard .dash-empty { padding: 1rem .9rem; }
@@ -1051,7 +1057,6 @@ export const adminPage = () => `<!doctype html>
   // ---- Dashboard: fecha de hoy y pendientes del día.
   // Lee lo que ya calcula cada módulo (tareas, pagos, plazos, cupones, presupuestos...); no guarda nada aparte.
   const SOON_DAYS = 7;
-  const todayLong = () => { const s = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Argentina/Buenos_Aires' }); return s.charAt(0).toUpperCase() + s.slice(1); };
   const daysTo = (iso) => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(todayIso() + 'T12:00:00Z')) / 86400000);
   const whenText = (n) => (n < -1 ? 'Vencido hace ' + (-n) + ' días' : n === -1 ? 'Venció ayer' : n === 0 ? 'Vence hoy' : n === 1 ? 'Vence mañana' : 'Vence en ' + n + ' días');
   const todayItems = () => {
@@ -1095,6 +1100,31 @@ export const adminPage = () => `<!doctype html>
     const key = (x) => x.date || '9999';
     return out.sort((a, b) => (b.urgent - a.urgent) || (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
   };
+  const TZ = 'America/Argentina/Buenos_Aires';
+  const clockParts = () => {
+    const now = new Date();
+    const time = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: TZ });
+    const date = now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ });
+    return { time, date: date.charAt(0).toUpperCase() + date.slice(1), iso: todayIso() };
+  };
+  let clockTimer = null;
+  let clockDay = '';
+  const tickClock = () => {
+    const c = clockParts();
+    const set = (id, v) => { const el = $(id); if (el && el.textContent !== v) el.textContent = v; };
+    set('dash-clock', c.time);
+    set('dash-greet', greeting() + ', Jimena ✨');
+    set('dash-date-full', c.date);
+    if (clockDay && clockDay !== c.iso) renderToday(); // cambió el día: se recalculan los pendientes
+    clockDay = c.iso;
+  };
+  // Se prende al entrar al Dashboard y se apaga al salir o al ocultar la pestaña (no queda un intervalo corriendo de fondo)
+  const dashClock = (on) => {
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+    if (!on) return;
+    tickClock();
+    clockTimer = setInterval(tickClock, 1000);
+  };
   const greeting = () => { const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' })) % 24; return h >= 5 && h < 12 ? 'Buen día' : h >= 12 && h < 20 ? 'Buenas tardes' : 'Buenas noches'; };
   const shortDay = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }).replace('.', '');
   const renderToday = () => {
@@ -1109,34 +1139,29 @@ export const adminPage = () => `<!doctype html>
       + '<span class="today-dot" aria-hidden="true"></span>'
       + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + esc(x.section) + '</span></span>'
       + '<span class="today-meta"><span class="today-when">' + (x.date ? shortDay(x.date) : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
-    const group = (cls, title, list, empty) => '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3>'
-      + (list.length ? '<ul class="today-list">' + list.map(row).join('') + '</ul>' : '<p class="ag-empty">' + empty + '</p>') + '</div>';
-    const head = $('dash-head');
-    if (head) {
-      head.innerHTML = '<div><p class="dash-kicker">Resumen</p><h2 class="dash-hello">' + greeting() + ', Jimena</h2>'
-        + '<p class="dash-sub">' + (late.length || today.length ? (late.length ? late.length + (late.length === 1 ? ' vencido' : ' vencidos') + (today.length ? ' y ' : '') : '') + (today.length ? today.length + ' para hoy' : '') + '.' : 'Todo al día por hoy.') + '</p></div>'
-        + '<p class="dash-date"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span><strong>' + todayLong().replace(', ', '</strong> · ') + '</span></p>';
-    }
-    box.innerHTML = '<div class="dash-card-head"><h2>Agenda y próximos vencimientos</h2><span class="small muted">' + items.length + ' en total</span></div>'
-      + group('is-late', 'Vencidos', late, 'Nada vencido.')
-      + group('is-today', 'Hoy', today, 'Nada para hoy.')
-      + group('is-next', 'Próximos 7 días', next, 'Nada en los próximos 7 días.')
+    // Solo se muestran los grupos con avisos; si no hay ninguno, un estado vacío
+    const group = (cls, title, list) => (list.length ? '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3><ul class="today-list">' + list.map(row).join('') + '</ul></div>' : '');
+    const allClear = (title, text) => '<div class="dash-empty dash-clear"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><p>' + title + '</p><span>' + text + '</span></div>';
+    const sub = $('dash-sub');
+    if (sub) sub.textContent = late.length || today.length ? (late.length ? late.length + (late.length === 1 ? ' vencido' : ' vencidos') + (today.length ? ' y ' : '') : '') + (today.length ? today.length + ' para hoy' : '') + '.' : 'Todo al día por hoy.';
+    box.innerHTML = '<div class="dash-card-head"><h2>Requiere tu atención</h2>' + (items.length ? '<span class="small muted">' + items.length + '</span>' : '') + '</div>'
+      + (items.length ? group('is-late', 'Vencidos', late) + group('is-today', 'Hoy', today) + group('is-next', 'Próximos 7 días', next)
+        : allClear('Todo al día', 'No hay vencimientos ni pendientes para los próximos 7 días.'))
       + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '');
     // Alertas de Marketing (js/admin-marketing.js): publicaciones, artículos, ideas, sorteos y recordatorios
     const mkBox = $('dash-mk');
     if (mkBox) {
       const mk = window.JNBMarketing && window.JNBMarketing.alerts ? window.JNBMarketing.alerts() : [];
       const by = (p) => mk.filter((x) => x.prio === p);
-      mkBox.innerHTML = '<div class="dash-card-head"><h2>Alertas de Marketing</h2><span class="small muted">' + mk.length + ' en total · <button type="button" class="link-btn" data-go="marketing">Abrir Marketing</button></span></div>'
-        + group('is-late', 'Urgente', by('urgente'), 'Nada vencido.')
-        + group('is-today', 'Importante', by('importante'), 'Nada para hoy ni para los próximos 7 días.')
-        + group('is-next', 'Informativo', by('info'), 'Sin ideas ni recordatorios pendientes.');
+      mkBox.innerHTML = '<div class="dash-card-head"><h2>Marketing Digital</h2><button type="button" class="link-btn dash-more" data-go="marketing">Abrir Marketing →</button></div>'
+        + (mk.length ? group('is-late', 'Urgente', by('urgente')) + group('is-today', 'Importante', by('importante')) + group('is-next', 'Informativo', by('info'))
+          : allClear('Contenido al día', 'No hay publicaciones, artículos ni recordatorios que necesiten atención.'));
     }
   };
   document.addEventListener('jnb-marketing-change', () => { if (route.mod === 'dashboard') renderToday(); });
   // Se actualiza solo: cada minuto mientras el Dashboard está a la vista (cambia el día, vence algo) y al volver a la pestaña
   setInterval(() => { if (route.mod === 'dashboard' && !document.hidden) renderToday(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && route.mod === 'dashboard') renderToday(); });
+  document.addEventListener('visibilitychange', () => { dashClock(!document.hidden && route.mod === 'dashboard'); if (!document.hidden && route.mod === 'dashboard') renderToday(); });
 
   // ---- Dashboard: resumen general con datos reales
   const renderDashboard = () => {
@@ -1146,7 +1171,7 @@ export const adminPage = () => `<!doctype html>
     const quotesWaiting = data.inquiries.filter((q) => q.kind === 'presupuesto' && q.status === 'enviado').length;
     const unpaid = (data.payments || []).filter((y) => !y.paid);
     const unseen = data.inquiries.filter((q) => !q.seen).length;
-    const stat = (href, n, label, extra, attrs, icon) => '<a class="stat" href="#' + href + '"' + (attrs || '') + '><span class="stat-ico"><svg class="ico" aria-hidden="true"><use href="#i-' + icon + '"/></svg></span><span class="stat-body"><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="stat-x">' + extra + '</span>' : '') + '</span></a>';
+    const stat = (href, n, label, extra, attrs, icon) => '<a class="stat' + (Number(n) === 0 ? ' is-zero' : '') + '" href="#' + href + '"' + (attrs || '') + '><span class="stat-ico"><svg class="ico" aria-hidden="true"><use href="#i-' + icon + '"/></svg></span><span class="stat-body"><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="stat-x">' + extra + '</span>' : '') + '</span></a>';
     const edited = P.filter((p) => p.briefEditUnseen);
     const dups = duplicates();
     // Actividad reciente: movimientos de los proyectos y pedidos nuevos
@@ -1155,7 +1180,10 @@ export const adminPage = () => `<!doctype html>
       ...(data.events || []).filter((e) => byToken.has(e.project)).map((e) => { const p = byToken.get(e.project); return { at: e.at, icon: e.icon, text: e.text, who: clientName(p), go: 'proyectos/' + (p.code || '') }; }),
       ...data.inquiries.map((q) => ({ at: q.created, icon: q.kind === 'presupuesto' ? '📩' : '✉️', text: (q.kind === 'presupuesto' ? 'Pidió presupuesto' : 'Nueva consulta') + (q.plan ? ': ' + q.plan : ''), who: q.name, go: q.kind === 'presupuesto' ? 'presupuestos/' + q.code : 'consultas' })),
     ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 12);
-    $('m-dashboard').innerHTML = '<header class="dash-head" id="dash-head"></header>'
+    const c = clockParts();
+    $('m-dashboard').innerHTML = '<header class="dash-head" id="dash-head"><div><h2 class="dash-hello" id="dash-greet">' + greeting() + ', Jimena ✨</h2>'
+      + '<p class="dash-date-full" id="dash-date-full">' + c.date + '</p><p class="dash-sub" id="dash-sub"></p></div>'
+      + '<time class="dash-clock" id="dash-clock" aria-label="Hora actual en Buenos Aires">' + c.time + '</time></header>'
       + (edited.length ? '<div class="alert">⚠ ' + edited.length + ' ' + (edited.length === 1 ? 'cliente editó su brief' : 'clientes editaron su brief') + ' después de enviarlo: ' + edited.map((p) => '<button type="button" class="link-btn" data-open="' + esc(p.token) + '">' + esc(clientName(p)) + '</button>').join(', ') + '.</div>' : '')
       + (dups.length ? '<div class="alert">🔎 Hay ' + dups.length + ' ' + (dups.length === 1 ? 'posible cliente duplicado' : 'posibles clientes duplicados') + ' para revisar. <a href="#clientes">Ver en Clientes</a></div>' : '')
       + '<div class="stats">'
@@ -1171,6 +1199,7 @@ export const adminPage = () => `<!doctype html>
       + '<div class="dash-cols"><section class="card dash-agenda" id="dash-today"></section>'
       + '<section class="card dash-activity"><div class="dash-card-head"><h2>Actividad reciente</h2></div>' + (feed.length ? '<ol class="dash-tl">' + feed.map((it) => '<li><span class="dash-tl-icon" aria-hidden="true">' + it.icon + '</span><div><p><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="dash-tl-meta" title="' + esc(date(it.at)) + '">' + new Date(it.at).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '') + ' ·<button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ol>' : '<div class="dash-empty"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><p>Todavía no hay movimientos</p><span>Acá vas a ver las consultas, los pedidos y los avances de tus proyectos.</span></div>') + '</section></div>'
       + '<section class="card dash-agenda dash-mk" id="dash-mk"></section>';
+    clockDay = c.iso;
     renderToday();
   };
 
@@ -1201,6 +1230,7 @@ export const adminPage = () => `<!doctype html>
     if (!data) return;
     const before = route.mod;
     route = parseHash();
+    dashClock(route.mod === 'dashboard');
     MODULES.forEach((m) => { $('m-' + m).hidden = m !== route.mod; });
     document.querySelectorAll('#side a').forEach((a) => { if (a.dataset.mod === route.mod) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     $('side').classList.remove('is-open');
