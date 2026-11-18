@@ -19,6 +19,12 @@
         { id: 'otros', name: 'Otros' },
     ];
     const scopeOf = (id) => SCOPES.find((x) => x.id === id) || SCOPES[1];
+    // Espacio elegido en el menú (Todo · JNB · Personal): JNB muestra solo las tareas de JNB; Personal, todas las demás
+    let space = 'todo';
+    const inSpace = (sc) => space === 'todo' || ((sc || 'jnb') === 'jnb') === (space === 'jnb');
+    const spaceScopes = () => SCOPES.filter((x) => inSpace(x.id));
+    // Ámbito de una tarea nueva: el elegido por defecto, si corresponde al espacio; si no, el primero del espacio
+    const newScope = () => (inSpace(state.defaultScope || 'jnb') ? state.defaultScope || 'jnb' : spaceScopes()[0].id);
     const PRIORITIES = [
         { id: 'alta', name: 'Alta' },
         { id: 'media', name: 'Media' },
@@ -90,6 +96,7 @@
         if (filters.category === 'none' && t.category) return false;
         if (filters.category && filters.category !== 'none' && String(t.category) !== filters.category) return false;
         if (filters.priority && t.priority !== filters.priority) return false;
+        if (!inSpace(t.scope)) return false;
         if (filters.scope && (t.scope || 'jnb') !== filters.scope) return false;
         const now = today();
         if (filters.date === 'overdue' && !isOverdue(t)) return false;
@@ -149,7 +156,7 @@
         </select></label>
         <label><span class="sr-only">Ámbito</span><select id="task-f-scope">
             <option value="">Todos los ámbitos</option>
-            ${SCOPES.map((x) => `<option value="${x.id}"${filters.scope === x.id ? ' selected' : ''}>${x.name}</option>`).join('')}
+            ${spaceScopes().map((x) => `<option value="${x.id}"${filters.scope === x.id ? ' selected' : ''}>${x.name}</option>`).join('')}
         </select></label>
         <label><span class="sr-only">Prioridad</span><select id="task-f-priority">
             <option value="">Todas las prioridades</option>
@@ -265,7 +272,7 @@
     </li>`;
 
     const openEditor = (task) => {
-        const t = task || { id: 0, title: '', description: '', category: null, priority: 'media', status: 'inbox', due: '', due_time: '', notes: '', subtasks: [], created: '', scope: state.defaultScope || 'jnb' };
+        const t = task || { id: 0, title: '', description: '', category: null, priority: 'media', status: 'inbox', due: '', due_time: '', notes: '', subtasks: [], created: '', scope: newScope() };
         const [hh, mm] = (t.due_time || '').split(':');
         const d = dialog();
         d.innerHTML = `<form method="dialog" class="task-form">
@@ -487,7 +494,7 @@
             if (!title) return;
             form.elements.title.value = '';
             const status = form.dataset.status;
-            if (await call({ action: 'save', task: { title, status, priority: 'media', scope: state.defaultScope || 'jnb', subtasks: [] } })) {
+            if (await call({ action: 'save', task: { title, status, priority: 'media', scope: newScope(), subtasks: [] } })) {
                 const input = root().querySelector(`.task-quick[data-status="${status}"] input`);
                 if (input) input.focus();
             }
@@ -568,5 +575,13 @@
         open: (id) => { bind(); const t = state.tasks.find((x) => x.id === id); if (t) openEditor(t); },
         // Para las alertas de Marketing del Dashboard (recordatorios = tareas de las categorías de marketing)
         categories: () => state.categories,
+        // Selector de espacios del menú: filtra el tablero sin tocar las tareas
+        setSpace: (s) => {
+            space = ['jnb', 'personal'].includes(s) ? s : 'todo';
+            if (filters.scope && !inSpace(filters.scope)) filters.scope = '';
+            if (loaded) render();
+        },
+        // Desde el Dashboard personal: abre el tablero filtrado por un ámbito
+        filterScope: (sc) => { filters.scope = SCOPES.some((x) => x.id === sc) ? sc : ''; if (loaded) render(); },
     };
 })();

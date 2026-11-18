@@ -129,6 +129,13 @@ export const adminPage = () => `<!doctype html>
   .side-head .mark { flex-shrink: 0; }
   .side-search { padding: 0 .7rem .4rem; position: relative; }
   .side-search input { width: 100%; }
+  /* Selector de espacios (Todo · JNB · Personal): JNB es el panel de siempre; Personal oculta lo comercial */
+  .side-space { background: var(--soft); border-radius: 999px; display: grid; gap: .2rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 .7rem .6rem; padding: .2rem; }
+  .side-space button { background: transparent; border-color: transparent; color: var(--muted); font-size: .78rem; min-height: 2.25rem; padding: .3rem .4rem; }
+  .side-space button:hover { border-color: transparent; color: var(--text); }
+  .side-space button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .side-space button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  html[data-space="personal"] .side [data-space-only="jnb"] { display: none; }
   .global-results { background: var(--card, #241a35); border: 1px solid var(--line, #3a2d52); border-radius: .6rem; left: .7rem; max-height: 60vh; overflow: auto; position: absolute; right: .7rem; top: 100%; z-index: 30; }
   .global-results button { background: none; border: 0; border-radius: 0; color: inherit; display: block; font: inherit; padding: .5rem .7rem; text-align: left; width: 100%; }
   .global-results button:hover, .global-results button:focus { background: rgba(255,255,255,.07); }
@@ -156,7 +163,7 @@ export const adminPage = () => `<!doctype html>
   .side-close { display: none; }
   /* Contraída: solo íconos; las categorías pasan a ser una línea fina y los contadores, un número chico sobre el ícono */
   html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 0; }
-  html.side-collapsed .side-search { display: none; }
+  html.side-collapsed .side-search, html.side-collapsed .side-space { display: none; }
   html.side-collapsed .side-head { justify-content: center; padding-left: 0; padding-right: 0; }
   html.side-collapsed .side-title { width: 0; }
   html.side-collapsed .side-group { background: var(--line); height: 1px; margin: .7rem .55rem; opacity: 1; padding: 0; text-indent: -999px; }
@@ -176,6 +183,8 @@ export const adminPage = () => `<!doctype html>
     .side.is-open { transform: none; }
     html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 1; }
     html.side-collapsed .side-search { display: block; }
+    html.side-collapsed .side-space { display: grid; }
+    html.side-collapsed[data-space="personal"] .side-search { display: none; }
     html.side-collapsed .side-title { width: auto; }
     html.side-collapsed .side-head { justify-content: flex-start; padding: 1rem 1rem .75rem; }
     html.side-collapsed .side-group { background: none; height: auto; margin: 1.1rem .7rem .35rem; opacity: .75; text-indent: 0; }
@@ -263,6 +272,17 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .dash-activity { display: flex; flex-direction: column; } #m-dashboard .dash-activity .dash-empty { flex: 1; justify-content: center; }
   @media (min-width: 1100px) { #m-dashboard .dash-cols { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); } }
   #m-dashboard .dash-cols .card { margin: 0; }
+  #m-dashboard .dash-cols.dash-cols-one { grid-template-columns: minmax(0, 1fr); }
+  /* Espacio Personal: los cinco ámbitos en una fila (en el celular, dos columnas y el último a lo ancho) */
+  #m-dashboard #dash-scopes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #m-dashboard #dash-scopes .stat { border-top: 0; }
+  #m-dashboard #dash-scopes .stat + .stat::before { display: block; }
+  @media (max-width: 640px) {
+    #m-dashboard #dash-scopes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #m-dashboard #dash-scopes .stat:nth-child(n + 3) { border-top: 1px solid var(--hair); }
+    #m-dashboard #dash-scopes .stat:nth-child(odd)::before { display: none; }
+    #m-dashboard #dash-scopes .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
   #m-dashboard .dash-mk { margin: .9rem 0 0; }
   #m-dashboard .dash-card-head { align-items: center; display: flex; gap: .5rem; justify-content: space-between; margin: 0 0 1rem; min-height: 1.6rem; }
   #m-dashboard .dash-card-head h2 { font-size: 1rem; letter-spacing: -.01em; margin: 0; }
@@ -371,33 +391,34 @@ export const adminPage = () => `<!doctype html>
     <div class="layout">
       <aside class="side" id="side">
         <div class="side-head"><span class="mark">JNB</span><span class="side-title"><strong>JNB Creative Studio</strong><span>Panel de administración</span></span><button type="button" class="side-close" id="side-close" aria-label="Cerrar el menú"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-        <div class="side-search"><input type="search" id="global-q" placeholder="Buscar cliente, mail, código…" aria-label="Buscar en todo el panel" autocomplete="off"><div id="global-results" class="global-results" hidden></div></div>
+        <div class="side-space" id="side-space" role="group" aria-label="Espacio de trabajo"><button type="button" data-space="todo" aria-pressed="true">Todo</button><button type="button" data-space="jnb" aria-pressed="false">JNB</button><button type="button" data-space="personal" aria-pressed="false">Personal</button></div>
+        <div class="side-search" data-space-only="jnb"><input type="search" id="global-q" placeholder="Buscar cliente, mail, código…" aria-label="Buscar en todo el panel" autocomplete="off"><div id="global-results" class="global-results" hidden></div></div>
         <nav class="side-scroll" aria-label="Secciones del panel">
           <p class="side-group">General</p>
           <a href="#dashboard" data-mod="dashboard"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Dashboard</span></a>
           <a href="#tareas" data-mod="tareas"><svg class="ico" aria-hidden="true"><use href="#i-kanban"/></svg><span class="side-label">Gestor de tareas</span><span class="badge" id="n-tareas" title=""></span></a>
-          <p class="side-group">Comercial</p>
-          <a href="#clientes" data-mod="clientes"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span class="side-label">Clientes</span><span class="badge" id="n-clientes"></span></a>
-          <a href="#consultas" data-mod="consultas"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><span class="side-label">Consultas</span><span class="badge" id="n-consultas"></span></a>
-          <a href="#presupuestos" data-mod="presupuestos"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
-          <a href="#proyectos" data-mod="proyectos"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="side-label">Proyectos</span><span class="badge" id="n-proyectos"></span></a>
-          <a href="#pagos" data-mod="pagos"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Pagos</span><span class="badge" id="n-pagos"></span></a>
-          <p class="side-group">Marketing y comunicación</p>
-          <a href="#marketing" data-mod="marketing"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Marketing Digital</span><span class="badge" id="n-marketing"></span></a>
-          <a href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos de Instagram</span><span class="badge" id="n-sorteos"></span></a>
-          <a href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
-          <a href="#newsletter" data-mod="newsletter"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg><span class="side-label">Newsletter</span><span class="badge" id="n-newsletter"></span></a>
-          <a href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
-          <a href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
-          <p class="side-group">Gestión y seguimiento</p>
-          <a href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
-          <a href="#agenda" data-mod="agenda"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Plazos y vencimientos</span><span class="badge" id="n-agenda"></span></a>
-          <p class="side-group">Servicios y cotización</p>
-          <a href="#cotizador" data-mod="cotizador"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Funcionalidades y cotizador</span></a>
-          <p class="side-group">Sitio web</p>
-          <a href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
-          <a href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
-          <a href="#faq" data-mod="faq"><svg class="ico" aria-hidden="true"><use href="#i-help"/></svg><span class="side-label">Preguntas frecuentes</span></a>
+          <p class="side-group" data-space-only="jnb">Comercial</p>
+          <a data-space-only="jnb" href="#clientes" data-mod="clientes"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span class="side-label">Clientes</span><span class="badge" id="n-clientes"></span></a>
+          <a data-space-only="jnb" href="#consultas" data-mod="consultas"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><span class="side-label">Consultas</span><span class="badge" id="n-consultas"></span></a>
+          <a data-space-only="jnb" href="#presupuestos" data-mod="presupuestos"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
+          <a data-space-only="jnb" href="#proyectos" data-mod="proyectos"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="side-label">Proyectos</span><span class="badge" id="n-proyectos"></span></a>
+          <a data-space-only="jnb" href="#pagos" data-mod="pagos"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Pagos</span><span class="badge" id="n-pagos"></span></a>
+          <p class="side-group" data-space-only="jnb">Marketing y comunicación</p>
+          <a data-space-only="jnb" href="#marketing" data-mod="marketing"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Marketing Digital</span><span class="badge" id="n-marketing"></span></a>
+          <a data-space-only="jnb" href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos de Instagram</span><span class="badge" id="n-sorteos"></span></a>
+          <a data-space-only="jnb" href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
+          <a data-space-only="jnb" href="#newsletter" data-mod="newsletter"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg><span class="side-label">Newsletter</span><span class="badge" id="n-newsletter"></span></a>
+          <a data-space-only="jnb" href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
+          <a data-space-only="jnb" href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
+          <p class="side-group" data-space-only="jnb">Gestión y seguimiento</p>
+          <a data-space-only="jnb" href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
+          <a data-space-only="jnb" href="#agenda" data-mod="agenda"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Plazos y vencimientos</span><span class="badge" id="n-agenda"></span></a>
+          <p class="side-group" data-space-only="jnb">Servicios y cotización</p>
+          <a data-space-only="jnb" href="#cotizador" data-mod="cotizador"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Funcionalidades y cotizador</span></a>
+          <p class="side-group" data-space-only="jnb">Sitio web</p>
+          <a data-space-only="jnb" href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
+          <a data-space-only="jnb" href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
+          <a data-space-only="jnb" href="#faq" data-mod="faq"><svg class="ico" aria-hidden="true"><use href="#i-help"/></svg><span class="side-label">Preguntas frecuentes</span></a>
           <p class="side-group">Configuración</p>
           <a href="#config" data-mod="config"><svg class="ico" aria-hidden="true"><use href="#i-settings"/></svg><span class="side-label">Configuración</span><span class="badge" id="n-config"></span></a>
         </nav>
@@ -1176,7 +1197,9 @@ export const adminPage = () => `<!doctype html>
   const renderToday = () => {
     const box = $('dash-today');
     if (!box || !data) return;
-    const items = todayItems();
+    // Solo lo del espacio elegido (en Todo, todo junto; cada aviso lleva su etiqueta de ámbito)
+    const items = todayItems().filter((x) => inSpace(x.scope));
+    renderScopeStats();
     // Tres niveles (ver levelOf): primero lo urgente; dentro de cada grupo, orden cronológico (ya viene de todayItems)
     const urgent = items.filter((x) => levelOf(x) === 'urgent');
     const today = items.filter((x) => levelOf(x) === 'today');
@@ -1203,7 +1226,7 @@ export const adminPage = () => `<!doctype html>
       + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '');
     // Alertas de Marketing (js/admin-marketing.js): publicaciones, artículos, ideas, sorteos y recordatorios
     const mkBox = $('dash-mk');
-    if (mkBox) {
+    if (mkBox && space !== 'personal') {
       const mk = window.JNBMarketing && window.JNBMarketing.alerts ? window.JNBMarketing.alerts() : [];
       const by = (p) => mk.filter((x) => x.prio === p);
       mkBox.innerHTML = '<div class="dash-card-head"><h2>Marketing Digital</h2><button type="button" class="link-btn dash-more" data-go="marketing">Abrir Marketing →</button></div>'
@@ -1217,14 +1240,41 @@ export const adminPage = () => `<!doctype html>
   document.addEventListener('visibilitychange', () => { dashClock(!document.hidden && route.mod === 'dashboard'); if (!document.hidden && route.mod === 'dashboard') renderToday(); });
 
   // ---- Dashboard: resumen general con datos reales
+  // Ámbitos del espacio Personal (los mismos del gestor de tareas, sin JNB)
+  const PERSONAL_SCOPES = [['personal', 'Personal'], ['estudios', 'Estudios'], ['trabajo', 'Trabajo'], ['tramites', 'Trámites'], ['otros', 'Otros']];
+  let pendingScope = '';
+  const stat = (href, n, label, extra, attrs, icon) => '<a class="stat' + (Number(n) === 0 ? ' is-zero' : '') + '" href="#' + href + '"' + (attrs || '') + '><span class="stat-ico"><svg class="ico" aria-hidden="true"><use href="#i-' + icon + '"/></svg></span><span class="stat-body"><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="stat-x">' + extra + '</span>' : '') + '</span></a>';
+  // Tarjetas del espacio Personal: tareas abiertas de cada ámbito (y cuántas vencieron)
+  const renderScopeStats = () => {
+    const box = $('dash-scopes');
+    if (!box) return;
+    const list = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
+    const open = (list || []).filter((t) => !t.archived && t.status !== 'done');
+    box.innerHTML = PERSONAL_SCOPES.map(([id, label]) => {
+      const mine = open.filter((t) => (t.scope || 'jnb') === id);
+      const late = mine.filter((t) => t.due && daysTo(t.due.slice(0, 10)) < 0).length;
+      return stat('tareas', list ? mine.length : '…', label, late ? late + (late === 1 ? ' vencida' : ' vencidas') : 'Tareas abiertas', ' data-scope-filter="' + id + '"', 'kanban');
+    }).join('');
+  };
   const renderDashboard = () => {
+    const c0 = clockParts();
+    const head = '<header class="dash-head" id="dash-head"><div><h2 class="dash-hello" id="dash-greet">' + greeting() + ', Jimena ✨</h2>'
+      + '<p class="dash-date-full" id="dash-date-full">' + c0.date + '</p><p class="dash-sub" id="dash-sub"></p></div>'
+      + '<time class="dash-clock" id="dash-clock" aria-label="Hora actual en Buenos Aires">' + c0.time + '</time></header>';
+    // Espacio Personal: sin datos comerciales, solo tus ámbitos y tus pendientes
+    if (space === 'personal') {
+      $('m-dashboard').innerHTML = head + '<div class="stats" id="dash-scopes"></div>'
+        + '<div class="dash-cols dash-cols-one"><section class="card dash-agenda" id="dash-today"></section></div>';
+      clockDay = c0.iso;
+      renderToday();
+      return;
+    }
     const P = data.projects;
     const inGroup = (g) => P.filter((p) => STAGE_GROUPS[g].includes(p.stage)).length;
     const quotesToDo = data.inquiries.filter((q) => q.kind === 'presupuesto' && !SENT.includes(q.status)).length;
     const quotesWaiting = data.inquiries.filter((q) => q.kind === 'presupuesto' && q.status === 'enviado').length;
     const unpaid = (data.payments || []).filter((y) => !y.paid);
     const unseen = data.inquiries.filter((q) => !q.seen).length;
-    const stat = (href, n, label, extra, attrs, icon) => '<a class="stat' + (Number(n) === 0 ? ' is-zero' : '') + '" href="#' + href + '"' + (attrs || '') + '><span class="stat-ico"><svg class="ico" aria-hidden="true"><use href="#i-' + icon + '"/></svg></span><span class="stat-body"><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="stat-x">' + extra + '</span>' : '') + '</span></a>';
     const edited = P.filter((p) => p.briefEditUnseen);
     const dups = duplicates();
     // Actividad reciente: movimientos de los proyectos y pedidos nuevos
@@ -1309,6 +1359,22 @@ export const adminPage = () => `<!doctype html>
 
   // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
   const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'marketing', 'brief', 'agenda', 'numeros', 'cotizador', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
+  // ---- Espacios de trabajo (Todo · JNB · Personal). JNB es el panel de siempre; Personal deja solo lo que no es comercial.
+  // La elección se recuerda en este navegador; no cambia ningún dato.
+  const SPACES = ['todo', 'jnb', 'personal'];
+  let space = 'todo';
+  try { const saved = localStorage.getItem('jnb-espacio'); if (SPACES.includes(saved)) space = saved; } catch (e) {}
+  const jnbOnly = (mod) => Boolean(document.querySelector('#side a[data-space-only="jnb"][data-mod="' + mod + '"]'));
+  const inSpace = (sc) => space === 'todo' || ((sc || 'jnb') === 'jnb') === (space === 'jnb');
+  const setSpace = (s, remember) => {
+    space = SPACES.includes(s) ? s : 'todo';
+    document.documentElement.dataset.space = space;
+    document.querySelectorAll('#side-space button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.space === space)));
+    if (remember) { try { localStorage.setItem('jnb-espacio', space); } catch (e) {} }
+    if (window.JNBTasks && window.JNBTasks.setSpace) window.JNBTasks.setSpace(space);
+    if (data && route.mod === 'dashboard') renderDashboard();
+  };
+  setSpace(space, false);
   const parseHash = () => {
     const [mod, id] = decodeURIComponent(location.hash.slice(1)).split('/');
     return { mod: MODULES.includes(mod) ? mod : 'dashboard', id: id || '' };
@@ -1321,6 +1387,8 @@ export const adminPage = () => `<!doctype html>
     if (!data) return;
     const before = route.mod;
     route = parseHash();
+    // Si se entra a un módulo comercial estando en Personal (un link, el botón Atrás), se pasa a JNB sin recordarlo
+    if (space === 'personal' && jnbOnly(route.mod)) setSpace('jnb', false);
     dashClock(route.mod === 'dashboard');
     MODULES.forEach((m) => { $('m-' + m).hidden = m !== route.mod; });
     document.querySelectorAll('#side a').forEach((a) => { if (a.dataset.mod === route.mod) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
@@ -1338,7 +1406,10 @@ export const adminPage = () => `<!doctype html>
     } else if (route.mod === 'dashboard') {
       renderToday();
     } else if (route.mod === 'tareas') {
-      if (window.JNBTasks) window.JNBTasks.show();
+      if (window.JNBTasks) {
+        window.JNBTasks.show();
+        if (pendingScope) { window.JNBTasks.filterScope(pendingScope); pendingScope = ''; }
+      }
     } else if (route.mod === 'sorteos') {
       if (window.JNBGiveaways) window.JNBGiveaways.show(route.id);
     } else if (route.mod === 'brief') {
@@ -1808,8 +1879,15 @@ export const adminPage = () => `<!doctype html>
 
   document.addEventListener('click', async (e) => {
     // Accesos del Dashboard que llegan con un filtro ya elegido
+    const spaceBtn = e.target.closest('#side-space button[data-space]');
+    if (spaceBtn) {
+      setSpace(spaceBtn.dataset.space, true);
+      if (space === 'personal' && jnbOnly(route.mod)) go('dashboard', '');
+      return;
+    }
     const statLink = e.target.closest('.stat');
     if (statLink) {
+      if (statLink.dataset.scopeFilter) pendingScope = statLink.dataset.scopeFilter;
       if (statLink.dataset.stageFilter !== undefined) { F.proyectos = { q: '', stage: statLink.dataset.stageFilter, type: '', from: '', to: '' }; PAGE.proyectos = 1; selected = ''; }
       if (statLink.dataset.quoteFilter) { F.presupuestos = { q: '', status: statLink.dataset.quoteFilter }; PAGE.presupuestos = 1; }
       if (statLink.dataset.payFilter) { F.pagos = { q: '', state: statLink.dataset.payFilter }; PAGE.pagos = 1; }
