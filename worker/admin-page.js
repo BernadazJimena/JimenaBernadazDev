@@ -2,6 +2,8 @@
 // que se escribe una vez en /api/admin/login: el servidor abre una sesión en una cookie HttpOnly (el JavaScript no la ve).
 // La sesión se cierra sola tras 2 horas sin uso o 12 horas en total, o con "Salir".
 
+import { navHtml, sectionsHtml, moduleSpaces } from './core/modules.js';
+
 export const adminPage = () => `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow"><title>Panel | JNB Creative Studio</title>
@@ -12,6 +14,7 @@ export const adminPage = () => `<!doctype html>
 <link rel="stylesheet" href="/css/pages/admin-sorteos.css">
 <link rel="stylesheet" href="/css/pages/admin-agenda.css">
 <link rel="stylesheet" href="/css/pages/admin-marketing.css">
+<link rel="stylesheet" href="/css/pages/admin-workspace.css">
 <style>
   /* El panel se ve siempre en modo oscuro, sin importar el tema del celular o la compu (las reglas "@media all" eran del modo oscuro) */
   :root { color-scheme: dark; --bg: #100b1d; --card: #211938; --soft: #2a2047; --text: #f4f0ff;
@@ -135,7 +138,7 @@ export const adminPage = () => `<!doctype html>
   .side-space button:hover { border-color: transparent; color: var(--text); }
   .side-space button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .side-space button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  html[data-space="personal"] .side [data-space-only="jnb"] { display: none; }
+  html[data-space="personal"] .side [data-space-only="jnb"], html[data-space="jnb"] .side [data-space-only="personal"] { display: none; }
   .global-results { background: var(--card, #241a35); border: 1px solid var(--line, #3a2d52); border-radius: .6rem; left: .7rem; max-height: 60vh; overflow: auto; position: absolute; right: .7rem; top: 100%; z-index: 30; }
   .global-results button { background: none; border: 0; border-radius: 0; color: inherit; display: block; font: inherit; padding: .5rem .7rem; text-align: left; width: 100%; }
   .global-results button:hover, .global-results button:focus { background: rgba(255,255,255,.07); }
@@ -275,6 +278,9 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .dash-cols.dash-cols-one { grid-template-columns: minmax(0, 1fr); }
   /* Espacio Personal: los cinco ámbitos en una fila (en el celular, dos columnas y el último a lo ancho) */
   #m-dashboard #dash-scopes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #m-dashboard #dash-ws { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #m-dashboard #dash-ws .stat { border-top: 0; }
+  #m-dashboard #dash-ws .stat + .stat::before { display: block; }
   #m-dashboard #dash-scopes .stat { border-top: 0; }
   #m-dashboard #dash-scopes .stat + .stat::before { display: block; }
   @media (max-width: 640px) {
@@ -282,6 +288,9 @@ export const adminPage = () => `<!doctype html>
     #m-dashboard #dash-scopes .stat:nth-child(n + 3) { border-top: 1px solid var(--hair); }
     #m-dashboard #dash-scopes .stat:nth-child(odd)::before { display: none; }
     #m-dashboard #dash-scopes .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    #m-dashboard #dash-ws { grid-template-columns: minmax(0, 1fr); }
+    #m-dashboard #dash-ws .stat + .stat { border-top: 1px solid var(--hair); }
+    #m-dashboard #dash-ws .stat + .stat::before { display: none; }
   }
   #m-dashboard .dash-mk { margin: .9rem 0 0; }
   #m-dashboard .dash-card-head { align-items: center; display: flex; gap: .5rem; justify-content: space-between; margin: 0 0 1rem; min-height: 1.6rem; }
@@ -374,7 +383,7 @@ export const adminPage = () => `<!doctype html>
   .table-wrap { overflow-x: auto; }
   [hidden] { display: none !important; }
 </style></head>
-<body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-kanban" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></symbol><symbol id="i-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol><symbol id="i-panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol></svg>
+<body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-kanban" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></symbol><symbol id="i-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol><symbol id="i-panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol></svg>
 <div class="wrap">
   <form class="card login" id="login" hidden>
     <div class="brand" style="margin-bottom:.75rem"><span class="mark">JNB</span> Panel</div>
@@ -394,34 +403,7 @@ export const adminPage = () => `<!doctype html>
         <div class="side-space" id="side-space" role="group" aria-label="Espacio de trabajo"><button type="button" data-space="todo" aria-pressed="true">Todo</button><button type="button" data-space="jnb" aria-pressed="false">JNB</button><button type="button" data-space="personal" aria-pressed="false">Personal</button></div>
         <div class="side-search" data-space-only="jnb"><input type="search" id="global-q" placeholder="Buscar cliente, mail, código…" aria-label="Buscar en todo el panel" autocomplete="off"><div id="global-results" class="global-results" hidden></div></div>
         <nav class="side-scroll" aria-label="Secciones del panel">
-          <p class="side-group">General</p>
-          <a href="#dashboard" data-mod="dashboard"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Dashboard</span></a>
-          <a href="#tareas" data-mod="tareas"><svg class="ico" aria-hidden="true"><use href="#i-kanban"/></svg><span class="side-label">Gestor de tareas</span><span class="badge" id="n-tareas" title=""></span></a>
-          <p class="side-group" data-space-only="jnb">Comercial</p>
-          <a data-space-only="jnb" href="#clientes" data-mod="clientes"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span class="side-label">Clientes</span><span class="badge" id="n-clientes"></span></a>
-          <a data-space-only="jnb" href="#consultas" data-mod="consultas"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><span class="side-label">Consultas</span><span class="badge" id="n-consultas"></span></a>
-          <a data-space-only="jnb" href="#presupuestos" data-mod="presupuestos"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Presupuestos</span><span class="badge" id="n-presupuestos"></span></a>
-          <a data-space-only="jnb" href="#proyectos" data-mod="proyectos"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="side-label">Proyectos</span><span class="badge" id="n-proyectos"></span></a>
-          <a data-space-only="jnb" href="#pagos" data-mod="pagos"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Pagos</span><span class="badge" id="n-pagos"></span></a>
-          <p class="side-group" data-space-only="jnb">Marketing y comunicación</p>
-          <a data-space-only="jnb" href="#marketing" data-mod="marketing"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Marketing Digital</span><span class="badge" id="n-marketing"></span></a>
-          <a data-space-only="jnb" href="#sorteos" data-mod="sorteos"><svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span class="side-label">Sorteos de Instagram</span><span class="badge" id="n-sorteos"></span></a>
-          <a data-space-only="jnb" href="#cupones" data-mod="cupones"><svg class="ico" aria-hidden="true"><use href="#i-ticket"/></svg><span class="side-label">Cupones</span><span class="badge" id="n-cupones"></span></a>
-          <a data-space-only="jnb" href="#newsletter" data-mod="newsletter"><svg class="ico" aria-hidden="true"><use href="#i-news"/></svg><span class="side-label">Newsletter</span><span class="badge" id="n-newsletter"></span></a>
-          <a data-space-only="jnb" href="#numeros" data-mod="numeros"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Ingresos y origen</span></a>
-          <a data-space-only="jnb" href="#resenas" data-mod="resenas"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><span class="side-label">Reseñas</span><span class="badge" id="n-resenas"></span></a>
-          <p class="side-group" data-space-only="jnb">Gestión y seguimiento</p>
-          <a data-space-only="jnb" href="#brief" data-mod="brief"><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg><span class="side-label">Brief</span></a>
-          <a data-space-only="jnb" href="#agenda" data-mod="agenda"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Plazos y vencimientos</span><span class="badge" id="n-agenda"></span></a>
-          <p class="side-group" data-space-only="jnb">Servicios y cotización</p>
-          <a data-space-only="jnb" href="#cotizador" data-mod="cotizador"><svg class="ico" aria-hidden="true"><use href="#i-card"/></svg><span class="side-label">Funcionalidades y cotizador</span></a>
-          <p class="side-group" data-space-only="jnb">Sitio web</p>
-          <a data-space-only="jnb" href="#cartel" data-mod="cartel"><svg class="ico" aria-hidden="true"><use href="#i-megaphone"/></svg><span class="side-label">Cartel del inicio</span></a>
-          <a data-space-only="jnb" href="#horario" data-mod="horario"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="side-label">Horario de atención</span></a>
-          <a data-space-only="jnb" href="#faq" data-mod="faq"><svg class="ico" aria-hidden="true"><use href="#i-help"/></svg><span class="side-label">Preguntas frecuentes</span></a>
-          <p class="side-group">Configuración</p>
-          <a href="#config" data-mod="config"><svg class="ico" aria-hidden="true"><use href="#i-settings"/></svg><span class="side-label">Configuración</span><span class="badge" id="n-config"></span></a>
-        </nav>
+${navHtml()}        </nav>
         <div class="side-foot"><button type="button" id="side-collapse" aria-expanded="true"><svg class="ico" aria-hidden="true"><use href="#i-panel"/></svg><span class="side-label">Contraer menú</span></button></div>
       </aside>
       <div class="side-backdrop" id="side-backdrop"></div>
@@ -429,7 +411,7 @@ export const adminPage = () => `<!doctype html>
       <main>
         <section class="module" id="m-dashboard"></section>
         <section class="module" id="m-tareas" hidden></section>
-        <section class="module" id="m-clientes" hidden></section>
+${sectionsHtml()}        <section class="module" id="m-clientes" hidden></section>
         <section class="module" id="m-proyectos" hidden><div id="tab-proyectos"></div></section>
         <section class="module" id="m-consultas" hidden></section>
         <section class="module" id="m-presupuestos" hidden></section>
@@ -462,6 +444,7 @@ export const adminPage = () => `<!doctype html>
 <script src="/js/backup-crypto.js"></script>
 <script src="/js/admin-agenda.js"></script>
 <script src="/js/admin-marketing.js"></script>
+<script src="/js/admin-workspace.js"></script>
 <script src="/js/pricing.js"></script>
 <script src="/js/custom-plan.js"></script>
 <script src="/js/admin-cotizador.js"></script>
@@ -1122,6 +1105,8 @@ export const adminPage = () => `<!doctype html>
     // Gestor de tareas: las que no están completadas ni archivadas y tienen fecha límite
     const tasks = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
     (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas', taskId: t.id, scope: t.scope || 'jnb', time: t.due_time || '' }, t.due.slice(0, 10)));
+    // Espacio Personal (js/admin-workspace.js): agenda, TPs y exámenes, entrevistas y postulaciones con fecha
+    if (window.JNBWorkspace) window.JNBWorkspace.upcoming().forEach((x) => dated({ section: x.section, text: x.text, go: x.go, scope: x.scope, time: x.time }, x.date, x.noPast));
     // Pagos sin acreditar con vencimiento
     (data.payments || []).filter((y) => !y.paid && y.due).forEach((y) => { const c = clientById(y.clientId); dated({ section: 'Pagos', text: [y.concept || 'Pago', money(y.currency, y.amount), c && c.name].filter(Boolean).join(' · '), go: 'pagos', openCode: y.projectCode || '' }, y.due.slice(0, 10)); });
     // Plazos y vencimientos (js/admin-agenda.js)
@@ -1235,6 +1220,7 @@ export const adminPage = () => `<!doctype html>
     }
   };
   document.addEventListener('jnb-marketing-change', () => { if (route.mod === 'dashboard') renderToday(); });
+  document.addEventListener('jnb-workspace-change', () => { if (route.mod === 'dashboard') renderToday(); });
   // Se actualiza solo: cada minuto mientras el Dashboard está a la vista (cambia el día, vence algo) y al volver a la pestaña
   setInterval(() => { if (route.mod === 'dashboard' && !document.hidden) renderToday(); }, 60000);
   document.addEventListener('visibilitychange', () => { dashClock(!document.hidden && route.mod === 'dashboard'); if (!document.hidden && route.mod === 'dashboard') renderToday(); });
@@ -1246,6 +1232,13 @@ export const adminPage = () => `<!doctype html>
   const stat = (href, n, label, extra, attrs, icon) => '<a class="stat' + (Number(n) === 0 ? ' is-zero' : '') + '" href="#' + href + '"' + (attrs || '') + '><span class="stat-ico"><svg class="ico" aria-hidden="true"><use href="#i-' + icon + '"/></svg></span><span class="stat-body"><span class="stat-n">' + n + '</span><span class="stat-l">' + label + '</span>' + (extra ? '<span class="stat-x">' + extra + '</span>' : '') + '</span></a>';
   // Tarjetas del espacio Personal: tareas abiertas de cada ámbito (y cuántas vencieron)
   const renderScopeStats = () => {
+    const ws = $('dash-ws');
+    if (ws && window.JNBWorkspace) {
+      const s = window.JNBWorkspace.summary();
+      ws.innerHTML = stat('mi-agenda', s.agenda, 'Agenda', 'Eventos en los próximos 7 días', '', 'calendar')
+        + stat('estudios', s.materias, 'Materias en curso', s.entregas ? s.entregas + (s.entregas === 1 ? ' entrega o examen' : ' entregas y exámenes') + ' en 7 días' : 'Sin entregas en 7 días', '', 'book')
+        + stat('trabajo', s.trabajo, 'Trabajo', 'Postulaciones, entrevistas y cursos en curso', '', 'briefcase');
+    }
     const box = $('dash-scopes');
     if (!box) return;
     const list = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
@@ -1256,14 +1249,16 @@ export const adminPage = () => `<!doctype html>
       return stat('tareas', list ? mine.length : '…', label, late ? late + (late === 1 ? ' vencida' : ' vencidas') : 'Tareas abiertas', ' data-scope-filter="' + id + '"', 'kanban');
     }).join('');
   };
+  let dashSpace = ''; // espacio con el que se armó el Dashboard que está en pantalla
   const renderDashboard = () => {
+    dashSpace = space;
     const c0 = clockParts();
     const head = '<header class="dash-head" id="dash-head"><div><h2 class="dash-hello" id="dash-greet">' + greeting() + ', Jimena ✨</h2>'
       + '<p class="dash-date-full" id="dash-date-full">' + c0.date + '</p><p class="dash-sub" id="dash-sub"></p></div>'
       + '<time class="dash-clock" id="dash-clock" aria-label="Hora actual en Buenos Aires">' + c0.time + '</time></header>';
     // Espacio Personal: sin datos comerciales, solo tus ámbitos y tus pendientes
     if (space === 'personal') {
-      $('m-dashboard').innerHTML = head + '<div class="stats" id="dash-scopes"></div>'
+      $('m-dashboard').innerHTML = head + '<div class="stats" id="dash-ws"></div><div class="stats" id="dash-scopes"></div>'
         + '<div class="dash-cols dash-cols-one"><section class="card dash-agenda" id="dash-today"></section></div>';
       clockDay = c0.iso;
       renderToday();
@@ -1358,13 +1353,16 @@ export const adminPage = () => `<!doctype html>
   };
 
   // ---- Navegación: cada módulo tiene su dirección (#clientes, #proyectos/JNB-PRY-0001...), así el botón Atrás funciona
-  const MODULES = ['dashboard', 'tareas', 'clientes', 'proyectos', 'consultas', 'presupuestos', 'pagos', 'resenas', 'cupones', 'sorteos', 'marketing', 'brief', 'agenda', 'numeros', 'cotizador', 'cartel', 'horario', 'faq', 'newsletter', 'config'];
+  // Módulos y su espacio: vienen del registro (worker/core/modules.js)
+  const MODULE_SPACE = ${JSON.stringify(moduleSpaces())};
+  const MODULES = Object.keys(MODULE_SPACE);
   // ---- Espacios de trabajo (Todo · JNB · Personal). JNB es el panel de siempre; Personal deja solo lo que no es comercial.
   // La elección se recuerda en este navegador; no cambia ningún dato.
   const SPACES = ['todo', 'jnb', 'personal'];
   let space = 'todo';
   try { const saved = localStorage.getItem('jnb-espacio'); if (SPACES.includes(saved)) space = saved; } catch (e) {}
-  const jnbOnly = (mod) => Boolean(document.querySelector('#side a[data-space-only="jnb"][data-mod="' + mod + '"]'));
+  // Un módulo que no pertenece al espacio elegido (comercial estando en Personal, o personal estando en JNB)
+  const outOfSpace = (mod) => { const sp = MODULE_SPACE[mod] || 'todo'; return sp !== 'todo' && space !== 'todo' && sp !== space; };
   const inSpace = (sc) => space === 'todo' || ((sc || 'jnb') === 'jnb') === (space === 'jnb');
   const setSpace = (s, remember) => {
     space = SPACES.includes(s) ? s : 'todo';
@@ -1387,8 +1385,8 @@ export const adminPage = () => `<!doctype html>
     if (!data) return;
     const before = route.mod;
     route = parseHash();
-    // Si se entra a un módulo comercial estando en Personal (un link, el botón Atrás), se pasa a JNB sin recordarlo
-    if (space === 'personal' && jnbOnly(route.mod)) setSpace('jnb', false);
+    // Si se entra a un módulo de otro espacio (un link, el botón Atrás), se pasa a ese espacio sin recordarlo
+    if (outOfSpace(route.mod)) setSpace(MODULE_SPACE[route.mod], false);
     dashClock(route.mod === 'dashboard');
     MODULES.forEach((m) => { $('m-' + m).hidden = m !== route.mod; });
     document.querySelectorAll('#side a').forEach((a) => { if (a.dataset.mod === route.mod) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
@@ -1404,12 +1402,15 @@ export const adminPage = () => `<!doctype html>
       openClientCode = route.id;
       renderClients();
     } else if (route.mod === 'dashboard') {
-      renderToday();
+      // Si se cambió de espacio estando en otro módulo, el Dashboard se vuelve a armar
+      if (dashSpace !== space) renderDashboard(); else renderToday();
     } else if (route.mod === 'tareas') {
       if (window.JNBTasks) {
         window.JNBTasks.show();
         if (pendingScope) { window.JNBTasks.filterScope(pendingScope); pendingScope = ''; }
       }
+    } else if (MODULE_SPACE[route.mod] === 'personal') {
+      if (window.JNBWorkspace) window.JNBWorkspace.show(route.mod, route.id);
     } else if (route.mod === 'sorteos') {
       if (window.JNBGiveaways) window.JNBGiveaways.show(route.id);
     } else if (route.mod === 'brief') {
@@ -1739,7 +1740,7 @@ export const adminPage = () => `<!doctype html>
         + '</tbody></table>' : '<p class="empty">Todavía no salió ningún aviso. Los artículos que ya estaban publicados no se avisan; sale uno con cada artículo nuevo.</p>');
   };
 
-  const render = () => { renderAvailability(); renderHours(); renderMailCheck(); renderBackup(); renderSecurity(); renderInquiries(); renderReviews(); renderProjects(); renderClients(); renderPayments(); renderCoupons(); renderFaq(); renderNewsletter(); renderDashboard(); };
+  const render = () => { if (window.JNBWorkspace) window.JNBWorkspace.badges(); renderAvailability(); renderHours(); renderMailCheck(); renderBackup(); renderSecurity(); renderInquiries(); renderReviews(); renderProjects(); renderClients(); renderPayments(); renderCoupons(); renderFaq(); renderNewsletter(); renderDashboard(); };
   const RENDER = { clientes: renderClients, proyectos: renderProjects, consultas: renderInquiries, presupuestos: renderInquiries, pagos: renderPayments };
 
   // ---- Acciones
@@ -1882,7 +1883,7 @@ export const adminPage = () => `<!doctype html>
     const spaceBtn = e.target.closest('#side-space button[data-space]');
     if (spaceBtn) {
       setSpace(spaceBtn.dataset.space, true);
-      if (space === 'personal' && jnbOnly(route.mod)) go('dashboard', '');
+      if (outOfSpace(route.mod)) go('dashboard', '');
       return;
     }
     const statLink = e.target.closest('.stat');

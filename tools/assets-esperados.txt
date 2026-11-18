@@ -46,6 +46,7 @@ css/pages/admin-agenda.css
 css/pages/admin-marketing.css
 css/pages/admin-sorteos.css
 css/pages/admin-tareas.css
+css/pages/admin-workspace.css
 css/pages/blog-tools.css
 css/pages/blog.css
 css/pages/budget.css
@@ -77,6 +78,7 @@ js/admin-cotizador.js
 js/admin-marketing.js
 js/admin-sorteos.js
 js/admin-tareas.js
+js/admin-workspace.js
 js/availability.js
 js/backup-crypto.js
 js/blog-before-after.js

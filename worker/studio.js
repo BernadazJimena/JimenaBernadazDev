@@ -23,6 +23,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
+import { WS } from './core/workspace.js';
 import { requiredLevel, sessionLevel, sessionLevelFromRow, markVerified } from './core/auth-levels.js';
 import { buildJnbCopy, jnbPartOfCopy, jnbCategoryIds, isJnbTask, UnclassifiedError, JNB_INCLUDE, JNB_SETTINGS_INCLUDE } from './core/backup-policy.js';
 import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail, proposalMail, stageMail, paymentMail } from './mail.js';
@@ -289,8 +290,9 @@ const MK_SEED = [
   ['2026-11-25', 'instagram-o-pagina-web', '¿Alcanza con Instagram o necesito una página web?', 'Qué te da Instagram, qué te da una página web y por qué lo ideal suele ser usarlos juntos. Con una pregunta para saber qué te conviene hoy.', 'Instagram o página web, necesito una página web, web para emprendedores, Instagram para negocios', 'listo'],
   ['2026-11-30', 'errores-de-diseno-web', '5 errores de diseño que hacen que una web no genere confianza', 'Los errores de diseño más comunes que alejan a los clientes de una web, cómo detectarlos y cómo resolverlos. Con un ejemplo de antes y después.', 'errores de diseño web, web que genere confianza, diseño web profesional, mejorar página web', 'listo'],
 ];
-const mkClean = (kind, raw) => {
-  const spec = MK[kind];
+const mkClean = (kind, raw) => specClean(MK[kind], raw);
+// Valida y limpia un registro según su especificación (MK de Marketing o WS del espacio Personal)
+const specClean = (spec, raw) => {
   if (!spec || !raw || typeof raw !== 'object') return null;
   const out = {};
   for (const [f, [type, max]] of Object.entries(spec.fields)) {
@@ -299,6 +301,7 @@ const mkClean = (kind, raw) => {
     else if (type === 'date') { out[f] = isoDate(v); if (v && !out[f]) return null; }
     else if (type === 'time') { out[f] = typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : ''; if (v && !out[f]) return null; }
     else if (type === 'url') { const u = oneLine(v, 500); if (u && !/^https?:\/\/\S+$/i.test(u)) return null; out[f] = u; }
+    else if (type === 'ref') { const r = v === null || v === undefined ? '' : String(v); if (!/^\d{0,10}$/.test(r)) return null; out[f] = r === '0' ? '' : r; }
     else out[f] = type === 'line' ? oneLine(v, max) : text(v, max);
   }
   if (!out[spec.required]) return null;
@@ -648,7 +651,7 @@ export class StudioData extends DurableObject {
       this.sql.exec("INSERT INTO settings (key, value) VALUES ('cotizadorTr', '1')");
     }
     // Marketing Digital & Contenidos: publicaciones de Instagram, plan editorial del blog y banco de ideas (solo planificación)
-    for (const { table, fields } of Object.values(MK)) {
+    for (const { table, fields } of [...Object.values(MK), ...Object.values(WS)]) {
       this.sql.exec(`CREATE TABLE IF NOT EXISTS ${table} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ${Object.keys(fields).map((f) => `${f} TEXT NOT NULL DEFAULT ''`).join(',\n        ')},
@@ -1105,6 +1108,43 @@ export class StudioData extends DurableObject {
   }
 
   // ---- Marketing Digital & Contenidos
+  // ---- Espacio Personal (Agenda, Estudios, Trabajo): datos personales, fuera de la copia JNB
+  workspaceData() {
+    const out = {};
+    for (const [kind, { table, fields }] of Object.entries(WS)) {
+      const order = fields.date ? "(date = ''), date, " + (fields.time ? 'time, ' : '') + 'id' : 'name, id';
+      out[kind] = this.sql.exec(`SELECT * FROM ${table} ORDER BY ${order}`).toArray();
+    }
+    return out;
+  }
+
+  saveWs(kind, id, item, updated) {
+    const { table, fields } = WS[kind];
+    const cols = Object.keys(fields);
+    const now = new Date().toISOString();
+    if (kind === 'actividad' && item.subject && !this.sql.exec('SELECT 1 FROM ws_subjects WHERE id = ?', Number(item.subject)).toArray().length) item.subject = '';
+    if (id) {
+      const row = this.sql.exec(`SELECT updated FROM ${table} WHERE id = ?`, id).toArray()[0];
+      if (!row) return { error: 'not found' };
+      if (updated && row.updated !== updated) return { error: 'conflict' };
+      this.sql.exec(`UPDATE ${table} SET ${cols.map((c) => c + ' = ?').join(', ')}, updated = ? WHERE id = ?`, ...cols.map((c) => item[c]), now, id);
+      return { id };
+    }
+    this.sql.exec(`INSERT INTO ${table} (${cols.join(', ')}, created, updated) VALUES (${cols.map(() => '?').join(', ')}, ?, ?)`, ...cols.map((c) => item[c]), now, now);
+    return { id: this.sql.exec('SELECT last_insert_rowid() AS id').one().id };
+  }
+
+  deleteWs(kind, id) {
+    const { table } = WS[kind];
+    if (!this.sql.exec(`SELECT 1 FROM ${table} WHERE id = ?`, id).toArray().length) return { error: 'not found' };
+    this.ctx.storage.transactionSync(() => {
+      // Las actividades de una materia borrada quedan sin materia (no se borran)
+      if (kind === 'materia') this.sql.exec("UPDATE ws_study_items SET subject = '' WHERE subject = ?", String(id));
+      this.sql.exec(`DELETE FROM ${table} WHERE id = ?`, id);
+    });
+    return { ok: true };
+  }
+
   marketingData() {
     const out = {};
     for (const [kind, { table }] of Object.entries(MK)) {
@@ -2540,6 +2580,7 @@ export async function handleStudio(request, env, ctx) {
       data.marketing = await store.marketingData();
       data.changes = await store.changeLog();
       data.level = sessionLevel(request);
+      data.workspace = await store.workspaceData();
       return json(data);
     }
 
@@ -2773,6 +2814,26 @@ export async function handleStudio(request, env, ctx) {
       if (saved.error === 'not found') return notFound();
       if (saved.error === 'conflict') return json(saved, 409);
       return json({ ...saved, marketing: await store.marketingData() });
+    }
+
+    // ---- Espacio Personal: Agenda, Estudios (materias y actividades) y Trabajo. No se anota el contenido en el registro de cambios.
+    if (path === '/api/admin/workspace') {
+      const kind = body.kind;
+      if (!WS[kind]) return badRequest();
+      const id = Number(body.id) || 0;
+      let saved;
+      if (body.action === 'save') {
+        const item = specClean(WS[kind], body.item);
+        // Además del formato, la fecha tiene que existir (2026-13-40 no)
+        const realDate = (d) => { if (!d) return true; const t = Date.parse(d + 'T12:00:00Z'); return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d; };
+        if (!item || !realDate(item.date)) return badRequest();
+        saved = await store.saveWs(kind, id, item, typeof body.updated === 'string' ? body.updated : '');
+      } else if (body.action === 'delete') {
+        saved = await store.deleteWs(kind, id);
+      } else return badRequest();
+      if (saved.error === 'not found') return notFound();
+      if (saved.error === 'conflict') return json(saved, 409);
+      return json({ ...saved, workspace: await store.workspaceData() });
     }
 
     // ---- Números: origen de cada cliente y datos del monotributo

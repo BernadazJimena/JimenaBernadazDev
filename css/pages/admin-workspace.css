@@ -1,0 +1,30 @@
+/* Espacio Personal de JNB Workspace (#mi-agenda, #estudios, #trabajo): mismos colores, botones, tablas y diálogos del panel */
+.ws-head { align-items: flex-start; display: flex; flex-wrap: wrap; gap: .75rem 1rem; justify-content: space-between; margin-bottom: .5rem; }
+.ws-head h2 { margin-bottom: .2rem; }
+.ws-head .row { flex-shrink: 0; }
+.ws-filters { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem .75rem; margin: .25rem 0 1rem; }
+.ws-filters nav { margin: 0; }
+.ws-filters select { max-width: 100%; width: auto; }
+.ws-table tbody tr { cursor: pointer; }
+.ws-table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.ws-table tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ws-nowrap { white-space: nowrap; }
+.ws-done td { opacity: .6; }
+.ws-tag { border: 1px solid color-mix(in srgb, var(--tc, var(--muted)) 40%, transparent); border-radius: 999px; color: var(--tc, var(--muted)); display: inline-block; font-size: .72rem; font-weight: 700; line-height: 1.5; padding: 0 .5rem; white-space: nowrap; }
+.ws-t-info { --tc: var(--accent-ink); } .ws-t-warn { --tc: var(--warn); } .ws-t-ok { --tc: var(--ok); } .ws-t-bad { --tc: #f2a7b5; }
+.ws-day { color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; margin: 1rem 0 .4rem; text-transform: uppercase; }
+.ws-day.is-today { color: var(--accent-ink); }
+.ws-form .task-form-grid .wide { grid-column: 1 / -1; }
+/* Agenda: una tabla por día, con las mismas columnas en todas */
+@media (min-width: 761px) {
+  .ws-agenda { table-layout: fixed; }
+  .ws-agenda th:nth-child(1) { width: 9rem; } .ws-agenda th:nth-child(3) { width: 9rem; } .ws-agenda th:nth-child(4) { width: 8rem; }
+}
+@media (max-width: 760px) {
+  .ws-head .row { width: 100%; }
+  .ws-head .row button { flex: 1 1 auto; }
+  .ws-table tbody tr:hover td { background: none; }
+}
+@media (max-width: 520px) {
+  .ws-form .task-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
