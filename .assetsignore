@@ -7,3 +7,19 @@ node_modules
 wrangler.jsonc
 vercel.json
 worker
+
+# Herramientas y documentación del repositorio (no son parte del sitio)
+tools
+docs
+
+# Secretos para probar en la computadora: nunca se publican
+.dev.vars*
+.env*
+
+# Carpetas y archivos privados que no están en Git: nunca se publican, aunque alguien despliegue desde la computadora
+.claude
+sorteo-2026
+imagenes-tiendanube
+muestras-upwork
+cotizaciones
+assets/images/demo-cocinera-*.png

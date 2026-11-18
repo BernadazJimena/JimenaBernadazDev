@@ -23,6 +23,8 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
+import { requiredLevel, sessionLevel, sessionLevelFromRow, markVerified } from './core/auth-levels.js';
+import { buildJnbCopy, jnbPartOfCopy, jnbCategoryIds, isJnbTask, UnclassifiedError, JNB_INCLUDE, JNB_SETTINGS_INCLUDE } from './core/backup-policy.js';
 import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail, proposalMail, stageMail, paymentMail } from './mail.js';
 
 const SITE = 'https://jnbcreativestudio.com.ar';
@@ -33,6 +35,8 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const STORE_LINK = /^https:\/\/jnbcreativestudio\.mitiendanube\.com(\/[^\s"<>]*)?$/;
 const DAY = 24 * 60 * 60 * 1000;
 const KEEP_INQUIRIES_DAYS = 365;     // las consultas se borran solas al año
+// En pausa hasta que exista la papelera (JNB Workspace, entrega 1.8): mientras tanto no se borra nada solo
+const AUTO_PURGE_PAUSED = true;
 const MIN_PUBLIC_REVIEWS = 3;        // la sección de reseñas no aparece con menos de esto
 const STAGES = 5;                    // etapas del seguimiento (los nombres están en js/client-pages.js)
 const MAX_BRIEF_FILES = 30;                 // archivos por brief
@@ -1413,40 +1417,92 @@ export class StudioData extends DurableObject {
     return true;
   }
 
-  // ---- Copia de seguridad: todas las tablas (los archivos del brief van solo con su nombre y tamaño; se bajan desde cada proyecto)
-  backup() {
-    const tables = this.sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name != 'brief_chunks' ORDER BY name").toArray();
-    const out = { created: new Date().toISOString(), tables: {} };
-    for (const { name } of tables) out.tables[name] = this.sql.exec(`SELECT * FROM "${name}"`).toArray();
+  // ---- Copia comercial (JNB): solo las tablas, filas y claves que permite worker/core/backup-policy.js.
+  // Las tareas de ámbito personal, estudios, trabajo, trámites u otros nunca van. Si hay algo sin clasificar, no se genera.
+  // (sin las tablas internas de SQLite, de Cloudflare ni del entorno local, que empiezan con "__")
+  tableNames() {
+    return this.sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND substr(name, 1, 2) != '__' ORDER BY name").toArray().map((t) => t.name);
+  }
+
+  // Copia completa: todas las tablas (comerciales y personales). No van el contenido de los archivos del brief,
+  // las sesiones ni los límites de pedidos. Solo la pide /api/admin/copia-completa (nivel 2).
+  backupFull() {
+    const skip = new Set(['brief_chunks', 'admin_sessions', 'rate_limits']);
+    const out = { formato: 'jnb-completa', version: 1, created: new Date().toISOString(), tables: {} };
+    for (const name of this.tableNames()) if (!skip.has(name)) out.tables[name] = this.sql.exec(`SELECT * FROM "${name}"`).toArray();
     return out;
   }
 
-  // ---- Restaurar una copia: reemplaza cada tabla de la copia por su contenido. Con apply = false solo compara cantidades.
+  backupJnb() {
+    try {
+      return buildJnbCopy(this.tableNames(), (name) => this.sql.exec(`SELECT * FROM "${name}"`).toArray());
+    } catch (err) {
+      if (err instanceof UnclassifiedError) return { error: 'sin-clasificar', kind: err.kind, item: err.item };
+      throw err;
+    }
+  }
+
+  // ---- Restaurar una copia JNB. Con apply = false solo compara cantidades.
+  // Solo se restaura lo que permite la política JNB, aunque el archivo sea una copia vieja que traiga más cosas.
+  // Las tareas personales (y las categorías que usan) nunca se borran ni se reemplazan.
   // No se tocan las sesiones, el registro de seguridad, el de cambios ni los archivos del brief (la copia no trae su contenido).
   restore(copy, apply) {
-    const SKIP = new Set(['admin_sessions', 'rate_limits', 'security_log', 'brief_files', 'brief_chunks', 'change_log']);
-    const existing = new Set(this.sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'").toArray().map((t) => t.name));
-    const src = copy && typeof copy.tables === 'object' && copy.tables ? copy.tables : null;
+    const SKIP = new Set(['brief_files']);
+    if (!copy || typeof copy !== 'object') return { error: 'formato' };
+    // Solo copias JNB (o copias viejas sin formato). La copia completa, cifrada o no, se restaura aparte (entrega 0.3).
+    if (copy.formato && copy.formato !== 'jnb') return { error: /cifrada/.test(String(copy.formato)) ? 'cifrada' : 'formato' };
+    if (copy.cifrado || copy.datos) return { error: 'cifrada' };
+    const existing = new Set(this.tableNames());
+    const src = typeof copy.tables === 'object' && copy.tables ? jnbPartOfCopy(copy.tables) : null;
     if (!src) return { error: 'formato' };
-    const tables = Object.keys(src).filter((n) => existing.has(n) && !SKIP.has(n) && !n.startsWith('__') && Array.isArray(src[n]));
+    const tables = Object.keys(src).filter((n) => existing.has(n) && !SKIP.has(n));
     if (!tables.length) return { error: 'formato' };
-    const summary = tables.map((name) => ({ name, now: this.sql.exec(`SELECT COUNT(*) AS n FROM "${name}"`).one().n, copy: src[name].length }));
-    if (!apply) return { created: String(copy.created || ''), summary };
+
+    // Lo que hoy es JNB en las tablas filtradas (lo que se va a reemplazar)
+    const allTasks = existing.has('tasks') ? this.sql.exec('SELECT id, scope, category FROM tasks').toArray() : [];
+    const personalTaskIds = new Set(allTasks.filter((t) => !isJnbTask(t)).map((t) => t.id));
+    const personalCategoryIds = new Set(allTasks.filter((t) => !isJnbTask(t) && t.category != null).map((t) => t.category));
+    const categoriesNow = existing.has('task_categories') ? this.sql.exec('SELECT id FROM task_categories').toArray() : [];
+    const jnbCategoriesNow = jnbCategoryIds(categoriesNow, allTasks);
+    const nowCount = (name) => {
+      if (name === 'tasks') return allTasks.length - personalTaskIds.size;
+      if (name === 'task_categories') return jnbCategoriesNow.size;
+      if (name === 'settings') return this.sql.exec(`SELECT COUNT(*) AS n FROM settings WHERE key IN (${JNB_SETTINGS_INCLUDE.map(() => '?').join(',')})`, ...JNB_SETTINGS_INCLUDE).one().n;
+      return this.sql.exec(`SELECT COUNT(*) AS n FROM "${name}"`).one().n;
+    };
+    const summary = tables.map((name) => ({ name, now: nowCount(name), copy: src[name].length }));
+    const kept = { tasks: personalTaskIds.size };
+    if (!apply) return { created: String(copy.created || ''), summary, kept };
+
+    let skipped = 0;
     this.ctx.storage.transactionSync(() => {
       // Las referencias entre tablas (pagos → proyectos → clientes) se revisan al final, no fila por fila
       this.sql.exec('PRAGMA defer_foreign_keys = ON');
       for (const name of tables) {
         const cols = new Set(this.sql.exec(`PRAGMA table_info("${name}")`).toArray().map((c) => c.name));
-        this.sql.exec(`DELETE FROM "${name}"`);
-        for (const row of src[name]) {
+        let rows = src[name];
+        if (name === 'tasks') {
+          this.sql.exec("DELETE FROM tasks WHERE scope = 'jnb'");
+          // Si una tarea de la copia hoy es personal (cambió de ámbito), gana la personal
+          rows = rows.filter((r) => { const clash = personalTaskIds.has(r.id); if (clash) skipped++; return !clash; });
+        } else if (name === 'task_categories') {
+          // Se borran las categorías JNB de hoy, salvo las que usa alguna tarea personal; las de la copia se cargan encima
+          for (const id of jnbCategoriesNow) if (!personalCategoryIds.has(id)) this.sql.exec('DELETE FROM task_categories WHERE id = ?', id);
+          for (const r of rows) this.sql.exec('DELETE FROM task_categories WHERE id = ?', r.id);
+        } else if (name === 'settings') {
+          this.sql.exec(`DELETE FROM settings WHERE key IN (${JNB_SETTINGS_INCLUDE.map(() => '?').join(',')})`, ...JNB_SETTINGS_INCLUDE);
+        } else if (JNB_INCLUDE.includes(name)) {
+          this.sql.exec(`DELETE FROM "${name}"`);
+        } else continue;
+        for (const row of rows) {
           const keys = Object.keys(row || {}).filter((k) => cols.has(k));
           if (!keys.length) continue;
           this.sql.exec(`INSERT INTO "${name}" (${keys.map((k) => `"${k}"`).join(',')}) VALUES (${keys.map(() => '?').join(',')})`, ...keys.map((k) => row[k]));
         }
       }
     });
-    this.logChange('⤴', `Restauraste la copia del ${String(copy.created || '').slice(0, 10)}`);
-    return { ok: true, summary };
+    this.logChange('⤴', `Restauraste la copia JNB del ${String(copy.created || '').slice(0, 10)}`);
+    return { ok: true, summary, kept, skipped };
   }
 
   // ---- Registro de cambios del panel (los últimos 500)
@@ -1467,10 +1523,12 @@ export class StudioData extends DurableObject {
     const now = new Date();
     // Al año se borran solas las consultas que no llegaron a ser un proyecto (las de un proyecto quedan en la ficha del cliente),
     // y también las fichas que quedaron sin pedidos ni proyectos (salvo que Jimena les haya puesto estado o nota)
-    const cutoff = new Date(now - KEEP_INQUIRIES_DAYS * DAY).toISOString();
-    this.sql.exec("DELETE FROM inquiries WHERE created < ? AND token NOT IN (SELECT quote FROM projects WHERE quote != '')", cutoff);
-    this.sql.exec(`DELETE FROM clients WHERE created < ? AND status = '' AND note = ''
-      AND NOT EXISTS (SELECT 1 FROM inquiries i WHERE i.client_id = clients.id) AND NOT EXISTS (SELECT 1 FROM projects p WHERE p.client_id = clients.id)`, cutoff);
+    if (!AUTO_PURGE_PAUSED) {
+      const cutoff = new Date(now - KEEP_INQUIRIES_DAYS * DAY).toISOString();
+      this.sql.exec("DELETE FROM inquiries WHERE created < ? AND token NOT IN (SELECT quote FROM projects WHERE quote != '')", cutoff);
+      this.sql.exec(`DELETE FROM clients WHERE created < ? AND status = '' AND note = ''
+        AND NOT EXISTS (SELECT 1 FROM inquiries i WHERE i.client_id = clients.id) AND NOT EXISTS (SELECT 1 FROM projects p WHERE p.client_id = clients.id)`, cutoff);
+    }
     // Freno para envíos automáticos: como mucho 5 por mail por hora
     const lastHour = new Date(now - DAY / 24).toISOString();
     if (this.sql.exec('SELECT COUNT(*) AS n FROM inquiries WHERE email = ? AND created > ?', data.email, lastHour).one().n >= 5) return null;
@@ -1989,7 +2047,19 @@ export async function weeklyBackup(env) {
   const store = env.STUDIO.get(env.STUDIO.idFromName('studio'));
   const last = await store.backupMailedAt();
   if (last && Date.now() - new Date(last).getTime() < 5 * DAY) return;
-  const copy = await store.backup();
+  // Solo la copia comercial (JNB): nunca tareas personales ni nada sin clasificar
+  const copy = await store.backupJnb();
+  if (copy.error) {
+    // Si apareció algo sin clasificar, no se manda ningún dato: solo el aviso (una vez por semana)
+    mailStore = store;
+    const result = await resendSend(env, to, {
+      subject: 'Copia de seguridad semanal: no se generó',
+      html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#211632"><p>Hola, Jimena:</p><p>Esta semana la copia de seguridad no se generó porque el panel tiene una ${copy.kind === 'clave' ? 'configuración' : 'parte'} nueva que todavía no está clasificada (${String(copy.item).replace(/[^\w-]/g, '')}). Por seguridad, no se adjunta ningún dato.</p><p style="color:#625970;font-size:13px">JNB Creative Studio · copia automática de los lunes</p></div>`,
+      text: `Hola, Jimena:\n\nEsta semana la copia de seguridad no se generó porque el panel tiene algo nuevo sin clasificar (${String(copy.item).replace(/[^\w-]/g, '')}). Por seguridad, no se adjunta ningún dato.`,
+    });
+    if (result.ok) await store.markBackupMailed();
+    return;
+  }
   const bytes = new TextEncoder().encode(JSON.stringify(copy, null, 1));
   let binary = '';
   for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
@@ -2001,7 +2071,7 @@ export async function weeklyBackup(env) {
     subject: `Copia de seguridad semanal · ${day}`,
     html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#211632"><p>Hola, Jimena:</p><p>Te llega la copia de seguridad semanal del panel (${summary}).</p><p>El archivo adjunto tiene datos privados de tus clientes: guardalo en un lugar seguro. Los archivos que subieron los clientes al brief no van en la copia (se descargan desde cada proyecto).</p><p style="color:#625970;font-size:13px">JNB Creative Studio · copia automática de los lunes</p></div>`,
     text: `Hola, Jimena:\n\nTe llega la copia de seguridad semanal del panel (${summary}).\nEl archivo adjunto tiene datos privados de tus clientes: guardalo en un lugar seguro.`,
-    attachments: [{ filename: `jnb-panel-copia-${day}.json`, content: btoa(binary) }],
+    attachments: [{ filename: `jnb-panel-copia-jnb-${day}.json`, content: btoa(binary) }],
   });
   if (result.ok) await store.markBackupMailed();
 }
@@ -2082,9 +2152,9 @@ async function sendAnyMail(env, to, mail) {
 // La clave ADMIN_CLAVE se escribe una sola vez en /api/admin/login. Si es correcta, el servidor abre una sesión
 // y la guarda en una cookie HttpOnly (el JavaScript de la página no la puede leer), Secure y SameSite=Strict.
 // Cada pedido a /api/admin/* lo valida index.js con adminGate() antes de llegar a cualquier función del panel.
-const verifiedAdmin = new WeakSet();
+// El nivel de cada pedido (1 = clave, 2 = clave + segundo factor) lo guarda adminGate() en worker/core/auth-levels.js
 export function isAdmin(request) {
-  return verifiedAdmin.has(request);
+  return sessionLevel(request) >= 1;
 }
 
 const sha256 = async (text) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
@@ -2183,8 +2253,14 @@ export async function adminGate(request, env) {
     await logSecurity(env, request, session.reason === 'none' ? 'sin-sesion' : 'sesion-invalida', session.reason);
     return json({ error: 'clave' }, 401, token ? { 'set-cookie': sessionCookie(url, '', 0) } : {});
   }
-  verifiedAdmin.add(request);
-  if (path === '/api/admin/sesion' && request.method === 'GET') return json({ ok: true, expires: session.expires });
+  markVerified(request, sessionLevelFromRow(session));
+  // Rutas que exigen más nivel que la clave (por ejemplo la copia completa): se controla acá, para todas a la vez
+  const needed = requiredLevel(path);
+  if (sessionLevel(request) < needed) {
+    await logSecurity(env, request, 'nivel-insuficiente', `requiere ${needed}`);
+    return json({ error: 'nivel', requiere: needed }, 403);
+  }
+  if (path === '/api/admin/sesion' && request.method === 'GET') return json({ ok: true, expires: session.expires, level: sessionLevel(request) });
   if (path === '/api/admin/cerrar-todas' && request.method === 'POST') {
     await store.endAllSessions();
     await logSecurity(env, request, 'logout-todas');
@@ -2463,6 +2539,7 @@ export async function handleStudio(request, env, ctx) {
       data.cotizador = await store.cotizadorData();
       data.marketing = await store.marketingData();
       data.changes = await store.changeLog();
+      data.level = sessionLevel(request);
       return json(data);
     }
 
@@ -2484,13 +2561,22 @@ export async function handleStudio(request, env, ctx) {
       return new Response(confirmationMail(inquiry, link).html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
     }
 
-    // Copia de seguridad de todo lo guardado (se descarga como archivo .json)
+    // Copia completa (comercial + personal), sin cifrar: solo la recibe una sesión de nivel 2 (lo controla adminGate)
+    // y el navegador la cifra antes de guardarla. El servidor no la guarda en ningún lado.
+    if (path === '/api/admin/copia-completa' && request.method === 'GET') {
+      return new Response(JSON.stringify(await store.backupFull()), {
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
+      });
+    }
+
+    // Copia de seguridad comercial (JNB), se descarga como archivo .json
     if (path === '/api/admin/copia' && request.method === 'GET') {
-      const copy = await store.backup();
+      const copy = await store.backupJnb();
+      if (copy.error) return json(copy, 409);
       return new Response(JSON.stringify(copy, null, 1), {
         headers: {
           'content-type': 'application/json; charset=utf-8',
-          'content-disposition': `attachment; filename="jnb-panel-copia-${copy.created.slice(0, 10)}.json"`,
+          'content-disposition': `attachment; filename="jnb-panel-copia-jnb-${copy.created.slice(0, 10)}.json"`,
           'cache-control': 'no-store',
         },
       });

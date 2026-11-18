@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Descifrador independiente de la copia completa del panel JNB.
+     Funciona sin internet, sin Cloudflare y sin el panel: se abre este archivo con doble clic en cualquier navegador actual.
+     Guardá una copia de este archivo junto a tus copias cifradas. No se conecta a ningún lado (ver la política de abajo). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob:; connect-src 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Descifrar copia | JNB</title>
+<style>
+  :root { --bg: #100b1d; --card: #1b1430; --line: #3a2d5c; --text: #efeaf7; --muted: #b5a9cf; --accent: #9b7be8; --on-accent: #100b1d; --ok: #8fd4a8; --bad: #f2a7b5; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-top: 16px; }
+  .muted { color: var(--muted); } .small { font-size: .88rem; }
+  label { display: block; margin-top: 12px; font-weight: 600; font-size: .92rem; }
+  input { display: block; width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+  button { margin-top: 14px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--text); border-color: var(--line); }
+  button:disabled { opacity: .5; cursor: progress; }
+  ul { padding-left: 1.2rem; } .ok { color: var(--ok); } .bad { color: var(--bad); }
+</style></head>
+<body><main>
+  <h1>Descifrar copia completa</h1>
+  <p class="muted small">Todo pasa en este navegador: el archivo y la frase no se envían a ningún lado.</p>
+  <form class="card" id="f">
+    <label>Archivo cifrado (.cifrada.json)<input type="file" id="archivo" accept=".json,application/json" required></label>
+    <label>Frase de cifrado<input type="password" id="frase" autocomplete="off" required></label>
+    <button id="ir">Descifrar</button>
+    <p id="estado" class="small" role="status"></p>
+  </form>
+  <div class="card" id="resultado" hidden>
+    <p class="ok" id="titulo"></p>
+    <ul class="small" id="tablas"></ul>
+    <p class="small muted">Si la guardás sin cifrar, el archivo queda legible para cualquiera que lo abra: guardalo solo en un lugar seguro y borralo al terminar.</p>
+    <button type="button" class="ghost" id="guardar">Guardar copia sin cifrar (.json)</button>
+  </div>
+<script>
+// <descifrar> — mismo formato que js/backup-crypto.js ("jnb-completa-cifrada", versión 1). No depende de ningún otro archivo.
+async function descifrarCopia(archivo, frase) {
+  const MIN_ITER = 600000;
+  const b64 = (t) => { if (typeof t !== 'string' || !/^[A-Za-z0-9+/]*={0,2}$/.test(t) || t.length % 4) throw new Error('incompleto'); const s = atob(t); const o = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i); return o; };
+  if (!(globalThis.crypto && crypto.subtle)) throw new Error('sin-webcrypto');
+  if (!archivo || archivo.formato !== 'jnb-completa-cifrada') throw new Error('no-es-copia');
+  if (archivo.version !== 1) throw new Error('version-desconocida');
+  const k = archivo.kdf || {}; const c = archivo.cifrado || {}; const t = archivo.contenido || {};
+  if (k.nombre !== 'PBKDF2' || k.hash !== 'SHA-256' || !Number.isInteger(k.iteraciones) || k.iteraciones < MIN_ITER || k.iteraciones > 10000000) throw new Error('parametros');
+  if (c.nombre !== 'AES-GCM' || c.largoClave !== 256 || c.etiquetaBits !== 128 || typeof t.tipo !== 'string') throw new Error('parametros');
+  const salt = b64(k.salt); const iv = b64(c.iv); const datos = b64(archivo.datos);
+  if (salt.length < 16 || iv.length !== 12) throw new Error('parametros');
+  if (datos.length < 17) throw new Error('incompleto');
+  const encabezado = JSON.stringify({
+    formato: archivo.formato, version: archivo.version,
+    kdf: { nombre: k.nombre, hash: k.hash, iteraciones: k.iteraciones, salt: k.salt },
+    cifrado: { nombre: c.nombre, largoClave: c.largoClave, iv: c.iv, etiquetaBits: c.etiquetaBits },
+    contenido: { tipo: t.tipo, creada: t.creada },
+  });
+  const te = new TextEncoder();
+  const base = await crypto.subtle.importKey('raw', te.encode(String(frase).normalize('NFC')), 'PBKDF2', false, ['deriveKey']);
+  const clave = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: k.iteraciones }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  let plano;
+  try { plano = await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData: te.encode(encabezado), tagLength: 128 }, clave, datos); }
+  catch (e) { throw new Error('frase-o-alterado'); }
+  return new TextDecoder('utf-8', { fatal: true }).decode(plano);
+}
+// </descifrar>
+
+const MENSAJES = {
+  'sin-webcrypto': 'Este navegador no permite descifrar desde acá. Abrí el archivo con doble clic desde tu computadora en un navegador actual (Chrome, Edge, Firefox o Safari).',
+  'no-es-copia': 'Este archivo no es una copia completa cifrada del panel.',
+  'version-desconocida': 'Es una versión del formato que este descifrador no conoce.',
+  'parametros': 'Los parámetros de cifrado del archivo no son los esperados.',
+  'incompleto': 'El archivo está incompleto o dañado.',
+  'frase-o-alterado': 'No se pudo descifrar: la frase es incorrecta o el archivo fue modificado.',
+};
+let texto = '';
+const $ = (id) => document.getElementById(id);
+$('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const archivo = $('archivo').files[0]; const frase = $('frase').value;
+  $('resultado').hidden = true; $('tablas').replaceChildren(); texto = ''; $('ir').disabled = true; $('estado').className = 'small'; $('estado').textContent = 'Descifrando…';
+  try {
+    let json;
+    try { json = JSON.parse(await archivo.text()); } catch (err) { throw new Error('incompleto'); }
+    texto = await descifrarCopia(json, frase);
+    const copia = JSON.parse(texto);
+    $('titulo').textContent = 'Copia descifrada' + (copia.created ? ' (creada el ' + new Date(copia.created).toLocaleString('es-AR') + ')' : '') + '.';
+    $('tablas').replaceChildren(...Object.entries(copia.tables || {}).map(([n, filas]) => { const li = document.createElement('li'); li.textContent = n + ': ' + (Array.isArray(filas) ? filas.length : 0) + ' registros'; return li; }));
+    $('resultado').hidden = false; $('estado').textContent = '';
+  } catch (err) {
+    $('estado').className = 'small bad'; $('estado').textContent = MENSAJES[err.message] || 'No se pudo descifrar el archivo.';
+  } finally { $('frase').value = ''; $('ir').disabled = false; }
+});
+$('guardar').addEventListener('click', () => {
+  if (!texto) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([texto], { type: 'application/json' }));
+  a.download = 'jnb-copia-completa-descifrada.json';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+</script>
+</main></body></html>

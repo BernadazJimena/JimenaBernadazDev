@@ -1,3 +1,7 @@
 # Carpetas que crean las herramientas al probar el sitio en la computadora
 .wrangler/
 node_modules/
+
+# Secretos para probar en la computadora: nunca van al repositorio
+.dev.vars*
+.env*

@@ -438,6 +438,7 @@ export const adminPage = () => `<!doctype html>
 <script src="/js/admin-sorteos.js"></script>
 <script src="/js/brief.js"></script>
 <script src="/js/admin-brief.js"></script>
+<script src="/js/backup-crypto.js"></script>
 <script src="/js/admin-agenda.js"></script>
 <script src="/js/admin-marketing.js"></script>
 <script src="/js/pricing.js"></script>
@@ -1281,11 +1282,19 @@ export const adminPage = () => `<!doctype html>
   // ---- Copia de seguridad (en Configuración)
   const renderBackup = () => {
     $('backup').innerHTML = '<div class="card"><h2>Copia de seguridad</h2>'
-      + '<p class="small muted">Descarga un archivo .json con todo lo que guarda el panel: clientes, consultas, presupuestos, proyectos, briefs, pagos, reseñas, cupones e historial. Los archivos que suben los clientes no van en la copia (se descargan desde cada proyecto). Tiene datos privados de tus clientes: guardalo en un lugar seguro.</p>'
+      + '<p class="small muted">Descarga la copia comercial (JNB) en un archivo .json: clientes, consultas, presupuestos, proyectos, briefs, pagos, reseñas, cupones, sorteos, marketing y las tareas de JNB. Las tareas personales, de estudios, trabajo, trámites y otros no van en esta copia. Los archivos que suben los clientes tampoco (se descargan desde cada proyecto). Tiene datos privados de tus clientes: guardalo en un lugar seguro.</p>'
       + '<p class="small">📧 Además, todos los lunes desde las 9 te llega sola por mail (a tu casilla de respuestas). ' + (data.backupMailed ? 'Última: ' + date(data.backupMailed) + '.' : 'Todavía no salió ninguna.') + '</p>'
-      + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia de seguridad</button></div>'
+      + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia JNB</button></div>'
+      + '<div class="card"><h2>Copia completa cifrada</h2>'
+      + '<p class="small muted">Incluye todo lo que guarda el panel: lo comercial y lo personal (tareas personales, de estudios, trabajo, trámites y otros). Tu navegador la cifra con una frase que elegís; la frase nunca sale de tu computadora ni se guarda. Sin la frase no se puede abrir: guardala en tu gestor de contraseñas. Se abre con el descifrador independiente, sin necesitar el panel.</p>'
+      + ((data.level || 0) >= 2
+        ? '<form id="full-backup-form"><label>Frase de cifrado (mínimo 12 caracteres)<input type="password" name="frase" autocomplete="new-password" minlength="12" required></label>'
+          + '<label>Repetí la frase<input type="password" name="frase2" autocomplete="new-password" minlength="12" required></label>'
+          + '<button class="primary" style="margin-top:.75rem">⬇ Descargar copia completa cifrada</button></form>'
+        : '<p class="small">🔒 Disponible cuando actives el segundo factor (passkey) en el panel. Hasta entonces, esta descarga queda bloqueada.</p>')
+      + '</div>'
       + '<details class="card"><summary>⤴ Restaurar una copia</summary>'
-      + '<p class="small muted" style="margin-top:.6rem">Elegí un archivo .json de copia. Primero vas a ver qué cambia en cada parte; recién al confirmar se reemplazan los datos por los de la copia. Las sesiones, los registros de seguridad y de cambios y los archivos de los briefs no se tocan.</p>'
+      + '<p class="small muted" style="margin-top:.6rem">Elegí un archivo .json de copia JNB. Primero vas a ver qué cambia en cada parte; recién al confirmar se reemplazan los datos comerciales por los de la copia. Las tareas personales y sus categorías, las sesiones, los registros de seguridad y de cambios y los archivos de los briefs no se tocan.</p>'
       + '<label>Archivo de copia<input type="file" id="restore-file" accept=".json,application/json"></label>'
       + '<div id="restore-preview"></div></details>'
       + '<details class="card"><summary>🕘 Registro de cambios</summary>'
@@ -1739,11 +1748,15 @@ export const adminPage = () => `<!doctype html>
     restoreCopy = null; box.innerHTML = '';
     if (!file) return;
     try { restoreCopy = JSON.parse(await file.text()); } catch (err) { box.innerHTML = '<p class="small">⚠ El archivo no es una copia válida.</p>'; return; }
+    if (restoreCopy && (restoreCopy.cifrado || restoreCopy.datos || (restoreCopy.formato && restoreCopy.formato !== 'jnb'))) {
+      restoreCopy = null; box.innerHTML = '<p class="small">⚠ Es una copia completa. Desde acá solo se restauran copias JNB.</p>'; return;
+    }
     let r;
     try { r = await api('restaurar', { copy: restoreCopy }); } catch (err) { restoreCopy = null; box.innerHTML = '<p class="small">⚠ El archivo no es una copia del panel.</p>'; return; }
-    const LABEL = { clients: 'Clientes', inquiries: 'Consultas y presupuestos', projects: 'Proyectos', payments: 'Pagos', briefs: 'Briefs', reviews: 'Reseñas', invitations: 'Invitaciones a reseñas', coupons: 'Cupones', project_events: 'Historial de proyectos', tasks: 'Tareas', task_categories: 'Categorías de tareas', giveaways: 'Sorteos', giveaway_winners: 'Ganadores', giveaway_events: 'Historial de sorteos', renewals: 'Vencimientos', quote_features: 'Cotizador', settings: 'Configuración', mk_posts: 'Publicaciones', mk_articles: 'Artículos', mk_ideas: 'Ideas' };
+    const LABEL = { clients: 'Clientes', inquiries: 'Consultas y presupuestos', projects: 'Proyectos', payments: 'Pagos', briefs: 'Briefs', reviews: 'Reseñas', invitations: 'Invitaciones a reseñas', coupons: 'Cupones', project_events: 'Historial de proyectos', tasks: 'Tareas JNB', task_categories: 'Categorías de tareas JNB', giveaways: 'Sorteos', giveaway_winners: 'Ganadores', giveaway_events: 'Historial de sorteos', renewals: 'Vencimientos', quote_features: 'Cotizador', settings: 'Configuración', mk_posts: 'Publicaciones', mk_articles: 'Artículos', mk_ideas: 'Ideas' };
     box.innerHTML = '<p class="small">Copia del ' + (r.created ? date(r.created) : 'día desconocido') + ' · Así quedaría cada parte (ahora → con la copia):</p>'
       + '<ul class="small">' + r.summary.map((t) => '<li>' + esc(LABEL[t.name] || t.name) + ': ' + t.now + ' → ' + t.copy + (t.now !== t.copy ? ' ⚑' : '') + '</li>').join('') + '</ul>'
+      + (r.kept && r.kept.tasks ? '<p class="small muted">Se conservan sin cambios ' + r.kept.tasks + (r.kept.tasks === 1 ? ' tarea personal.' : ' tareas personales.') + '</p>' : '')
       + '<label>Para confirmar, escribí RESTAURAR<input id="restore-confirm" autocomplete="off" placeholder="RESTAURAR"></label>'
       + '<button type="button" id="restore-go" style="margin-top:.75rem">Restaurar copia</button>';
   };
@@ -1870,10 +1883,16 @@ export const adminPage = () => `<!doctype html>
       btn.disabled = true;
       try {
         const res = await fetch('/api/admin/copia', { credentials: 'same-origin' });
+        if (res.status === 409) {
+          const why = await res.json().catch(() => ({}));
+          toast('No se generó la copia: hay ' + (why.kind === 'clave' ? 'una configuración nueva' : 'una parte nueva') + ' sin clasificar (' + String(why.item || '').replace(/[^A-Za-z0-9_-]/g, '') + ')');
+          btn.disabled = false;
+          return;
+        }
         if (!res.ok) throw new Error(res.status);
         const a = document.createElement('a');
         a.href = URL.createObjectURL(await res.blob());
-        a.download = 'jnb-panel-copia-' + todayIso() + '.json';
+        a.download = 'jnb-panel-copia-jnb-' + todayIso() + '.json';
         document.body.append(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
         toast('Listo: la copia quedó en tu carpeta Descargas');
@@ -2049,6 +2068,30 @@ export const adminPage = () => `<!doctype html>
         renderHours();
         toast('Ausencia activada');
       } catch (err) { btn.disabled = false; toast('No se pudo guardar'); }
+    } else if (form.id === 'full-backup-form') {
+      // Copia completa: el servidor la entrega solo a una sesión de nivel 2; el navegador la cifra antes de guardarla.
+      // La frase queda solo en memoria: no se manda, no se guarda y los campos se vacían al terminar.
+      e.preventDefault();
+      const fields = form.elements;
+      const phrase = fields.frase.value;
+      const done = () => { fields.frase.value = ''; fields.frase2.value = ''; };
+      if (phrase.length < window.JNBCopiaCifrada.MIN_PHRASE) { toast('La frase tiene que tener al menos ' + window.JNBCopiaCifrada.MIN_PHRASE + ' caracteres'); return; }
+      if (phrase !== fields.frase2.value) { toast('Las dos frases no coinciden'); return; }
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/copia-completa', { credentials: 'same-origin', cache: 'no-store' });
+        if (res.status === 403) { toast('La copia completa necesita el segundo factor'); return; }
+        if (!res.ok) throw new Error(res.status);
+        const file = await window.JNBCopiaCifrada.encryptBackup(await res.text(), phrase);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(file)], { type: 'application/json' }));
+        a.download = 'jnb-copia-completa-' + todayIso() + '.cifrada.json';
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast('Listo: la copia cifrada quedó en tu carpeta Descargas');
+      } catch (err) { toast('No se pudo generar la copia cifrada'); }
+      finally { done(); btn.disabled = false; }
     } else if (form.id === 'availability-form') {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(form));
