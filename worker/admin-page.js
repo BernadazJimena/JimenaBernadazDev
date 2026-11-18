@@ -288,13 +288,25 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .today-text { font-size: .9rem; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
   #m-dashboard .is-next .today-text { font-weight: 500; }
   #m-dashboard .today-sec { color: var(--muted); font-size: .74rem; }
+  #m-dashboard .today-sec .task-scope { margin-right: .4rem; vertical-align: 1px; }
   #m-dashboard .today-meta { display: contents; }
   #m-dashboard .today-when { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; text-align: left; white-space: nowrap; }
   #m-dashboard .today-when.has-time { color: var(--accent-ink); font-weight: 700; }
   #m-dashboard .today-time { display: block; font-size: .72rem; font-weight: 600; opacity: .85; }
   #m-dashboard .today-item .chip { background: var(--soft); color: var(--muted); font-size: .7rem; font-weight: 700; justify-self: start; line-height: 1.4; max-width: 100%; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
   #m-dashboard .today-item .chip.warn { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-ink); }
+  #m-dashboard { --urgent: #ef8f9f; }
   #m-dashboard .today-item .chip.alert-chip { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  #dash-today .is-late .today-item .chip.alert-chip { align-items: center; background: color-mix(in srgb, var(--urgent) 13%, transparent); color: var(--urgent); display: inline-flex; gap: .3rem; }
+  #m-dashboard .today-alert-ico { flex-shrink: 0; height: .85em; width: .85em; }
+  #dash-today .ag-group.is-late h3 { color: var(--urgent); } #dash-today .ag-group.is-late h3::before { display: none; }
+  #dash-today .is-late .today-dot { background: var(--urgent); }
+  #dash-today .is-late .today-item { background: color-mix(in srgb, var(--urgent) 4%, transparent); }
+  #dash-today .is-late .today-item:hover { background: color-mix(in srgb, var(--urgent) 8%, transparent); }
+  #m-dashboard .today-late { color: var(--urgent); }
+  #dash-today .is-next .today-dot { background: color-mix(in srgb, var(--accent-ink) 35%, transparent); }
+  #m-dashboard .today-ok { align-items: center; color: var(--ok); display: flex; font-size: .8rem; font-weight: 600; gap: .45rem; margin: 0 0 1rem; }
+  #m-dashboard .today-ok .ico { height: 1rem; width: 1rem; }
   /* Actividad reciente: línea de tiempo y estados vacíos */
   #m-dashboard .dash-tl { list-style: none; margin: 0; padding: 0; }
   #m-dashboard .dash-tl li { display: grid; gap: .75rem; grid-template-columns: 2rem minmax(0, 1fr); padding-bottom: 1rem; position: relative; }
@@ -1087,7 +1099,7 @@ export const adminPage = () => `<!doctype html>
     const undated = (it, urgent) => out.push(Object.assign(it, { date: '', urgent, tone: urgent ? 'warn' : '' }));
     // Gestor de tareas: las que no están completadas ni archivadas y tienen fecha límite
     const tasks = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
-    (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas', time: t.due_time || '' }, t.due.slice(0, 10)));
+    (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas', taskId: t.id, scope: t.scope || 'jnb', time: t.due_time || '' }, t.due.slice(0, 10)));
     // Pagos sin acreditar con vencimiento
     (data.payments || []).filter((y) => !y.paid && y.due).forEach((y) => { const c = clientById(y.clientId); dated({ section: 'Pagos', text: [y.concept || 'Pago', money(y.currency, y.amount), c && c.name].filter(Boolean).join(' · '), go: 'pagos', openCode: y.projectCode || '' }, y.due.slice(0, 10)); });
     // Plazos y vencimientos (js/admin-agenda.js)
@@ -1114,9 +1126,24 @@ export const adminPage = () => `<!doctype html>
     const rv = (data.reviews || []).filter((r) => r.status === 'pendiente').length;
     if (rv) undated({ section: 'Reseñas', text: rv + (rv === 1 ? ' reseña espera' : ' reseñas esperan') + ' tu aprobación', state: 'Pendiente', go: 'resenas' }, false);
     if (data.mailError) undated({ section: 'Configuración', text: 'Los mails al cliente dieron error', state: 'Revisar', go: 'config' }, true);
-    // A igual fecha, las tareas con horario van primero y por hora
+    // Sin repetidos: el mismo aviso (mismo destino, texto y fecha) que llega por dos caminos se muestra una vez
+    const seen = new Set();
+    const unique = out.filter((x) => { const k = [x.taskId || x.openCode || x.go || x.rec, x.text, x.date].join('|'); if (seen.has(k)) return false; seen.add(k); return true; });
+    // Orden cronológico: a igual fecha, las que tienen horario van primero y por hora; las sin fecha al final
     const key = (x) => (x.date ? x.date + ' ' + (x.time || '~') : '9999');
-    return out.sort((a, b) => (b.urgent - a.urgent) || (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+    return unique.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+  };
+  // Hora actual de Buenos Aires (HH:MM), para saber si un compromiso de hoy con horario ya pasó
+  // Ámbito de cada aviso: el de la tarea; lo que viene de pagos, proyectos, cupones, etc. es de JNB Creative Studio
+  const SCOPE_SHORT = { personal: 'Personal', jnb: 'JNB', estudios: 'Estudios', trabajo: 'Trabajo', tramites: 'Trámites', otros: 'Otros' };
+  const scopeTag = (sc) => { const id = SCOPE_SHORT[sc] ? sc : 'jnb'; return '<span class="task-scope scope-' + id + '">' + SCOPE_SHORT[id] + '</span>'; };
+  const nowHM = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' });
+  // Urgente: vencido, o de hoy con horario que ya pasó · Hoy: vence hoy (sin hora o con hora por venir) y avisos sin fecha · Próximos 7 días
+  const levelOf = (x) => {
+    if (!x.date) return 'today';
+    const n = daysTo(x.date);
+    if (n < 0 || (n === 0 && x.time && x.time <= nowHM())) return 'urgent';
+    return n === 0 ? 'today' : 'next';
   };
   const TZ = 'America/Argentina/Buenos_Aires';
   const clockParts = () => {
@@ -1149,22 +1176,29 @@ export const adminPage = () => `<!doctype html>
     const box = $('dash-today');
     if (!box || !data) return;
     const items = todayItems();
-    // Vencidos (fecha pasada) · Hoy (vence hoy o sin fecha, para atender ya) · Próximos 7 días
-    const late = items.filter((x) => x.date && daysTo(x.date) < 0);
-    const today = items.filter((x) => !x.date || daysTo(x.date) === 0).sort((a, b) => (Boolean(b.date) - Boolean(a.date)) || (b.urgent - a.urgent));
-    const next = items.filter((x) => x.date && daysTo(x.date) > 0);
-    const row = (x) => '<li><button type="button" class="today-item" ' + (x.rec ? 'data-mk-rec="' + esc(x.rec) + '"' : x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
+    // Tres niveles (ver levelOf): primero lo urgente; dentro de cada grupo, orden cronológico (ya viene de todayItems)
+    const urgent = items.filter((x) => levelOf(x) === 'urgent');
+    const today = items.filter((x) => levelOf(x) === 'today');
+    const next = items.filter((x) => levelOf(x) === 'next');
+    const alertIco = '<svg class="today-alert-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+    // Qué pasó con un urgente: vencido hace días, o de hoy con la hora ya pasada
+    const lateText = (x) => (daysTo(x.date) === 0 ? 'Venció hoy' : x.state); // la hora ya se ve en la columna de fecha
+    const target = (x) => (x.taskId ? 'data-task-open="' + x.taskId + '"' : x.rec ? 'data-mk-rec="' + esc(x.rec) + '"' : x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"');
+    const row = (lvl) => (x) => '<li><button type="button" class="today-item" ' + target(x) + '>'
       + '<span class="today-dot" aria-hidden="true"></span>'
-      + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + esc(x.section) + '</span></span>'
-      + '<span class="today-meta"><span class="today-when' + (x.time ? ' has-time' : '') + '">' + (x.date ? shortDay(x.date) + (x.time ? '<span class="today-time">' + esc(x.time) + ' hs</span>' : '') : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
-    // Solo se muestran los grupos con avisos; si no hay ninguno, un estado vacío
-    const group = (cls, title, list) => (list.length ? '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3><ul class="today-list">' + list.map(row).join('') + '</ul></div>' : '');
+      + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + scopeTag(x.scope) + esc(x.section) + (lvl === 'urgent' ? ' · <span class="today-late">' + esc(lateText(x)) + '</span>' : '') + '</span></span>'
+      + '<span class="today-meta"><span class="today-when' + (x.time ? ' has-time' : '') + '">' + (x.date ? shortDay(x.date) + (x.time ? '<span class="today-time">' + esc(x.time) + ' hs</span>' : '') : 'Sin fecha') + '</span>'
+      + (lvl === 'urgent' ? '<span class="chip alert-chip">' + alertIco + 'Requiere atención</span>' : '<span class="chip' + (lvl === 'today' && x.tone === 'warn' ? ' warn' : !lvl && x.tone === 'late' ? ' alert-chip' : !lvl && x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span>') + '</span></button></li>';
+    const levelGroup = (lvl, cls, title, list, icon) => (list.length ? '<div class="ag-group ' + cls + '"><h3>' + (icon || '') + title + ' <span class="ag-count">' + list.length + '</span></h3><ul class="today-list">' + list.map(row(lvl)).join('') + '</ul></div>' : '');
+    const group = (cls, title, list) => (list.length ? '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3><ul class="today-list">' + list.map(row('')).join('') + '</ul></div>' : '');
     const allClear = (title, text) => '<div class="dash-empty dash-clear"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><p>' + title + '</p><span>' + text + '</span></div>';
     const sub = $('dash-sub');
-    if (sub) sub.textContent = late.length || today.length ? (late.length ? late.length + (late.length === 1 ? ' vencido' : ' vencidos') + (today.length ? ' y ' : '') : '') + (today.length ? today.length + ' para hoy' : '') + '.' : 'Todo al día por hoy.';
+    if (sub) sub.textContent = urgent.length || today.length ? (urgent.length ? urgent.length + (urgent.length === 1 ? ' urgente' : ' urgentes') + (today.length ? ' y ' : '') : '') + (today.length ? today.length + ' para hoy' : '') + '.' : 'Todo al día por hoy.';
     box.innerHTML = '<div class="dash-card-head"><h2>Requiere tu atención</h2>' + (items.length ? '<span class="small muted">' + items.length + '</span>' : '') + '</div>'
-      + (items.length ? group('is-late', 'Vencidos', late) + group('is-today', 'Hoy', today) + group('is-next', 'Próximos 7 días', next)
-        : allClear('Todo al día', 'No hay vencimientos ni pendientes para los próximos 7 días.'))
+      + (items.length
+        ? (urgent.length ? levelGroup('urgent', 'is-late', 'Urgente', urgent, alertIco) : '<p class="today-ok"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg>No tenés pendientes urgentes</p>')
+          + levelGroup('today', 'is-today', 'Hoy', today) + levelGroup('next', 'is-next', 'Próximos 7 días', next)
+        : allClear('No tenés pendientes urgentes', 'No hay vencimientos ni pendientes para los próximos 7 días.'))
       + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '');
     // Alertas de Marketing (js/admin-marketing.js): publicaciones, artículos, ideas, sorteos y recordatorios
     const mkBox = $('dash-mk');
@@ -1773,6 +1807,8 @@ export const adminPage = () => `<!doctype html>
     }
     const mkRec = e.target.closest('[data-mk-rec]');
     if (mkRec && window.JNBMarketing) { const [kind, id] = mkRec.dataset.mkRec.split(':'); window.JNBMarketing.open(kind, Number(id)); return; }
+    const taskBtn = e.target.closest('[data-task-open]');
+    if (taskBtn) { const id = Number(taskBtn.dataset.taskOpen); go('tareas', ''); if (window.JNBTasks && window.JNBTasks.open) window.JNBTasks.open(id); return; }
     const goBtn = e.target.closest('[data-go]');
     if (goBtn) { const [mod, id] = goBtn.dataset.go.split('/'); go(mod, id || ''); return; }
     const goClient = e.target.closest('[data-go-client]');

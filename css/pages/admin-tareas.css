@@ -214,3 +214,13 @@ button.task-stat:disabled:hover { border-color: var(--line); }
   .task-card, .task-list, .task-progress span { transition: none; }
   .task-card:hover { transform: none; }
 }
+
+/* Ámbito de la tarea: etiqueta discreta (punto de color + nombre corto); no es la prioridad */
+.task-tags { align-items: center; display: flex; gap: .45rem; min-width: 0; }
+.task-scope { --sc: var(--muted); align-items: center; border: 1px solid color-mix(in srgb, var(--sc) 40%, transparent); border-radius: 999px; color: var(--sc); display: inline-flex; flex-shrink: 0; font-size: .64rem; font-weight: 700; gap: .3rem; line-height: 1.5; padding: 0 .45rem; white-space: nowrap; }
+.task-scope::before { background: currentColor; border-radius: 50%; content: ''; height: .36rem; width: .36rem; }
+.scope-personal { --sc: #e7a3c9; } .scope-jnb { --sc: #b9a0ff; } .scope-estudios { --sc: #8fc3f0; }
+.scope-trabajo { --sc: #8fd6b8; } .scope-tramites { --sc: #e9c58a; } .scope-otros { --sc: #b6aecf; }
+.task-scope-field { display: flex; flex-direction: column; gap: .35rem; }
+.task-scope-default { align-items: center; color: var(--muted); display: flex; flex-direction: row; font-size: .75rem; font-weight: 500; gap: .4rem; }
+.task-scope-default input { margin: 0; width: auto; }

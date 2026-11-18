@@ -94,6 +94,7 @@ const newCode = (now) => `JNB-${String(now.getUTCFullYear()).slice(2)}${String(n
 // Gestor de tareas: columnas del tablero y prioridades
 const TASK_STATUSES = ['inbox', 'todo', 'doing', 'review', 'done'];
 const TASK_PRIORITIES = ['baja', 'media', 'alta'];
+const TASK_SCOPES = ['personal', 'jnb', 'estudios', 'trabajo', 'tramites', 'otros'];
 // Sorteos de Instagram: etapas del ganador (contando desde 0) y la fecha que se guarda la primera vez que llega a cada paso
 const GIVEAWAY_STATUSES = ['borrador', 'activo', 'finalizado'];
 const WINNER_STAGES = ['Ganador anunciado', 'Pendiente de contacto', 'Contactado', 'Brief enviado', 'Brief recibido', 'Material pendiente',
@@ -584,6 +585,8 @@ export class StudioData extends DurableObject {
     if (!giveawayTaskColumns.includes('project')) this.sql.exec("ALTER TABLE tasks ADD COLUMN project TEXT NOT NULL DEFAULT ''");
     // Hora opcional de la tarea (HH:MM, 24 h). '' = solo fecha; las tareas anteriores quedan así
     if (!giveawayTaskColumns.includes('due_time')) this.sql.exec("ALTER TABLE tasks ADD COLUMN due_time TEXT NOT NULL DEFAULT ''");
+    // Ámbito de cada tarea (personal, JNB, estudios...). Las tareas que ya existían quedan en JNB Creative Studio, sin tocar nada más
+    if (!giveawayTaskColumns.includes('scope')) this.sql.exec("ALTER TABLE tasks ADD COLUMN scope TEXT NOT NULL DEFAULT 'jnb'");
     // Fecha en que llegó todo el material del proyecto: desde ahí corre el plazo de entrega (se completa sola al pasar a Diseño)
     const agendaProjectColumns = this.sql.exec('PRAGMA table_info(projects)').toArray().map((c) => c.name);
     // Adicionales pedidos en un proyecto creado desde el panel (módulo Brief): el brief suma sus preguntas
@@ -929,6 +932,7 @@ export class StudioData extends DurableObject {
   tasksData() {
     return {
       categories: this.sql.exec('SELECT id, name, position FROM task_categories ORDER BY position, id').toArray(),
+      defaultScope: (this.sql.exec("SELECT value FROM settings WHERE key = 'tareasAmbito'").toArray()[0] || {}).value || 'jnb',
       tasks: this.sql.exec('SELECT * FROM tasks ORDER BY archived, status, position, id').toArray()
         .map((t) => ({ ...t, subtasks: JSON.parse(t.subtasks || '[]'), archived: Boolean(t.archived) })),
     };
@@ -945,13 +949,18 @@ export class StudioData extends DurableObject {
       if (!old) return false;
       const doneAt = t.status === 'done' ? (old.status === 'done' ? old.done_at : now) : '';
       this.sql.exec(`UPDATE tasks SET title = ?, description = ?, category = ?, priority = ?, status = ?, due = ?, due_time = ?, notes = ?, subtasks = ?,
-        updated = ?, done_at = ? WHERE id = ?`, t.title, t.description, category, t.priority, t.status, t.due, dueTime, t.notes, subtasks, now, doneAt, t.id);
+        updated = ?, done_at = ?, scope = ? WHERE id = ?`, t.title, t.description, category, t.priority, t.status, t.due, dueTime, t.notes, subtasks, now, doneAt, t.scope || 'jnb', t.id);
       if (old.status !== t.status) this.sql.exec('UPDATE tasks SET position = ? WHERE id = ?', this.lastTaskPosition(t.status) + 1, t.id);
       return true;
     }
-    this.sql.exec(`INSERT INTO tasks (title, description, category, priority, status, position, due, due_time, notes, subtasks, created, updated, done_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, t.title, t.description, category, t.priority, t.status,
-    this.lastTaskPosition(t.status) + 1, t.due, dueTime, t.notes, subtasks, now, now, t.status === 'done' ? now : '');
+    this.sql.exec(`INSERT INTO tasks (title, description, category, priority, status, position, due, due_time, notes, subtasks, created, updated, done_at, scope)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, t.title, t.description, category, t.priority, t.status,
+    this.lastTaskPosition(t.status) + 1, t.due, dueTime, t.notes, subtasks, now, now, t.status === 'done' ? now : '', t.scope || 'jnb');
+    return true;
+  }
+
+  setDefaultScope(scope) {
+    this.sql.exec("INSERT INTO settings (key, value) VALUES ('tareasAmbito', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", scope);
     return true;
   }
 
@@ -2512,6 +2521,7 @@ export async function handleStudio(request, env, ctx) {
           status: TASK_STATUSES.includes(t.status) ? t.status : 'inbox',
           due: /^\d{4}-\d{2}-\d{2}$/.test(t.due || '') ? t.due : '',
           due_time: /^([01]\d|2[0-3]):[0-5]\d$/.test(t.due_time || '') ? t.due_time : '',
+          scope: TASK_SCOPES.includes(t.scope) ? t.scope : 'jnb',
           notes: text(t.notes, 4000),
           subtasks: (Array.isArray(t.subtasks) ? t.subtasks : []).slice(0, 100)
             .map((x) => ({ text: text(x && x.text, 300), done: Boolean(x && x.done) })).filter((x) => x.text),
@@ -2528,6 +2538,9 @@ export async function handleStudio(request, env, ctx) {
       } else if (body.action === 'delete') {
         ok = await store.deleteTask(id);
         if (ok) await store.logChange('🗑️', `Borraste la tarea #${id}`);
+      } else if (body.action === 'default-scope') {
+        if (!TASK_SCOPES.includes(body.scope)) return badRequest();
+        ok = await store.setDefaultScope(body.scope);
       } else if (body.action === 'categories') {
         const list = (Array.isArray(body.categories) ? body.categories : []).slice(0, 40)
           .map((c) => ({ id: Number(c && c.id) || 0, name: text(c && c.name, 60) })).filter((c) => c.name);

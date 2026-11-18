@@ -9,6 +9,16 @@
         { id: 'review', name: 'En revisión' },
         { id: 'done', name: 'Completadas' },
     ];
+    // Ámbito: a qué parte de la vida pertenece la tarea (no es la prioridad: una tarea personal también puede ser urgente)
+    const SCOPES = [
+        { id: 'personal', name: 'Personal' },
+        { id: 'jnb', name: 'JNB Creative Studio', short: 'JNB' },
+        { id: 'estudios', name: 'Universidad / Estudios', short: 'Estudios' },
+        { id: 'trabajo', name: 'Trabajo' },
+        { id: 'tramites', name: 'Trámites' },
+        { id: 'otros', name: 'Otros' },
+    ];
+    const scopeOf = (id) => SCOPES.find((x) => x.id === id) || SCOPES[1];
     const PRIORITIES = [
         { id: 'alta', name: 'Alta' },
         { id: 'media', name: 'Media' },
@@ -31,7 +41,7 @@
     let state = { tasks: [], categories: [] };
     let loaded = false;
     let showArchived = false;
-    const filters = { q: '', category: '', priority: '', date: '' };
+    const filters = { q: '', category: '', priority: '', date: '', scope: '' };
 
     const panel = () => window.JNBPanel;
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -80,6 +90,7 @@
         if (filters.category === 'none' && t.category) return false;
         if (filters.category && filters.category !== 'none' && String(t.category) !== filters.category) return false;
         if (filters.priority && t.priority !== filters.priority) return false;
+        if (filters.scope && (t.scope || 'jnb') !== filters.scope) return false;
         const now = today();
         if (filters.date === 'overdue' && !isOverdue(t)) return false;
         if (filters.date === 'today' && t.due !== now) return false;
@@ -87,7 +98,7 @@
         if (filters.date === 'nodate' && t.due) return false;
         return true;
     };
-    const filtering = () => Boolean(filters.q || filters.category || filters.priority || filters.date);
+    const filtering = () => Boolean(filters.q || filters.category || filters.priority || filters.date || filters.scope);
 
     // ---- Tablero
     const cardHtml = (t) => {
@@ -100,7 +111,7 @@
         return `<article class="task-card prio-${esc(t.priority)}${overdue ? ' is-overdue' : ''}${t.status === 'done' ? ' is-done' : ''}" draggable="true" data-id="${t.id}" tabindex="0"
             aria-label="${esc(t.title)}. Prioridad ${esc(prio.toLowerCase())}${t.due ? `. Vence el ${fmtWhen(t)}` : ''}${overdue ? ', vencida' : ''}">
             <div class="task-card-top">
-                <span class="task-cat" title="${esc(cat || 'Sin categoría')}">${cat ? esc(cat) : 'Sin categoría'}</span>
+                <span class="task-tags"><span class="task-scope scope-${esc(scopeOf(t.scope).id)}" title="Ámbito: ${esc(scopeOf(t.scope).name)}">${esc(scopeOf(t.scope).short || scopeOf(t.scope).name)}</span><span class="task-cat" title="${esc(cat || 'Sin categoría')}">${cat ? esc(cat) : 'Sin categoría'}</span></span>
                 <span class="task-prio" title="Prioridad ${esc(prio.toLowerCase())}"><i aria-hidden="true"></i>${esc(prio)}</span>
             </div>
             <p class="task-title">${esc(t.title)}</p>
@@ -124,7 +135,7 @@
         </div>`;
     };
 
-    const activeFilters = () => ['category', 'priority', 'date'].filter((k) => filters[k]).length;
+    const activeFilters = () => ['scope', 'category', 'priority', 'date'].filter((k) => filters[k]).length;
     const toolbarHtml = () => `<div class="task-toolbar${filtersOpen ? ' is-open' : ''}">
         <div class="task-search-row">
             <label class="task-search"><span class="sr-only">Buscar tareas</span><input type="search" id="task-q" placeholder="Buscar por nombre…" value="${esc(filters.q)}"></label>
@@ -135,6 +146,10 @@
             <option value="">Todas las categorías</option>
             ${state.categories.map((c) => `<option value="${c.id}"${filters.category === String(c.id) ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
             <option value="none"${filters.category === 'none' ? ' selected' : ''}>Sin categoría</option>
+        </select></label>
+        <label><span class="sr-only">Ámbito</span><select id="task-f-scope">
+            <option value="">Todos los ámbitos</option>
+            ${SCOPES.map((x) => `<option value="${x.id}"${filters.scope === x.id ? ' selected' : ''}>${x.name}</option>`).join('')}
         </select></label>
         <label><span class="sr-only">Prioridad</span><select id="task-f-priority">
             <option value="">Todas las prioridades</option>
@@ -250,7 +265,7 @@
     </li>`;
 
     const openEditor = (task) => {
-        const t = task || { id: 0, title: '', description: '', category: null, priority: 'media', status: 'inbox', due: '', due_time: '', notes: '', subtasks: [], created: '' };
+        const t = task || { id: 0, title: '', description: '', category: null, priority: 'media', status: 'inbox', due: '', due_time: '', notes: '', subtasks: [], created: '', scope: state.defaultScope || 'jnb' };
         const [hh, mm] = (t.due_time || '').split(':');
         const d = dialog();
         d.innerHTML = `<form method="dialog" class="task-form">
@@ -262,6 +277,8 @@
                 <label>Título<input name="title" required maxlength="160" value="${esc(t.title)}"></label>
                 <label>Descripción<textarea name="description" maxlength="4000" rows="3">${esc(t.description)}</textarea></label>
                 <div class="task-form-grid">
+                    <div class="task-scope-field"><label>Ámbito<select name="scope">${SCOPES.map((x) => `<option value="${x.id}"${x.id === (t.scope || 'jnb') ? ' selected' : ''}>${x.name}</option>`).join('')}</select></label>
+                        <label class="task-scope-default"><input type="checkbox" name="scope_default"> Usar por defecto en tareas nuevas</label></div>
                     <label>Categoría<select name="category"><option value="">Sin categoría</option>
                         ${state.categories.map((c) => `<option value="${c.id}"${c.id === t.category ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
                     <label>Prioridad<select name="priority">${PRIORITIES.map((p) => `<option value="${p.id}"${p.id === t.priority ? ' selected' : ''}>${p.name}</option>`).join('')}</select></label>
@@ -309,6 +326,7 @@
             description: val('description'),
             category: Number(val('category')) || null,
             priority: val('priority'),
+            scope: val('scope'),
             status: val('status'),
             due: val('due'),
             due_time: val('due_hour') ? `${val('due_hour')}:${val('due_min') || '00'}` : '',
@@ -370,7 +388,7 @@
                 render();
                 root().querySelector(`.task-tab[data-col="${mobileCol}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
                 break;
-            case 'clear-filters': Object.assign(filters, { q: '', category: '', priority: '', date: '' }); render(); break;
+            case 'clear-filters': Object.assign(filters, { q: '', category: '', priority: '', date: '', scope: '' }); render(); break;
             case 'show-overdue': Object.assign(filters, { date: 'overdue' }); showArchived = false; render(); break;
             case 'close': d.close(); break;
             case 'sub-add': addSubtask(); break;
@@ -457,7 +475,7 @@
             if (e.target.id === 'task-q') { filters.q = e.target.value; render(); }
         });
         el.addEventListener('change', (e) => {
-            const map = { 'task-f-category': 'category', 'task-f-priority': 'priority', 'task-f-date': 'date' };
+            const map = { 'task-f-scope': 'scope', 'task-f-category': 'category', 'task-f-priority': 'priority', 'task-f-date': 'date' };
             if (map[e.target.id]) { filters[map[e.target.id]] = e.target.value; render(); }
         });
         // Agregar rápido: se escribe el título y Enter
@@ -469,7 +487,7 @@
             if (!title) return;
             form.elements.title.value = '';
             const status = form.dataset.status;
-            if (await call({ action: 'save', task: { title, status, priority: 'media', subtasks: [] } })) {
+            if (await call({ action: 'save', task: { title, status, priority: 'media', scope: state.defaultScope || 'jnb', subtasks: [] } })) {
                 const input = root().querySelector(`.task-quick[data-status="${status}"] input`);
                 if (input) input.focus();
             }
@@ -532,7 +550,11 @@
             const task = readEditor();
             if (!task.title) { form.elements.title.focus(); return; }
             if (task.due_time && !task.due) { panel().toast('Elegí una fecha para poder guardar la hora'); form.elements.due.focus(); return; }
-            if (await call({ action: 'save', task })) { d.close(); panel().toast(task.id ? 'Tarea guardada' : 'Tarea creada'); }
+            const makeDefault = form.elements.scope_default && form.elements.scope_default.checked && !form.elements.scope_default.disabled;
+            if (await call({ action: 'save', task })) {
+                if (makeDefault) await call({ action: 'default-scope', scope: task.scope });
+                d.close(); panel().toast(task.id ? 'Tarea guardada' : 'Tarea creada');
+            }
         });
     };
 
@@ -542,6 +564,8 @@
         show: () => { bind(); if (!loaded) refresh(); else render(); },
         // Para los pendientes del día del Dashboard (null mientras no se cargaron)
         list: () => (loaded ? state.tasks : null),
+        // Desde el Dashboard: abre la ficha de una tarea puntual
+        open: (id) => { bind(); const t = state.tasks.find((x) => x.id === id); if (t) openEditor(t); },
         // Para las alertas de Marketing del Dashboard (recordatorios = tareas de las categorías de marketing)
         categories: () => state.categories,
     };
