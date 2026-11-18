@@ -187,7 +187,6 @@ export const adminPage = () => `<!doctype html>
     html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 1; }
     html.side-collapsed .side-search { display: block; }
     html.side-collapsed .side-space { display: grid; }
-    html.side-collapsed[data-space="personal"] .side-search { display: none; }
     html.side-collapsed .side-title { width: auto; }
     html.side-collapsed .side-head { justify-content: flex-start; padding: 1rem 1rem .75rem; }
     html.side-collapsed .side-group { background: none; height: auto; margin: 1.1rem .7rem .35rem; opacity: .75; text-indent: 0; }
@@ -401,7 +400,7 @@ export const adminPage = () => `<!doctype html>
       <aside class="side" id="side">
         <div class="side-head"><span class="mark">JNB</span><span class="side-title"><strong>JNB Creative Studio</strong><span>Panel de administración</span></span><button type="button" class="side-close" id="side-close" aria-label="Cerrar el menú"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
         <div class="side-space" id="side-space" role="group" aria-label="Espacio de trabajo"><button type="button" data-space="todo" aria-pressed="true">Todo</button><button type="button" data-space="jnb" aria-pressed="false">JNB</button><button type="button" data-space="personal" aria-pressed="false">Personal</button></div>
-        <div class="side-search" data-space-only="jnb"><input type="search" id="global-q" placeholder="Buscar cliente, mail, código…" aria-label="Buscar en todo el panel" autocomplete="off"><div id="global-results" class="global-results" hidden></div></div>
+        <div class="side-search"><input type="search" id="global-q" placeholder="Buscar en todo el panel…" aria-label="Buscar en el espacio elegido" autocomplete="off"><div id="global-results" class="global-results" hidden></div></div>
         <nav class="side-scroll" aria-label="Secciones del panel">
 ${navHtml()}        </nav>
         <div class="side-foot"><button type="button" id="side-collapse" aria-expanded="true"><svg class="ico" aria-hidden="true"><use href="#i-panel"/></svg><span class="side-label">Contraer menú</span></button></div>
@@ -1368,6 +1367,8 @@ ${sectionsHtml()}        <section class="module" id="m-clientes" hidden></sectio
     space = SPACES.includes(s) ? s : 'todo';
     document.documentElement.dataset.space = space;
     document.querySelectorAll('#side-space button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.space === space)));
+    const q = $('global-q');
+    if (q) { q.placeholder = { todo: 'Buscar en todo el panel…', jnb: 'Buscar cliente, mail, código…', personal: 'Buscar en tu espacio personal…' }[space]; if (q.value) globalSearch(q.value); }
     if (remember) { try { localStorage.setItem('jnb-espacio', space); } catch (e) {} }
     if (window.JNBTasks && window.JNBTasks.setSpace) window.JNBTasks.setSpace(space);
     if (data && route.mod === 'dashboard') renderDashboard();
@@ -1788,18 +1789,28 @@ ${sectionsHtml()}        <section class="module" id="m-clientes" hidden></sectio
     } catch (err) { toast('No se pudo enviar el mail'); }
   };
 
-  // ---- Búsqueda general: clientes, proyectos, consultas y presupuestos por nombre, mail, teléfono, código o token
-  const globalSearch = (q) => {
+  // ---- Búsqueda general (en el navegador, sobre lo ya cargado: no se manda nada al servidor).
+  // JNB: clientes, proyectos, consultas y presupuestos por nombre, mail, teléfono, código o token.
+  // También tareas y registros personales (Agenda, Estudios, Trabajo). Solo muestra lo del espacio elegido, con su etiqueta.
+  const SPACE_LABEL = { personal: 'Personal', jnb: 'JNB', estudios: 'Personal · Estudios', trabajo: 'Personal · Trabajo', tramites: 'Personal · Trámites', otros: 'Personal · Otros' };
+  function globalSearch(q) {
     const box = $('global-results');
     const k = fold(q);
     if (!data || k.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
     const hit = (...vals) => vals.some((v) => fold(v).includes(k));
+    const jnb = space !== 'personal';
     const items = [
-      ...data.clients.filter((c) => hit(c.name, c.email, c.phone, c.code)).map((c) => ({ go: 'clientes|' + c.code, title: '👤 ' + c.name, sub: c.code + (c.email ? ' · ' + c.email : '') })),
-      ...data.projects.filter((p) => hit(p.code, p.client, p.project, p.token)).map((p) => ({ go: 'proyectos|' + (p.code || ''), title: '📁 ' + p.project, sub: (p.code || '') + ' · ' + p.client })),
-      ...data.inquiries.filter((i) => hit(i.code, i.token, i.name, i.email)).map((i) => ({ go: (i.kind === 'presupuesto' ? 'presupuestos' : 'consultas') + '|' + i.code, title: (i.kind === 'presupuesto' ? '📝 ' : '✉ ') + i.name, sub: i.code + ' · ' + (i.kind === 'presupuesto' ? 'Presupuesto' : 'Consulta') + (i.email ? ' · ' + i.email : '') })),
-    ].slice(0, 30);
-    box.innerHTML = items.length ? items.map((x) => '<button type="button" data-global-go="' + esc(x.go) + '">' + esc(x.title) + '<small>' + esc(x.sub) + '</small></button>').join('') : '<p class="small muted">Sin resultados</p>';
+      ...(!jnb ? [] : data.clients).filter((c) => hit(c.name, c.email, c.phone, c.code)).map((c) => ({ go: 'clientes|' + c.code, title: '👤 ' + c.name, sub: c.code + (c.email ? ' · ' + c.email : '') })),
+      ...(!jnb ? [] : data.projects).filter((p) => hit(p.code, p.client, p.project, p.token)).map((p) => ({ go: 'proyectos|' + (p.code || ''), title: '📁 ' + p.project, sub: (p.code || '') + ' · ' + p.client })),
+      ...(!jnb ? [] : data.inquiries).filter((i) => hit(i.code, i.token, i.name, i.email)).map((i) => ({ go: (i.kind === 'presupuesto' ? 'presupuestos' : 'consultas') + '|' + i.code, title: (i.kind === 'presupuesto' ? '📝 ' : '✉ ') + i.name, sub: i.code + ' · ' + (i.kind === 'presupuesto' ? 'Presupuesto' : 'Consulta') + (i.email ? ' · ' + i.email : '') })),
+      // Tareas (las del espacio elegido) y registros personales
+      ...((window.JNBTasks && window.JNBTasks.list && window.JNBTasks.list()) || []).filter((t) => !t.archived && inSpace(t.scope) && hit(t.title, t.description, t.notes))
+        .map((t) => ({ go: 'tarea|' + t.id, title: '✓ ' + t.title, sub: 'Tarea' + (t.due ? ' · ' + t.due.slice(0, 10) : ''), scope: t.scope || 'jnb' })),
+      ...(space === 'jnb' || !window.JNBWorkspace ? [] : window.JNBWorkspace.search(hit)),
+    ].map((x) => Object.assign(x, { scope: x.scope || 'jnb' })).slice(0, 30);
+    // En Todo, cada resultado dice de qué espacio es (JNB o Personal)
+    const where = (x) => (space === 'todo' || x.scope !== 'jnb' ? SPACE_LABEL[x.scope] + ' · ' : '');
+    box.innerHTML = items.length ? items.map((x) => '<button type="button" data-global-go="' + esc(x.go) + '">' + esc(x.title) + '<small>' + esc(where(x) + x.sub) + '</small></button>').join('') : '<p class="small muted">Sin resultados</p>';
     box.hidden = false;
   };
   document.addEventListener('input', (e) => { if (e.target.id === 'global-q') globalSearch(e.target.value); });
@@ -1808,6 +1819,8 @@ ${sectionsHtml()}        <section class="module" id="m-clientes" hidden></sectio
     if (!b) { if (!e.target.closest('.side-search')) $('global-results').hidden = true; return; }
     const [mod, id] = b.dataset.globalGo.split('|');
     $('global-results').hidden = true; $('global-q').value = '';
+    if (mod === 'tarea') { go('tareas', ''); if (window.JNBTasks) window.JNBTasks.open(Number(id)); return; }
+    if (MODULE_SPACE[mod] === 'personal' && id) { const [kind, rid] = id.split(':'); go(mod, ''); if (window.JNBWorkspace) window.JNBWorkspace.open(kind, Number(rid)); return; }
     if (mod === 'consultas' || mod === 'presupuestos') { F[mod].q = id; PAGE[mod] = 1; go(mod, ''); renderInquiries(); return; }
     if (mod === 'clientes') clientSub = 'datos';
     go(mod, id);
