@@ -245,6 +245,41 @@ const WINNER_PROJECTS = { premium: 'Plan Premium', basico: 'Plan Básico', empre
 const text = (value, max) => (typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '');
 const oneLine = (value, max) => text(value, max).replace(/\s+/g, ' ');
 const isoDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '');
+
+// Marketing Digital & Contenidos: campos de cada tipo. [tipo, máximo] o la lista de valores permitidos (el primero es el de por defecto).
+const MK = {
+  post: { table: 'mk_posts', required: 'title', fields: {
+    title: ['line', 160], date: ['date'], time: ['time'], format: [['reel', 'carrusel', 'historia', 'imagen']],
+    goal: [['reconocimiento', 'educacion', 'interaccion', 'captacion', 'venta']], topic: ['line', 200], description: ['text', 3000],
+    copy: ['text', 5000], hashtags: ['text', 1000], refs: ['text', 2000], notes: ['text', 2000],
+    status: [['idea', 'pendiente', 'preparacion', 'listo', 'publicado']],
+  } },
+  article: { table: 'mk_articles', required: 'title', fields: {
+    date: ['date'], title: ['line', 200], topic: ['line', 200], summary: ['text', 3000], goal: ['line', 300], category: ['line', 120],
+    keyword: ['line', 120], keywords: ['line', 500], meta: ['text', 320],
+    status: [['idea', 'planificado', 'redaccion', 'revision', 'listo', 'publicado']], url: ['url'], notes: ['text', 2000],
+  } },
+  idea: { table: 'mk_ideas', required: 'title', fields: {
+    title: ['line', 160], description: ['text', 2000], kind: [['instagram', 'blog', 'ambos']], category: ['line', 120],
+    goal: ['line', 300], notes: ['text', 2000], status: [['pendiente', 'seleccionada', 'desarrollada']],
+  } },
+};
+// Valida y limpia un registro de marketing; devuelve null si falta lo obligatorio o una fecha/hora no es válida
+const mkClean = (kind, raw) => {
+  const spec = MK[kind];
+  if (!spec || !raw || typeof raw !== 'object') return null;
+  const out = {};
+  for (const [f, [type, max]] of Object.entries(spec.fields)) {
+    const v = raw[f];
+    if (Array.isArray(type)) out[f] = type.includes(v) ? v : type[0];
+    else if (type === 'date') { out[f] = isoDate(v); if (v && !out[f]) return null; }
+    else if (type === 'time') { out[f] = typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : ''; if (v && !out[f]) return null; }
+    else if (type === 'url') { const u = oneLine(v, 500); if (u && !/^https?:\/\/\S+$/i.test(u)) return null; out[f] = u; }
+    else out[f] = type === 'line' ? oneLine(v, max) : text(v, max);
+  }
+  if (!out[spec.required]) return null;
+  return out;
+};
 // Mail normalizado (sin espacios y en minúsculas): dos pedidos con el mismo mail son del mismo cliente
 const normEmail = (value) => {
   const mail = String(value || '').trim().toLowerCase();
@@ -584,6 +619,16 @@ export class StudioData extends DurableObject {
       }
       this.sql.exec("INSERT INTO settings (key, value) VALUES ('cotizadorTr', '1')");
     }
+    // Marketing Digital & Contenidos: publicaciones de Instagram, plan editorial del blog y banco de ideas (solo planificación)
+    for (const { table, fields } of Object.values(MK)) {
+      this.sql.exec(`CREATE TABLE IF NOT EXISTS ${table} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Object.keys(fields).map((f) => `${f} TEXT NOT NULL DEFAULT ''`).join(',\n        ')},
+        idea_id INTEGER,
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      )`);
+    }
     this.linkClients();
   }
 
@@ -889,6 +934,53 @@ export class StudioData extends DurableObject {
     if (!this.sql.exec('SELECT 1 FROM giveaway_winners WHERE id = ?', id).toArray().length) return { error: 'not found' };
     this.sql.exec(`UPDATE giveaway_winners SET ${field} = ?, updated = ? WHERE id = ?`, date, new Date().toISOString(), id);
     this.logWinner(id, '✅', date ? `${WINNER_MARKS[field]}: ${date.slice(0, 10)}` : `${WINNER_MARKS[field]}: fecha quitada`);
+    return { id };
+  }
+
+  // ---- Marketing Digital & Contenidos
+  marketingData() {
+    const out = {};
+    for (const [kind, { table }] of Object.entries(MK)) {
+      const order = kind === 'idea' ? 'created DESC' : `(date = ''), date, ${kind === 'post' ? 'time, ' : ''}id`;
+      out[kind + 's'] = this.sql.exec(`SELECT * FROM ${table} ORDER BY ${order}`).toArray();
+    }
+    return out;
+  }
+
+  // Guarda un registro. Con `updated` (lo que se cargó en pantalla) no pisa una versión más nueva: devuelve { error: 'conflict' }.
+  saveMk(kind, id, item, ideaId, updated) {
+    const { table, fields } = MK[kind];
+    const cols = Object.keys(fields);
+    const now = new Date().toISOString();
+    let linked = null;
+    if (id) {
+      const row = this.sql.exec(`SELECT updated, idea_id FROM ${table} WHERE id = ?`, id).toArray()[0];
+      if (!row) return { error: 'not found' };
+      if (updated && row.updated !== updated) return { error: 'conflict' };
+      this.sql.exec(`UPDATE ${table} SET ${cols.map((c) => c + ' = ?').join(', ')}, updated = ? WHERE id = ?`, ...cols.map((c) => item[c]), now, id);
+      linked = row.idea_id;
+    } else {
+      if (ideaId && (kind === 'idea' || !this.sql.exec('SELECT 1 FROM mk_ideas WHERE id = ?', ideaId).toArray().length)) ideaId = 0;
+      this.sql.exec(`INSERT INTO ${table} (${cols.join(', ')}, idea_id, created, updated) VALUES (${cols.map(() => '?').join(', ')}, ?, ?, ?)`,
+        ...cols.map((c) => item[c]), ideaId || null, now, now);
+      id = this.sql.exec('SELECT last_insert_rowid() AS id').one().id;
+      linked = ideaId || null;
+    }
+    // La idea de origen pasa a "seleccionada" al convertirla y a "desarrollada" cuando el contenido se publica
+    if (linked) {
+      if (item.status === 'publicado') this.sql.exec("UPDATE mk_ideas SET status = 'desarrollada', updated = ? WHERE id = ?", now, linked);
+      else this.sql.exec("UPDATE mk_ideas SET status = 'seleccionada', updated = ? WHERE id = ? AND status = 'pendiente'", now, linked);
+    }
+    return { id };
+  }
+
+  deleteMk(kind, id) {
+    const { table } = MK[kind];
+    if (!this.sql.exec(`SELECT 1 FROM ${table} WHERE id = ?`, id).toArray().length) return { error: 'not found' };
+    this.ctx.storage.transactionSync(() => {
+      if (kind === 'idea') { this.sql.exec('UPDATE mk_posts SET idea_id = NULL WHERE idea_id = ?', id); this.sql.exec('UPDATE mk_articles SET idea_id = NULL WHERE idea_id = ?', id); }
+      this.sql.exec(`DELETE FROM ${table} WHERE id = ?`, id);
+    });
     return { id };
   }
 
@@ -2039,6 +2131,7 @@ export async function handleStudio(request, env, ctx) {
       data.monotributo = await store.monotributo();
       data.backupMailed = await store.backupMailedAt();
       data.cotizador = await store.cotizadorData();
+      data.marketing = await store.marketingData();
       return json(data);
     }
 
@@ -2239,6 +2332,24 @@ export async function handleStudio(request, env, ctx) {
       if (saved.error === 'not found') return notFound();
       if (saved.error) return badRequest();
       return json({ ok: true, ...saved });
+    }
+
+    // ---- Marketing Digital & Contenidos (publicaciones, artículos e ideas). Responde con todos los datos del módulo.
+    if (path === '/api/admin/marketing') {
+      const kind = body.kind;
+      if (!MK[kind]) return badRequest();
+      const id = Number(body.id) || 0;
+      let saved;
+      if (body.action === 'save') {
+        const item = mkClean(kind, body.item);
+        if (!item) return badRequest();
+        saved = await store.saveMk(kind, id, item, Number(body.ideaId) || 0, typeof body.updated === 'string' ? body.updated : '');
+      } else if (body.action === 'delete') {
+        saved = await store.deleteMk(kind, id);
+      } else return badRequest();
+      if (saved.error === 'not found') return notFound();
+      if (saved.error === 'conflict') return json(saved, 409);
+      return json({ ...saved, marketing: await store.marketingData() });
     }
 
     // ---- Números: origen de cada cliente y datos del monotributo
