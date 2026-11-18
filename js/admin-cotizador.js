@@ -172,6 +172,9 @@
         }, 80);
     };
 
+    // Mismo ancho de columnas en todas las categorías, así horas, pesos y USD quedan alineados
+    const COLS = '<colgroup><col class="c-pick"><col><col class="c-h"><col class="c-ars"><col class="c-usd"><col class="c-act"></colgroup>';
+
     const render = () => {
         const el = document.getElementById('m-cotizador');
         if (!el || el.hidden) return;
@@ -186,7 +189,7 @@
             + '<p class="small muted">Precio de cada funcionalidad = horas × valor de la hora (redondeado a $x.990). Al cambiar estos valores se recalcula todo el catálogo.</p></form>'
             // Catálogo
             + '<section class="card"><h3>Catálogo</h3><p class="small muted">Tildá las que pide el cliente para cotizarlas abajo.</p>'
-            + groups.map(([cat, list]) => '<div class="qz-table"><table><thead><tr><th colspan="2">' + esc(cat) + '</th><th class="n">Horas</th><th class="n">Pesos</th><th class="n">USD</th><th></th></tr></thead><tbody>'
+            + groups.map(([cat, list]) => '<div class="qz-table"><table>' + COLS + '<thead><tr><th colspan="2">' + esc(cat) + '</th><th class="n">Horas</th><th class="n">Pesos</th><th class="n">USD</th><th></th></tr></thead><tbody>'
                 + list.map((f) => '<tr><td><input type="checkbox" data-qz-pick="' + f.id + '"' + (picked.has(f.id) ? ' checked' : '') + ' aria-label="Cotizar ' + esc(f.name) + '"></td><td><strong>' + esc(f.name) + '</strong><br><span class="small muted">' + esc(f.description) + '</span></td>'
                     + '<td class="n">' + hrs(f.hours) + '</td><td class="n">' + ars(f.ars) + '</td><td class="n">USD ' + f.usd + '</td><td class="qz-act"><button type="button" data-qz-edit="' + f.id + '">Editar</button><button type="button" data-qz-del="' + f.id + '" title="Borrar">✕</button></td></tr>').join('')
                 + '</tbody><tfoot><tr><th colspan="2">Subtotal</th><th class="n">' + hrs(list.reduce((s, f) => s + f.hours, 0)) + '</th><th class="n">' + ars(list.reduce((s, f) => s + f.ars, 0)) + '</th><th class="n">' + usd(list.reduce((s, f) => s + f.ars, 0)) + '</th><th></th></tr></tfoot></table></div>').join('')
