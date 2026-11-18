@@ -23,7 +23,7 @@
 #m-sorteos .sg-marks { list-style: none; margin: 1rem 0 0; padding: 0; }
 #m-sorteos .sg-marks li { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: .5rem; grid-template-columns: 1fr auto auto; padding: .35rem 0; }
 #m-sorteos textarea { width: 100%; }
-@media (prefers-color-scheme: dark) {
+@media all {
   #m-sorteos .sg-warn { background: #4a3413; color: #f6d39a; }
   #m-sorteos .sg-info { background: #3a2c66; color: #d9ccff; }
   #m-sorteos .sg-dev { background: #1f3358; color: #c4d8fb; }

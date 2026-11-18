@@ -1,6 +1,6 @@
 /* Marketing Digital & Contenidos (#marketing): js/admin-marketing.js. Usa los colores del panel (--card, --soft, --accent...). */
 #m-marketing { --ig: #b0479a; --ig-bg: #f3d9ec; --blog: #4a63c9; --blog-bg: #dae0f7; }
-@media (prefers-color-scheme: dark) { #m-marketing, .mk-dialog { --ig: #f08fd6; --ig-bg: #4a1f40; --blog: #a8b8ff; --blog-bg: #252e5c; } }
+@media all { #m-marketing, .mk-dialog { --ig: #f08fd6; --ig-bg: #4a1f40; --blog: #a8b8ff; --blog-bg: #252e5c; } }
 #m-marketing h2 { margin: 0 0 .2rem; }
 #m-marketing h3 { font-size: 1rem; margin: 0 0 .6rem; }
 .mk-head { align-items: flex-start; display: flex; flex-wrap: wrap; gap: .75rem 1rem; justify-content: space-between; margin-bottom: .5rem; }
@@ -34,7 +34,7 @@
 .mk-warn { background: #f6e1bd; color: #6b3d00; }
 .mk-ready { background: var(--accent); color: var(--on-accent); }
 .mk-ok { background: #cdebdc; color: #0f5534; }
-@media (prefers-color-scheme: dark) {
+@media all {
   .mk-info { background: #33285e; color: #d4c6ff; }
   .mk-warn { background: #4a3413; color: #f6d39a; }
   .mk-ok { background: #173f2c; color: #a8e4c6; }
@@ -114,7 +114,7 @@ label.mk-k-blog { border-color: var(--blog); }
 .mk-x { border-radius: 999px; line-height: 1; padding: .35rem .6rem; }
 .mk-from { background: var(--soft); border-radius: .6rem; margin: .6rem 0 0; padding: .4rem .65rem; }
 .mk-error { background: #f6cfcc; border-radius: .6rem; color: #8a1c14; margin: .6rem 0 0; padding: .5rem .7rem; }
-@media (prefers-color-scheme: dark) { .mk-error { background: #4a1916; color: #ffb4ab; } }
+@media all { .mk-error { background: #4a1916; color: #ffb4ab; } }
 .mk-grid { display: grid; gap: .7rem .9rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .9rem 0; }
 .mk-field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
 .mk-field label { font-size: .85rem; font-weight: 700; }
@@ -122,7 +122,7 @@ label.mk-k-blog { border-color: var(--blog); }
 .mk-wide { grid-column: 1 / -1; }
 .mk-dlg-foot { align-items: center; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; padding-top: .8rem; }
 .mk-danger { color: #b3261e; }
-@media (prefers-color-scheme: dark) { .mk-danger { color: #ff8a80; } }
+@media all { .mk-danger { color: #ff8a80; } }
 
 @media (max-width: 1000px) {
   .mk-stats, .mk-sections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
