@@ -278,7 +278,7 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .ag-count { background: var(--soft); border-radius: 999px; color: var(--text); font-size: .66rem; letter-spacing: 0; line-height: 1.55; padding: 0 .45rem; }
   #m-dashboard .today-list { list-style: none; margin: 0; padding: 0; }
   #m-dashboard .today-list li + li { border-top: 1px solid var(--hair); }
-  #m-dashboard .today-item { align-items: center; background: transparent; border: 0; border-radius: .6rem; display: grid; font-weight: 400; gap: .15rem .9rem; grid-template-columns: 3px minmax(0, 1fr) 3.6rem 11.5rem; margin: 0; padding: .6rem .6rem .6rem 0; text-align: left; transition: background .2s var(--ease); width: 100%; }
+  #m-dashboard .today-item { align-items: center; background: transparent; border: 0; border-radius: .6rem; display: grid; font-weight: 400; gap: .15rem .9rem; grid-template-columns: 3px minmax(0, 1fr) 4.4rem 11.5rem; margin: 0; padding: .6rem .6rem .6rem 0; text-align: left; transition: background .2s var(--ease); width: 100%; }
   #m-dashboard .today-item:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); color: var(--text); }
   #m-dashboard .today-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   #m-dashboard .today-dot { align-self: stretch; background: transparent; border-radius: 3px; margin: .1rem 0; }
@@ -291,6 +291,7 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .today-meta { display: contents; }
   #m-dashboard .today-when { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; text-align: left; white-space: nowrap; }
   #m-dashboard .today-when.has-time { color: var(--accent-ink); font-weight: 700; }
+  #m-dashboard .today-time { display: block; font-size: .72rem; font-weight: 600; opacity: .85; }
   #m-dashboard .today-item .chip { background: var(--soft); color: var(--muted); font-size: .7rem; font-weight: 700; justify-self: start; line-height: 1.4; max-width: 100%; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
   #m-dashboard .today-item .chip.warn { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-ink); }
   #m-dashboard .today-item .chip.alert-chip { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
@@ -334,7 +335,7 @@ export const adminPage = () => `<!doctype html>
     #m-dashboard .ag-group + .ag-group { margin-top: .85rem; }
     #m-dashboard .today-item { grid-template-columns: 3px minmax(0, 1fr); padding: .5rem .5rem .55rem 0; }
     #m-dashboard .today-meta { align-items: center; display: flex; flex-wrap: wrap; gap: .3rem .6rem; grid-column: 2; padding-top: .15rem; }
-    #m-dashboard .today-when { text-align: left; } #m-dashboard .today-item .chip { justify-self: start; }
+    #m-dashboard .today-when { text-align: left; } #m-dashboard .today-time { display: inline; margin-left: .35rem; } #m-dashboard .today-item .chip { justify-self: start; }
     #m-dashboard .dash-tl li { padding-bottom: .8rem; } #m-dashboard .dash-empty { padding: 1rem .9rem; }
   }
   .money-ok { color: var(--ok); font-weight: 800; } .money-warn { color: var(--warn); font-weight: 800; }
@@ -1155,7 +1156,7 @@ export const adminPage = () => `<!doctype html>
     const row = (x) => '<li><button type="button" class="today-item" ' + (x.rec ? 'data-mk-rec="' + esc(x.rec) + '"' : x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
       + '<span class="today-dot" aria-hidden="true"></span>'
       + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + esc(x.section) + '</span></span>'
-      + '<span class="today-meta"><span class="today-when' + (x.time ? ' has-time' : '') + '">' + (x.date ? shortDay(x.date) + (x.time ? ' · ' + esc(x.time) + ' hs' : '') : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
+      + '<span class="today-meta"><span class="today-when' + (x.time ? ' has-time' : '') + '">' + (x.date ? shortDay(x.date) + (x.time ? '<span class="today-time">' + esc(x.time) + ' hs</span>' : '') : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
     // Solo se muestran los grupos con avisos; si no hay ninguno, un estado vacío
     const group = (cls, title, list) => (list.length ? '<div class="ag-group ' + cls + '"><h3>' + title + ' <span class="ag-count">' + list.length + '</span></h3><ul class="today-list">' + list.map(row).join('') + '</ul></div>' : '');
     const allClear = (title, text) => '<div class="dash-empty dash-clear"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg><p>' + title + '</p><span>' + text + '</span></div>';
