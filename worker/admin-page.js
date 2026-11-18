@@ -127,6 +127,13 @@ export const adminPage = () => `<!doctype html>
   .side { background: var(--side-bg); border-right: 1px solid var(--line); bottom: 0; display: flex; flex-direction: column; left: 0; margin: 0; position: fixed; top: 0; transition: width .22s ease, transform .22s ease; width: var(--side-w); z-index: 30; }
   .side-head { align-items: center; display: flex; gap: .6rem; min-height: 4rem; overflow: hidden; padding: 1rem 1rem .75rem; white-space: nowrap; }
   .side-head .mark { flex-shrink: 0; }
+  .side-search { padding: 0 .7rem .4rem; position: relative; }
+  .side-search input { width: 100%; }
+  .global-results { background: var(--card, #241a35); border: 1px solid var(--line, #3a2d52); border-radius: .6rem; left: .7rem; max-height: 60vh; overflow: auto; position: absolute; right: .7rem; top: 100%; z-index: 30; }
+  .global-results button { background: none; border: 0; border-radius: 0; color: inherit; display: block; font: inherit; padding: .5rem .7rem; text-align: left; width: 100%; }
+  .global-results button:hover, .global-results button:focus { background: rgba(255,255,255,.07); }
+  .global-results small { color: var(--muted); display: block; font-size: .72rem; }
+  .global-results p { margin: 0; padding: .6rem .7rem; }
   .side-title { display: flex; flex-direction: column; line-height: 1.2; transition: opacity .15s ease; }
   .side-title strong { font-size: .92rem; }
   .side-title span { color: var(--muted); font-size: .72rem; font-weight: 600; }
@@ -149,6 +156,7 @@ export const adminPage = () => `<!doctype html>
   .side-close { display: none; }
   /* Contraída: solo íconos; las categorías pasan a ser una línea fina y los contadores, un número chico sobre el ícono */
   html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 0; }
+  html.side-collapsed .side-search { display: none; }
   html.side-collapsed .side-head { justify-content: center; padding-left: 0; padding-right: 0; }
   html.side-collapsed .side-title { width: 0; }
   html.side-collapsed .side-group { background: var(--line); height: 1px; margin: .7rem .55rem; opacity: 1; padding: 0; text-indent: -999px; }
@@ -167,6 +175,7 @@ export const adminPage = () => `<!doctype html>
     .side { box-shadow: 0 0 2rem rgba(16, 11, 29, .45); transform: translateX(-105%); width: min(17rem, 85vw); }
     .side.is-open { transform: none; }
     html.side-collapsed .side-title, html.side-collapsed .side-label { opacity: 1; }
+    html.side-collapsed .side-search { display: block; }
     html.side-collapsed .side-title { width: auto; }
     html.side-collapsed .side-head { justify-content: flex-start; padding: 1rem 1rem .75rem; }
     html.side-collapsed .side-group { background: none; height: auto; margin: 1.1rem .7rem .35rem; opacity: .75; text-indent: 0; }
@@ -349,6 +358,7 @@ export const adminPage = () => `<!doctype html>
     <div class="layout">
       <aside class="side" id="side">
         <div class="side-head"><span class="mark">JNB</span><span class="side-title"><strong>JNB Creative Studio</strong><span>Panel de administración</span></span><button type="button" class="side-close" id="side-close" aria-label="Cerrar el menú"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+        <div class="side-search"><input type="search" id="global-q" placeholder="Buscar cliente, mail, código…" aria-label="Buscar en todo el panel" autocomplete="off"><div id="global-results" class="global-results" hidden></div></div>
         <nav class="side-scroll" aria-label="Secciones del panel">
           <p class="side-group">General</p>
           <a href="#dashboard" data-mod="dashboard"><svg class="ico" aria-hidden="true"><use href="#i-dashboard"/></svg><span class="side-label">Dashboard</span></a>
@@ -890,7 +900,7 @@ export const adminPage = () => `<!doctype html>
           + '<td>' + esc(y.concept) + (y.method ? '<br><span class="small muted">' + esc(y.method) + '</span>' : '') + (y.note ? '<br><span class="small muted">' + esc(y.note) + '</span>' : '') + '</td>'
           + '<td class="n"><strong>' + esc(money(y.currency, y.amount)) + '</strong></td><td>' + (day(y.due) || '—') + '</td>'
           + '<td>' + (y.paid ? '<span class="chip ok">✓ Pagado ' + day(y.paid) + '</span>' : '<span class="chip ' + (late ? 'alert-chip' : 'warn') + '">' + (late ? 'Vencido' : 'Pendiente') + '</span>') + '</td>'
-          + '<td class="n"><div class="row" style="justify-content:flex-end">' + (y.paid ? '<button type="button" data-pay-toggle>Desmarcar</button>' : '<button type="button" class="primary" data-pay-toggle>Marcar pagado</button>') + '<button type="button" data-pay-remove>Borrar</button></div></td></tr>';
+          + '<td class="n"><div class="row" style="justify-content:flex-end">' + (y.paid ? '<button type="button" data-pay-toggle>Desmarcar</button><button type="button" data-pay-mail="receipt" title="Le manda por mail un comprobante simple (no es factura)">📧 Recibo</button>' : '<button type="button" class="primary" data-pay-toggle>Marcar pagado</button><button type="button" data-pay-mail="reminder" title="Le manda por mail un recordatorio con el monto y el concepto">📧 Recordar pago</button>') + '<button type="button" data-pay-remove>Borrar</button></div></td></tr>';
       }).join('') + '</tbody></table></div>'
     : '<p class="empty">Todavía no hay pagos cargados.</p>');
   const paymentForm = (projectToken) => '<form class="payment-form">'
@@ -1239,6 +1249,13 @@ export const adminPage = () => `<!doctype html>
       + '<p class="small muted">Descarga un archivo .json con todo lo que guarda el panel: clientes, consultas, presupuestos, proyectos, briefs, pagos, reseñas, cupones e historial. Los archivos que suben los clientes no van en la copia (se descargan desde cada proyecto). Tiene datos privados de tus clientes: guardalo en un lugar seguro.</p>'
       + '<p class="small">📧 Además, todos los lunes desde las 9 te llega sola por mail (a tu casilla de respuestas). ' + (data.backupMailed ? 'Última: ' + date(data.backupMailed) + '.' : 'Todavía no salió ninguna.') + '</p>'
       + '<button type="button" class="primary" id="backup-btn">⬇ Descargar copia de seguridad</button></div>'
+      + '<details class="card"><summary>⤴ Restaurar una copia</summary>'
+      + '<p class="small muted" style="margin-top:.6rem">Elegí un archivo .json de copia. Primero vas a ver qué cambia en cada parte; recién al confirmar se reemplazan los datos por los de la copia. Las sesiones, los registros de seguridad y de cambios y los archivos de los briefs no se tocan.</p>'
+      + '<label>Archivo de copia<input type="file" id="restore-file" accept=".json,application/json"></label>'
+      + '<div id="restore-preview"></div></details>'
+      + '<details class="card"><summary>🕘 Registro de cambios</summary>'
+      + ((data.changes || []).length ? '<ul class="small" style="margin-top:.6rem">' + data.changes.slice(0, 50).map((c) => '<li>' + esc(c.icon) + ' ' + esc(c.text) + ' <span class="muted">· ' + date(c.at) + '</span></li>').join('') + '</ul>' : '<p class="small muted" style="margin-top:.6rem">Todavía no hay cambios anotados.</p>')
+      + '</details>'
       + '<details class="card"><summary>⚠ Reiniciar datos en cero</summary>'
       + '<form id="reset-form"><p class="small muted" style="margin-top:.6rem">Borra clientes, consultas, presupuestos, proyectos, briefs y sus archivos, pagos, cupones, reseñas e historial. Los códigos vuelven a empezar en JNB-CLI-0001. No se tocan los me gusta del blog, el newsletter, el cartel del inicio ni el horario. <strong>No se puede deshacer: descargá antes la copia de seguridad.</strong></p>'
       + '<label class="check-line"><input type="checkbox" name="faq" checked> También poner en cero los votos y búsquedas de Preguntas frecuentes</label>'
@@ -1645,7 +1662,56 @@ export const adminPage = () => `<!doctype html>
   document.addEventListener('change', (e) => {
     if (e.target.dataset && e.target.dataset.f && e.target.type !== 'search') applyFilter(e.target);
     if (e.target.id === 'np-client') document.querySelectorAll('.np-new').forEach((l) => { l.hidden = Boolean(e.target.value); });
+    if (e.target.id === 'restore-file') previewRestore(e.target.files && e.target.files[0]);
   });
+
+  const sendPaymentMail = async (id, kind) => {
+    try {
+      const r = await api('pagos/' + id + '/mail', { kind });
+      toast(r.ok ? (kind === 'receipt' ? 'Recibo enviado' : 'Recordatorio enviado') : r.error === 'email' ? 'El cliente no tiene mail cargado' : 'No se pudo enviar el mail');
+    } catch (err) { toast('No se pudo enviar el mail'); }
+  };
+
+  // ---- Búsqueda general: clientes, proyectos, consultas y presupuestos por nombre, mail, teléfono, código o token
+  const globalSearch = (q) => {
+    const box = $('global-results');
+    const k = fold(q);
+    if (!data || k.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
+    const hit = (...vals) => vals.some((v) => fold(v).includes(k));
+    const items = [
+      ...data.clients.filter((c) => hit(c.name, c.email, c.phone, c.code)).map((c) => ({ go: 'clientes|' + c.code, title: '👤 ' + c.name, sub: c.code + (c.email ? ' · ' + c.email : '') })),
+      ...data.projects.filter((p) => hit(p.code, p.client, p.project, p.token)).map((p) => ({ go: 'proyectos|' + (p.code || ''), title: '📁 ' + p.project, sub: (p.code || '') + ' · ' + p.client })),
+      ...data.inquiries.filter((i) => hit(i.code, i.token, i.name, i.email)).map((i) => ({ go: (i.kind === 'presupuesto' ? 'presupuestos' : 'consultas') + '|' + i.code, title: (i.kind === 'presupuesto' ? '📝 ' : '✉ ') + i.name, sub: i.code + ' · ' + (i.kind === 'presupuesto' ? 'Presupuesto' : 'Consulta') + (i.email ? ' · ' + i.email : '') })),
+    ].slice(0, 30);
+    box.innerHTML = items.length ? items.map((x) => '<button type="button" data-global-go="' + esc(x.go) + '">' + esc(x.title) + '<small>' + esc(x.sub) + '</small></button>').join('') : '<p class="small muted">Sin resultados</p>';
+    box.hidden = false;
+  };
+  document.addEventListener('input', (e) => { if (e.target.id === 'global-q') globalSearch(e.target.value); });
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-global-go]');
+    if (!b) { if (!e.target.closest('.side-search')) $('global-results').hidden = true; return; }
+    const [mod, id] = b.dataset.globalGo.split('|');
+    $('global-results').hidden = true; $('global-q').value = '';
+    if (mod === 'consultas' || mod === 'presupuestos') { F[mod].q = id; PAGE[mod] = 1; go(mod, ''); renderInquiries(); return; }
+    if (mod === 'clientes') clientSub = 'datos';
+    go(mod, id);
+  });
+
+  // ---- Restaurar copia: lee el archivo, pide la vista previa al servidor y muestra qué cambia en cada tabla
+  let restoreCopy = null;
+  const previewRestore = async (file) => {
+    const box = $('restore-preview');
+    restoreCopy = null; box.innerHTML = '';
+    if (!file) return;
+    try { restoreCopy = JSON.parse(await file.text()); } catch (err) { box.innerHTML = '<p class="small">⚠ El archivo no es una copia válida.</p>'; return; }
+    let r;
+    try { r = await api('restaurar', { copy: restoreCopy }); } catch (err) { restoreCopy = null; box.innerHTML = '<p class="small">⚠ El archivo no es una copia del panel.</p>'; return; }
+    const LABEL = { clients: 'Clientes', inquiries: 'Consultas y presupuestos', projects: 'Proyectos', payments: 'Pagos', briefs: 'Briefs', reviews: 'Reseñas', invitations: 'Invitaciones a reseñas', coupons: 'Cupones', project_events: 'Historial de proyectos', tasks: 'Tareas', task_categories: 'Categorías de tareas', giveaways: 'Sorteos', giveaway_winners: 'Ganadores', giveaway_events: 'Historial de sorteos', renewals: 'Vencimientos', quote_features: 'Cotizador', settings: 'Configuración', mk_posts: 'Publicaciones', mk_articles: 'Artículos', mk_ideas: 'Ideas' };
+    box.innerHTML = '<p class="small">Copia del ' + (r.created ? date(r.created) : 'día desconocido') + ' · Así quedaría cada parte (ahora → con la copia):</p>'
+      + '<ul class="small">' + r.summary.map((t) => '<li>' + esc(LABEL[t.name] || t.name) + ': ' + t.now + ' → ' + t.copy + (t.now !== t.copy ? ' ⚑' : '') + '</li>').join('') + '</ul>'
+      + '<label>Para confirmar, escribí RESTAURAR<input id="restore-confirm" autocomplete="off" placeholder="RESTAURAR"></label>'
+      + '<button type="button" id="restore-go" style="margin-top:.75rem">Restaurar copia</button>';
+  };
 
   $('menu-toggle').addEventListener('click', () => {
     const open = $('side').classList.toggle('is-open');
@@ -1740,11 +1806,27 @@ export const adminPage = () => `<!doctype html>
     if (payRow && e.target.closest('[data-pay-toggle]')) {
       const y = data.payments.find((x) => x.id === Number(payRow.dataset.payment));
       await api('pagos/' + y.id, { ...y, paid: y.paid ? '' : todayIso() });
-      toast(y.paid ? 'Vuelve a quedar pendiente' : 'Pago marcado como cobrado'); load(); return;
+      toast(y.paid ? 'Vuelve a quedar pendiente' : 'Pago marcado como cobrado');
+      if (!y.paid && confirm('¿Le mandás el recibo por mail?')) await sendPaymentMail(y.id, 'receipt');
+      load(); return;
+    }
+    if (payRow && e.target.closest('[data-pay-mail]')) {
+      const kind = e.target.closest('[data-pay-mail]').dataset.payMail;
+      if (!confirm(kind === 'receipt' ? '¿Mandarle el recibo de este pago por mail?' : '¿Mandarle un recordatorio de este pago por mail?')) return;
+      await sendPaymentMail(Number(payRow.dataset.payment), kind); load(); return;
     }
     if (payRow && e.target.closest('[data-pay-remove]')) {
       if (!confirm('¿Borrar este pago? No se puede deshacer.')) return;
       await api('pagos/' + payRow.dataset.payment, { remove: true }); toast('Pago borrado'); load(); return;
+    }
+    if (e.target.closest('#restore-go')) {
+      if (!restoreCopy) return;
+      if (($('restore-confirm').value || '').trim() !== 'RESTAURAR') { toast('Escribí RESTAURAR para confirmar'); return; }
+      if (!confirm('¿Reemplazar los datos actuales por los de la copia? Conviene descargar antes una copia de lo que hay ahora.')) return;
+      try { await api('restaurar', { copy: restoreCopy, confirm: 'RESTAURAR' }); } catch (err) { toast('No se pudo restaurar'); return; }
+      restoreCopy = null; openClientCode = ''; selected = '';
+      toast('Listo: se restauró la copia'); await load(); go('config', '');
+      return;
     }
     if (e.target.closest('#backup-btn')) {
       const btn = $('backup-btn');

@@ -10,7 +10,7 @@
 // así un mismo navegador no suma dos veces el mismo artículo. No se guarda la IP ni nada personal.
 
 import { DurableObject } from 'cloudflare:workers';
-import { handleStudio, isAdmin, weeklyBackup, adminGate, ipBucket, logSecurity } from './studio.js';
+import { handleStudio, isAdmin, weeklyBackup, briefReminders, adminGate, ipBucket, logSecurity } from './studio.js';
 import { handleNewsletter, notifyNewArticles } from './newsletter.js';
 
 export { StudioData } from './studio.js';
@@ -332,5 +332,7 @@ export default {
     ctx.waitUntil(notifyNewArticles(env));
     // Y los lunes desde las 9, la copia de seguridad del panel por mail (studio.js)
     ctx.waitUntil(weeklyBackup(env));
+    // Y entre las 10 y las 19, recordatorio del brief a quien lleva 5 días sin completarlo
+    ctx.waitUntil(briefReminders(env));
   },
 };

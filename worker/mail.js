@@ -168,8 +168,15 @@ const BRIEF_INVITE = {
 };
 
 // Al cliente, cuando acepta el presupuesto: link para completar el brief de su plan
-export function briefInviteMail({ lang, name, link }) {
-  const t = BRIEF_INVITE[lang] || BRIEF_INVITE.es;
+// Recordatorio (reminder: true): mismo mail, con otro asunto y otra primera línea
+const BRIEF_REMINDER = {
+  es: { subject: 'Recordatorio: tu brief está pendiente', intro: 'Te escribo porque todavía no completaste el brief de tu proyecto. Lo necesito para poder empezar.' },
+  en: { subject: 'Reminder: your brief is still pending', intro: 'I am writing because you have not filled in your project brief yet. I need it to get started.' },
+  pt: { subject: 'Lembrete: seu briefing está pendente', intro: 'Escrevo porque você ainda não preencheu o briefing do seu projeto. Preciso dele para começar.' },
+};
+
+export function briefInviteMail({ lang, name, link, reminder }) {
+  const t = { ...(BRIEF_INVITE[lang] || BRIEF_INVITE.es), ...(reminder ? BRIEF_REMINDER[lang] || BRIEF_REMINDER.es : {}) };
   const first = String(name || '').split(' ')[0];
   const inner = `
     <tr><td style="padding:16px 28px 0;font-size:16px;line-height:1.6;">
@@ -355,6 +362,42 @@ export function proposalMail({ lang, name, link }) {
   const inner = noticeBody(t, first, [esc(t.p1), esc(t.p2)], link, t.button);
   const plain = [t.hello(first), '', t.p1, t.p2, '', `${t.button}: ${link}`, '', 'Jimena Bernadaz'].join('\n');
   return { subject: t.subject, html: frame(lang, t.subject, inner, t.footer), text: plain };
+}
+
+// ---- Pagos: recordatorio de un pago pendiente y recibo de un pago cobrado (comprobante simple, no es factura)
+const PAYMENT_MAIL = {
+  es: {
+    reminder: { subject: (c) => `Recordatorio de pago: ${c}`, p1: 'Te escribo para recordarte que tenés un pago pendiente de tu proyecto:', p2: 'Si ya lo hiciste, avisame y lo registro. Si tenés alguna duda, escribime.' },
+    receipt: { subject: (c) => `Recibo de pago: ${c}`, p1: '¡Gracias! Recibí tu pago. Te dejo el comprobante:', p2: 'Este recibo es un comprobante simple del pago, no es una factura.' },
+    hello: (n) => `Hola ${n}:`, client: 'Cliente', concept: 'Concepto', amount: 'Monto', due: 'Vence', paid: 'Fecha de pago', method: 'Medio de pago',
+    button: 'Ver mi proyecto', footer: 'Recibiste este mail porque tenés un proyecto con jnbcreativestudio.com.ar.',
+  },
+  en: {
+    reminder: { subject: (c) => `Payment reminder: ${c}`, p1: 'This is a friendly reminder that you have a pending payment for your project:', p2: 'If you have already paid, let me know and I will record it. If you have any questions, write to me.' },
+    receipt: { subject: (c) => `Payment receipt: ${c}`, p1: 'Thank you! I received your payment. Here is your receipt:', p2: 'This receipt is a simple proof of payment, not an invoice.' },
+    hello: (n) => `Hi ${n},`, client: 'Client', concept: 'Concept', amount: 'Amount', due: 'Due', paid: 'Payment date', method: 'Payment method',
+    button: 'See my project', footer: 'You received this email because you have a project with jnbcreativestudio.com.ar.',
+  },
+  pt: {
+    reminder: { subject: (c) => `Lembrete de pagamento: ${c}`, p1: 'Escrevo para lembrar que você tem um pagamento pendente do seu projeto:', p2: 'Se já pagou, me avise e eu registro. Se tiver dúvidas, escreva para mim.' },
+    receipt: { subject: (c) => `Recibo de pagamento: ${c}`, p1: 'Obrigada! Recebi o seu pagamento. Segue o comprovante:', p2: 'Este recibo é um comprovante simples do pagamento, não é uma nota fiscal.' },
+    hello: (n) => `Olá, ${n}!`, client: 'Cliente', concept: 'Conceito', amount: 'Valor', due: 'Vencimento', paid: 'Data do pagamento', method: 'Forma de pagamento',
+    button: 'Ver meu projeto', footer: 'Você recebeu este e-mail porque tem um projeto com jnbcreativestudio.com.ar.',
+  },
+};
+
+export function paymentMail({ lang, kind, name, link, clientCode, concept, amount, due, paid, method }) {
+  const base = PAYMENT_MAIL[lang] || PAYMENT_MAIL.es;
+  const t = { ...base, ...(kind === 'receipt' ? base.receipt : base.reminder) };
+  const first = String(name || '').split(' ')[0];
+  const fmt = (d) => (d ? d.split('-').reverse().join('/') : '');
+  const rows = [[t.client, clientCode], [t.concept, concept], [t.amount, amount],
+    ...(kind === 'receipt' ? [[t.paid, fmt(paid)], [t.method, method]] : [[t.due, fmt(due)]])].filter((r) => r[1]);
+  const table = `<table role="presentation" style="border-collapse:collapse;font-size:15px;">${rows.map(([k, v]) => `<tr><td style="padding:3px 14px 3px 0;color:#5d4a73;">${esc(k)}</td><td style="padding:3px 0;font-weight:700;">${esc(v)}</td></tr>`).join('')}</table>`;
+  const subject = t.subject(concept);
+  const inner = noticeBody(t, first, [esc(t.p1), table, esc(t.p2)], link, t.button);
+  const plain = [t.hello(first), '', t.p1, ...rows.map(([k, v]) => `${k}: ${v}`), '', t.p2, '', `${t.button}: ${link}`, '', 'Jimena Bernadaz'].join('\n');
+  return { subject, html: frame(lang, subject, inner, t.footer), text: plain };
 }
 
 // ---- Cambio de etapa del proyecto

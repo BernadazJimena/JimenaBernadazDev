@@ -23,7 +23,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { adminPage } from './admin-page.js';
-import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail, proposalMail, stageMail } from './mail.js';
+import { confirmationMail, briefInviteMail, briefReceivedMail, briefUpdatedMail, launchMail, proposalMail, stageMail, paymentMail } from './mail.js';
 
 const SITE = 'https://jnbcreativestudio.com.ar';
 const LANGS = new Set(['es', 'en', 'pt']);
@@ -902,6 +902,29 @@ export class StudioData extends DurableObject {
     return true;
   }
 
+  // Proyectos en reserva o materiales, con más de `days` días, sin brief enviado y sin recordatorio previo (uno solo por proyecto)
+  briefsToRemind(days) {
+    const cutoff = new Date(Date.now() - days * DAY).toISOString();
+    return this.sql.exec(`SELECT p.token, p.quote, p.lang, p.client, c.email, c.name FROM projects p
+      LEFT JOIN clients c ON c.id = p.client_id
+      LEFT JOIN briefs b ON b.token = CASE WHEN p.quote != '' THEN p.quote ELSE p.token END
+      WHERE p.stage <= 1 AND p.created < ? AND p.created >= '2026-11-18' AND (b.sent IS NULL OR b.sent = '') AND c.email IS NOT NULL AND c.email != ''
+        AND NOT EXISTS (SELECT 1 FROM project_events e WHERE e.project = p.token AND e.text LIKE 'Recordatorio automático del brief%')
+      LIMIT 20`, cutoff).toArray();
+  }
+
+  // Datos para el mail de un pago (recordatorio o recibo): el pago, a quién va y qué link lleva
+  paymentContact(id) {
+    const row = this.sql.exec(`SELECT pay.*, p.lang, p.quote, p.client, c.id AS client_id, c.email, c.name
+      FROM payments pay JOIN projects p ON p.token = pay.project LEFT JOIN clients c ON c.id = p.client_id WHERE pay.id = ?`, id).toArray()[0];
+    if (!row) return null;
+    return {
+      project: row.project, lang: row.lang, quote: row.quote, email: row.email || '', name: row.name || row.client || '',
+      clientCode: row.client_id ? clientCode(row.client_id) : '', concept: row.concept,
+      amount: `${row.currency} ${Number(row.amount).toLocaleString('es-AR')}`, due: row.due, paid: row.paid, method: row.method,
+    };
+  }
+
   // ---- Gestor de tareas
   tasksData() {
     return {
@@ -1387,6 +1410,47 @@ export class StudioData extends DurableObject {
     const out = { created: new Date().toISOString(), tables: {} };
     for (const { name } of tables) out.tables[name] = this.sql.exec(`SELECT * FROM "${name}"`).toArray();
     return out;
+  }
+
+  // ---- Restaurar una copia: reemplaza cada tabla de la copia por su contenido. Con apply = false solo compara cantidades.
+  // No se tocan las sesiones, el registro de seguridad, el de cambios ni los archivos del brief (la copia no trae su contenido).
+  restore(copy, apply) {
+    const SKIP = new Set(['admin_sessions', 'rate_limits', 'security_log', 'brief_files', 'brief_chunks', 'change_log']);
+    const existing = new Set(this.sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'").toArray().map((t) => t.name));
+    const src = copy && typeof copy.tables === 'object' && copy.tables ? copy.tables : null;
+    if (!src) return { error: 'formato' };
+    const tables = Object.keys(src).filter((n) => existing.has(n) && !SKIP.has(n) && !n.startsWith('__') && Array.isArray(src[n]));
+    if (!tables.length) return { error: 'formato' };
+    const summary = tables.map((name) => ({ name, now: this.sql.exec(`SELECT COUNT(*) AS n FROM "${name}"`).one().n, copy: src[name].length }));
+    if (!apply) return { created: String(copy.created || ''), summary };
+    this.ctx.storage.transactionSync(() => {
+      // Las referencias entre tablas (pagos → proyectos → clientes) se revisan al final, no fila por fila
+      this.sql.exec('PRAGMA defer_foreign_keys = ON');
+      for (const name of tables) {
+        const cols = new Set(this.sql.exec(`PRAGMA table_info("${name}")`).toArray().map((c) => c.name));
+        this.sql.exec(`DELETE FROM "${name}"`);
+        for (const row of src[name]) {
+          const keys = Object.keys(row || {}).filter((k) => cols.has(k));
+          if (!keys.length) continue;
+          this.sql.exec(`INSERT INTO "${name}" (${keys.map((k) => `"${k}"`).join(',')}) VALUES (${keys.map(() => '?').join(',')})`, ...keys.map((k) => row[k]));
+        }
+      }
+    });
+    this.logChange('⤴', `Restauraste la copia del ${String(copy.created || '').slice(0, 10)}`);
+    return { ok: true, summary };
+  }
+
+  // ---- Registro de cambios del panel (los últimos 500)
+  logChange(icon, textLine) {
+    this.sql.exec('CREATE TABLE IF NOT EXISTS change_log (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, icon TEXT, text TEXT)');
+    this.sql.exec('INSERT INTO change_log (at, icon, text) VALUES (?, ?, ?)', new Date().toISOString(), icon, String(textLine).slice(0, 300));
+    this.sql.exec('DELETE FROM change_log WHERE id <= (SELECT MAX(id) FROM change_log) - 500');
+    return true;
+  }
+
+  changeLog() {
+    this.sql.exec('CREATE TABLE IF NOT EXISTS change_log (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, icon TEXT, text TEXT)');
+    return this.sql.exec('SELECT at, icon, text FROM change_log ORDER BY id DESC LIMIT 200').toArray();
   }
 
   // ---- Consultas y pedidos de presupuesto
@@ -1892,6 +1956,21 @@ const cleanEnv = (value) => String(value || '').trim().replace(/^["'“”]+|["'
 
 // ---- Copia de seguridad semanal: los lunes desde las 9 (hora de Argentina) llega por mail a MAIL_REPLY_TO, con el .json adjunto.
 // La corre el cron de cada hora (worker/index.js); si el envío falla, lo vuelve a intentar a la hora siguiente.
+// Cada hora (entre las 10 y las 19 de Buenos Aires): a los 5 días sin brief, un recordatorio por mail al cliente. Uno solo por proyecto.
+const BRIEF_REMINDER_DAYS = 5;
+export async function briefReminders(env) {
+  const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Argentina/Buenos_Aires', hour: 'numeric', hourCycle: 'h23' }).format(new Date()));
+  if (hour < 10 || hour > 19) return;
+  const store = env.STUDIO.get(env.STUDIO.idFromName('studio'));
+  mailStore = store;
+  for (const p of await store.briefsToRemind(BRIEF_REMINDER_DAYS)) {
+    const link = `${p.quote ? quoteLink(p.lang, p.quote) : projectLink(p.lang, p.token)}#brief`;
+    let mailed = false;
+    try { mailed = await sendAnyMail(env, p.email, briefInviteMail({ lang: p.lang, name: p.name || p.client, link, reminder: true })); } catch { /* se reintenta en la próxima hora */ }
+    if (mailed) await store.logEvent(p.token, '📧', `Recordatorio automático del brief (a los ${BRIEF_REMINDER_DAYS} días sin completarlo)`);
+  }
+}
+
 export async function weeklyBackup(env) {
   const to = cleanEnv(env.MAIL_REPLY_TO);
   if (!to) return;
@@ -2374,6 +2453,7 @@ export async function handleStudio(request, env, ctx) {
       data.backupMailed = await store.backupMailedAt();
       data.cotizador = await store.cotizadorData();
       data.marketing = await store.marketingData();
+      data.changes = await store.changeLog();
       return json(data);
     }
 
@@ -2447,6 +2527,7 @@ export async function handleStudio(request, env, ctx) {
         ok = await store.archiveTasks(ids(body.ids), body.archived !== false);
       } else if (body.action === 'delete') {
         ok = await store.deleteTask(id);
+        if (ok) await store.logChange('🗑️', `Borraste la tarea #${id}`);
       } else if (body.action === 'categories') {
         const list = (Array.isArray(body.categories) ? body.categories : []).slice(0, 40)
           .map((c) => ({ id: Number(c && c.id) || 0, name: text(c && c.name, 60) })).filter((c) => c.name);
@@ -2649,7 +2730,15 @@ export async function handleStudio(request, env, ctx) {
     if (path === '/api/admin/reiniciar') {
       if (body.confirm !== 'REINICIAR') return badRequest();
       await store.resetAll();
+      await store.logChange('⚠', 'Reiniciaste los datos del panel en cero');
       return json({ ok: true });
+    }
+
+    // Restaurar una copia de seguridad: primero vista previa (apply: false), después confirmar con RESTAURAR
+    if (path === '/api/admin/restaurar') {
+      const apply = body.confirm === 'RESTAURAR';
+      const result = await store.restore(body.copy, apply);
+      return result.error ? json(result, 400) : json(result);
     }
 
     // ---- Clientes
@@ -2664,6 +2753,7 @@ export async function handleStudio(request, env, ctx) {
       const data = clientData();
       if (!data.name || (data.email && !normEmail(data.email))) return badRequest();
       const saved = await store.addClient(data);
+      if (!saved.error) await store.logChange('👤', `Creaste la ficha de ${data.name}`);
       return saved.error ? json(saved, 409) : json(saved);
     }
     if ((match = path.match(/^\/api\/admin\/clientes\/(\d+)$/))) {
@@ -2671,12 +2761,15 @@ export async function handleStudio(request, env, ctx) {
       if (!data.name || (data.email && !normEmail(data.email))) return badRequest();
       const saved = await store.setClient(Number(match[1]), data);
       if (saved.error === 'not found') return notFound();
+      if (!saved.error) await store.logChange('👤', `Editaste la ficha de ${data.name}`);
       return saved.error ? json(saved, 409) : json(saved);
     }
     if ((match = path.match(/^\/api\/admin\/clientes\/(\d+)\/unir$/))) {
       const into = Number(body.into);
       if (!Number.isInteger(into)) return badRequest();
-      return (await store.mergeClients(Number(match[1]), into)) ? json({ ok: true }) : notFound();
+      const merged = await store.mergeClients(Number(match[1]), into);
+      if (merged) await store.logChange('🔗', `Uniste la ficha #${match[1]} con la #${into}`);
+      return merged ? json({ ok: true }) : notFound();
     }
     if (path === '/api/admin/duplicados/descartar') {
       const a = Number(body.a);
@@ -2701,12 +2794,28 @@ export async function handleStudio(request, env, ctx) {
     if (path === '/api/admin/pagos') {
       const data = paymentData();
       if (!TOKEN.test(data.project) || !data.concept || !data.amount) return badRequest();
-      return (await store.addPayment(data)) ? json({ ok: true }) : notFound();
+      const ok = await store.addPayment(data);
+      if (ok) await store.logChange('💳', `Registraste un pago: ${data.concept}`);
+      return ok ? json({ ok: true }) : notFound();
     }
     if ((match = path.match(/^\/api\/admin\/pagos\/(\d+)$/))) {
       const data = paymentData();
       if (!data.remove && (!data.concept || !data.amount)) return badRequest();
-      return (await store.setPayment(Number(match[1]), data)) ? json({ ok: true }) : notFound();
+      const ok = await store.setPayment(Number(match[1]), data);
+      if (ok) await store.logChange(data.remove ? '🗑️' : '💳', `${data.remove ? 'Borraste' : 'Editaste'} el pago #${match[1]}${data.concept ? `: ${data.concept}` : ''}`);
+      return ok ? json({ ok: true }) : notFound();
+    }
+    // Recordatorio de un pago pendiente o recibo de uno cobrado, por mail al cliente
+    if ((match = path.match(/^\/api\/admin\/pagos\/(\d+)\/mail$/))) {
+      const kind = body.kind === 'receipt' ? 'receipt' : 'reminder';
+      const p = await store.paymentContact(Number(match[1]));
+      if (!p) return notFound();
+      if (!p.email) return json({ ok: false, error: 'email' });
+      if (kind === 'receipt' ? !p.paid : p.paid) return badRequest();
+      const link = p.quote ? quoteLink(p.lang, p.quote) : projectLink(p.lang, p.project);
+      const mailed = await sendAnyMail(env, p.email, paymentMail({ ...p, kind, link }));
+      if (mailed) await store.logEvent(p.project, '📧', kind === 'receipt' ? `Le mandaste el recibo del pago: ${p.concept}` : `Le recordaste el pago pendiente: ${p.concept}`);
+      return json({ ok: mailed });
     }
 
     // ---- Consultas nuevas: marcar como vistas (una, varias o todas)
@@ -2744,6 +2853,7 @@ export async function handleStudio(request, env, ctx) {
       }
       const result = await store.setQuote(match[1], status, proposal);
       if (!result) return notFound();
+      await store.logChange('📝', `Presupuesto ${match[1].slice(0, 6)}…: quedó como "${status}"`);
       // Recién aceptado: se crea el proyecto y le llega al cliente el link para completar su brief
       let briefMailed = false;
       if (result.created) {
@@ -2772,6 +2882,7 @@ export async function handleStudio(request, env, ctx) {
     if ((match = path.match(/^\/api\/admin\/resenas\/(\d+)$/))) {
       if (!['aprobada', 'oculta', 'pendiente', 'borrar'].includes(body.status)) return badRequest();
       await store.setReview(Number(match[1]), body.status);
+      await store.logChange('⭐', `Reseña #${match[1]}: ${body.status === 'borrar' ? 'borrada' : body.status}`);
       return json({ ok: true });
     }
 
@@ -2790,7 +2901,9 @@ export async function handleStudio(request, env, ctx) {
       };
       if (!project.client || !project.project) return badRequest();
       if (project.email && !normEmail(project.email)) return badRequest();
-      return json({ token: await store.addProject(project) });
+      const token = await store.addProject(project);
+      await store.logChange('📁', `Creaste el proyecto "${project.project}" de ${project.client}`);
+      return json({ token });
     }
 
     if ((match = path.match(/^\/api\/admin\/proyectos\/([^/]+)\/presupuesto$/))) {
@@ -2816,6 +2929,7 @@ export async function handleStudio(request, env, ctx) {
       const result = await store.setProject(match[1], changes);
       if (!result) return notFound();
       if (result.error) return json(result, 409);
+      await store.logChange(changes.remove ? '🗑️' : '📁', changes.remove ? `Borraste el proyecto ${match[1].slice(0, 6)}…` : `Actualizaste el proyecto ${match[1].slice(0, 6)}… (etapa ${changes.stage + 1})`);
       // Recién publicado: mail al cliente con la reseña (opcional) y su cupón
       let launchMailed = false;
       if (result.launched && result.email) {
