@@ -524,5 +524,7 @@
         show: () => { bind(); if (!loaded) refresh(); else render(); },
         // Para los pendientes del día del Dashboard (null mientras no se cargaron)
         list: () => (loaded ? state.tasks : null),
+        // Para las alertas de Marketing del Dashboard (recordatorios = tareas de las categorías de marketing)
+        categories: () => state.categories,
     };
 })();

@@ -252,6 +252,7 @@ export const adminPage = () => `<!doctype html>
   #m-dashboard .dash-cols { align-items: start; display: grid; gap: .75rem; }
   @media (min-width: 1100px) { #m-dashboard .dash-cols { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); } }
   #m-dashboard .dash-cols .card { margin: 0; }
+  #m-dashboard .dash-mk { margin: .75rem 0 0; }
   #m-dashboard .dash-card-head { align-items: center; display: flex; gap: .5rem; justify-content: space-between; margin: 0 0 1rem; min-height: 1.6rem; }
   #m-dashboard .dash-card-head h2 { font-size: 1rem; letter-spacing: -.01em; margin: 0; }
   #m-dashboard .dash-card-head .small { background: var(--soft); border-radius: 999px; font-size: .74rem; font-weight: 700; padding: .1rem .6rem; }
@@ -1104,7 +1105,7 @@ export const adminPage = () => `<!doctype html>
     const late = items.filter((x) => x.date && daysTo(x.date) < 0);
     const today = items.filter((x) => !x.date || daysTo(x.date) === 0).sort((a, b) => (Boolean(b.date) - Boolean(a.date)) || (b.urgent - a.urgent));
     const next = items.filter((x) => x.date && daysTo(x.date) > 0);
-    const row = (x) => '<li><button type="button" class="today-item" ' + (x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
+    const row = (x) => '<li><button type="button" class="today-item" ' + (x.rec ? 'data-mk-rec="' + esc(x.rec) + '"' : x.openCode ? 'data-open-code="' + esc(x.openCode) + '"' : 'data-go="' + esc(x.go) + '"') + '>'
       + '<span class="today-dot" aria-hidden="true"></span>'
       + '<span class="today-body"><span class="today-text">' + esc(x.text) + '</span><span class="today-sec">' + esc(x.section) + '</span></span>'
       + '<span class="today-meta"><span class="today-when">' + (x.date ? shortDay(x.date) : 'Sin fecha') + '</span><span class="chip' + (x.tone === 'late' ? ' alert-chip' : x.tone === 'warn' ? ' warn' : '') + '">' + esc(x.state) + '</span></span></button></li>';
@@ -1121,7 +1122,18 @@ export const adminPage = () => `<!doctype html>
       + group('is-today', 'Hoy', today, 'Nada para hoy.')
       + group('is-next', 'Próximos 7 días', next, 'Nada en los próximos 7 días.')
       + (window.JNBTasks && window.JNBTasks.list && !window.JNBTasks.list() ? '<p class="small muted">Cargando las tareas…</p>' : '');
+    // Alertas de Marketing (js/admin-marketing.js): publicaciones, artículos, ideas, sorteos y recordatorios
+    const mkBox = $('dash-mk');
+    if (mkBox) {
+      const mk = window.JNBMarketing && window.JNBMarketing.alerts ? window.JNBMarketing.alerts() : [];
+      const by = (p) => mk.filter((x) => x.prio === p);
+      mkBox.innerHTML = '<div class="dash-card-head"><h2>Alertas de Marketing</h2><span class="small muted">' + mk.length + ' en total · <button type="button" class="link-btn" data-go="marketing">Abrir Marketing</button></span></div>'
+        + group('is-late', 'Urgente', by('urgente'), 'Nada vencido.')
+        + group('is-today', 'Importante', by('importante'), 'Nada para hoy ni para los próximos 7 días.')
+        + group('is-next', 'Informativo', by('info'), 'Sin ideas ni recordatorios pendientes.');
+    }
   };
+  document.addEventListener('jnb-marketing-change', () => { if (route.mod === 'dashboard') renderToday(); });
   // Se actualiza solo: cada minuto mientras el Dashboard está a la vista (cambia el día, vence algo) y al volver a la pestaña
   setInterval(() => { if (route.mod === 'dashboard' && !document.hidden) renderToday(); }, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && route.mod === 'dashboard') renderToday(); });
@@ -1157,7 +1169,8 @@ export const adminPage = () => `<!doctype html>
       + stat(newCount('consulta') || !newCount('presupuesto') ? 'consultas' : 'presupuestos', unseen, 'Consultas nuevas', unseen ? 'Sin ver todavía' : '', newCount('consulta') ? ' data-seen-filter="nuevas"' : '', 'mail')
       + '</div>'
       + '<div class="dash-cols"><section class="card dash-agenda" id="dash-today"></section>'
-      + '<section class="card dash-activity"><div class="dash-card-head"><h2>Actividad reciente</h2></div>' + (feed.length ? '<ol class="dash-tl">' + feed.map((it) => '<li><span class="dash-tl-icon" aria-hidden="true">' + it.icon + '</span><div><p><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="dash-tl-meta" title="' + esc(date(it.at)) + '">' + new Date(it.at).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '') + ' ·<button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ol>' : '<div class="dash-empty"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><p>Todavía no hay movimientos</p><span>Acá vas a ver las consultas, los pedidos y los avances de tus proyectos.</span></div>') + '</section></div>';
+      + '<section class="card dash-activity"><div class="dash-card-head"><h2>Actividad reciente</h2></div>' + (feed.length ? '<ol class="dash-tl">' + feed.map((it) => '<li><span class="dash-tl-icon" aria-hidden="true">' + it.icon + '</span><div><p><strong>' + esc(it.who) + '</strong> · ' + esc(it.text) + '</p><p class="dash-tl-meta" title="' + esc(date(it.at)) + '">' + new Date(it.at).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '') + ' ·<button type="button" class="link-btn" data-go="' + esc(it.go) + '">Ver</button></p></div></li>').join('') + '</ol>' : '<div class="dash-empty"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><p>Todavía no hay movimientos</p><span>Acá vas a ver las consultas, los pedidos y los avances de tus proyectos.</span></div>') + '</section></div>'
+      + '<section class="card dash-agenda dash-mk" id="dash-mk"></section>';
     renderToday();
   };
 
@@ -1620,6 +1633,8 @@ export const adminPage = () => `<!doctype html>
       if (location.hash === '#' + target) { e.preventDefault(); applyRoute(); }
       return;
     }
+    const mkRec = e.target.closest('[data-mk-rec]');
+    if (mkRec && window.JNBMarketing) { const [kind, id] = mkRec.dataset.mkRec.split(':'); window.JNBMarketing.open(kind, Number(id)); return; }
     const goBtn = e.target.closest('[data-go]');
     if (goBtn) { const [mod, id] = goBtn.dataset.go.split('/'); go(mod, id || ''); return; }
     const goClient = e.target.closest('[data-go-client]');

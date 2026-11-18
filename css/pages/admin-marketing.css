@@ -65,6 +65,14 @@ label.mk-k-blog { border-color: var(--blog); }
 .mk-cal-d.is-out { background: var(--bg); }
 .mk-cal-n { color: var(--muted); font-size: .8rem; font-weight: 700; }
 .mk-cal-d.is-today .mk-cal-n { background: var(--accent); border-radius: 999px; color: var(--on-accent); padding: 0 .45rem; width: fit-content; }
+.mk-cal-d.is-plan { box-shadow: inset 0 3px 0 var(--ig); }
+.mk-cal-d.is-plan .mk-cal-n { color: var(--ig); }
+.mk-cal-d.is-plan.is-today .mk-cal-n { color: var(--on-accent); }
+.mk-cal-d .mk-add { align-self: flex-start; font-size: .75rem; margin-top: auto; opacity: .7; padding: .15rem .5rem; }
+.mk-cal-d .mk-add:hover, .mk-cal-d .mk-add:focus-visible { opacity: 1; }
+.mk-legend { align-items: center; display: flex; gap: .45rem; margin: -.4rem 0 .75rem; }
+.mk-dot { background: var(--ig); border-radius: 999px; display: inline-block; height: .6rem; width: .6rem; }
+.mk-agenda li.is-plan { border-left: 4px solid var(--ig); }
 .mk-agenda { display: none; list-style: none; margin: 0 0 1rem; padding: 0; }
 .mk-agenda li { background: var(--card); border: 1px solid var(--line); border-radius: .85rem; display: flex; flex-direction: column; gap: .35rem; margin-bottom: .5rem; padding: .6rem .75rem; }
 .mk-agenda li.is-today { border-color: var(--accent); }

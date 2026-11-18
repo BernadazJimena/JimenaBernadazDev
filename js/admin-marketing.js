@@ -18,6 +18,8 @@
     const fshort = (iso) => (iso ? Number(iso.slice(8)) + '/' + Number(iso.slice(5, 7)) + '/' + iso.slice(2, 4) : 'Sin fecha');
     // Días del blog: lunes y miércoles (getUTCDay: 1 y 3)
     const BLOG_DAYS = [1, 3];
+    // Días sugeridos para Instagram: lunes, miércoles y viernes (se marcan en el calendario; publicar esos días no es obligatorio)
+    const IG_DAYS = [1, 3, 5];
 
     // ---- Opciones de cada tipo (las mismas claves que valida el servidor en MK, worker/studio.js)
     const POST_STATUS = { idea: 'Idea', pendiente: 'Pendiente de planificación', preparacion: 'En preparación', listo: 'Listo para publicar', publicado: 'Publicado' };
@@ -96,7 +98,9 @@
         + '<strong>' + esc(monthName(ym)) + '</strong><button type="button" data-mk-month="' + key + '" data-step="1" aria-label="Mes siguiente">›</button>'
         + '<input type="month" data-mk-monthpick="' + key + '" value="' + ym + '" aria-label="Elegir mes">'
         + (ym !== thisMonth() ? '<button type="button" data-mk-month="' + key + '" data-step="0">Hoy</button>' : '') + '</div>';
-    const calendar = (ym, items) => {
+    // opts.days: días de la semana a marcar; opts.add: tipo que se agrega con "+" en esos días
+    const calendar = (ym, items, opts) => {
+        const o = opts || {};
         const [y, m] = ym.split('-').map(Number);
         const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
         const lead = (dow(ym + '-01') + 6) % 7;
@@ -109,8 +113,10 @@
         for (let d = 1; d <= days; d++) {
             const iso = ym + '-' + pad(d);
             const list = byDate[iso] || [];
-            grid += '<div class="mk-cal-d' + (iso === t ? ' is-today' : '') + ([0, 6].includes(dow(iso)) ? ' is-weekend' : '') + '" role="gridcell"><span class="mk-cal-n">' + d + '</span>' + list.join('') + '</div>';
-            if (list.length) agenda += '<li' + (iso === t ? ' class="is-today"' : '') + '><span class="mk-ag-day">' + esc(fdate(iso)) + '</span>' + list.join('') + '</li>';
+            const mark = (o.days || []).includes(dow(iso));
+            const add = mark && o.add && iso >= t ? '<button type="button" class="mk-add" data-mk-new="' + o.add + '" data-date="' + iso + '" aria-label="Agregar el ' + esc(fdate(iso)) + '">+ Agregar</button>' : '';
+            grid += '<div class="mk-cal-d' + (iso === t ? ' is-today' : '') + ([0, 6].includes(dow(iso)) ? ' is-weekend' : '') + (mark ? ' is-plan' : '') + '" role="gridcell"><span class="mk-cal-n">' + d + '</span>' + list.join('') + (list.length ? '' : add) + '</div>';
+            if (list.length || add) agenda += '<li class="' + (iso === t ? 'is-today ' : '') + (mark ? 'is-plan' : '') + '"><span class="mk-ag-day">' + esc(fdate(iso)) + '</span>' + list.join('') + (list.length ? '' : add) + '</li>';
         }
         const tail = (7 - ((lead + days) % 7)) % 7;
         for (let i = 0; i < tail; i++) grid += '<div class="mk-cal-d is-out" aria-hidden="true"></div>';
@@ -165,7 +171,8 @@
         const toggle = '<div class="mk-seg" role="group" aria-label="Vista"><button type="button" data-mk-igview="cal" aria-pressed="' + (st.igView === 'cal') + '">Calendario</button><button type="button" data-mk-igview="list" aria-pressed="' + (st.igView === 'list') + '">Listado</button></div>';
         if (st.igView === 'cal') {
             return '<div class="mk-filters">' + toggle + monthNav('ig', st.igMonth) + filters + '</div>'
-                + calendar(st.igMonth, f.filter((r) => r.date.startsWith(st.igMonth)).map((r) => ({ date: r.date, html: chip('post', r) })))
+                + '<p class="small muted mk-legend"><span class="mk-dot"></span>Días sugeridos: lunes, miércoles y viernes. No hace falta publicar todos.</p>'
+                + calendar(st.igMonth, f.filter((r) => r.date.startsWith(st.igMonth)).map((r) => ({ date: r.date, html: chip('post', r) })), { days: IG_DAYS, add: 'post' })
                 + (f.some((r) => !r.date) ? '<div class="card"><h3>Sin fecha</h3><ul class="mk-list">' + f.filter((r) => !r.date).map((r) => '<li>' + chip('post', r) + statusTag(r.status, POST_STATUS) + '</li>').join('') + '</ul></div>' : '');
         }
         const months = [...new Set(posts.map((r) => r.date.slice(0, 7)).filter(Boolean))].sort();
@@ -294,6 +301,7 @@
             dlg.close();
             panel().toast('Guardado');
             render();
+            document.dispatchEvent(new Event('jnb-marketing-change'));
         } catch (e) {
             const code = String(e.message);
             if (code === '409') {
@@ -318,6 +326,7 @@
             dlg.close();
             panel().toast('Eliminado');
             render();
+            document.dispatchEvent(new Event('jnb-marketing-change'));
         } catch (e) { showError(String(e.message) === '404' ? 'Ya se había eliminado.' : 'No se pudo eliminar. Intentá de nuevo.'); }
     };
     // Convierte una idea: copia su información en el formulario del nuevo formato
@@ -339,7 +348,7 @@
         if (!b) return;
         const ds = b.dataset;
         if (ds.mkTab !== undefined) panel().go('marketing', ds.mkTab);
-        else if (ds.mkNew) open(ds.mkNew, null, ds.date ? { values: { date: ds.date, status: 'planificado' } } : null);
+        else if (ds.mkNew) open(ds.mkNew, null, ds.date ? { values: { date: ds.date, status: ds.mkNew === 'post' ? 'pendiente' : 'planificado' } } : null);
         else if (ds.mkOpen) { const [k, id] = ds.mkOpen.split(':'); const r = M()[k + 's'].find((x) => x.id === Number(id)); if (r) open(k, r); }
         else if (ds.mkConvert) { const [k, id] = ds.mkConvert.split(':'); convert(k, Number(id)); }
         else if (ds.mkIgview) { st.igView = ds.mkIgview; render(); }
@@ -356,9 +365,77 @@
         else if (t.dataset.mkMonthpick && /^\d{4}-\d{2}$/.test(t.value)) { st[t.dataset.mkMonthpick + 'Month'] = t.value; render(); }
     });
 
+    // ---- Alertas para el Dashboard: se calculan con los datos ya cargados (marketing, sorteos y tareas); no se guardan aparte.
+    // prio: 'urgente' (fecha pasada), 'importante' (hoy y próximos 7 días, o en revisión), 'info' (ideas, recordatorios y lo que viene)
+    const SOON = 7;
+    const LATER = 21;
+    const alerts = () => {
+        const { posts, articles, ideas } = M();
+        const d = panel().data() || {};
+        const t = today();
+        const days = (iso) => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(t + 'T12:00:00Z')) / 86400000);
+        const inDays = (n) => (n === 0 ? 'hoy' : n === 1 ? 'mañana' : 'en ' + n + ' días');
+        const late = (n) => (n === -1 ? 'ayer' : 'hace ' + (-n) + ' días');
+        const out = [];
+        const push = (a) => out.push(Object.assign({ date: '', tone: '' }, a));
+        const content = (kind, r) => {
+            const labels = kind === 'post' ? POST_STATUS : ART_STATUS;
+            const section = (kind === 'post' ? 'Instagram' : 'Blog') + ' · ' + labels[r.status];
+            const base = { text: r.title + (kind === 'post' ? ' (' + FORMATS[r.format] + ')' : ''), section, rec: kind + ':' + r.id, go: 'marketing/' + (kind === 'post' ? 'redes' : 'blog'), date: r.date };
+            const ready = r.status === 'listo';
+            if (!r.date) {
+                if (kind === 'article' && r.status === 'revision') push({ ...base, prio: 'importante', state: 'Requiere revisión', tone: 'warn' });
+                return;
+            }
+            const n = days(r.date);
+            if (n < 0) push({ ...base, prio: 'urgente', state: (ready ? '¿Ya salió? Pasó ' : 'Fecha pasada ') + late(n), tone: 'late' });
+            else if (n <= SOON) push({ ...base, prio: 'importante', state: n === 0 && ready ? 'Publicar hoy' + (r.time ? ' ' + r.time : '') : (ready ? 'Listo · ' : r.status === 'revision' ? 'En revisión · ' : 'Falta prepararlo · ') + inDays(n), tone: n === 0 || !ready ? 'warn' : '' });
+            else if (r.status === 'revision') push({ ...base, prio: 'importante', state: 'Requiere revisión', tone: 'warn' });
+            else if (n <= LATER && !ready) push({ ...base, prio: 'info', state: 'Por ' + (kind === 'post' ? 'preparar' : 'desarrollar') + ' · ' + inDays(n) });
+        };
+        posts.filter((r) => r.status !== 'publicado').forEach((r) => content('post', r));
+        articles.filter((r) => r.status !== 'publicado').forEach((r) => content('article', r));
+        // Días de blog (lunes y miércoles) de esta semana que todavía no tienen artículo
+        for (let n = 0; n <= SOON; n++) {
+            const iso = window.JNBHolidays ? window.JNBHolidays.addDays(t, n) : '';
+            if (iso && BLOG_DAYS.includes(dow(iso)) && !articles.some((a) => a.date === iso)) push({ prio: 'info', text: 'Día de blog sin artículo: ' + fdate(iso), section: 'Blog · Plan editorial', state: 'Sin planificar', date: iso, go: 'marketing/blog' });
+        }
+        // Publicaciones sin fecha e ideas pendientes (un aviso por grupo, para no llenar la lista)
+        const undated = posts.filter((r) => !r.date && r.status !== 'publicado').length;
+        if (undated) push({ prio: 'info', text: undated + (undated === 1 ? ' publicación espera' : ' publicaciones esperan') + ' fecha', section: 'Instagram · Sin fecha', state: 'Para planificar', go: 'marketing/redes' });
+        const undatedArt = articles.filter((r) => !r.date && !['publicado', 'revision'].includes(r.status)).length;
+        if (undatedArt) push({ prio: 'info', text: undatedArt + (undatedArt === 1 ? ' artículo espera' : ' artículos esperan') + ' fecha', section: 'Blog · Sin fecha', state: 'Para planificar', go: 'marketing/blog' });
+        const pend = ideas.filter((i) => i.status === 'pendiente').length;
+        if (pend) push({ prio: 'info', text: pend + (pend === 1 ? ' idea pendiente' : ' ideas pendientes') + ' de desarrollar', section: 'Banco de ideas', state: 'Pendiente', go: 'marketing/ideas' });
+        // Campañas: sorteos de Instagram activos o en borrador con fechas cercanas
+        ((d.sorteos || {}).giveaways || []).filter((g) => !g.archived && g.status !== 'finalizado').forEach((g) => {
+            [['starts', 'Empieza'], ['ends', 'Termina'], ['draw_date', 'Se sortea']].forEach(([f, label]) => {
+                if (!g[f]) return;
+                const n = days(g[f].slice(0, 10));
+                if (n < 0 || n > LATER) return;
+                push({ prio: n <= SOON ? 'importante' : 'info', text: 'Sorteo "' + g.name + '": ' + label.toLowerCase() + ' ' + inDays(n), section: 'Campañas · Sorteos de Instagram', state: label + ' ' + inDays(n), date: g[f].slice(0, 10), go: 'sorteos', tone: n === 0 ? 'warn' : '' });
+            });
+        });
+        // Recordatorios: tareas abiertas del Gestor en las categorías de marketing
+        const tasks = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() || [] : [];
+        const cats = window.JNBTasks && window.JNBTasks.categories ? window.JNBTasks.categories().filter((c) => /marketing|redes|seo/i.test(c.name)).map((c) => c.id) : [];
+        tasks.filter((x) => !x.archived && x.status !== 'done' && cats.includes(x.category)).forEach((x) => {
+            const base = { text: x.title, section: 'Recordatorio · Gestor de tareas', go: 'tareas' };
+            if (!x.due) return push({ ...base, prio: 'info', state: 'Sin fecha' });
+            const n = days(x.due.slice(0, 10));
+            push({ ...base, date: x.due.slice(0, 10), prio: n < 0 ? 'urgente' : n <= SOON ? 'importante' : 'info', state: n < 0 ? 'Venció ' + late(n) : 'Vence ' + inDays(n), tone: n < 0 ? 'late' : n === 0 ? 'warn' : '' });
+        });
+        const key = (x) => x.date || '9999';
+        return out.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+    };
+    // Abre la ficha de un contenido (desde el Dashboard)
+    const openRec = (kind, id) => { const r = (M()[kind + 's'] || []).find((x) => x.id === id); if (r) open(kind, r); };
+
     window.JNBMarketing = {
         show: (tab) => { st.tab = TABS.some(([k]) => k === tab) ? tab : ''; render(); },
         refresh: () => render(),
         counts,
+        alerts,
+        open: openRec,
     };
 })();
