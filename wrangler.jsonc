@@ -27,6 +27,18 @@
     { "tag": "v3", "new_sqlite_classes": ["StudioData"] },
     { "tag": "v4", "new_sqlite_classes": ["Newsletter"] }
   ],
+  // Vistas previas de las ramas (Workers Builds corre `wrangler preview` fuera de main): cada vista previa tiene sus
+  // propios Durable Objects, vacíos y aislados de los datos reales. No afecta la publicación de main.
+  "previews": {
+    "durable_objects": {
+      "bindings": [
+        { "name": "BLOG_LIKES", "class_name": "BlogLikes" },
+        { "name": "FAQ_FEEDBACK", "class_name": "FaqFeedback" },
+        { "name": "STUDIO", "class_name": "StudioData" },
+        { "name": "NEWSLETTER", "class_name": "Newsletter" }
+      ]
+    }
+  },
   // Una vez por hora, a los 20 minutos: el newsletter del blog se fija si hay un artículo nuevo para avisar
   "triggers": {
     "crons": ["20 * * * *"]
