@@ -15,6 +15,19 @@
 .ws-day { color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; margin: 1rem 0 .4rem; text-transform: uppercase; }
 .ws-day.is-today { color: var(--accent-ink); }
 .ws-form .task-form-grid .wide { grid-column: 1 / -1; }
+/* Estudios: una tarjeta por carrera con sus números, y la tabla de notas */
+.ws-careers { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); }
+.ws-career { margin: 0; }
+.ws-career-head { align-items: flex-start; display: flex; gap: .75rem; justify-content: space-between; margin-bottom: .8rem; }
+.ws-career-head h3 { margin: 0 0 .15rem; }
+.ws-career-head p { margin: 0; }
+.ws-kpis { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); }
+.ws-kpi { background: var(--soft); border-radius: .7rem; display: flex; flex-direction: column; gap: .15rem; padding: .6rem .75rem; }
+.ws-kpi-n { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
+.ws-kpi-n small, .ws-kpi-l small { color: var(--muted); font-size: .72rem; font-weight: 600; }
+.ws-kpi-l { color: var(--muted); font-size: .75rem; font-weight: 700; }
+.ws-grades td.n strong { color: var(--accent-ink); }
+.ws-note { margin-top: .75rem; }
 /* Agenda: una tabla por día, con las mismas columnas en todas */
 @media (min-width: 761px) {
   .ws-agenda { table-layout: fixed; }

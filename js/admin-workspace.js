@@ -3,7 +3,7 @@
 // Son datos personales: no van en la copia JNB (worker/core/backup-policy.js).
 (() => {
     const panel = () => window.JNBPanel;
-    const W = () => (panel().data() || {}).workspace || { agenda: [], materia: [], actividad: [], trabajo: [] };
+    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], trabajo: [], ...((panel().data() || {}).workspace || {}) });
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const today = () => (window.JNBHolidays ? window.JNBHolidays.now().date : new Date().toISOString().slice(0, 10));
     const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -14,15 +14,17 @@
 
     // ---- Opciones (las mismas claves que valida el servidor en worker/core/workspace.js)
     const AGENDA_KIND = { evento: 'Evento', turno: 'Turno', reunion: 'Reunión', recordatorio: 'Recordatorio', otro: 'Otro' };
-    const SUBJECT_STATUS = { cursando: 'Cursando', pendiente: 'Pendiente', regular: 'Regular', aprobada: 'Aprobada', libre: 'Libre', abandonada: 'Abandonada' };
+    const CAREER_STATUS = { cursando: 'Cursando', pausada: 'En pausa', finalizada: 'Finalizada' };
+    const SUBJECT_STATUS = { inscripta: 'Inscripta', cursando: 'Cursando', regular: 'Regular (debe final)', promocionada: 'Promocionada', aprobada: 'Aprobada', libre: 'Libre', abandonada: 'Abandonada', pendiente: 'Pendiente' };
     const ACT_KIND = { tp: 'Trabajo práctico', parcial: 'Parcial', final: 'Final', recuperatorio: 'Recuperatorio', entrega: 'Entrega', fecha: 'Fecha importante' };
-    const ACT_STATUS = { pendiente: 'Pendiente', 'en-curso': 'En curso', entregado: 'Entregado', aprobado: 'Aprobado', desaprobado: 'Desaprobado' };
+    const ACT_STATUS = { pendiente: 'Pendiente', inscripta: 'Inscripta', 'en-curso': 'En curso', entregado: 'Entregado', aprobado: 'Aprobado', desaprobado: 'Desaprobado' };
+    const ACT_RESULT = { '': 'Sin resultado', aprobado: 'Aprobado', desaprobado: 'Desaprobado' };
     const JOB_KIND = { postulacion: 'Postulación', entrevista: 'Entrevista', empleo: 'Empleo', capacitacion: 'Capacitación' };
     const JOB_STATUS = { pendiente: 'Pendiente', enviada: 'Enviada', 'en-proceso': 'En proceso', aceptada: 'Aceptada', rechazada: 'Rechazada', activo: 'Activo', finalizado: 'Finalizado' };
-    const TONE = { cursando: 'info', regular: 'warn', aprobada: 'ok', aprobado: 'ok', libre: 'bad', abandonada: 'bad', desaprobado: 'bad', 'en-curso': 'info', entregado: 'ok', enviada: 'info', 'en-proceso': 'warn', aceptada: 'ok', rechazada: 'bad', activo: 'ok' };
+    const TONE = { inscripta: 'info', promocionada: 'ok', finalizada: 'ok', pausada: 'warn', cursando: 'info', regular: 'warn', aprobada: 'ok', aprobado: 'ok', libre: 'bad', abandonada: 'bad', desaprobado: 'bad', 'en-curso': 'info', entregado: 'ok', enviada: 'info', 'en-proceso': 'warn', aceptada: 'ok', rechazada: 'bad', activo: 'ok' };
     const tag = (value, labels) => '<span class="ws-tag ws-t-' + (TONE[value] || 'muted') + '">' + esc(labels[value] || value) + '</span>';
     // Lo que sigue abierto (para filtros, contadores y el Dashboard)
-    const ACT_OPEN = ['pendiente', 'en-curso'];
+    const ACT_OPEN = ['pendiente', 'inscripta', 'en-curso'];
     const JOB_OPEN = ['pendiente', 'enviada', 'en-proceso', 'activo'];
     const subjectName = (id) => { const s = W().materia.find((x) => String(x.id) === String(id)); return s ? s.name : ''; };
 
@@ -33,16 +35,24 @@
             ['time', 'Hora de inicio', 'time'], ['end', 'Hora de fin', 'time'], ['place', 'Lugar', 'line', { max: 160 }],
             ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho' }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
+        carrera: { title: 'carrera', fields: [
+            ['name', 'Carrera', 'line', { required: true, max: 160, wide: true, hint: 'Ingeniería en Sistemas' }], ['institution', 'Universidad o institución', 'line', { max: 160 }],
+            ['status', 'Estado', 'select', CAREER_STATUS], ['total', 'Materias del plan', 'line', { max: 4, hint: 'Ej.: 36', mode: 'numeric' }],
+            ['promo', 'Nota para promocionar', 'line', { max: 5, hint: '7', mode: 'decimal' }], ['aprueba', 'Nota para aprobar', 'line', { max: 5, hint: '4', mode: 'decimal' }],
+            ['notes', 'Notas', 'text', { max: 2000 }],
+        ] },
         materia: { title: 'materia', fields: [
-            ['name', 'Materia', 'line', { required: true, max: 160, wide: true }], ['career', 'Carrera o curso', 'line', { max: 160 }],
-            ['term', 'Cursada (cuatrimestre o año)', 'line', { max: 80, hint: '1.er cuatrimestre 2026' }], ['schedule', 'Horario', 'line', { max: 200, hint: 'Lunes y miércoles 18 a 20' }],
-            ['teacher', 'Docente', 'line', { max: 160 }], ['status', 'Estado', 'select', SUBJECT_STATUS], ['grade', 'Calificación', 'line', { max: 10 }],
+            ['name', 'Materia', 'line', { required: true, max: 160, wide: true }], ['carrera', 'Carrera', 'career'],
+            ['status', 'Estado', 'select', SUBJECT_STATUS], ['term', 'Cursada (cuatrimestre o año)', 'line', { max: 80, hint: '1.er cuatrimestre 2026' }],
+            ['schedule', 'Horario', 'line', { max: 200, hint: 'Lunes y miércoles 18 a 20' }], ['teacher', 'Docente', 'line', { max: 160 }],
+            ['p1', 'Nota 1.er parcial', 'line', { max: 10, mode: 'decimal' }], ['p2', 'Nota 2.º parcial', 'line', { max: 10, mode: 'decimal' }],
+            ['recup', 'Nota del recuperatorio', 'line', { max: 10, mode: 'decimal', hint: 'Reemplaza al parcial más bajo' }], ['final', 'Nota del final', 'line', { max: 10, mode: 'decimal', hint: 'Vacío si promocionás' }],
             ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         actividad: { title: 'actividad', fields: [
             ['title', 'Qué', 'line', { required: true, max: 160, wide: true, hint: 'TP 2: análisis de casos' }], ['kind', 'Tipo', 'select', ACT_KIND],
             ['subject', 'Materia', 'subject'], ['date', 'Fecha', 'date'], ['time', 'Hora', 'time'], ['status', 'Estado', 'select', ACT_STATUS],
-            ['grade', 'Calificación', 'line', { max: 10 }], ['notes', 'Notas', 'text', { max: 2000 }],
+            ['grade', 'Nota (número)', 'line', { max: 10, mode: 'decimal' }], ['result', 'O resultado', 'select', ACT_RESULT], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         trabajo: { title: 'registro', fields: [
             ['kind', 'Tipo', 'select', JOB_KIND], ['title', 'Puesto, búsqueda o curso', 'line', { required: true, max: 160 }],
@@ -53,7 +63,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', studyTab: 'materias', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos' };
+    const st = { agendaView: 'proximos', studyTab: 'carreras', studyCareer: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -81,34 +91,115 @@
                 : empty(st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
     };
 
-    // ---- Estudios: materias y actividades (TPs, exámenes y fechas importantes)
+    // ---- Estudios: carreras, materias (inscripción, notas y condición) y actividades (TPs, exámenes, finales y fechas)
+    // Cálculos: el recuperatorio reemplaza al parcial más bajo; promociona si los dos parciales llegan a la nota de promoción
+    // y los TPs están aprobados; queda regular (debe final) si llegan a la nota de aprobación. La nota de la materia es la del
+    // final o, si promocionó, el promedio de los parciales. Las notas mínimas se toman de la carrera (por defecto 7 y 4).
+    const num = (v) => { const n = parseFloat(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+    const fmt = (n) => (n === null || n === undefined ? '—' : (Math.round(n * 100) / 100).toLocaleString('es-AR'));
+    const avg = (list) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
+    const careerOf = (s) => W().carrera.find((c) => String(c.id) === String(s.carrera)) || null;
+    const limits = (s) => { const c = careerOf(s); return { promo: num(c && c.promo) ?? 7, aprueba: num(c && c.aprueba) ?? 4 }; };
+    const tpsOf = (s) => W().actividad.filter((a) => a.kind === 'tp' && String(a.subject) === String(s.id));
+    const finalsOf = (s) => W().actividad.filter((a) => a.kind === 'final' && String(a.subject) === String(s.id));
+    const study = (s) => {
+        const L = limits(s);
+        const parts = [num(s.p1), num(s.p2)];
+        const recup = num(s.recup);
+        if (recup !== null) { const known = parts.filter((n) => n !== null); const low = known.length ? Math.min(...known) : null; const i = parts.indexOf(low); parts[i >= 0 ? i : parts.indexOf(null)] = recup; }
+        const given = parts.filter((n) => n !== null);
+        const cursada = avg(given);
+        const tps = tpsOf(s);
+        const tpNums = tps.map((t) => num(t.grade)).filter((n) => n !== null);
+        const tpBad = tps.some((t) => t.result === 'desaprobado' || (num(t.grade) !== null && num(t.grade) < L.aprueba));
+        const tpOk = !tpBad;
+        const final = num(s.final);
+        let cond = 'En curso'; let tone = 'info';
+        if (final !== null) { cond = final >= L.aprueba ? 'Aprobada con final' : 'Final desaprobado'; tone = final >= L.aprueba ? 'ok' : 'bad'; }
+        else if (given.length === 2) {
+            const min = Math.min(...given);
+            if (min >= L.promo && tpOk) { cond = 'Promociona'; tone = 'ok'; }
+            else if (min >= L.aprueba && tpOk) { cond = 'Regular: rinde final'; tone = 'warn'; }
+            else { cond = tpOk ? 'No alcanza: recuperar o recursar' : 'TP desaprobado'; tone = 'bad'; }
+        }
+        const approved = ['aprobada', 'promocionada'].includes(s.status) || (final !== null && final >= L.aprueba);
+        const grade = final !== null ? final : (s.status === 'promocionada' || cond === 'Promociona' ? cursada : null);
+        return { parts, given, cursada, tps, tpAvg: avg(tpNums), tpOk, final, cond, tone, approved, grade };
+    };
+    // Resumen de una carrera (o de las materias sin carrera, con id vacío)
+    const careerStats = (cid) => {
+        const w = W();
+        const subjects = w.materia.filter((s) => String(s.carrera || '') === String(cid || ''));
+        const info = subjects.map((s) => ({ s, x: study(s) }));
+        const passed = info.filter((i) => i.x.approved);
+        const grades = passed.map((i) => i.x.grade).filter((n) => n !== null);
+        const failedFinals = subjects.flatMap((s) => finalsOf(s).filter((a) => a.status === 'desaprobado' || a.result === 'desaprobado').map((a) => num(a.grade)).filter((n) => n !== null));
+        const finalsTaken = subjects.reduce((n, s) => { const f = finalsOf(s).filter((a) => ['aprobado', 'desaprobado'].includes(a.status) || a.result); return n + Math.max(f.length, num(s.final) !== null ? 1 : 0); }, 0);
+        const regular = info.filter((i) => !i.x.approved && (i.s.status === 'regular' || i.x.cond === 'Regular: rinde final'));
+        const enrolled = subjects.reduce((n, s) => n + finalsOf(s).filter((a) => a.status === 'inscripta').length, 0);
+        const c = cid ? w.carrera.find((x) => String(x.id) === String(cid)) : null;
+        const total = num(c && c.total);
+        return { subjects, passed: passed.length, total, left: total !== null ? Math.max(total - passed.length, 0) : null,
+            avg: avg(grades), avgAll: avg(grades.concat(failedFinals)), finalsTaken, finalsLeft: regular.length, enrolled,
+            current: subjects.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length };
+    };
+    const kpi = (n, label) => '<div class="ws-kpi"><span class="ws-kpi-n">' + n + '</span><span class="ws-kpi-l">' + label + '</span></div>';
+
     const renderStudies = () => {
         const t = today();
         const w = W();
-        const tabs = seg('studyTab', st.studyTab, { materias: 'Materias', actividades: 'TPs, exámenes y fechas' });
+        const tabs = seg('studyTab', st.studyTab, { carreras: 'Carreras', materias: 'Materias y notas', actividades: 'TPs, exámenes y finales' });
+        const careers = { '': 'Todas las carreras', ...Object.fromEntries(w.carrera.map((c) => [String(c.id), c.name])) };
         let body;
-        if (st.studyTab === 'materias') {
-            const pending = (id) => w.actividad.filter((a) => String(a.subject) === String(id) && ACT_OPEN.includes(a.status)).length;
-            body = w.materia.length ? '<table class="ws-table"><thead><tr><th>Materia</th><th>Cursada</th><th>Horario</th><th>Estado</th><th>Pendientes</th></tr></thead><tbody>'
-                + w.materia.map((s) => '<tr' + rowAttrs('materia', s) + '><td data-label="Materia"><strong>' + esc(s.name) + '</strong>' + (s.career ? '<br><span class="small muted">' + esc(s.career) + '</span>' : '') + (s.teacher ? '<br><span class="small muted">' + esc(s.teacher) + '</span>' : '') + '</td>'
-                    + '<td data-label="Cursada">' + esc(s.term) + '</td><td data-label="Horario">' + esc(s.schedule) + '</td>'
-                    + '<td data-label="Estado">' + tag(s.status, SUBJECT_STATUS) + (s.grade ? ' <span class="small muted">Nota ' + esc(s.grade) + '</span>' : '') + '</td><td data-label="Pendientes">' + (pending(s.id) || '—') + '</td></tr>').join('')
-                + '</tbody></table>' : empty('Todavía no cargaste materias. Agregá la primera con “Nueva materia”.');
+        if (st.studyTab === 'carreras') {
+            const card = (c) => {
+                const k = careerStats(c ? c.id : '');
+                return '<div class="card ws-career"><div class="ws-career-head"><div><h3>' + esc(c ? c.name : 'Materias sin carrera') + '</h3>'
+                    + (c && (c.institution || c.status) ? '<p class="small muted">' + esc(c.institution || '') + (c.institution ? ' · ' : '') + esc(CAREER_STATUS[c.status] || '') + '</p>' : '') + '</div>'
+                    + (c ? '<button type="button" data-ws-open="carrera:' + c.id + '">Editar</button>' : '') + '</div>'
+                    + '<div class="ws-kpis">'
+                    + kpi(k.passed + (k.total !== null ? ' <small>de ' + k.total + '</small>' : ''), 'Materias aprobadas')
+                    + kpi(fmt(k.avg), 'Promedio' + (k.avgAll !== null && k.avgAll !== k.avg ? ' <small>(con aplazos ' + fmt(k.avgAll) + ')</small>' : ''))
+                    + kpi(k.current, 'Cursando o inscripta')
+                    + kpi(k.finalsTaken, 'Finales rendidos')
+                    + kpi(k.finalsLeft, 'Finales que te quedan')
+                    + kpi(k.enrolled, 'Inscripciones a finales')
+                    + (k.left !== null ? kpi(k.left, 'Materias que faltan') : '')
+                    + '</div></div>';
+            };
+            const loose = w.materia.some((s) => !s.carrera);
+            body = w.carrera.length || loose ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose ? card(null) : '') + '</div>'
+                : empty('Empezá cargando tu carrera con “Nueva carrera”. Si cursás dos en simultáneo, cargá las dos.');
+        } else if (st.studyTab === 'materias') {
+            const list = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
+            const n = (v) => (num(v) === null ? '—' : fmt(num(v)));
+            body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
+                + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Promedio</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
+                    + list.map((s) => { const x = study(s); const c = careerOf(s);
+                        const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
+                        return '<tr' + rowAttrs('materia', s) + '><td data-label="Materia"><strong>' + esc(s.name) + '</strong>' + (c && !st.studyCareer ? '<br><span class="small muted">' + esc(c.name) + '</span>' : '') + (s.term ? '<br><span class="small muted">' + esc(s.term) + '</span>' : '') + '</td>'
+                            + '<td data-label="Estado">' + tag(s.status, SUBJECT_STATUS) + '</td>'
+                            + '<td class="n" data-label="1.er parcial">' + n(s.p1) + '</td><td class="n" data-label="2.º parcial">' + n(s.p2) + '</td><td class="n" data-label="Recuperatorio">' + n(s.recup) + '</td>'
+                            + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Promedio de parciales"><strong>' + fmt(x.cursada) + '</strong></td><td class="n" data-label="Final">' + n(s.final) + '</td>'
+                            + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond }) + '</td></tr>'; }).join('')
+                    + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
+                    : empty('Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else {
             let list = w.actividad.slice();
             if (st.studySubject) list = list.filter((a) => String(a.subject) === st.studySubject);
             if (st.studyView === 'abiertas') list = list.filter((a) => ACT_OPEN.includes(a.status));
             const subjects = { '': 'Todas las materias', ...Object.fromEntries(w.materia.map((s) => [String(s.id), s.name])) };
-            body = '<div class="ws-filters">' + seg('studyView', st.studyView, { abiertas: 'Pendientes', todas: 'Todas' }) + select('studySubject', st.studySubject, subjects, 'Materia') + '</div>'
+            body = '<div class="ws-filters">' + seg('studyView', st.studyView, { abiertas: 'Pendientes e inscripciones', todas: 'Todas' }) + select('studySubject', st.studySubject, subjects, 'Materia') + '</div>'
                 + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
-                    + list.map((a) => { const late = a.date && a.date < t && ACT_OPEN.includes(a.status);
+                    + list.map((a) => { const late = a.date && a.date < t && ['pendiente', 'en-curso'].includes(a.status);
+                        const res = (num(a.grade) !== null ? ' <span class="small muted">Nota ' + esc(a.grade) + '</span>' : '') + (a.result ? ' ' + tag(a.result, ACT_RESULT) : '');
                         return '<tr' + rowAttrs('actividad', a) + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(a.date)) + (a.time ? '<br><span class="small muted">' + esc(a.time) + ' h</span>' : '') + (late ? '<br>' + tag('desaprobado', { desaprobado: 'Vencida' }) : '') + '</td>'
                             + '<td data-label="Qué"><strong>' + esc(a.title) + '</strong>' + (subjectName(a.subject) ? '<br><span class="small muted">' + esc(subjectName(a.subject)) + '</span>' : '') + '</td>'
-                            + '<td data-label="Tipo">' + esc(ACT_KIND[a.kind] || a.kind) + '</td><td data-label="Estado">' + tag(a.status, ACT_STATUS) + (a.grade ? ' <span class="small muted">Nota ' + esc(a.grade) + '</span>' : '') + '</td></tr>'; }).join('')
-                    + '</tbody></table>' : empty(st.studyView === 'abiertas' ? 'No tenés TPs, exámenes ni fechas pendientes.' : 'No hay actividades para mostrar.'));
+                            + '<td data-label="Tipo">' + esc(ACT_KIND[a.kind] || a.kind) + '</td><td data-label="Estado">' + tag(a.status, ACT_STATUS) + res + '</td></tr>'; }).join('')
+                    + '</tbody></table>' : empty(st.studyView === 'abiertas' ? 'No tenés TPs, exámenes ni inscripciones a finales pendientes.' : 'No hay actividades para mostrar.'));
         }
-        root('estudios').innerHTML = head('Estudios', 'Materias, cursadas, trabajos prácticos, exámenes y fechas importantes.',
-            '<button type="button" data-ws-new="materia">+ Nueva materia</button><button type="button" class="primary" data-ws-new="actividad">+ Nueva actividad</button>')
+        root('estudios').innerHTML = head('Estudios', 'Carreras, materias, notas, promedios, TPs, exámenes y finales.',
+            '<button type="button" data-ws-new="carrera">+ Nueva carrera</button><button type="button" data-ws-new="materia">+ Nueva materia</button><button type="button" class="primary" data-ws-new="actividad">+ Nueva actividad</button>')
             + '<div class="ws-filters">' + tabs + '</div>' + body;
     };
 
@@ -128,7 +219,7 @@
     };
 
     const RENDER = { 'mi-agenda': renderAgenda, estudios: renderStudies, trabajo: renderJobs };
-    const MOD_OF = { agenda: 'mi-agenda', materia: 'estudios', actividad: 'estudios', trabajo: 'trabajo' };
+    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', trabajo: 'trabajo' };
     let current = '';
 
     // ---- Contadores del menú: agenda de hoy, entregas y exámenes de los próximos 7 días (o vencidos), entrevistas próximas
@@ -152,10 +243,11 @@
         const o = opt || {}; const v = r[name] ?? '';
         const wide = type === 'text' || o.wide ? ' class="wide"' : '';
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+        if (type === 'career') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin carrera</option>' + W().carrera.map((c) => '<option value="' + c.id + '"' + (String(c.id) === String(v) ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></label>';
         if (type === 'subject') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin materia</option>' + W().materia.map((s) => '<option value="' + s.id + '"' + (String(s.id) === String(v) ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>';
         if (type === 'text') return '<label' + wide + '>' + label + '<textarea name="' + name + '" rows="3" maxlength="' + o.max + '">' + esc(v) + '</textarea></label>';
         const input = type === 'line' ? 'text' : type;
-        return '<label' + wide + '>' + label + '<input type="' + input + '" name="' + name + '" value="' + esc(v) + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.required ? ' required' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + '></label>';
+        return '<label' + wide + '>' + label + '<input type="' + input + '" name="' + name + '" value="' + esc(v) + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.required ? ' required' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + (o.mode ? ' inputmode="' + o.mode + '"' : '') + '></label>';
     };
     const open = (kind, rec, preset) => {
         const f = FORMS[kind];
@@ -190,7 +282,7 @@
         const set = e.target.closest('[data-ws-set]');
         if (set) { st[set.dataset.wsSet] = set.dataset.value; if (RENDER[current]) RENDER[current](); return; }
         const nw = e.target.closest('[data-ws-new]');
-        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : null); return; }
+        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && st.studyCareer ? { carrera: st.studyCareer } : null); return; }
         const op = e.target.closest('[data-ws-open]');
         if (op) { const [kind, id] = op.dataset.wsOpen.split(':'); const rec = W()[kind].find((x) => x.id === Number(id)); if (rec) open(kind, rec); return; }
         if (e.target.closest('[data-ws-close]')) { close(); return; }
@@ -241,7 +333,7 @@
             const t = today(); const week = addDays(t, 7); const w = W();
             return {
                 agenda: w.agenda.filter((e) => e.done !== 'si' && e.date && e.date >= t && e.date <= week).length,
-                materias: w.materia.filter((s) => s.status === 'cursando').length,
+                materias: w.materia.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length,
                 entregas: w.actividad.filter((a) => ACT_OPEN.includes(a.status) && a.date && a.date <= week).length,
                 trabajo: w.trabajo.filter((j) => JOB_OPEN.includes(j.status)).length,
             };

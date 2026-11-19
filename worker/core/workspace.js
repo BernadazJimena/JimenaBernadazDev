@@ -11,14 +11,21 @@ export const WS = {
     kind: [['evento', 'turno', 'reunion', 'recordatorio', 'otro']],
     place: ['line', 160], notes: ['text', 2000], done: [['no', 'si']],
   } },
+  // Carreras (puede haber varias en simultáneo). total: materias del plan; promo y aprueba: notas mínimas (vacío = 7 y 4)
+  carrera: { table: 'ws_careers', required: 'name', fields: {
+    name: ['line', 160], institution: ['line', 160], total: ['line', 4], promo: ['line', 5], aprueba: ['line', 5],
+    status: [['cursando', 'pausada', 'finalizada']], notes: ['text', 2000],
+  } },
+  // Materias: inscripción, cursada y notas (parciales, recuperatorio y final). Los TPs son actividades de tipo "tp".
   materia: { table: 'ws_subjects', required: 'name', fields: {
-    name: ['line', 160], career: ['line', 160], term: ['line', 80], schedule: ['line', 200], teacher: ['line', 160],
-    status: [['cursando', 'pendiente', 'regular', 'aprobada', 'libre', 'abandonada']], grade: ['line', 10], notes: ['text', 2000],
+    name: ['line', 160], carrera: ['ref'], term: ['line', 80], schedule: ['line', 200], teacher: ['line', 160],
+    status: [['inscripta', 'cursando', 'regular', 'promocionada', 'aprobada', 'libre', 'abandonada', 'pendiente']],
+    p1: ['line', 10], p2: ['line', 10], recup: ['line', 10], final: ['line', 10], notes: ['text', 2000],
   } },
   actividad: { table: 'ws_study_items', required: 'title', fields: {
     title: ['line', 160], subject: ['ref'], kind: [['tp', 'parcial', 'final', 'recuperatorio', 'entrega', 'fecha']],
-    date: ['date'], time: ['time'], status: [['pendiente', 'en-curso', 'entregado', 'aprobado', 'desaprobado']],
-    grade: ['line', 10], notes: ['text', 2000],
+    date: ['date'], time: ['time'], status: [['pendiente', 'inscripta', 'en-curso', 'entregado', 'aprobado', 'desaprobado']],
+    grade: ['line', 10], result: [['', 'aprobado', 'desaprobado']], notes: ['text', 2000],
   } },
   trabajo: { table: 'ws_jobs', required: 'title', fields: {
     kind: [['postulacion', 'entrevista', 'empleo', 'capacitacion']], title: ['line', 160], company: ['line', 160],

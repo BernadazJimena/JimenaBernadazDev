@@ -660,6 +660,11 @@ export class StudioData extends DurableObject {
         updated TEXT NOT NULL
       )`);
     }
+    // Campos nuevos del espacio Personal en tablas que ya existían: se agregan vacíos (nunca se borra ni se cambia una columna)
+    for (const { table, fields } of Object.values(WS)) {
+      const have = new Set(this.sql.exec(`PRAGMA table_info(${table})`).toArray().map((c) => c.name));
+      for (const f of Object.keys(fields)) if (!have.has(f)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${f} TEXT NOT NULL DEFAULT ''`);
+    }
     // Plan editorial: los artículos de noviembre 2026 (ya escritos y programados) se cargan una sola vez; después se editan desde el panel
     if (!this.sql.exec("SELECT 1 FROM settings WHERE key = 'marketingSeed'").toArray().length) {
       const now = new Date().toISOString();
@@ -1123,6 +1128,7 @@ export class StudioData extends DurableObject {
     const cols = Object.keys(fields);
     const now = new Date().toISOString();
     if (kind === 'actividad' && item.subject && !this.sql.exec('SELECT 1 FROM ws_subjects WHERE id = ?', Number(item.subject)).toArray().length) item.subject = '';
+    if (kind === 'materia' && item.carrera && !this.sql.exec('SELECT 1 FROM ws_careers WHERE id = ?', Number(item.carrera)).toArray().length) item.carrera = '';
     if (id) {
       const row = this.sql.exec(`SELECT updated FROM ${table} WHERE id = ?`, id).toArray()[0];
       if (!row) return { error: 'not found' };
@@ -1140,6 +1146,7 @@ export class StudioData extends DurableObject {
     this.ctx.storage.transactionSync(() => {
       // Las actividades de una materia borrada quedan sin materia (no se borran)
       if (kind === 'materia') this.sql.exec("UPDATE ws_study_items SET subject = '' WHERE subject = ?", String(id));
+      if (kind === 'carrera') this.sql.exec("UPDATE ws_subjects SET carrera = '' WHERE carrera = ?", String(id));
       this.sql.exec(`DELETE FROM ${table} WHERE id = ?`, id);
     });
     return { ok: true };
