@@ -233,7 +233,7 @@
     const renderStudies = () => {
         const t = today();
         const w = W();
-        const tabs = seg('studyTab', st.studyTab, { cursando: 'Cursando', actividades: 'TPs, exámenes y finales', horario: 'Horario', materias: 'Materias y notas', correlativas: 'Correlativas', carreras: 'Carreras' });
+        const tabs = seg('studyTab', st.studyTab, { cursando: 'Cursando', actividades: 'TPs, exámenes y finales', horario: 'Horario', pendientes: 'Pendientes', aprobadas: 'Aprobadas', materias: 'Todas las materias', correlativas: 'Correlativas', carreras: 'Carreras' });
         const careers = { '': 'Todas las carreras', ...Object.fromEntries(w.carrera.map((c) => [String(c.id), c.name])) };
         let body;
         if (st.studyTab === 'carreras') {
@@ -266,11 +266,13 @@
             const loose = w.materia.some((s) => !s.carrera);
             body = w.carrera.length || loose ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose ? card(null) : '') + '</div>'
                 : empty('Empezá cargando tu carrera con “Nueva carrera”. Si cursás dos en simultáneo, cargá las dos.');
-        } else if (st.studyTab === 'materias' || st.studyTab === 'cursando') {
-            const now = st.studyTab === 'cursando'; // "Cursando": solo las materias inscriptas o en curso, sin filtro de año ni cuatrimestre
+        } else if (['materias', 'cursando', 'pendientes', 'aprobadas'].includes(st.studyTab)) {
+            // Cursando (inscriptas o en curso) y Pendientes (todavía no cursadas) van sin filtro de año ni cuatrimestre; Aprobadas y Todas, con filtros
+            const now = st.studyTab === 'cursando' || st.studyTab === 'pendientes';
+            const pick = { cursando: (s) => ['inscripta', 'cursando'].includes(s.status), pendientes: (s) => s.status === 'pendiente' && !study(s).approved, aprobadas: (s) => study(s).approved }[st.studyTab] || (() => true);
             const years = [...new Set(w.materia.map(termYear).filter(Boolean))].sort();
             const list = w.materia.filter((s) => (!st.studyCareer || String(s.carrera) === st.studyCareer)
-                && (now ? ['inscripta', 'cursando'].includes(s.status) : (!st.studyYear || termYear(s) === st.studyYear) && (!st.studyHalf || termHalf(s) === st.studyHalf)))
+                && pick(s) && (now || ((!st.studyYear || termYear(s) === st.studyYear) && (!st.studyHalf || termHalf(s) === st.studyHalf))))
                 .sort((a, b) => (termYear(a) || '9999').localeCompare(termYear(b) || '9999') || (termHalf(a) || '9').localeCompare(termHalf(b) || '9') || String(a.name).localeCompare(String(b.name), 'es'));
             const n = (v) => (num(v) === null ? '—' : fmt(num(v)));
             body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
@@ -286,7 +288,7 @@
                             + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Nota de la materia"><strong>' + fmt(x.final ?? x.cursada) + '</strong></td><td class="n" data-label="Final">' + n(s.final) + '</td>'
                             + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : x.tone === 'muted' ? 'por-cursar' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond, 'por-cursar': x.cond }) + (x.owed.length ? '<br><span class="small muted">Primero rendí el final de: ' + esc(x.owed.join(', ')) + '</span>' : '') + '</td></tr>'; }).join('')
                     + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. La nota de la materia es la del final si lo rendiste; si no, el promedio de los parciales, redondeado al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
-                    : empty(now ? 'No estás cursando ninguna materia ahora. Las que tengan el estado “Inscripta” o “Cursando” aparecen acá.' : 'Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
+                    : empty(st.studyTab === 'cursando' ? 'No estás cursando ninguna materia ahora. Las que tengan el estado “Inscripta” o “Cursando” aparecen acá.' : st.studyTab === 'pendientes' ? 'No tenés materias pendientes. Cargá las que te faltan cursar con el estado “Pendiente”.' : st.studyTab === 'aprobadas' ? 'Todavía no hay materias aprobadas' + (st.studyYear || st.studyHalf ? ' en este período' : '') + '.' : 'Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else if (st.studyTab === 'correlativas') {
             const mine = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
             const sub = (s) => '<strong>' + esc(s.name) + '</strong>' + (s.code || s.term ? '<br><span class="small muted">' + [s.code, termLabel(s) || s.term].filter(Boolean).map(esc).join(' · ') + '</span>' : '');
