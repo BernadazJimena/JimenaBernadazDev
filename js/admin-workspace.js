@@ -25,6 +25,8 @@
     const tag = (value, labels) => '<span class="ws-tag ws-t-' + (TONE[value] || 'muted') + '">' + esc(labels[value] || value) + '</span>';
     // Lo que sigue abierto (para filtros, contadores y el Dashboard)
     const ACT_OPEN = ['pendiente', 'inscripta', 'en-curso'];
+    // Solo los finales llevan inscripción: un TP, parcial o entrega guardado como "Inscripta" cuenta como pendiente (o con su resultado)
+    const actStatus = (a) => (a.kind !== 'final' && a.status === 'inscripta' ? (a.result || 'pendiente') : a.status);
     const JOB_OPEN = ['pendiente', 'enviada', 'en-proceso', 'activo'];
     const subjectName = (id) => { const s = W().materia.find((x) => String(x.id) === String(id)); return s ? s.name : ''; };
 
@@ -186,29 +188,29 @@
             body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
                 + select('studyYear', st.studyYear, { '': 'Todos los años', ...Object.fromEntries(years.map((y) => [y, y])) }, 'Año')
                 + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1.er cuatrimestre', 2: '2.º cuatrimestre' }, 'Cuatrimestre') + '</div>'
-                + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Promedio</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
+                + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Nota</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
                     + list.map((s) => { const x = study(s); const c = careerOf(s);
                         const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
                         const isOpen = folded.has(s.id);
                         return '<tr' + rowAttrs('materia', s, isOpen ? 'is-open' : '') + '><td data-label="Materia"><button type="button" class="ws-fold" data-ws-fold="' + s.id + '" aria-expanded="' + isOpen + '" aria-label="Ver notas de ' + esc(s.name) + '"></button><strong>' + esc(s.name) + '</strong>' + (c && !st.studyCareer ? '<br><span class="small muted">' + esc(c.name) + '</span>' : '') + (s.term ? '<br><span class="small muted">' + esc(s.term) + '</span>' : '') + '</td>'
                             + '<td data-label="Estado">' + tag(s.status, SUBJECT_STATUS) + '</td>'
                             + '<td class="n" data-label="1.er parcial">' + n(s.p1) + '</td><td class="n" data-label="2.º parcial">' + n(s.p2) + '</td><td class="n" data-label="Recuperatorio">' + n(s.recup) + '</td>'
-                            + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Promedio de parciales"><strong>' + fmt(x.cursada) + '</strong></td><td class="n" data-label="Final">' + n(s.final) + '</td>'
+                            + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Nota de la materia"><strong>' + fmt(x.final ?? x.cursada) + '</strong>' + (x.final !== null && x.cursada !== null ? '<br><span class="small muted">promedio ' + fmt(x.cursada) + '</span>' : '') + '</td><td class="n" data-label="Final">' + n(s.final) + '</td>'
                             + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond }) + '</td></tr>'; }).join('')
-                    + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. El promedio se redondea al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
+                    + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. La nota de la materia es la del final si lo rendiste; si no, el promedio de los parciales, redondeado al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
                     : empty('Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else {
             let list = w.actividad.slice();
             if (st.studySubject) list = list.filter((a) => String(a.subject) === st.studySubject);
-            if (st.studyView === 'abiertas') list = list.filter((a) => ACT_OPEN.includes(a.status));
+            if (st.studyView === 'abiertas') list = list.filter((a) => ACT_OPEN.includes(actStatus(a)));
             const subjects = { '': 'Todas las materias', ...Object.fromEntries(w.materia.map((s) => [String(s.id), s.name])) };
             body = '<div class="ws-filters">' + seg('studyView', st.studyView, { abiertas: 'Pendientes e inscripciones', todas: 'Todas' }) + select('studySubject', st.studySubject, subjects, 'Materia') + '</div>'
                 + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
                     + list.map((a) => { const late = a.date && a.date < t && ['pendiente', 'en-curso'].includes(a.status);
-                        const res = (num(a.grade) !== null ? ' <span class="small muted">Nota ' + esc(a.grade) + '</span>' : '') + (a.result ? ' ' + tag(a.result, ACT_RESULT) : '');
+                        const res = (num(a.grade) !== null ? ' <span class="small muted">Nota ' + esc(a.grade) + '</span>' : '') + (a.result && a.result !== actStatus(a) ? ' ' + tag(a.result, ACT_RESULT) : '');
                         return '<tr' + rowAttrs('actividad', a) + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(a.date)) + (a.time ? '<br><span class="small muted">' + esc(a.time) + ' h</span>' : '') + (late ? '<br>' + tag('desaprobado', { desaprobado: 'Vencida' }) : '') + '</td>'
                             + '<td data-label="Qué"><strong>' + esc(a.title) + '</strong>' + (subjectName(a.subject) ? '<br><span class="small muted">' + esc(subjectName(a.subject)) + '</span>' : '') + '</td>'
-                            + '<td data-label="Tipo">' + esc(ACT_KIND[a.kind] || a.kind) + '</td><td data-label="Estado">' + tag(a.status, ACT_STATUS) + res + '</td></tr>'; }).join('')
+                            + '<td data-label="Tipo">' + esc(ACT_KIND[a.kind] || a.kind) + '</td><td data-label="Estado">' + tag(actStatus(a), ACT_STATUS) + res + '</td></tr>'; }).join('')
                     + '</tbody></table>' : empty(st.studyView === 'abiertas' ? 'No tenés TPs, exámenes ni inscripciones a finales pendientes.' : 'No hay actividades para mostrar.'));
         }
         root('estudios').innerHTML = head('Estudios', 'Carreras, materias, notas, promedios, TPs, exámenes y finales.',
@@ -240,7 +242,7 @@
         const t = today(); const week = addDays(t, 7); const w = W();
         const set = (id, n, title) => { const b = document.getElementById('n-' + id); if (b) { b.textContent = n || ''; b.title = n ? title : ''; } };
         const ag = w.agenda.filter((e) => e.done !== 'si' && e.date === t).length;
-        const st7 = w.actividad.filter((a) => ACT_OPEN.includes(a.status) && a.date && a.date <= week).length;
+        const st7 = w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date && a.date <= week).length;
         const jb = w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.date >= t && j.date <= week).length;
         set('mi-agenda', ag, ag + ' para hoy'); set('estudios', st7, st7 + ' en los próximos 7 días o vencidas'); set('trabajo', jb, jb + ' en los próximos 7 días');
     };
@@ -272,6 +274,11 @@
             + '<div class="task-form-body"><div class="task-form-grid">' + f.fields.map(fieldHtml(r)).join('') + '</div></div>'
             + '<div class="task-form-foot">' + (r.id ? '<button type="button" data-ws-delete>Eliminar</button>' : '<span></span>')
             + '<div class="row"><button type="button" data-ws-close>Cancelar</button><button type="submit" class="primary">Guardar</button></div></div></form>';
+        if (kind === 'actividad') { // "Inscripta" solo para finales
+            const k = d.querySelector('[name="kind"]'); const s = d.querySelector('[name="status"]'); const o = s.querySelector('option[value="inscripta"]');
+            const sync = () => { const fin = k.value === 'final'; o.hidden = o.disabled = !fin; if (!fin && s.value === 'inscripta') s.value = 'pendiente'; };
+            k.addEventListener('change', sync); sync();
+        }
         d.showModal();
         const first = d.querySelector('input, select, textarea'); if (first) first.focus();
     };
@@ -340,7 +347,7 @@
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
             w.agenda.filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
-            w.actividad.filter((a) => ACT_OPEN.includes(a.status) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
+            w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
             w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.kind !== 'empleo').forEach((j) => out.push({ section: 'Trabajo', text: (JOB_KIND[j.kind] || '') + ': ' + j.title + (j.company ? ' · ' + j.company : ''), date: j.date, time: j.time || '', scope: 'trabajo', go: 'trabajo' }));
             return out;
         },
@@ -350,7 +357,7 @@
             return {
                 agenda: w.agenda.filter((e) => e.done !== 'si' && e.date && e.date >= t && e.date <= week).length,
                 materias: w.materia.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length,
-                entregas: w.actividad.filter((a) => ACT_OPEN.includes(a.status) && a.date && a.date <= week).length,
+                entregas: w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date && a.date <= week).length,
                 trabajo: w.trabajo.filter((j) => JOB_OPEN.includes(j.status)).length,
             };
         },
