@@ -19,7 +19,7 @@ export const JNB_FILTER = ['tasks', 'task_categories', 'settings'];
 // Tablas que nunca van en la copia JNB
 export const JNB_EXCLUDE = ['brief_chunks', 'admin_sessions', 'rate_limits', 'security_log', 'change_log',
   // Espacio Personal (worker/core/workspace.js): Agenda, materias, actividades de estudio y Trabajo. Solo van en la copia completa cifrada.
-  'ws_agenda', 'ws_careers', 'ws_subjects', 'ws_study_items', 'ws_jobs',
+  'ws_agenda', 'ws_careers', 'ws_subjects', 'ws_study_items', 'ws_jobs', 'ws_expenses', 'ws_deadlines', 'ws_goals',
 ];
 
 // Claves de "settings" que van en la copia JNB
@@ -29,7 +29,7 @@ export const JNB_SETTINGS_INCLUDE = [
 ];
 
 // Claves de "settings" que no van: el ámbito por defecto de las tareas (puede ser personal) y el último error de Resend
-export const JNB_SETTINGS_EXCLUDE = ['tareasAmbito', 'mailError'];
+export const JNB_SETTINGS_EXCLUDE = ['tareasAmbito', 'mailError', 'wsAvisos']; // wsAvisos: vencimientos personales ya avisados por mail
 
 export class UnclassifiedError extends Error {
   constructor(kind, name) {

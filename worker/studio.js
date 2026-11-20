@@ -1117,7 +1117,7 @@ export class StudioData extends DurableObject {
   workspaceData() {
     const out = {};
     for (const [kind, { table, fields }] of Object.entries(WS)) {
-      const order = fields.date ? "(date = ''), date, " + (fields.time ? 'time, ' : '') + 'id' : 'name, id';
+      const order = fields.date ? "(date = ''), date, " + (fields.time ? 'time, ' : '') + 'id' : fields.name ? 'name, id' : 'id';
       out[kind] = this.sql.exec(`SELECT * FROM ${table} ORDER BY ${order}`).toArray();
     }
     return out;
@@ -1238,6 +1238,25 @@ export class StudioData extends DurableObject {
     this.sql.exec('UPDATE inquiries SET followup_at = ? WHERE token = ?', new Date().toISOString(), token);
     this.logQuoteEvent(token, '💬', 'Le escribiste para hacer seguimiento del presupuesto');
     return { ok: true };
+  }
+
+  // Vencimientos personales que hoy están dentro de su aviso y todavía no se avisaron para esa fecha
+  dueDeadlines(today) {
+    const sent = JSON.parse((this.sql.exec("SELECT value FROM settings WHERE key = 'wsAvisos'").toArray()[0] || {}).value || '{}');
+    return this.sql.exec("SELECT id, title, date, time, place, notice FROM ws_deadlines WHERE done != 'si' AND date != '' AND date >= ?", today).toArray()
+      .filter((r) => {
+        const days = /^\d{1,3}$/.test(r.notice) ? Number(r.notice) : 7;
+        const from = new Date(r.date + 'T12:00:00Z'); from.setUTCDate(from.getUTCDate() - days);
+        return from.toISOString().slice(0, 10) <= today && sent[r.id] !== r.date;
+      });
+  }
+
+  markDeadlinesSent(rows) {
+    const ids = new Set(this.sql.exec('SELECT id FROM ws_deadlines').toArray().map((r) => String(r.id)));
+    const sent = JSON.parse((this.sql.exec("SELECT value FROM settings WHERE key = 'wsAvisos'").toArray()[0] || {}).value || '{}');
+    for (const k of Object.keys(sent)) if (!ids.has(k)) delete sent[k]; // los borrados no quedan guardados
+    for (const r of rows) sent[r.id] = r.date;
+    this.sql.exec("INSERT INTO settings (key, value) VALUES ('wsAvisos', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", JSON.stringify(sent));
   }
 
   // Copia de seguridad semanal por mail: cuándo salió la última
@@ -2083,6 +2102,29 @@ export async function briefReminders(env) {
     try { mailed = await sendAnyMail(env, p.email, briefInviteMail({ lang: p.lang, name: p.name || p.client, link, reminder: true })); } catch { /* se reintenta en la próxima hora */ }
     if (mailed) await store.logEvent(p.token, '📧', `Recordatorio automático del brief (a los ${BRIEF_REMINDER_DAYS} días sin completarlo)`);
   }
+}
+
+// Una vez por hora (desde las 9, hora argentina): un solo mail con los vencimientos personales que entran en su aviso
+export async function deadlineReminders(env) {
+  const to = cleanEnv(env.MAIL_REPLY_TO);
+  if (!to) return;
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', hourCycle: 'h23' })
+    .formatToParts(new Date()).map((p) => [p.type, p.value]));
+  if (Number(parts.hour) < 9) return;
+  const today = `${parts.year}-${parts.month}-${parts.day}`;
+  const store = env.STUDIO.get(env.STUDIO.idFromName('studio'));
+  const rows = await store.dueDeadlines(today);
+  if (!rows.length) return;
+  const e = (v) => String(v || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const left = (d) => { const n = Math.round((new Date(d + 'T12:00:00Z') - new Date(today + 'T12:00:00Z')) / DAY); return n === 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${n} días`; };
+  const when = (r) => `${Number(r.date.slice(8))}/${Number(r.date.slice(5, 7))}/${r.date.slice(0, 4)}${r.time ? ' ' + r.time + ' h' : ''} (${left(r.date)})`;
+  mailStore = store;
+  const result = await resendSend(env, to, {
+    subject: rows.length === 1 ? `Vence ${left(rows[0].date)}: ${rows[0].title}` : `Tenés ${rows.length} vencimientos cerca`,
+    html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#211632"><p>Hola, Jimena:</p><p>Te recuerdo estos vencimientos personales:</p><ul>${rows.map((r) => `<li><strong>${e(r.title)}</strong>: ${e(when(r))}${r.place ? ' · ' + e(r.place) : ''}</li>`).join('')}</ul><p style="color:#625970;font-size:13px">JNB Workspace · Vencimientos. Cuando lo resuelvas, marcalo como hecho en el panel.</p></div>`,
+    text: `Hola, Jimena:\n\nTe recuerdo estos vencimientos personales:\n${rows.map((r) => `- ${r.title}: ${when(r)}${r.place ? ' · ' + r.place : ''}`).join('\n')}`,
+  });
+  if (result.ok) await store.markDeadlinesSent(rows);
 }
 
 export async function weeklyBackup(env) {

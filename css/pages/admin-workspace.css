@@ -28,6 +28,32 @@
 .ws-kpi-l { color: var(--muted); font-size: .75rem; font-weight: 700; }
 .ws-grades td.n strong { color: var(--accent-ink); }
 .ws-note { margin-top: .75rem; }
+/* Links de la materia, barra de avance y gráfico de promedio por cuatrimestre (un solo color: el violeta del panel) */
+.ws-links { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .35rem; }
+.ws-links a { border: 1px solid var(--line); border-radius: 999px; color: var(--accent-ink); font-size: .72rem; font-weight: 700; padding: .05rem .55rem; text-decoration: none; }
+.ws-links a:hover, .ws-links a:focus-visible { border-color: var(--accent); }
+.ws-bar { background: var(--soft); border-radius: 999px; display: block; height: .5rem; overflow: hidden; width: 100%; }
+.ws-bar > span { background: var(--accent); border-radius: 999px; display: block; height: 100%; }
+.ws-progress { display: grid; gap: .3rem; margin-top: .8rem; }
+.ws-chart { margin-top: .9rem; }
+.ws-chart-t { color: var(--muted); font-size: .75rem; font-weight: 700; margin: 0 0 .4rem; }
+.ws-bars { align-items: flex-end; display: flex; gap: .5rem; overflow-x: auto; }
+.ws-bar-col { align-items: center; display: flex; flex: 0 0 3.4rem; flex-direction: column; gap: .2rem; }
+.ws-bar-v { font-size: .78rem; font-weight: 800; }
+.ws-bar-track { align-items: flex-end; display: flex; height: 5rem; width: 1.4rem; }
+.ws-bar-f { background: var(--accent); border-radius: 4px 4px 0 0; display: block; width: 100%; }
+.ws-bar-l { color: var(--muted); font-size: .72rem; font-weight: 700; white-space: nowrap; }
+/* Horario semanal: una columna por día (en el celular, uno abajo del otro y sin los días libres) */
+.ws-week { display: grid; gap: .6rem; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.ws-wday .ws-day { margin-top: 0; }
+@media (max-width: 1100px) { .ws-week { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.ws-slot { align-items: flex-start; background: var(--soft); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: .6rem; color: inherit; display: flex; flex-direction: column; gap: .15rem; margin-bottom: .4rem; padding: .45rem .6rem; text-align: left; width: 100%; }
+.ws-slot strong { font-size: .85rem; line-height: 1.25; }
+/* Gastos: totales por categoría */
+.ws-kpis-top { margin-bottom: 1rem; }
+.ws-cats { display: grid; gap: .45rem; margin-bottom: 1rem; max-width: 40rem; }
+.ws-cat { align-items: center; display: grid; gap: .6rem; grid-template-columns: 9rem 1fr 7rem; font-size: .85rem; }
+.ws-cat-n { font-weight: 700; text-align: right; }
 /* Agenda: una tabla por día, con las mismas columnas en todas */
 @media (min-width: 761px) {
   .ws-agenda { table-layout: fixed; }
@@ -37,6 +63,9 @@
   .ws-head .row { width: 100%; }
   .ws-head .row button { flex: 1 1 auto; }
   .ws-table tbody tr:hover td { background: none; }
+  .ws-week { grid-template-columns: minmax(0, 1fr); }
+  .ws-wday.is-empty { display: none; }
+  .ws-cat { grid-template-columns: 6.5rem 1fr auto; }
 }
 @media (max-width: 700px) {
   /* Notas en el celular: cada materia se despliega con la flecha; cerrada muestra solo nombre y condición */
