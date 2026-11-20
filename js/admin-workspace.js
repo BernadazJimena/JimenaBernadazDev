@@ -99,7 +99,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso' };
+    const st = { agendaView: 'proximos', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -114,7 +114,14 @@
     const ageOf = (e) => (e.birth ? Number(e.date.slice(0, 4)) - Number(e.birth.slice(0, 4)) : 0);
     const renderAgenda = () => {
         const t = today();
-        let list = agendaItems();
+        // Cumpleaños: cajas compactas una al lado de la otra (quién, cuándo y la edad que cumple), fuera de las tablas por día
+        const bdays = st.agendaView === 'pasados' ? [] : agendaItems().filter((e) => e.birth);
+        const bdayBox = (e) => { const n = daysTo(e.date);
+            return '<button type="button" class="ws-bday' + (n === 0 ? ' is-today' : '') + '" data-ws-open="agenda:' + e.id + '"><span class="ws-bday-i" aria-hidden="true">🎂</span>'
+                + '<strong>' + esc(e.title) + '</strong><span class="small">' + (n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : Number(e.date.slice(8)) + ' de ' + MONTHS[Number(e.date.slice(5, 7)) - 1]) + '</span>'
+                + '<span class="small muted">' + (ageOf(e) > 0 ? 'Cumple ' + ageOf(e) : 'Cumpleaños') + (n > 1 && n <= 30 ? ' · faltan ' + n + ' días' : '') + '</span></button>'; };
+        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-bdays">' + bdays.map(bdayBox).join('') + '</div>' : '';
+        let list = agendaItems().filter((e) => !e.birth);
         if (st.agendaView === 'proximos') list = list.filter((e) => e.done !== 'si' && (!e.date || e.date >= t));
         if (st.agendaView === 'pasados') list = list.filter((e) => e.date && e.date < t).reverse();
         const days = [];
@@ -127,8 +134,9 @@
             + '</tbody></table>';
         root('mi-agenda').innerHTML = head('Agenda', 'Turnos, reuniones, eventos, recordatorios y cumpleaños (se repiten todos los años con la edad que cumple cada uno).', '<button type="button" class="primary" data-ws-new="agenda">+ Nuevo evento</button>')
             + '<div class="ws-filters">' + seg('agendaView', st.agendaView, { proximos: 'Próximos', pasados: 'Pasados', todos: 'Todos' }) + '</div>'
+            + bdayHtml
             + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t ? ' is-today' : '') + '">' + (d.k === t ? 'Hoy · ' : '') + esc(fdate(d.k)) + '</p>' + table(d.items)).join('')
-                : empty(st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
+                : bdays.length ? '' : empty(st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
     };
 
     // ---- Estudios: carreras, materias (inscripción, notas y condición) y actividades (TPs, exámenes, finales y fechas)
@@ -321,7 +329,11 @@
                     + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. La nota de la materia es la del final si lo rendiste; si no, el promedio de los parciales, redondeado al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
                     : empty(view === 'cursando' ? 'No estás cursando ninguna materia ahora. Las que tengan el estado “Inscripta” o “Cursando” aparecen acá.' : view === 'pendientes' ? 'No tenés materias pendientes. Cargá las que te faltan cursar con el estado “Pendiente”.' : view === 'aprobadas' ? 'Todavía no hay materias aprobadas' + (st.studyYear || st.studyHalf ? ' en este período' : '') + '.' : 'Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else if (st.studyTab === 'correlativas') {
-            const mine = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
+            // Filtros de año y cuatrimestre propios de esta pestaña (no cambian los de Materias)
+            const corrYears = [...new Set(w.materia.map(termYear).filter(Boolean))].sort();
+            const period = st.corrYear || st.corrHalf;
+            const mine = w.materia.filter((s) => (!st.studyCareer || String(s.carrera) === st.studyCareer)
+                && (!st.corrYear || termYear(s) === st.corrYear) && (!st.corrHalf || termHalf(s) === st.corrHalf));
             const sub = (s) => '<strong>' + esc(s.name) + '</strong>' + (s.code || s.term ? '<br><span class="small muted">' + [s.code, termLabel(s) || s.term].filter(Boolean).map(esc).join(' · ') + '</span>' : '');
             const table = (list, which, okTxt, badTxt) => '<table class="ws-table ws-corr"><thead><tr><th>Materia</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((s) => { const m = corr(s)[which];
@@ -335,12 +347,14 @@
                 return groups.map((g) => '<p class="ws-term">' + esc(termYear(g.s) ? termText(termHalf(g.s), termYear(g.s)) : 'Sin cuatrimestre cargado') + '</p>' + table(g.items, ...rest)).join(''); };
             const toTake = mine.filter((s) => ['pendiente', 'inscripta'].includes(s.status) && !study(s).approved);
             const toFinal = mine.filter((s) => isRegular(s) && !study(s).approved);
-            body = '<div class="ws-filters">' + (w.carrera.length > 1 ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
-                + (mine.some((s) => s.code) ? '' : '<p class="small muted ws-note">Para que funcione, cargá en la ficha de cada materia su código y los códigos de sus correlativas. Las materias que todavía no cursás se cargan con el estado “Pendiente”.</p>')
+            body = '<div class="ws-filters">' + (w.carrera.length > 1 ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
+                + select('corrYear', st.corrYear, { '': 'Todos los años', ...Object.fromEntries(corrYears.map((y) => [y, y])) }, 'Año')
+                + select('corrHalf', st.corrHalf, { '': 'Todos los cuatrimestres', 1: '1er cuatrimestre', 2: '2do cuatrimestre', A: 'Anual' }, 'Cuatrimestre') + '</div>'
+                + (period || mine.some((s) => s.code) ? '' : '<p class="small muted ws-note">Para que funcione, cargá en la ficha de cada materia su código y los códigos de sus correlativas. Las materias que todavía no cursás se cargan con el estado “Pendiente”.</p>')
                 + '<p class="ws-day">Para cursar · alcanza con las correlativas regularizadas</p>'
-                + (toTake.length ? rows(toTake, 'cursar', 'Habilitada', 'Bloqueada') : empty('No hay materias pendientes. Cargá las del próximo cuatrimestre con el estado “Pendiente”.'))
+                + (toTake.length ? rows(toTake, 'cursar', 'Habilitada', 'Bloqueada') : empty(period ? 'No hay materias pendientes en este período.' : 'No hay materias pendientes. Cargá las del próximo cuatrimestre con el estado “Pendiente”.'))
                 + '<p class="ws-day">Para rendir el final · las correlativas tienen que estar aprobadas</p>'
-                + (toFinal.length ? rows(toFinal, 'rendir', 'Puede rendir', 'Todavía no') : empty('No tenés materias regulares con el final pendiente.'));
+                + (toFinal.length ? rows(toFinal, 'rendir', 'Puede rendir', 'Todavía no') : empty(period ? 'No tenés materias regulares con el final pendiente en este período.' : 'No tenés materias regulares con el final pendiente.'));
         } else if (st.studyTab === 'horario') {
             const mine = w.materia.filter((s) => ['inscripta', 'cursando'].includes(s.status) && (!st.studyCareer || String(s.carrera) === st.studyCareer));
             const blocks = mine.flatMap((s) => parseSchedule(s.schedule).map((b) => ({ ...b, s })));
@@ -548,7 +562,7 @@
             const sync = () => { const b = k.value === 'cumpleanos';
                 d.querySelectorAll('[data-ws-nobday]').forEach((x) => { x.hidden = b; });
                 d.querySelector('[name="date"]').previousSibling.textContent = b ? 'Fecha de nacimiento' : 'Fecha';
-                d.querySelector('[name="title"]').previousSibling.textContent = b ? 'De quién' : 'Qué'; };
+                d.querySelector('[name="title"]').previousSibling.textContent = b ? 'Quién' : 'Qué'; };
             k.addEventListener('change', sync); sync();
         }
         const ys = d.querySelector('[name="_year"]'); // "Otro año…": aparece el campo para escribirlo
