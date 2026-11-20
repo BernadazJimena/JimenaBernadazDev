@@ -46,6 +46,14 @@
   .ws-fold { align-items: center; background: none; border: 1px solid var(--line); border-radius: 999px; color: var(--accent-ink); display: flex; height: 2.2rem; justify-content: center; min-height: 0; padding: 0; position: absolute; right: .6rem; top: .6rem; width: 2.2rem; }
   .ws-fold::before { border-bottom: 2px solid currentColor; border-right: 2px solid currentColor; content: ""; height: .5rem; transform: translateY(-2px) rotate(45deg); transition: transform .2s; width: .5rem; }
   .ws-fold[aria-expanded="true"]::before { transform: translateY(2px) rotate(-135deg); }
+  /* Cerrada: tarjeta compacta, sin los títulos de columna; nombre y cursada arriba, condición abajo */
+  .module .ws-grades tbody tr:not(.is-open) { margin-bottom: .4rem; padding: .45rem .7rem; }
+  .module .ws-grades tbody tr:not(.is-open) td[data-label]::before { display: none; }
+  .module .ws-grades tbody tr:not(.is-open) td { padding: .1rem 0; }
+  .module .ws-grades tbody tr:not(.is-open) td:first-child { padding-right: 2.6rem; }
+  .ws-grades tbody tr:not(.is-open) .ws-fold { height: 1.9rem; top: 50%; transform: translateY(-50%); width: 1.9rem; }
+  .ws-grades .ws-sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ws-grades tbody tr:not(.is-open) td:first-child br { display: none; }
 }
 @media (min-width: 701px) { .ws-fold { display: none; } }
 @media (max-width: 520px) {
