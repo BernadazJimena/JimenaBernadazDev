@@ -122,7 +122,7 @@
             const min = Math.min(...given);
             if (min >= L.promo && tpOk) { cond = 'Promociona'; tone = 'ok'; }
             else if (min >= L.aprueba && tpOk) { cond = 'Regular: rinde final'; tone = 'warn'; }
-            else { cond = tpOk ? 'No alcanza: recuperar o recursar' : 'TP desaprobado'; tone = 'bad'; }
+            else { cond = !tpOk ? 'TP desaprobado' : recup !== null ? 'Recursa' : 'Tiene que recuperar'; tone = 'bad'; } // con el recuperatorio ya rendido y desaprobado, se recursa
         }
         const approved = ['aprobada', 'promocionada'].includes(s.status) || (final !== null && final >= L.aprueba);
         const grade = final !== null ? final : (s.status === 'promocionada' || cond === 'Promociona' ? cursada : null);
