@@ -189,9 +189,12 @@
     const termLabel = (s) => { const y = termYear(s); const h = termHalf(s); return y ? (h === 'A' ? 'Anual ' : h ? h + 'C ' : '') + y : ''; };
     const termText = (half, year) => (half === '1' ? '1er cuatrimestre ' : half === '2' ? '2do cuatrimestre ' : half === 'A' ? 'Anual ' : '') + year;
     // Carrera abreviada con sus iniciales ("Tecnicatura universitaria web" → TUW); el nombre completo queda al pasar el mouse
-    const careerShort = (c) => { const w = String(c.name || '').split(/\s+/).filter((x) => x && !/^(de|del|en|la|las|el|los|y|e)$/i.test(x));
-        const ab = w.length > 1 ? w.map((x) => x[0].toUpperCase()).join('') : String(c.name || '').slice(0, 4);
-        return '<abbr title="' + esc(c.name) + '">' + esc(ab) + '</abbr>'; };
+    // Abreviatura con iniciales ("Programación web I" → PW I); el número o romano del final se conserva
+    const initials = (name) => { const w = String(name || '').split(/\s+/).filter((x) => x && !/^(a|al|de|del|en|la|las|el|los|y|e|para|con)$/i.test(x));
+        const num = w.length > 1 && /^([ivx]+|\d+)$/i.test(w[w.length - 1]) ? ' ' + w.pop().toUpperCase() : '';
+        return (w.length > 1 ? w.map((x) => x[0].toUpperCase()).join('') : (String(w[0] || name || '').length <= 8 ? String(w[0] || name || '') : String(w[0] || name || '').slice(0, 4) + '.')) + num; }; // una sola palabra: entera si es corta
+    const abbr = (name) => '<abbr title="' + esc(name) + '">' + esc(initials(name)) + '</abbr>';
+    const careerShort = (c) => abbr(c.name);
     const inTerm = (period) => { const y = termYear(period); const h = termHalf(period); return (s) => (!y || termYear(s) === y) && (!h || termHalf(s) === h); };
 
     // Correlativas: códigos separados por coma. Para cursar alcanza con tenerlas regularizadas; para rendir el final, aprobadas
@@ -229,6 +232,10 @@
     const LINKS = [['aula', 'Aula virtual'], ['drive', 'Drive'], ['apuntes', 'Apuntes'], ['whatsapp', 'WhatsApp']];
     const linksOf = (s) => { const l = LINKS.filter(([k]) => s[k]); return l.length ? '<span class="ws-links">' + l.map(([k, label]) => '<a href="' + esc(s[k]) + '" target="_blank" rel="noopener">' + label + '</a>').join('') + '</span>' : ''; };
     const bar = (pct) => '<span class="ws-bar"><span style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%"></span></span>';
+    // Grilla de cuadros sin cuadros huérfanos: 4 o 3 columnas según cuántos haya (fila final completa o de 2 o más)
+    const kpiGrid = (items) => { const l = items.filter(Boolean); const n = l.length;
+        const cols = n <= 4 ? n : [4, 3].find((c) => n % c === 0) || [4, 3].find((c) => n % c >= 2) || 4;
+        return '<div class="ws-kpis ws-kpis-fit" style="--cols:' + cols + '">' + l.join('') + '</div>'; };
     const kpi = (n, label) => '<div class="ws-kpi"><span class="ws-kpi-n">' + n + '</span><span class="ws-kpi-l">' + label + '</span></div>';
 
     const renderStudies = () => {
@@ -254,16 +261,16 @@
                 return '<div class="card ws-career"><div class="ws-career-head"><div><h3>' + esc(c ? c.name : 'Materias sin carrera') + '</h3>'
                     + (c && (c.institution || c.status) ? '<p class="small muted">' + esc(c.institution || '') + (c.institution ? ' · ' : '') + esc(CAREER_STATUS[c.status] || '') + '</p>' : '') + '</div>'
                     + (c ? '<button type="button" data-ws-open="carrera:' + c.id + '">Editar</button>' : '') + '</div>'
-                    + '<div class="ws-kpis">'
-                    + kpi(k.passed + (k.total !== null ? ' <small>de ' + k.total + '</small>' : ''), 'Materias aprobadas')
-                    + kpi(fmt(k.avg), 'Promedio' + (k.avgAll !== null && k.avgAll !== k.avg ? ' <small>(con aplazos ' + fmt(k.avgAll) + ')</small>' : ''))
-                    + kpi(k.current, 'Cursando o inscripta')
-                    + kpi(k.pending, 'Materias pendientes')
-                    + kpi(k.finalsTaken, 'Finales rendidos')
-                    + kpi(k.finalsLeft, 'Finales que te quedan')
-                    + kpi(k.enrolled, 'Inscripciones a finales')
-                    + (k.left !== null ? kpi(k.left, 'Materias que faltan') : '')
-                    + '</div>' + progress(k) + '</div>';
+                    + kpiGrid([
+                        kpi(k.passed + (k.total !== null ? ' <small>de ' + k.total + '</small>' : ''), 'Materias aprobadas'),
+                        kpi(fmt(k.avg), 'Promedio' + (k.avgAll !== null && k.avgAll !== k.avg ? ' <small>(con aplazos ' + fmt(k.avgAll) + ')</small>' : '')),
+                        kpi(k.current, 'Cursando o inscripta'),
+                        kpi(k.pending, 'Materias pendientes'),
+                        kpi(k.finalsTaken, 'Finales rendidos'),
+                        kpi(k.finalsLeft, 'Finales que te quedan'),
+                        kpi(k.enrolled, 'Inscripciones a finales'),
+                        k.left !== null ? kpi(k.left, 'Materias que faltan') : '',
+                    ]) + progress(k) + '</div>';
             };
             // Con al menos una carrera cargada, no se muestra la tarjeta "Materias sin carrera": solo un aviso con cuáles son
             const loose = w.materia.filter((s) => !s.carrera);
@@ -317,7 +324,7 @@
             const unread = mine.filter((s) => !parseSchedule(s.schedule).length);
             body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
                 + (blocks.length ? '<div class="ws-week">' + WEEKDAYS.map(([k, label]) => { const day = blocks.filter((b) => b.day === k).sort((a, b) => a.from.localeCompare(b.from));
-                    return '<div class="ws-wday' + (day.length ? '' : ' is-empty') + '"><p class="ws-day">' + label + '</p>' + (day.length ? day.map((b) => '<button type="button" class="ws-slot" data-ws-open="materia:' + b.s.id + '"><span class="small">' + b.from + '–' + b.to + '</span><strong>' + esc(b.s.name) + '</strong>' + (clash(b) ? tag('desaprobado', { desaprobado: 'Se superpone' }) : '') + '</button>').join('') : '<p class="small muted">Libre</p>') + '</div>'; }).join('') + '</div>'
+                    return '<div class="ws-wday' + (day.length ? '' : ' is-empty') + '"><p class="ws-day">' + label + '</p>' + (day.length ? day.map((b) => '<button type="button" class="ws-slot" data-ws-open="materia:' + b.s.id + '"><span class="small">' + b.from + '–' + b.to + '</span><strong>' + abbr(b.s.name) + '</strong>' + (clash(b) ? tag('desaprobado', { desaprobado: 'Se superpone' }) : '') + '</button>').join('') : '<p class="small muted">Libre</p>') + '</div>'; }).join('') + '</div>'
                     : empty(mine.length ? 'Ninguna materia en curso tiene un horario que pueda leer.' : 'No tenés materias inscriptas o en curso.'))
                 + (unread.length ? '<p class="small muted ws-note">Sin horario reconocido: ' + unread.map((s) => esc(s.name) + (s.schedule ? ' («' + esc(s.schedule) + '»)' : '')).join(', ') + '. Escribilo en la ficha como “Lun 18-20, Mié 14:30-16”.</p>' : '');
         } else {

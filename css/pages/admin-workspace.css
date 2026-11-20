@@ -22,6 +22,11 @@
 .ws-career-head h3 { margin: 0 0 .15rem; }
 .ws-career-head p { margin: 0; }
 .ws-kpis { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); }
+.ws-kpis-fit { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
+@media (max-width: 700px) {
+  .ws-kpis-fit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ws-kpis-fit > .ws-kpi:last-child:nth-child(odd) { grid-column: 1 / -1; } /* en el celular, el último solo ocupa toda la fila */
+}
 .ws-kpi { background: var(--soft); border-radius: .7rem; display: flex; flex-direction: column; gap: .15rem; padding: .6rem .75rem; }
 .ws-kpi-n { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
 .ws-kpi-n small, .ws-kpi-l small { color: var(--muted); font-size: .72rem; font-weight: 600; }
