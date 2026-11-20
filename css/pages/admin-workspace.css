@@ -66,6 +66,16 @@
 .ws-cats { display: grid; gap: .45rem; margin-bottom: 1rem; max-width: 40rem; }
 .ws-cat { align-items: center; display: grid; gap: .6rem; grid-template-columns: 9rem 1fr 7rem; font-size: .85rem; }
 .ws-cat-n { font-weight: 700; text-align: right; }
+button.ws-cat { background: none; border: 1px solid transparent; border-radius: .5rem; color: inherit; font: inherit; font-size: .85rem; min-height: 0; padding: .2rem .4rem; text-align: left; width: 100%; }
+button.ws-cat:hover, button.ws-cat:focus-visible { border-color: var(--line); }
+button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
+/* Correlativas: un título chico por cuatrimestre */
+.ws-term { color: var(--accent-ink); font-size: .8rem; font-weight: 700; margin: .7rem 0 .3rem; }
+/* Trabajo: tarjeta de cada empleo activo */
+.ws-jobs { margin-bottom: 1rem; }
+.ws-job-l { display: grid; gap: .05rem; margin: 0 0 .55rem; }
+.ws-job-f { margin: .15rem 0 0; padding-left: 1.1rem; }
+.ws-job-f li { margin-bottom: .15rem; }
 /* Agenda: una tabla por día, con las mismas columnas en todas */
 @media (min-width: 761px) {
   .ws-agenda { table-layout: fixed; }

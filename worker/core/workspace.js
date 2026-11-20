@@ -36,6 +36,10 @@ export const WS = {
     date: ['date'], time: ['time'],
     status: [['pendiente', 'enviada', 'en-proceso', 'aceptada', 'rechazada', 'activo', 'finalizado']],
     contact: ['line', 200], url: ['url'], notes: ['text', 2000],
+    // Datos del empleo (tipo "empleo"): fecha de fin, dirección, días y horario, contratación, cómo cobra y funciones (como en un CV)
+    end: ['date'], address: ['line', 200], days: ['line', 120], hours: ['line', 80],
+    contract: [['', 'indeterminado', 'plazo-fijo', 'temporada', 'eventual', 'pasantia', 'por-proyecto', 'otro']],
+    regime: [['', 'dependencia', 'monotributo', 'responsable-inscripto', 'informal']], functions: ['text', 3000],
   } },
   // Gastos personales (en pesos), separados de los números de JNB
   gasto: { table: 'ws_expenses', required: 'concept', fields: {
@@ -43,10 +47,12 @@ export const WS = {
     category: [['otros', 'super', 'comida', 'transporte', 'servicios', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos']],
     method: [['', 'efectivo', 'debito', 'credito', 'transferencia', 'mercadopago']], notes: ['text', 2000],
   } },
-  // Vencimientos personales (DNI, carnet, seguro, turnos): aviso por mail "notice" días antes (vacío = 7)
+  // Vencimientos personales (DNI, carnet, seguro, turnos): aviso por mail "notice" días antes (vacío = 7).
+  // repeat: '' (una vez), 'mensual' o 'anual'; los que se repiten pasan solos a la próxima fecha (nextDue)
   vencimiento: { table: 'ws_deadlines', required: 'title', fields: {
-    title: ['line', 160], kind: [['documento', 'turno', 'seguro', 'impuesto', 'servicio', 'otro']],
+    title: ['line', 160], kind: [['documento', 'turno', 'seguro', 'impuesto', 'servicio', 'cuota', 'otro']],
     date: ['date'], time: ['time'], notice: ['line', 3], place: ['line', 160], done: [['no', 'si']], notes: ['text', 2000],
+    repeat: [['', 'mensual', 'anual']],
   } },
   // Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período "term")
   meta: { table: 'ws_goals', required: 'title', fields: {
@@ -54,5 +60,17 @@ export const WS = {
     target: ['line', 10], progress: ['line', 10], status: [['en-curso', 'cumplida', 'abandonada']], notes: ['text', 2000],
   } },
 };
+
+// Próxima fecha de un vencimiento que se repite: el mismo día de cada mes (o de cada año) desde la fecha cargada.
+// Si el mes es más corto (un 31 en abril), queda el último día del mes. Sin repetición devuelve la fecha tal cual.
+export function nextDue(date, repeat, today) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !['mensual', 'anual'].includes(repeat)) return date || '';
+  const day = Number(date.slice(8));
+  let y = Number(date.slice(0, 4)); let m = Number(date.slice(5, 7));
+  const make = () => `${y}-${String(m).padStart(2, '0')}-${String(Math.min(day, new Date(Date.UTC(y, m, 0)).getUTCDate())).padStart(2, '0')}`;
+  let d = make();
+  for (let i = 0; d < today && i < 1200; i++) { if (repeat === 'anual') y++; else if (++m > 12) { m = 1; y++; } d = make(); }
+  return d;
+}
 
 export const WS_TABLES = Object.values(WS).map((s) => s.table);

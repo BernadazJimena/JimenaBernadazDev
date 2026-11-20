@@ -29,9 +29,12 @@
     // Solo los finales llevan inscripción: un TP, parcial o entrega guardado como "Inscripta" cuenta como pendiente (o con su resultado)
     const actStatus = (a) => (a.kind !== 'final' && a.status === 'inscripta' ? (a.result || 'pendiente') : a.status);
     const JOB_OPEN = ['pendiente', 'enviada', 'en-proceso', 'activo'];
+    const JOB_CONTRACT = { '': 'Sin indicar', indeterminado: 'Por tiempo indeterminado', 'plazo-fijo': 'Plazo fijo', temporada: 'De temporada', eventual: 'Eventual', pasantia: 'Pasantía', 'por-proyecto': 'Por proyecto o freelance', otro: 'Otra' };
+    const JOB_REGIME = { '': 'Sin indicar', dependencia: 'Relación de dependencia (recibo de sueldo)', monotributo: 'Monotributo (factura)', 'responsable-inscripto': 'Responsable inscripta (factura)', informal: 'Sin registrar' };
     const EXP_CAT = { super: 'Supermercado', comida: 'Comida y delivery', transporte: 'Transporte', servicios: 'Servicios', alquiler: 'Alquiler', salud: 'Salud', estudio: 'Estudio', ocio: 'Salidas y ocio', ropa: 'Ropa', regalos: 'Regalos', impuestos: 'Impuestos', otros: 'Otros' };
     const EXP_METHOD = { '': 'Sin indicar', efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia', mercadopago: 'Mercado Pago' };
-    const DL_KIND = { documento: 'Documento', turno: 'Turno', seguro: 'Seguro', impuesto: 'Impuesto', servicio: 'Servicio', otro: 'Otro' };
+    const DL_KIND = { documento: 'Documento', turno: 'Turno', seguro: 'Seguro', impuesto: 'Impuesto', servicio: 'Servicio', cuota: 'Cuota', otro: 'Otro' };
+    const DL_REPEAT = { '': 'Una sola vez', mensual: 'Todos los meses', anual: 'Todos los años' };
     const GOAL_AUTO = { '': 'Lo actualizo a mano', materias: 'Materias aprobadas (de Estudios)', promedio: 'Promedio (de Estudios)' };
     const GOAL_STATUS = { 'en-curso': 'En curso', cumplida: 'Cumplida', abandonada: 'Abandonada' };
     const subjectName = (id) => { const s = W().materia.find((x) => String(x.id) === String(id)); return s ? s.name : ''; };
@@ -66,10 +69,16 @@
             ['subject', 'Materia', 'subject'], ['date', 'Fecha', 'date'], ['time', 'Hora', 'time'], ['status', 'Estado', 'select', ACT_STATUS],
             ['grade', 'Nota (número)', 'line', { max: 10, mode: 'decimal' }], ['result', 'O resultado', 'select', ACT_RESULT], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
+        // Los campos con job: true se ven solo cuando el tipo es "Empleo"
         trabajo: { title: 'registro', fields: [
             ['kind', 'Tipo', 'select', JOB_KIND], ['title', 'Puesto, búsqueda o curso', 'line', { required: true, max: 160 }],
-            ['company', 'Empresa o institución', 'line', { max: 160 }], ['date', 'Fecha', 'date'], ['time', 'Hora', 'time'],
-            ['status', 'Estado', 'select', JOB_STATUS], ['contact', 'Contacto', 'line', { max: 200 }], ['url', 'Link', 'url', { hint: 'https://…' }],
+            ['company', 'Empresa o institución', 'line', { max: 160 }], ['status', 'Estado', 'select', JOB_STATUS],
+            ['date', 'Fecha', 'date'], ['time', 'Hora', 'time', { nojob: true }], ['end', 'Fecha de fin', 'date', { job: true }],
+            ['days', 'Días', 'line', { max: 120, job: true, hint: 'Sábados, domingos y feriados' }], ['hours', 'Horario', 'line', { max: 80, job: true, hint: '7 a 19 h' }],
+            ['address', 'Dirección', 'line', { max: 200, job: true, wide: true }],
+            ['contract', 'Contratación', 'select', { ...JOB_CONTRACT, job: true }], ['regime', 'Cómo cobrás', 'select', { ...JOB_REGIME, job: true }],
+            ['functions', 'Funciones y tareas (como en un CV)', 'text', { max: 3000, job: true, hint: 'Una por línea: atención al público, caja, reposición…' }],
+            ['contact', 'Contacto', 'line', { max: 200 }], ['url', 'Link', 'url', { hint: 'https://…' }],
             ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         gasto: { title: 'gasto', fields: [
@@ -78,8 +87,8 @@
         ] },
         vencimiento: { title: 'vencimiento', fields: [
             ['title', 'Qué vence', 'line', { required: true, max: 160, wide: true, hint: 'Renovar el DNI' }], ['kind', 'Tipo', 'select', DL_KIND],
-            ['date', 'Fecha', 'date'], ['time', 'Hora', 'time'], ['notice', 'Avisarme por mail (días antes)', 'line', { max: 3, mode: 'numeric', hint: '7' }],
-            ['place', 'Lugar', 'line', { max: 160 }], ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho' }], ['notes', 'Notas', 'text', { max: 2000 }],
+            ['date', 'Fecha', 'date'], ['repeat', 'Se repite', 'select', DL_REPEAT], ['time', 'Hora', 'time'], ['notice', 'Avisarme por mail (días antes)', 'line', { max: 3, mode: 'numeric', hint: '7' }],
+            ['place', 'Lugar', 'line', { max: 160 }], ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho (si se repite, deja de avisar)' }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         meta: { title: 'meta', fields: [
             ['title', 'Meta', 'line', { required: true, max: 160, wide: true, hint: 'Aprobar 4 materias' }], ['term', 'Período', 'line', { max: 80, hint: '2027 o 1er cuatrimestre 2027' }],
@@ -89,7 +98,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', goalView: 'en-curso' };
+    const st = { agendaView: 'proximos', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -243,6 +252,7 @@
         const w = W();
         const tabs = seg('studyTab', st.studyTab, { materias: 'Materias', actividades: 'TPs, exámenes y finales', horario: 'Horario', correlativas: 'Correlativas', carreras: 'Carreras' });
         const careers = { '': 'Todas las carreras', ...Object.fromEntries(w.carrera.map((c) => [String(c.id), c.name])) };
+        if (w.carrera.length < 2) st.studyCareer = ''; // con una sola carrera no hay filtro
         let body;
         if (st.studyTab === 'carreras') {
             // Avance: porcentaje del plan aprobado y promedio de las materias aprobadas en cada cuatrimestre
@@ -288,7 +298,7 @@
                 .sort((a, b) => (termYear(a) || '9999').localeCompare(termYear(b) || '9999') || (termHalf(a) || '9').localeCompare(termHalf(b) || '9') || String(a.name).localeCompare(String(b.name), 'es'));
             const n = (v) => (num(v) === null ? '—' : fmt(num(v)));
             body = '<div class="ws-filters">' + select('subjView', view, { cursando: 'En curso', pendientes: 'Pendientes', aprobadas: 'Aprobadas', todas: 'Todas' }, 'Qué materias ver')
-                + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
+                + (w.carrera.length > 1 ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
                 + (now ? '' : select('studyYear', st.studyYear, { '': 'Todos los años', ...Object.fromEntries(years.map((y) => [y, y])) }, 'Año')
                 + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1er cuatrimestre', 2: '2do cuatrimestre' }, 'Cuatrimestre')) + '</div>'
                 + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Nota</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
@@ -305,13 +315,19 @@
         } else if (st.studyTab === 'correlativas') {
             const mine = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
             const sub = (s) => '<strong>' + esc(s.name) + '</strong>' + (s.code || s.term ? '<br><span class="small muted">' + [s.code, termLabel(s) || s.term].filter(Boolean).map(esc).join(' · ') + '</span>' : '');
-            const rows = (list, which, okTxt, badTxt, missTxt) => '<table class="ws-table"><thead><tr><th>Materia</th><th>Estado</th></tr></thead><tbody>'
+            const table = (list, which, okTxt, badTxt, missTxt) => '<table class="ws-table"><thead><tr><th>Materia</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((s) => { const m = corr(s)[which];
                     return '<tr' + rowAttrs('materia', s) + '><td data-label="Materia">' + sub(s) + '</td><td data-label="Estado">' + (m.length ? tag('desaprobado', { desaprobado: badTxt }) + '<br><span class="small muted">' + missTxt + ': ' + esc(m.join(', ')) + '</span>' : tag('aprobado', { aprobado: okTxt })) + '</td></tr>'; }).join('')
                 + '</tbody></table>';
+            // Agrupadas por cuatrimestre, del más viejo al más nuevo (las que no tienen cursada, al final)
+            const termKey = (s) => (termYear(s) || '9999') + ({ '1': '1', '2': '2', A: '0' }[termHalf(s)] || '3');
+            const rows = (list, ...rest) => { const groups = [];
+                list.slice().sort((a, b) => termKey(a).localeCompare(termKey(b)) || String(a.code || a.name).localeCompare(String(b.code || b.name), 'es', { numeric: true }))
+                    .forEach((s) => { const k = termKey(s); const g = groups.find((x) => x.k === k); if (g) g.items.push(s); else groups.push({ k, s, items: [s] }); });
+                return groups.map((g) => '<p class="ws-term">' + esc(termYear(g.s) ? termText(termHalf(g.s), termYear(g.s)) : 'Sin cuatrimestre cargado') + '</p>' + table(g.items, ...rest)).join(''); };
             const toTake = mine.filter((s) => ['pendiente', 'inscripta'].includes(s.status) && !study(s).approved);
             const toFinal = mine.filter((s) => isRegular(s) && !study(s).approved);
-            body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
+            body = '<div class="ws-filters">' + (w.carrera.length > 1 ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
                 + (mine.some((s) => s.code) ? '' : '<p class="small muted ws-note">Para que funcione, cargá en la ficha de cada materia su código y los códigos de sus correlativas. Las materias que todavía no cursás se cargan con el estado “Pendiente”.</p>')
                 + '<p class="ws-day">Para cursar · alcanza con las correlativas regularizadas</p>'
                 + (toTake.length ? rows(toTake, 'cursar', 'Habilitada', 'Bloqueada', 'Falta regularizar') : empty('No hay materias pendientes. Cargá las del próximo cuatrimestre con el estado “Pendiente”.'))
@@ -322,7 +338,7 @@
             const blocks = mine.flatMap((s) => parseSchedule(s.schedule).map((b) => ({ ...b, s })));
             const clash = (b) => blocks.some((o) => o !== b && o.s !== b.s && o.day === b.day && o.from < b.to && b.from < o.to);
             const unread = mine.filter((s) => !parseSchedule(s.schedule).length);
-            body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
+            body = '<div class="ws-filters">' + (w.carrera.length > 1 ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
                 + (blocks.length ? '<div class="ws-week">' + WEEKDAYS.map(([k, label]) => { const day = blocks.filter((b) => b.day === k).sort((a, b) => a.from.localeCompare(b.from));
                     return '<div class="ws-wday' + (day.length ? '' : ' is-empty') + '"><p class="ws-day">' + label + '</p>' + (day.length ? day.map((b) => '<button type="button" class="ws-slot" data-ws-open="materia:' + b.s.id + '"><span class="small">' + b.from + '–' + b.to + '</span><strong>' + abbr(b.s.name) + '</strong>' + (clash(b) ? tag('desaprobado', { desaprobado: 'Se superpone' }) : '') + '</button>').join('') : '<p class="small muted">Libre</p>') + '</div>'; }).join('') + '</div>'
                     : empty(mine.length ? 'Ninguna materia en curso tiene un horario que pueda leer.' : 'No tenés materias inscriptas o en curso.'))
@@ -352,13 +368,22 @@
         let list = W().trabajo.slice();
         if (st.jobKind) list = list.filter((j) => j.kind === st.jobKind);
         if (st.jobView === 'abiertos') list = list.filter((j) => JOB_OPEN.includes(j.status));
-        root('trabajo').innerHTML = head('Trabajo', 'Empleos, entrevistas, postulaciones y capacitaciones fuera de JNB.', '<button type="button" class="primary" data-ws-new="trabajo">+ Nuevo registro</button>')
+        // Empleos activos: una tarjeta con todos sus datos (puesto, lugar, días y horario, contratación, cómo cobra y funciones)
+        const jobs = W().trabajo.filter((j) => j.kind === 'empleo' && j.status === 'activo' && (!st.jobKind || st.jobKind === 'empleo'));
+        const line = (label, value) => (value ? '<p class="ws-job-l"><span class="small muted">' + label + '</span>' + esc(value) + '</p>' : '');
+        const cards = jobs.length ? '<div class="ws-careers ws-jobs">' + jobs.map((j) => '<div class="card ws-career"><div class="ws-career-head"><div><h3>' + esc(j.title) + '</h3><p class="small muted">' + [j.company, j.date ? 'desde el ' + fshort(j.date) : '', j.end ? 'hasta el ' + fshort(j.end) : ''].filter(Boolean).map(esc).join(' · ') + '</p></div><button type="button" data-ws-open="trabajo:' + j.id + '">Editar</button></div>'
+            + line('Días y horario', [j.days, j.hours].filter(Boolean).join(' · ')) + line('Dirección', j.address) + line('Contratación', j.contract ? JOB_CONTRACT[j.contract] : '') + line('Cómo cobrás', j.regime ? JOB_REGIME[j.regime] : '')
+            + (j.functions ? '<div class="ws-job-l"><span class="small muted">Funciones</span><ul class="ws-job-f">' + j.functions.split(/\n+/).map((x) => x.replace(/^\s*[-•*]\s*/, '').trim()).filter(Boolean).map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul></div>' : '')
+            + '</div>').join('') + '</div>' : '';
+        list = list.filter((j) => !jobs.includes(j)); // los activos ya están en su tarjeta
+        root('trabajo').innerHTML = head('Trabajo', 'Tus empleos, entrevistas, postulaciones y capacitaciones fuera de JNB.', '<button type="button" class="primary" data-ws-new="trabajo">+ Nuevo registro</button>')
             + '<div class="ws-filters">' + seg('jobView', st.jobView, { abiertos: 'En curso', todos: 'Todos' }) + select('jobKind', st.jobKind, { '': 'Todos los tipos', ...JOB_KIND }, 'Tipo') + '</div>'
+            + cards + (cards && list.length ? '<p class="ws-day">Otros registros</p>' : '')
             + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((j) => '<tr' + rowAttrs('trabajo', j) + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(j.date)) + (j.time ? '<br><span class="small muted">' + esc(j.time) + ' h</span>' : '') + (j.date === t ? '<br>' + tag('en-curso', { 'en-curso': 'Hoy' }) : '') + '</td>'
-                    + '<td data-label="Qué"><strong>' + esc(j.title) + '</strong>' + (j.company ? '<br><span class="small muted">' + esc(j.company) + '</span>' : '') + '</td>'
+                    + '<td data-label="Qué"><strong>' + esc(j.title) + '</strong>' + (j.company || j.days || j.hours ? '<br><span class="small muted">' + [j.company, j.kind === 'empleo' ? [j.days, j.hours].filter(Boolean).join(' ') : ''].filter(Boolean).map(esc).join(' · ') + '</span>' : '') + '</td>'
                     + '<td data-label="Tipo">' + esc(JOB_KIND[j.kind] || j.kind) + '</td><td data-label="Estado">' + tag(j.status, JOB_STATUS) + '</td></tr>').join('')
-                + '</tbody></table>' : empty(st.jobView === 'abiertos' ? 'No tenés postulaciones, entrevistas ni capacitaciones en curso.' : 'No hay registros para mostrar.'));
+                + '</tbody></table>' : cards ? '' : empty(st.jobView === 'abiertos' ? 'No tenés empleos, postulaciones, entrevistas ni capacitaciones en curso.' : 'No hay registros para mostrar.'));
     };
 
     // ---- Gastos personales: total del mes, por categoría y lista (en pesos)
@@ -374,12 +399,14 @@
         const total = sum(list);
         const prevKey = st.expMonth ? (() => { const d = new Date(st.expMonth + '-15T12:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); })() : '';
         const prev = prevKey ? sum(inMonth(prevKey).filter((g) => !st.expCat || g.category === st.expCat)) : null;
-        const cats = Object.keys(EXP_CAT).map((k) => ({ k, n: sum(list.filter((g) => g.category === k)) })).filter((c) => c.n > 0).sort((a, b) => b.n - a.n);
+        const monthList = inMonth(st.expMonth);
+        const cats = Object.keys(EXP_CAT).map((k) => ({ k, n: sum(monthList.filter((g) => g.category === k)) })).filter((c) => c.n > 0).sort((a, b) => b.n - a.n);
         root('gastos').innerHTML = head('Gastos', 'Tus gastos personales en pesos, separados de los números de JNB.', '<button type="button" class="primary" data-ws-new="gasto">+ Nuevo gasto</button>')
             + '<div class="ws-filters">' + select('expMonth', st.expMonth, { '': 'Todos los meses', ...Object.fromEntries(months.map((m) => [m, mLabel(m)])) }, 'Mes') + select('expCat', st.expCat, { '': 'Todas las categorías', ...EXP_CAT }, 'Categoría') + '</div>'
-            + '<div class="ws-kpis ws-kpis-top">' + kpi(ars(total), st.expMonth ? 'Total de ' + mLabel(st.expMonth).toLowerCase() : 'Total') + kpi(list.length, list.length === 1 ? 'Gasto' : 'Gastos')
+            + '<div class="ws-kpis ws-kpis-top">' + kpi(ars(total), (st.expMonth ? 'Total de ' + mLabel(st.expMonth).toLowerCase() : 'Total') + (st.expCat ? ' en ' + esc(EXP_CAT[st.expCat].toLowerCase()) : '')) + kpi(list.length, list.length === 1 ? 'Gasto' : 'Gastos')
                 + (prev !== null ? kpi(ars(prev), 'Mes anterior' + (prev ? ' <small>(' + (total >= prev ? '+' : '−') + Math.abs(Math.round((total - prev) / prev * 100)) + ' %)</small>' : '')) : '') + '</div>'
-            + (cats.length > 1 ? '<div class="ws-cats">' + cats.map((c) => '<div class="ws-cat"><span>' + esc(EXP_CAT[c.k]) + '</span>' + bar(c.n / cats[0].n) + '<span class="ws-cat-n">' + ars(c.n) + '</span></div>').join('') + '</div>' : '')
+            // Totales por categoría: tocar una filtra la lista por esa categoría (y tocarla de nuevo vuelve a todas)
+            + (cats.length > 1 ? '<div class="ws-cats">' + cats.map((c) => '<button type="button" class="ws-cat" data-ws-set="expCat" data-value="' + (st.expCat === c.k ? '' : c.k) + '" aria-pressed="' + (st.expCat === c.k) + '"><span>' + esc(EXP_CAT[c.k]) + '</span>' + bar(c.n / cats[0].n) + '<span class="ws-cat-n">' + ars(c.n) + '</span></button>').join('') + '</div>' : '')
             + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="n">Monto</th></tr></thead><tbody>'
                 + list.map((g) => '<tr' + rowAttrs('gasto', g) + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(g.date)) + '</td><td data-label="Concepto"><strong>' + esc(g.concept) + '</strong>' + (g.method ? '<br><span class="small muted">' + esc(EXP_METHOD[g.method] || '') + '</span>' : '') + '</td>'
                     + '<td data-label="Categoría">' + esc(EXP_CAT[g.category] || g.category) + '</td><td class="n" data-label="Monto"><strong>' + (money(g.amount) === null ? '—' : ars(money(g.amount))) + '</strong></td></tr>').join('')
@@ -389,17 +416,30 @@
     // ---- Vencimientos personales: DNI, carnet, seguro, turnos; aviso por mail "notice" días antes (por defecto 7)
     const noticeOf = (v) => (/^\d{1,3}$/.test(String(v.notice || '')) ? Number(v.notice) : 7);
     const daysTo = (iso) => Math.round((new Date(iso + 'T12:00:00Z') - new Date(today() + 'T12:00:00Z')) / 864e5);
+    // Los que se repiten (mensual o anual) pasan solos a la próxima fecha: el mismo día de cada mes o de cada año (igual que el aviso por mail)
+    const nextDue = (date, repeat, t) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !DL_REPEAT[repeat] || !repeat) return date || '';
+        const day = Number(date.slice(8)); let y = Number(date.slice(0, 4)); let m = Number(date.slice(5, 7));
+        const make = () => y + '-' + String(m).padStart(2, '0') + '-' + String(Math.min(day, new Date(Date.UTC(y, m, 0)).getUTCDate())).padStart(2, '0');
+        let d = make();
+        for (let i = 0; d < t && i < 1200; i++) { if (repeat === 'anual') y++; else if (++m > 12) { m = 1; y++; } d = make(); }
+        return d; };
+    const dueOf = (v) => (v.done === 'si' ? v.date : nextDue(v.date, v.repeat, today()));
+    const repeatText = (v) => (v.repeat === 'mensual' && v.date ? 'Todos los ' + Number(v.date.slice(8)) + ' de cada mes' : v.repeat === 'anual' && v.date ? 'Todos los años el ' + Number(v.date.slice(8)) + '/' + Number(v.date.slice(5, 7)) : '');
     const renderDeadlines = () => {
-        let list = W().vencimiento.slice();
+        let list = W().vencimiento.map((v) => ({ ...v, date: dueOf(v), first: v.date }));
+        if (st.dlKind) list = list.filter((v) => v.kind === st.dlKind);
+        list.sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.id - b.id);
         if (st.dlView === 'proximos') list = list.filter((v) => v.done !== 'si');
         if (st.dlView === 'hechos') list = list.filter((v) => v.done === 'si').reverse();
-        root('vencimientos').innerHTML = head('Vencimientos', 'DNI, carnet, seguros, impuestos y turnos. Te llega un mail a tu casilla de contacto los días antes que elijas (por defecto, 7).', '<button type="button" class="primary" data-ws-new="vencimiento">+ Nuevo vencimiento</button>')
-            + '<div class="ws-filters">' + seg('dlView', st.dlView, { proximos: 'Pendientes', hechos: 'Hechos', todos: 'Todos' }) + '</div>'
+        root('vencimientos').innerHTML = head('Vencimientos', 'DNI, carnet, seguros, impuestos, cuotas mensuales y turnos. Te llega un mail a tu casilla de contacto los días antes que elijas (por defecto, 7).', '<button type="button" class="primary" data-ws-new="vencimiento">+ Nuevo vencimiento</button>')
+            + '<div class="ws-filters">' + seg('dlView', st.dlView, { proximos: 'Pendientes', hechos: 'Hechos', todos: 'Todos' }) + select('dlKind', st.dlKind, { '': 'Todos los tipos', ...DL_KIND }, 'Tipo') + '</div>'
             + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((v) => { const n = v.date ? daysTo(v.date) : null;
                     const state = v.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : n === null ? tag('pendiente', { pendiente: 'Sin fecha' })
                         : n < 0 ? tag('desaprobado', { desaprobado: 'Vencido' }) : tag(n <= noticeOf(v) ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' });
-                    return '<tr' + rowAttrs('vencimiento', v, v.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(v.date)) + (v.time ? '<br><span class="small muted">' + esc(v.time) + ' h</span>' : '') + '</td>'
+                    const rep = repeatText({ ...v, date: v.first });
+                    return '<tr' + rowAttrs('vencimiento', v, v.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(v.date)) + (v.time ? '<br><span class="small muted">' + esc(v.time) + ' h</span>' : '') + (rep ? '<br><span class="small muted">🔁 ' + esc(rep) + '</span>' : '') + '</td>'
                         + '<td data-label="Qué"><strong>' + esc(v.title) + '</strong>' + (v.place ? '<br><span class="small muted">📍 ' + esc(v.place) + '</span>' : '') + '</td>'
                         + '<td data-label="Tipo">' + esc(DL_KIND[v.kind] || v.kind) + '</td><td data-label="Estado">' + state + (v.done !== 'si' ? '<br><span class="small muted">Aviso ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + '</td></tr>'; }).join('')
                 + '</tbody></table>' : empty(st.dlView === 'proximos' ? 'No tenés vencimientos pendientes. Cargá el primero con “Nuevo vencimiento”.' : 'No hay vencimientos para mostrar.'));
@@ -442,7 +482,7 @@
         const ag = w.agenda.filter((e) => e.done !== 'si' && e.date === t).length;
         const st7 = w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date && a.date <= week).length;
         const jb = w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.date >= t && j.date <= week).length;
-        const dl = w.vencimiento.filter((v) => v.done !== 'si' && v.date && daysTo(v.date) <= noticeOf(v)).length;
+        const dl = w.vencimiento.filter((v) => v.done !== 'si' && v.date && daysTo(dueOf(v)) <= noticeOf(v)).length;
         set('vencimientos', dl, dl + (dl === 1 ? ' vencimiento cerca o vencido' : ' vencimientos cerca o vencidos'));
         set('mi-agenda', ag, ag + ' para hoy'); set('estudios', st7, st7 + ' en los próximos 7 días o vencidas'); set('trabajo', jb, jb + ' en los próximos 7 días');
     };
@@ -456,7 +496,7 @@
     };
     const fieldHtml = (r) => ([name, label, type, opt]) => {
         const o = opt || {}; const v = r[name] ?? '';
-        const wide = type === 'text' || o.wide ? ' class="wide"' : '';
+        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '');
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
         if (type === 'career') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin carrera</option>' + W().carrera.map((c) => '<option value="' + c.id + '"' + (String(c.id) === String(v) ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></label>';
         if (type === 'term') { // dos listas: cuatrimestre y año (se guarda como "1er cuatrimestre 2026")
@@ -467,7 +507,7 @@
                 + '<label data-ws-year-other hidden>Escribí el año<input type="text" name="_yearOther" inputmode="numeric" maxlength="4" pattern="(19|20)[0-9]{2}" placeholder="2031"></label>';
         }
         if (type === 'subject') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin materia</option>' + W().materia.map((s) => '<option value="' + s.id + '"' + (String(s.id) === String(v) ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>';
-        if (type === 'text') return '<label' + wide + '>' + label + '<textarea name="' + name + '" rows="3" maxlength="' + o.max + '">' + esc(v) + '</textarea></label>';
+        if (type === 'text') return '<label' + wide + '>' + label + '<textarea name="' + name + '" rows="3" maxlength="' + o.max + '"' + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + '>' + esc(v) + '</textarea></label>';
         const input = type === 'line' ? 'text' : type;
         return '<label' + wide + '>' + label + '<input type="' + input + '" name="' + name + '" value="' + esc(v) + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.required ? ' required' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + (o.mode ? ' inputmode="' + o.mode + '"' : '') + '></label>';
     };
@@ -484,6 +524,15 @@
         if (kind === 'actividad') { // "Inscripta" solo para finales
             const k = d.querySelector('[name="kind"]'); const s = d.querySelector('[name="status"]'); const o = s.querySelector('option[value="inscripta"]');
             const sync = () => { const fin = k.value === 'final'; o.hidden = o.disabled = !fin; if (!fin && s.value === 'inscripta') s.value = 'pendiente'; };
+            k.addEventListener('change', sync); sync();
+        }
+        if (kind === 'trabajo') { // los datos del empleo aparecen solo con el tipo "Empleo"; un empleo nuevo arranca como "Activo"
+            const k = d.querySelector('[name="kind"]'); const s = d.querySelector('[name="status"]');
+            const sync = () => { const job = k.value === 'empleo';
+                d.querySelectorAll('[data-ws-job]').forEach((x) => { x.hidden = !job; }); d.querySelectorAll('[data-ws-nojob]').forEach((x) => { x.hidden = job; });
+                d.querySelector('[name="date"]').previousSibling.textContent = job ? 'Fecha de inicio' : 'Fecha';
+                d.querySelector('[name="title"]').previousSibling.textContent = job ? 'Puesto' : 'Puesto, búsqueda o curso';
+                if (!r.id && job && s.value === 'pendiente') s.value = 'activo'; };
             k.addEventListener('change', sync); sync();
         }
         const ys = d.querySelector('[name="_year"]'); // "Otro año…": aparece el campo para escribirlo
@@ -553,7 +602,7 @@
             w.meta.filter((g) => hit(g.title, g.term, g.notes)).forEach((g) => out.push({ go: 'metas|meta:' + g.id, title: '🎯 ' + g.title, sub: 'Meta' + (g.term ? ' · ' + g.term : ''), scope: 'personal' }));
             w.materia.filter((m) => hit(m.name, m.code, m.teacher, m.notes)).forEach((m) => out.push({ go: 'estudios|materia:' + m.id, title: '📚 ' + m.name, sub: 'Materia' + (m.term ? ' · ' + m.term : ''), scope: 'estudios' }));
             w.actividad.filter((a) => hit(a.title, a.notes, subjectName(a.subject))).forEach((a) => out.push({ go: 'estudios|actividad:' + a.id, title: '📝 ' + a.title, sub: (ACT_KIND[a.kind] || '') + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : '') + (a.date ? ' · ' + fshort(a.date) : ''), scope: 'estudios' }));
-            w.trabajo.filter((j) => hit(j.title, j.company, j.contact, j.notes)).forEach((j) => out.push({ go: 'trabajo|trabajo:' + j.id, title: '💼 ' + j.title, sub: (JOB_KIND[j.kind] || '') + (j.company ? ' · ' + j.company : ''), scope: 'trabajo' }));
+            w.trabajo.filter((j) => hit(j.title, j.company, j.contact, j.notes, j.address, j.functions)).forEach((j) => out.push({ go: 'trabajo|trabajo:' + j.id, title: '💼 ' + j.title, sub: (JOB_KIND[j.kind] || '') + (j.company ? ' · ' + j.company : ''), scope: 'trabajo' }));
             return out;
         },
         badges,
@@ -561,7 +610,7 @@
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
             w.agenda.filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
-            w.vencimiento.filter((v) => v.done !== 'si' && v.date).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: v.date, time: v.time || '', scope: 'personal', go: 'vencimientos' }));
+            w.vencimiento.filter((v) => v.done !== 'si' && v.date).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
             w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.kind !== 'empleo').forEach((j) => out.push({ section: 'Trabajo', text: (JOB_KIND[j.kind] || '') + ': ' + j.title + (j.company ? ' · ' + j.company : ''), date: j.date, time: j.time || '', scope: 'trabajo', go: 'trabajo' }));
             return out;
