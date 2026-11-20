@@ -93,7 +93,7 @@
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
-    const select = (key, value, options, label) => '<label><span class="sr-only">' + label + '</span><select data-ws-select="' + key + '">' + Object.entries(options).map(([v, l]) => '<option value="' + esc(v) + '"' + (value === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+    const select = (key, value, options, label) => '<label><span class="sr-only">' + label + '</span><select data-ws-select="' + key + '">' + Object.entries(options).sort((a, b) => (a[0] === '' ? -1 : b[0] === '' ? 1 : 0)).map(([v, l]) => '<option value="' + esc(v) + '"' + (value === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
     const empty = (text) => '<p class="empty">' + text + '</p>';
     const rowAttrs = (kind, r, extra) => ' tabindex="0" data-ws-open="' + kind + ':' + r.id + '"' + (extra ? ' class="' + extra + '"' : '');
 
@@ -263,8 +263,10 @@
                     + (k.left !== null ? kpi(k.left, 'Materias que faltan') : '')
                     + '</div>' + progress(k) + '</div>';
             };
-            const loose = w.materia.some((s) => !s.carrera);
-            body = w.carrera.length || loose ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose ? card(null) : '') + '</div>'
+            // Con al menos una carrera cargada, no se muestra la tarjeta "Materias sin carrera": solo un aviso con cuáles son
+            const loose = w.materia.filter((s) => !s.carrera);
+            body = w.carrera.length || loose.length ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose.length && !w.carrera.length ? card(null) : '') + '</div>'
+                + (loose.length && w.carrera.length ? '<p class="small muted ws-note">' + (loose.length === 1 ? 'Esta materia no tiene carrera' : 'Estas materias no tienen carrera') + ' y no se cuentan: ' + loose.map((s) => '<button type="button" class="ws-inline" data-ws-open="materia:' + s.id + '">' + esc(s.name) + '</button>').join(', ') + '. Abrila y elegí la carrera.</p>' : '')
                 : empty('Empezá cargando tu carrera con “Nueva carrera”. Si cursás dos en simultáneo, cargá las dos.');
         } else if (st.studyTab === 'materias') {
             const view = st.subjView; // lista desplegable: en curso, pendientes, aprobadas o todas
@@ -279,7 +281,7 @@
             body = '<div class="ws-filters">' + select('subjView', view, { cursando: 'En curso', pendientes: 'Pendientes', aprobadas: 'Aprobadas', todas: 'Todas' }, 'Qué materias ver')
                 + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
                 + (now ? '' : select('studyYear', st.studyYear, { '': 'Todos los años', ...Object.fromEntries(years.map((y) => [y, y])) }, 'Año')
-                + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1.er cuatrimestre', 2: '2.º cuatrimestre' }, 'Cuatrimestre')) + '</div>'
+                + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1er cuatrimestre', 2: '2do cuatrimestre' }, 'Cuatrimestre')) + '</div>'
                 + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Nota</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
                     + list.map((s) => { const x = study(s); const c = careerOf(s);
                         const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
@@ -451,8 +453,9 @@
         if (type === 'term') { // dos listas: cuatrimestre y año (se guarda como "1er cuatrimestre 2026")
             const y0 = Number(today().slice(0, 4)); const ry = termYear(r); const rh = termHalf(r);
             const years = [...new Set([...Array(9)].map((_, i) => String(y0 - 4 + i)).concat(ry ? [ry] : []))].sort();
-            return '<label>' + label + ': cuatrimestre<select name="_half"><option value="">Sin cuatrimestre</option>' + [['1', '1.er cuatrimestre'], ['2', '2.º cuatrimestre'], ['A', 'Anual']].map(([k, l]) => '<option value="' + k + '"' + (k === rh ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
-                + '<label>' + label + ': año<select name="_year"><option value="">Sin año</option>' + years.map((y) => '<option' + (y === (ry || (r.id ? '' : String(y0))) ? ' selected' : '') + '>' + y + '</option>').join('') + '</select></label>';
+            return '<label>' + label + ': cuatrimestre<select name="_half"><option value="">Sin cuatrimestre</option>' + [['1', '1er cuatrimestre'], ['2', '2do cuatrimestre'], ['A', 'Anual']].map(([k, l]) => '<option value="' + k + '"' + (k === rh ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
+                + '<label>' + label + ': año<select name="_year"><option value="">Sin año</option>' + years.map((y) => '<option' + (y === (ry || (r.id ? '' : String(y0))) ? ' selected' : '') + '>' + y + '</option>').join('') + '<option value="otro">Otro año…</option></select></label>'
+                + '<label data-ws-year-other hidden>Escribí el año<input type="text" name="_yearOther" inputmode="numeric" maxlength="4" pattern="(19|20)[0-9]{2}" placeholder="2031"></label>';
         }
         if (type === 'subject') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin materia</option>' + W().materia.map((s) => '<option value="' + s.id + '"' + (String(s.id) === String(v) ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>';
         if (type === 'text') return '<label' + wide + '>' + label + '<textarea name="' + name + '" rows="3" maxlength="' + o.max + '">' + esc(v) + '</textarea></label>';
@@ -474,6 +477,8 @@
             const sync = () => { const fin = k.value === 'final'; o.hidden = o.disabled = !fin; if (!fin && s.value === 'inscripta') s.value = 'pendiente'; };
             k.addEventListener('change', sync); sync();
         }
+        const ys = d.querySelector('[name="_year"]'); // "Otro año…": aparece el campo para escribirlo
+        if (ys) { const box = d.querySelector('[data-ws-year-other]'); const sync = () => { box.hidden = ys.value !== 'otro'; box.querySelector('input').required = !box.hidden; }; ys.addEventListener('change', sync); sync(); }
         d.showModal();
         const first = d.querySelector('input, select, textarea'); if (first) first.focus();
     };
@@ -500,7 +505,7 @@
         const set = e.target.closest('[data-ws-set]');
         if (set) { st[set.dataset.wsSet] = set.dataset.value; if (RENDER[current]) RENDER[current](); return; }
         const nw = e.target.closest('[data-ws-new]');
-        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && st.studyCareer ? { carrera: st.studyCareer } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
+        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
         const op = e.target.closest('[data-ws-open]');
         if (op) { const [kind, id] = op.dataset.wsOpen.split(':'); const rec = W()[kind].find((x) => x.id === Number(id)); if (rec) open(kind, rec); return; }
@@ -522,7 +527,7 @@
         if (!e.target.classList.contains('ws-form') || !editing) return;
         e.preventDefault();
         const item = Object.fromEntries(new FormData(e.target));
-        if ('_year' in item) { item.term = termText(item._half, item._year).trim(); delete item._half; delete item._year; }
+        if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
         send({ action: 'save', kind: editing.kind, id: editing.id, updated: editing.updated, item }, 'Guardado');
     });
 

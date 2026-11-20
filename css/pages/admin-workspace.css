@@ -34,6 +34,7 @@
   .ws-grades th.n, .ws-grades td.n { text-align: center; }
 }
 .ws-note { margin-top: .75rem; }
+.ws-inline { background: none; border: 0; color: var(--accent-ink); font: inherit; min-height: 0; padding: 0; text-decoration: underline; }
 /* Links de la materia, barra de avance y gráfico de promedio por cuatrimestre (un solo color: el violeta del panel) */
 .ws-links { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .35rem; }
 .ws-links a { border: 1px solid var(--line); border-radius: 999px; color: var(--accent-ink); font-size: .72rem; font-weight: 700; padding: .05rem .55rem; text-decoration: none; }
