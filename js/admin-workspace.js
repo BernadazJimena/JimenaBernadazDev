@@ -22,7 +22,7 @@
     const ACT_RESULT = { '': 'Sin resultado', aprobado: 'Aprobado', desaprobado: 'Desaprobado' };
     const JOB_KIND = { postulacion: 'Postulación', entrevista: 'Entrevista', empleo: 'Empleo', capacitacion: 'Capacitación' };
     const JOB_STATUS = { pendiente: 'Pendiente', enviada: 'Enviada', 'en-proceso': 'En proceso', aceptada: 'Aceptada', rechazada: 'Rechazada', activo: 'Activo', finalizado: 'Finalizado' };
-    const TONE = { inscripta: 'info', promocionada: 'ok', finalizada: 'ok', pausada: 'warn', cursando: 'info', regular: 'warn', aprobada: 'ok', aprobado: 'ok', libre: 'bad', abandonada: 'bad', desaprobado: 'bad', 'en-curso': 'info', entregado: 'ok', enviada: 'info', 'en-proceso': 'warn', aceptada: 'ok', rechazada: 'bad', activo: 'ok' };
+    const TONE = { 'por-cursar': 'todo', inscripta: 'info', promocionada: 'ok', finalizada: 'ok', pausada: 'warn', cursando: 'info', regular: 'warn', aprobada: 'ok', aprobado: 'ok', libre: 'bad', abandonada: 'bad', desaprobado: 'bad', 'en-curso': 'info', entregado: 'ok', enviada: 'info', 'en-proceso': 'warn', aceptada: 'ok', rechazada: 'bad', activo: 'ok' };
     const tag = (value, labels) => '<span class="ws-tag ws-t-' + (TONE[value] || 'muted') + '">' + esc(labels[value] || value) + '</span>';
     // Lo que sigue abierto (para filtros, contadores y el Dashboard)
     const ACT_OPEN = ['pendiente', 'inscripta', 'en-curso'];
@@ -140,7 +140,7 @@
         const tpBad = tps.some((t) => t.result === 'desaprobado' || (num(t.grade) !== null && num(t.grade) < L.aprueba));
         const tpOk = !tpBad;
         const final = num(s.final);
-        let cond = 'En curso'; let tone = 'info';
+        let cond = s.status === 'pendiente' ? 'Por cursar' : 'En curso'; let tone = s.status === 'pendiente' ? 'muted' : 'info'; // pendiente = todavía no la cursó
         if (final !== null) { cond = final >= L.aprueba ? 'Aprobada con final' : 'Final desaprobado'; tone = final >= L.aprueba ? 'ok' : 'bad'; }
         else if (given.length === 2) {
             const min = Math.min(...given);
@@ -266,10 +266,10 @@
                         const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
                         const isOpen = folded.has(s.id);
                         return '<tr' + rowAttrs('materia', s, isOpen ? 'is-open' : '') + '><td data-label="Materia"><button type="button" class="ws-fold" data-ws-fold="' + s.id + '" aria-expanded="' + isOpen + '" aria-label="Ver notas de ' + esc(s.name) + '"></button><strong>' + esc(s.name) + '</strong>' + ((c && !st.studyCareer) || s.term || s.code ?'<br><span class="small muted ws-sub">' + [s.code ? esc(s.code) : '', s.term ? esc(s.term) : '', c && !st.studyCareer ? esc(c.name) : ''].filter(Boolean).join(' · ') + '</span>' : '') + linksOf(s) + '</td>'
-                            + '<td data-label="Estado">' + tag(s.status, SUBJECT_STATUS) + '</td>'
+                            + '<td data-label="Estado">' + (s.status === 'pendiente' ? tag('por-cursar', { 'por-cursar': 'Pendiente' }) : tag(s.status, SUBJECT_STATUS)) + '</td>'
                             + '<td class="n" data-label="1.er parcial">' + n(s.p1) + '</td><td class="n" data-label="2.º parcial">' + n(s.p2) + '</td><td class="n" data-label="Recuperatorio">' + n(s.recup) + '</td>'
                             + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Nota de la materia"><strong>' + fmt(x.final ?? x.cursada) + '</strong></td><td class="n" data-label="Final">' + n(s.final) + '</td>'
-                            + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond }) + '</td></tr>'; }).join('')
+                            + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : x.tone === 'muted' ? 'por-cursar' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond, 'por-cursar': x.cond }) + '</td></tr>'; }).join('')
                     + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. La nota de la materia es la del final si lo rendiste; si no, el promedio de los parciales, redondeado al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
                     : empty('Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else if (st.studyTab === 'correlativas') {

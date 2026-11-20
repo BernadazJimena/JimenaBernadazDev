@@ -11,7 +11,7 @@
 .ws-nowrap { white-space: nowrap; }
 .ws-done td { opacity: .6; }
 .ws-tag { border: 1px solid color-mix(in srgb, var(--tc, var(--muted)) 40%, transparent); border-radius: 999px; color: var(--tc, var(--muted)); display: inline-block; font-size: .72rem; font-weight: 700; line-height: 1.5; padding: 0 .5rem; white-space: nowrap; }
-.ws-t-info { --tc: var(--accent-ink); } .ws-t-warn { --tc: var(--warn); } .ws-t-ok { --tc: var(--ok); } .ws-t-bad { --tc: #f2a7b5; }
+.ws-t-info { --tc: var(--accent-ink); } .ws-t-warn { --tc: var(--warn); } .ws-t-ok { --tc: var(--ok); } .ws-t-bad { --tc: #f2a7b5; } .ws-t-todo { --tc: #8ec5ff; } /* todo: materias que todavía no se cursan */
 .ws-day { color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; margin: 1rem 0 .4rem; text-transform: uppercase; }
 .ws-day.is-today { color: var(--accent-ink); }
 .ws-form .task-form-grid .wide { grid-column: 1 / -1; }
@@ -27,6 +27,12 @@
 .ws-kpi-n small, .ws-kpi-l small { color: var(--muted); font-size: .72rem; font-weight: 600; }
 .ws-kpi-l { color: var(--muted); font-size: .75rem; font-weight: 700; }
 .ws-grades td.n strong { color: var(--accent-ink); }
+/* Notas en la computadora: números centrados bajo su título, en una sola línea, y todo alineado al medio de la fila */
+@media (min-width: 701px) {
+  .ws-grades th, .ws-grades td.n { white-space: nowrap; }
+  .ws-grades th, .ws-grades td { vertical-align: middle; }
+  .ws-grades th.n, .ws-grades td.n { text-align: center; }
+}
 .ws-note { margin-top: .75rem; }
 /* Links de la materia, barra de avance y gráfico de promedio por cuatrimestre (un solo color: el violeta del panel) */
 .ws-links { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .35rem; }
