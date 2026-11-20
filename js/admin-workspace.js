@@ -14,7 +14,7 @@
     const fshort = (iso) => (iso ? Number(iso.slice(8)) + '/' + Number(iso.slice(5, 7)) + '/' + iso.slice(2, 4) : 'Sin fecha');
 
     // ---- Opciones (las mismas claves que valida el servidor en worker/core/workspace.js)
-    const AGENDA_KIND = { evento: 'Evento', turno: 'Turno', reunion: 'Reunión', recordatorio: 'Recordatorio', otro: 'Otro' };
+    const AGENDA_KIND = { evento: 'Evento', turno: 'Turno', reunion: 'Reunión', recordatorio: 'Recordatorio', cumpleanos: 'Cumpleaños', otro: 'Otro' };
     const CAREER_STATUS = { cursando: 'Cursando', pausada: 'En pausa', finalizada: 'Finalizada' };
     const SUBJECT_STATUS = { inscripta: 'Inscripta', cursando: 'Cursando', regular: 'Regular (debe final)', promocionada: 'Promocionada', aprobada: 'Aprobada', libre: 'Libre', abandonada: 'Abandonada', pendiente: 'Pendiente' };
     const ACT_KIND = { tp: 'Trabajo práctico', parcial: 'Parcial', final: 'Final', recuperatorio: 'Recuperatorio', entrega: 'Entrega', fecha: 'Fecha importante' };
@@ -43,8 +43,9 @@
     const FORMS = {
         agenda: { title: 'evento', fields: [
             ['title', 'Qué', 'line', { required: true, max: 160, wide: true }], ['kind', 'Tipo', 'select', AGENDA_KIND], ['date', 'Fecha', 'date'],
-            ['time', 'Hora de inicio', 'time'], ['end', 'Hora de fin', 'time'], ['place', 'Lugar', 'line', { max: 160 }],
-            ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho' }], ['notes', 'Notas', 'text', { max: 2000 }],
+            // Para los cumpleaños no hacen falta hora, lugar ni estado (se repiten todos los años)
+            ['time', 'Hora de inicio', 'time', { notBday: true }], ['end', 'Hora de fin', 'time', { notBday: true }], ['place', 'Lugar', 'line', { max: 160, notBday: true }],
+            ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho', notBday: true }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         carrera: { title: 'carrera', fields: [
             ['name', 'Carrera', 'line', { required: true, max: 160, wide: true, hint: 'Ingeniería en Sistemas' }], ['institution', 'Universidad o institución', 'line', { max: 160 }],
@@ -106,10 +107,14 @@
     const empty = (text) => '<p class="empty">' + text + '</p>';
     const rowAttrs = (kind, r, extra) => ' tabindex="0" data-ws-open="' + kind + ':' + r.id + '"' + (extra ? ' class="' + extra + '"' : '');
 
-    // ---- Agenda
+    // ---- Agenda. Los cumpleaños guardan la fecha de nacimiento y se muestran en el próximo cumpleaños con la edad que cumple
+    const isBday = (e) => e.kind === 'cumpleanos' && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '');
+    const agendaItems = () => W().agenda.map((e) => (isBday(e) ? { ...e, birth: e.date, date: nextDue(e.date, 'anual', today()), done: 'no', time: '', end: '' } : e))
+        .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.time || '').localeCompare(b.time || '') || a.id - b.id);
+    const ageOf = (e) => (e.birth ? Number(e.date.slice(0, 4)) - Number(e.birth.slice(0, 4)) : 0);
     const renderAgenda = () => {
         const t = today();
-        let list = W().agenda.slice();
+        let list = agendaItems();
         if (st.agendaView === 'proximos') list = list.filter((e) => e.done !== 'si' && (!e.date || e.date >= t));
         if (st.agendaView === 'pasados') list = list.filter((e) => e.date && e.date < t).reverse();
         const days = [];
@@ -117,10 +122,10 @@
         if (st.agendaView === 'proximos') days.sort((a, b) => (a.k === '' ? 1 : b.k === '' ? -1 : 0));
         const table = (items) => '<table class="ws-table ws-agenda"><thead><tr><th>Hora</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
             + items.map((e) => '<tr' + rowAttrs('agenda', e, e.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Hora">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</td>'
-                + '<td data-label="Qué"><strong>' + esc(e.title) + '</strong>' + (e.place ? '<br><span class="small muted">📍 ' + esc(e.place) + '</span>' : '') + '</td>'
-                + '<td data-label="Tipo">' + esc(AGENDA_KIND[e.kind] || e.kind) + '</td><td data-label="Estado">' + (e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' })) + '</td></tr>').join('')
+                + '<td data-label="Qué"><strong>' + (e.birth ? '🎂 ' : '') + esc(e.title) + '</strong>' + (e.place && !e.birth ? '<br><span class="small muted">📍 ' + esc(e.place) + '</span>' : '') + (e.birth ? '<br><span class="small muted">Nació el ' + Number(e.birth.slice(8)) + '/' + Number(e.birth.slice(5, 7)) + '/' + e.birth.slice(0, 4) + '</span>' : '') + '</td>'
+                + '<td data-label="Tipo">' + esc(AGENDA_KIND[e.kind] || e.kind) + '</td><td data-label="Estado">' + (e.birth ? (ageOf(e) > 0 ? tag('en-curso', { 'en-curso': (e.date === t ? 'Hoy cumple ' : 'Cumple ') + ageOf(e) }) : tag('en-curso', { 'en-curso': e.date === t ? '¡Hoy!' : 'Cumpleaños' })) : e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' })) + '</td></tr>').join('')
             + '</tbody></table>';
-        root('mi-agenda').innerHTML = head('Agenda', 'Turnos, reuniones, eventos y recordatorios personales.', '<button type="button" class="primary" data-ws-new="agenda">+ Nuevo evento</button>')
+        root('mi-agenda').innerHTML = head('Agenda', 'Turnos, reuniones, eventos, recordatorios y cumpleaños (se repiten todos los años con la edad que cumple cada uno).', '<button type="button" class="primary" data-ws-new="agenda">+ Nuevo evento</button>')
             + '<div class="ws-filters">' + seg('agendaView', st.agendaView, { proximos: 'Próximos', pasados: 'Pasados', todos: 'Todos' }) + '</div>'
             + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t ? ' is-today' : '') + '">' + (d.k === t ? 'Hoy · ' : '') + esc(fdate(d.k)) + '</p>' + table(d.items)).join('')
                 : empty(st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
@@ -315,9 +320,9 @@
         } else if (st.studyTab === 'correlativas') {
             const mine = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
             const sub = (s) => '<strong>' + esc(s.name) + '</strong>' + (s.code || s.term ? '<br><span class="small muted">' + [s.code, termLabel(s) || s.term].filter(Boolean).map(esc).join(' · ') + '</span>' : '');
-            const table = (list, which, okTxt, badTxt, missTxt) => '<table class="ws-table"><thead><tr><th>Materia</th><th>Estado</th></tr></thead><tbody>'
+            const table = (list, which, okTxt, badTxt) => '<table class="ws-table ws-corr"><thead><tr><th>Materia</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((s) => { const m = corr(s)[which];
-                    return '<tr' + rowAttrs('materia', s) + '><td data-label="Materia">' + sub(s) + '</td><td data-label="Estado">' + (m.length ? tag('desaprobado', { desaprobado: badTxt }) + '<br><span class="small muted">' + missTxt + ': ' + esc(m.join(', ')) + '</span>' : tag('aprobado', { aprobado: okTxt })) + '</td></tr>'; }).join('')
+                    return '<tr' + rowAttrs('materia', s) + '><td data-label="Materia">' + sub(s) + '</td><td data-label="Estado">' + (m.length ? tag('desaprobado', { desaprobado: badTxt }) : tag('aprobado', { aprobado: okTxt })) + '</td></tr>'; }).join('')
                 + '</tbody></table>';
             // Agrupadas por cuatrimestre, del más viejo al más nuevo (las que no tienen cursada, al final)
             const termKey = (s) => (termYear(s) || '9999') + ({ '1': '1', '2': '2', A: '0' }[termHalf(s)] || '3');
@@ -330,9 +335,9 @@
             body = '<div class="ws-filters">' + (w.carrera.length > 1 ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
                 + (mine.some((s) => s.code) ? '' : '<p class="small muted ws-note">Para que funcione, cargá en la ficha de cada materia su código y los códigos de sus correlativas. Las materias que todavía no cursás se cargan con el estado “Pendiente”.</p>')
                 + '<p class="ws-day">Para cursar · alcanza con las correlativas regularizadas</p>'
-                + (toTake.length ? rows(toTake, 'cursar', 'Habilitada', 'Bloqueada', 'Falta regularizar') : empty('No hay materias pendientes. Cargá las del próximo cuatrimestre con el estado “Pendiente”.'))
+                + (toTake.length ? rows(toTake, 'cursar', 'Habilitada', 'Bloqueada') : empty('No hay materias pendientes. Cargá las del próximo cuatrimestre con el estado “Pendiente”.'))
                 + '<p class="ws-day">Para rendir el final · las correlativas tienen que estar aprobadas</p>'
-                + (toFinal.length ? rows(toFinal, 'rendir', 'Puede rendir', 'Todavía no', 'Falta aprobar') : empty('No tenés materias regulares con el final pendiente.'));
+                + (toFinal.length ? rows(toFinal, 'rendir', 'Puede rendir', 'Todavía no') : empty('No tenés materias regulares con el final pendiente.'));
         } else if (st.studyTab === 'horario') {
             const mine = w.materia.filter((s) => ['inscripta', 'cursando'].includes(s.status) && (!st.studyCareer || String(s.carrera) === st.studyCareer));
             const blocks = mine.flatMap((s) => parseSchedule(s.schedule).map((b) => ({ ...b, s })));
@@ -479,7 +484,7 @@
     const badges = () => {
         const t = today(); const week = addDays(t, 7); const w = W();
         const set = (id, n, title) => { const b = document.getElementById('n-' + id); if (b) { b.textContent = n || ''; b.title = n ? title : ''; } };
-        const ag = w.agenda.filter((e) => e.done !== 'si' && e.date === t).length;
+        const ag = agendaItems().filter((e) => e.done !== 'si' && e.date === t).length;
         const st7 = w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date && a.date <= week).length;
         const jb = w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.date >= t && j.date <= week).length;
         const dl = w.vencimiento.filter((v) => v.done !== 'si' && v.date && daysTo(dueOf(v)) <= noticeOf(v)).length;
@@ -496,7 +501,7 @@
     };
     const fieldHtml = (r) => ([name, label, type, opt]) => {
         const o = opt || {}; const v = r[name] ?? '';
-        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '');
+        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '') + (o.notBday ? ' data-ws-nobday' : '');
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
         if (type === 'career') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin carrera</option>' + W().carrera.map((c) => '<option value="' + c.id + '"' + (String(c.id) === String(v) ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></label>';
         if (type === 'term') { // dos listas: cuatrimestre y año (se guarda como "1er cuatrimestre 2026")
@@ -533,6 +538,14 @@
                 d.querySelector('[name="date"]').previousSibling.textContent = job ? 'Fecha de inicio' : 'Fecha';
                 d.querySelector('[name="title"]').previousSibling.textContent = job ? 'Puesto' : 'Puesto, búsqueda o curso';
                 if (!r.id && job && s.value === 'pendiente') s.value = 'activo'; };
+            k.addEventListener('change', sync); sync();
+        }
+        if (kind === 'agenda') { // cumpleaños: nombre y fecha de nacimiento; sin hora, lugar ni estado
+            const k = d.querySelector('[name="kind"]');
+            const sync = () => { const b = k.value === 'cumpleanos';
+                d.querySelectorAll('[data-ws-nobday]').forEach((x) => { x.hidden = b; });
+                d.querySelector('[name="date"]').previousSibling.textContent = b ? 'Fecha de nacimiento' : 'Fecha';
+                d.querySelector('[name="title"]').previousSibling.textContent = b ? 'De quién' : 'Qué'; };
             k.addEventListener('change', sync); sync();
         }
         const ys = d.querySelector('[name="_year"]'); // "Otro año…": aparece el campo para escribirlo
@@ -609,7 +622,7 @@
         // Para el Dashboard: lo personal con fecha (agenda pendiente desde hoy, actividades y trabajo abiertos)
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
-            w.agenda.filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
+            agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: e.birth ? '🎂 Cumpleaños de ' + e.title + (ageOf(e) > 0 ? ' (' + ageOf(e) + ')' : '') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
             w.vencimiento.filter((v) => v.done !== 'si' && v.date).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
             w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.kind !== 'empleo').forEach((j) => out.push({ section: 'Trabajo', text: (JOB_KIND[j.kind] || '') + ': ' + j.title + (j.company ? ' · ' + j.company : ''), date: j.date, time: j.time || '', scope: 'trabajo', go: 'trabajo' }));
@@ -619,7 +632,7 @@
         summary: () => {
             const t = today(); const week = addDays(t, 7); const w = W();
             return {
-                agenda: w.agenda.filter((e) => e.done !== 'si' && e.date && e.date >= t && e.date <= week).length,
+                agenda: agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t && e.date <= week).length,
                 materias: w.materia.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length,
                 entregas: w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date && a.date <= week).length,
                 trabajo: w.trabajo.filter((j) => JOB_OPEN.includes(j.status)).length,

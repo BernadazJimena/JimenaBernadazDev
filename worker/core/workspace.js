@@ -8,7 +8,7 @@
 export const WS = {
   agenda: { table: 'ws_agenda', required: 'title', fields: {
     title: ['line', 160], date: ['date'], time: ['time'], end: ['time'],
-    kind: [['evento', 'turno', 'reunion', 'recordatorio', 'otro']],
+    kind: [['evento', 'turno', 'reunion', 'recordatorio', 'otro', 'cumpleanos']], // cumpleanos: date es la fecha de nacimiento y se repite todos los años
     place: ['line', 160], notes: ['text', 2000], done: [['no', 'si']],
   } },
   // Carreras (puede haber varias en simultáneo). total: materias del plan; promo y aprueba: notas mínimas (vacío = 7 y 4)

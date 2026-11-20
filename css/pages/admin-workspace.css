@@ -71,6 +71,10 @@ button.ws-cat:hover, button.ws-cat:focus-visible { border-color: var(--line); }
 button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 /* Correlativas: un título chico por cuatrimestre */
 .ws-term { color: var(--accent-ink); font-size: .8rem; font-weight: 700; margin: .7rem 0 .3rem; }
+@media (min-width: 761px) { /* las tablas de todos los cuatrimestres con las mismas columnas */
+  .ws-corr { table-layout: fixed; }
+  .ws-corr th:first-child { width: 60%; }
+}
 /* Trabajo: tarjeta de cada empleo activo */
 .ws-jobs { margin-bottom: 1rem; }
 .ws-job-l { display: grid; gap: .05rem; margin: 0 0 .55rem; }
