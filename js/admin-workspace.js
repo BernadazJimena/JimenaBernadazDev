@@ -51,7 +51,7 @@
         ] },
         materia: { title: 'materia', fields: [
             ['name', 'Materia', 'line', { required: true, max: 160, wide: true }], ['carrera', 'Carrera', 'career'],
-            ['status', 'Estado', 'select', SUBJECT_STATUS], ['term', 'Cursada (cuatrimestre o año)', 'line', { max: 80, hint: '1.er cuatrimestre 2026' }],
+            ['status', 'Estado', 'select', SUBJECT_STATUS], ['term', 'Cursada', 'term'],
             ['schedule', 'Horario', 'line', { max: 200, hint: 'Lun 18-20, Mié 14:30-16' }], ['teacher', 'Docente', 'line', { max: 160 }],
             ['code', 'Código de la materia', 'line', { max: 20, hint: 'PW1' }], ['corrCursar', 'Correlativas para cursar (regularizadas)', 'line', { max: 300, hint: 'Códigos separados por coma: PB1, MB' }],
             ['corrRendir', 'Correlativas para rendir el final (aprobadas)', 'line', { max: 300, wide: true, hint: 'Códigos separados por coma' }],
@@ -89,7 +89,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', studyTab: 'carreras', studyCareer: '', studyYear: '', studyHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', goalView: 'en-curso' };
+    const st = { agendaView: 'proximos', studyTab: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', goalView: 'en-curso' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -128,7 +128,11 @@
     const limits = (s) => { const c = careerOf(s); return { promo: num(c && c.promo) ?? 7, aprueba: num(c && c.aprueba) ?? 4 }; };
     const tpsOf = (s) => W().actividad.filter((a) => a.kind === 'tp' && String(a.subject) === String(s.id));
     const finalsOf = (s) => W().actividad.filter((a) => a.kind === 'final' && String(a.subject) === String(s.id));
-    const study = (s) => {
+    // Correlativas (de cursar o de final) que todavía no están aprobadas: con alguna pendiente la materia no promociona
+    const owedFinals = (s, depth) => (depth > 6 ? [] : [...new Set(codesOf(s.corrCursar).concat(codesOf(s.corrRendir)))]
+        .map((c) => ({ c, m: byCode(s, c) })).filter((o) => !o.m || !study(o.m, depth + 1).approved)
+        .map((o) => (o.m ? (o.m.code ? o.m.code + ' ' : '') + o.m.name : o.c)));
+    const study = (s, depth = 0) => {
         const L = limits(s);
         const parts = [num(s.p1), num(s.p2)];
         const recup = num(s.recup);
@@ -142,15 +146,18 @@
         const final = num(s.final);
         let cond = s.status === 'pendiente' ? 'Por cursar' : 'En curso'; let tone = s.status === 'pendiente' ? 'muted' : 'info'; // pendiente = todavía no la cursó
         if (final !== null) { cond = final >= L.aprueba ? 'Aprobada con final' : 'Final desaprobado'; tone = final >= L.aprueba ? 'ok' : 'bad'; }
-        else if (given.length === 2) {
+        let owed = [];
+        if (final === null && given.length === 2) {
             const min = Math.min(...given);
-            if (min >= L.promo && tpOk) { cond = 'Promociona'; tone = 'ok'; }
+            owed = min >= L.promo && tpOk ? owedFinals(s, depth) : [];
+            if (min >= L.promo && tpOk && owed.length) { cond = 'Final: debe correlativas'; tone = 'warn'; } // primero tiene que aprobar el final de la correlativa
+            else if (min >= L.promo && tpOk) { cond = 'Promociona'; tone = 'ok'; }
             else if (min >= L.aprueba && tpOk) { cond = 'Regular: rinde final'; tone = 'warn'; }
             else { cond = !tpOk ? 'TP desaprobado' : recup !== null ? 'Recursa' : 'Tiene que recuperar'; tone = 'bad'; } // con el recuperatorio ya rendido y desaprobado, se recursa
         }
-        const approved = ['aprobada', 'promocionada'].includes(s.status) || (final !== null && final >= L.aprueba);
+        const approved = s.status === 'aprobada' || (s.status === 'promocionada' && !owed.length) || (final !== null && final >= L.aprueba);
         const grade = final !== null ? final : (s.status === 'promocionada' || cond === 'Promociona' ? cursada : null);
-        return { parts, given, cursada, tps, tpAvg: avg(tpNums), tpOk, final, cond, tone, approved, grade };
+        return { parts, given, cursada, tps, tpAvg: avg(tpNums), tpOk, final, cond, tone, approved, grade, owed };
     };
     // Resumen de una carrera (o de las materias sin carrera, con id vacío)
     const careerStats = (cid) => {
@@ -161,7 +168,7 @@
         const grades = passed.map((i) => i.x.grade).filter((n) => n !== null);
         const failedFinals = subjects.flatMap((s) => finalsOf(s).filter((a) => a.status === 'desaprobado' || a.result === 'desaprobado').map((a) => num(a.grade)).filter((n) => n !== null));
         const finalsTaken = subjects.reduce((n, s) => { const f = finalsOf(s).filter((a) => ['aprobado', 'desaprobado'].includes(a.status) || a.result); return n + Math.max(f.length, num(s.final) !== null ? 1 : 0); }, 0);
-        const regular = info.filter((i) => !i.x.approved && (i.s.status === 'regular' || i.x.cond === 'Regular: rinde final'));
+        const regular = info.filter((i) => !i.x.approved && (i.s.status === 'regular' || i.x.cond === 'Regular: rinde final' || i.x.cond === 'Final: debe correlativas'));
         const enrolled = subjects.reduce((n, s) => n + finalsOf(s).filter((a) => a.status === 'inscripta').length, 0);
         const c = cid ? w.carrera.find((x) => String(x.id) === String(cid)) : null;
         const total = num(c && c.total);
@@ -172,18 +179,25 @@
     // Año y cuatrimestre se leen del texto de la cursada ("1er cuatrimestre 2026", "2.º cuatrimestre 2025", "Segundo cuatrimestre 2026")
     const termYear = (s) => { const m = String(s.term || '').match(/\b(19|20)\d{2}\b/); return m ? m[0] : ''; };
     const termHalf = (s) => { const t = String(s.term || '').toLowerCase();
-        if (/\b(1|primer|primero)\s*(\.?\s*(er|ero|ro|º|°|o))?\s*cuatri/.test(t)) return '1';
-        if (/\b(2|segundo)\s*(\.?\s*(do|º|°|o))?\s*cuatri/.test(t)) return '2';
+        if (/\b(1|primer|primero)\s*(\.?\s*(er|ero|ro|º|°|o))?\s*(cuatri|c\b)/.test(t)) return '1'; // también "1er C 2026" y "1C 2026"
+        if (/\b(2|segundo)\s*(\.?\s*(do|º|°|o))?\s*(cuatri|c\b)/.test(t)) return '2';
+        if (/\banual\b/.test(t)) return 'A';
         return ''; };
     const folded = new Set(); // materias abiertas en el celular
-    const termLabel = (s) => { const y = termYear(s); const h = termHalf(s); return y ? (h ? h + 'C ' : '') + y : ''; };
+    // Cursada corta: "1C 2026", "2C 2026", "Anual 2026" o el año solo
+    const termLabel = (s) => { const y = termYear(s); const h = termHalf(s); return y ? (h === 'A' ? 'Anual ' : h ? h + 'C ' : '') + y : ''; };
+    const termText = (half, year) => (half === '1' ? '1er cuatrimestre ' : half === '2' ? '2do cuatrimestre ' : half === 'A' ? 'Anual ' : '') + year;
+    // Carrera abreviada con sus iniciales ("Tecnicatura universitaria web" → TUW); el nombre completo queda al pasar el mouse
+    const careerShort = (c) => { const w = String(c.name || '').split(/\s+/).filter((x) => x && !/^(de|del|en|la|las|el|los|y|e)$/i.test(x));
+        const ab = w.length > 1 ? w.map((x) => x[0].toUpperCase()).join('') : String(c.name || '').slice(0, 4);
+        return '<abbr title="' + esc(c.name) + '">' + esc(ab) + '</abbr>'; };
     const inTerm = (period) => { const y = termYear(period); const h = termHalf(period); return (s) => (!y || termYear(s) === y) && (!h || termHalf(s) === h); };
 
     // Correlativas: códigos separados por coma. Para cursar alcanza con tenerlas regularizadas; para rendir el final, aprobadas
     const codeKey = (v) => String(v || '').trim().toUpperCase();
     const codesOf = (v) => String(v || '').split(/[,;]+/).map(codeKey).filter(Boolean);
     const byCode = (s, c) => { const all = W().materia.filter((x) => codeKey(x.code) === c); return all.find((x) => String(x.carrera || '') === String(s.carrera || '')) || all[0] || null; };
-    const isRegular = (s) => { const x = study(s); return x.approved || s.status === 'regular' || x.cond === 'Regular: rinde final' || x.cond === 'Promociona'; };
+    const isRegular = (s) => { const x = study(s); return x.approved || s.status === 'regular' || x.cond === 'Regular: rinde final' || x.cond === 'Final: debe correlativas' || x.cond === 'Promociona'; };
     const corr = (s) => {
         const miss = (list, ok) => list.map((c) => ({ c, m: byCode(s, c) })).filter((o) => !o.m || !ok(o.m)).map((o) => (o.m ? o.m.name : o.c + ' (no cargada)'));
         return { cursar: miss(codesOf(s.corrCursar), isRegular), rendir: miss(codesOf(s.corrRendir), (m) => study(m).approved) };
@@ -219,7 +233,7 @@
     const renderStudies = () => {
         const t = today();
         const w = W();
-        const tabs = seg('studyTab', st.studyTab, { carreras: 'Carreras', materias: 'Materias y notas', correlativas: 'Correlativas', horario: 'Horario', actividades: 'TPs, exámenes y finales' });
+        const tabs = seg('studyTab', st.studyTab, { cursando: 'Cursando', actividades: 'TPs, exámenes y finales', horario: 'Horario', materias: 'Materias y notas', correlativas: 'Correlativas', carreras: 'Carreras' });
         const careers = { '': 'Todas las carreras', ...Object.fromEntries(w.carrera.map((c) => [String(c.id), c.name])) };
         let body;
         if (st.studyTab === 'carreras') {
@@ -252,29 +266,30 @@
             const loose = w.materia.some((s) => !s.carrera);
             body = w.carrera.length || loose ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose ? card(null) : '') + '</div>'
                 : empty('Empezá cargando tu carrera con “Nueva carrera”. Si cursás dos en simultáneo, cargá las dos.');
-        } else if (st.studyTab === 'materias') {
+        } else if (st.studyTab === 'materias' || st.studyTab === 'cursando') {
+            const now = st.studyTab === 'cursando'; // "Cursando": solo las materias inscriptas o en curso, sin filtro de año ni cuatrimestre
             const years = [...new Set(w.materia.map(termYear).filter(Boolean))].sort();
             const list = w.materia.filter((s) => (!st.studyCareer || String(s.carrera) === st.studyCareer)
-                && (!st.studyYear || termYear(s) === st.studyYear) && (!st.studyHalf || termHalf(s) === st.studyHalf))
+                && (now ? ['inscripta', 'cursando'].includes(s.status) : (!st.studyYear || termYear(s) === st.studyYear) && (!st.studyHalf || termHalf(s) === st.studyHalf)))
                 .sort((a, b) => (termYear(a) || '9999').localeCompare(termYear(b) || '9999') || (termHalf(a) || '9').localeCompare(termHalf(b) || '9') || String(a.name).localeCompare(String(b.name), 'es'));
             const n = (v) => (num(v) === null ? '—' : fmt(num(v)));
             body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
-                + select('studyYear', st.studyYear, { '': 'Todos los años', ...Object.fromEntries(years.map((y) => [y, y])) }, 'Año')
-                + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1.er cuatrimestre', 2: '2.º cuatrimestre' }, 'Cuatrimestre') + '</div>'
+                + (now ? '' : select('studyYear', st.studyYear, { '': 'Todos los años', ...Object.fromEntries(years.map((y) => [y, y])) }, 'Año')
+                + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1.er cuatrimestre', 2: '2.º cuatrimestre' }, 'Cuatrimestre')) + '</div>'
                 + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Nota</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
                     + list.map((s) => { const x = study(s); const c = careerOf(s);
                         const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
                         const isOpen = folded.has(s.id);
-                        return '<tr' + rowAttrs('materia', s, isOpen ? 'is-open' : '') + '><td data-label="Materia"><button type="button" class="ws-fold" data-ws-fold="' + s.id + '" aria-expanded="' + isOpen + '" aria-label="Ver notas de ' + esc(s.name) + '"></button><strong>' + esc(s.name) + '</strong>' + ((c && !st.studyCareer) || s.term || s.code ?'<br><span class="small muted ws-sub">' + [s.code ? esc(s.code) : '', s.term ? esc(s.term) : '', c && !st.studyCareer ? esc(c.name) : ''].filter(Boolean).join(' · ') + '</span>' : '') + linksOf(s) + '</td>'
+                        return '<tr' + rowAttrs('materia', s, isOpen ? 'is-open' : '') + '><td data-label="Materia"><button type="button" class="ws-fold" data-ws-fold="' + s.id + '" aria-expanded="' + isOpen + '" aria-label="Ver notas de ' + esc(s.name) + '"></button><strong>' + esc(s.name) + '</strong>' + ((c && !st.studyCareer) || s.term || s.code ?'<br><span class="small muted ws-sub">' + [s.code ? esc(s.code) : '', s.term ? esc(termLabel(s) || s.term) : '', c && !st.studyCareer ? careerShort(c) : ''].filter(Boolean).join(' · ') + '</span>' : '') + linksOf(s) + '</td>'
                             + '<td data-label="Estado">' + (s.status === 'pendiente' ? tag('por-cursar', { 'por-cursar': 'Pendiente' }) : tag(s.status, SUBJECT_STATUS)) + '</td>'
                             + '<td class="n" data-label="1.er parcial">' + n(s.p1) + '</td><td class="n" data-label="2.º parcial">' + n(s.p2) + '</td><td class="n" data-label="Recuperatorio">' + n(s.recup) + '</td>'
                             + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Nota de la materia"><strong>' + fmt(x.final ?? x.cursada) + '</strong></td><td class="n" data-label="Final">' + n(s.final) + '</td>'
-                            + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : x.tone === 'muted' ? 'por-cursar' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond, 'por-cursar': x.cond }) + '</td></tr>'; }).join('')
+                            + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : x.tone === 'muted' ? 'por-cursar' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond, 'por-cursar': x.cond }) + (x.owed.length ? '<br><span class="small muted">Primero rendí el final de: ' + esc(x.owed.join(', ')) + '</span>' : '') + '</td></tr>'; }).join('')
                     + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. La nota de la materia es la del final si lo rendiste; si no, el promedio de los parciales, redondeado al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
-                    : empty('Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
+                    : empty(now ? 'No estás cursando ninguna materia ahora. Las que tengan el estado “Inscripta” o “Cursando” aparecen acá.' : 'Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else if (st.studyTab === 'correlativas') {
             const mine = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
-            const sub = (s) => '<strong>' + esc(s.name) + '</strong>' + (s.code || s.term ? '<br><span class="small muted">' + [s.code, s.term].filter(Boolean).map(esc).join(' · ') + '</span>' : '');
+            const sub = (s) => '<strong>' + esc(s.name) + '</strong>' + (s.code || s.term ? '<br><span class="small muted">' + [s.code, termLabel(s) || s.term].filter(Boolean).map(esc).join(' · ') + '</span>' : '');
             const rows = (list, which, okTxt, badTxt, missTxt) => '<table class="ws-table"><thead><tr><th>Materia</th><th>Estado</th></tr></thead><tbody>'
                 + list.map((s) => { const m = corr(s)[which];
                     return '<tr' + rowAttrs('materia', s) + '><td data-label="Materia">' + sub(s) + '</td><td data-label="Estado">' + (m.length ? tag('desaprobado', { desaprobado: badTxt }) + '<br><span class="small muted">' + missTxt + ': ' + esc(m.join(', ')) + '</span>' : tag('aprobado', { aprobado: okTxt })) + '</td></tr>'; }).join('')
@@ -429,6 +444,12 @@
         const wide = type === 'text' || o.wide ? ' class="wide"' : '';
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
         if (type === 'career') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin carrera</option>' + W().carrera.map((c) => '<option value="' + c.id + '"' + (String(c.id) === String(v) ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></label>';
+        if (type === 'term') { // dos listas: cuatrimestre y año (se guarda como "1er cuatrimestre 2026")
+            const y0 = Number(today().slice(0, 4)); const ry = termYear(r); const rh = termHalf(r);
+            const years = [...new Set([...Array(9)].map((_, i) => String(y0 - 4 + i)).concat(ry ? [ry] : []))].sort();
+            return '<label>' + label + ': cuatrimestre<select name="_half"><option value="">Sin cuatrimestre</option>' + [['1', '1.er cuatrimestre'], ['2', '2.º cuatrimestre'], ['A', 'Anual']].map(([k, l]) => '<option value="' + k + '"' + (k === rh ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
+                + '<label>' + label + ': año<select name="_year"><option value="">Sin año</option>' + years.map((y) => '<option' + (y === (ry || (r.id ? '' : String(y0))) ? ' selected' : '') + '>' + y + '</option>').join('') + '</select></label>';
+        }
         if (type === 'subject') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin materia</option>' + W().materia.map((s) => '<option value="' + s.id + '"' + (String(s.id) === String(v) ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></label>';
         if (type === 'text') return '<label' + wide + '>' + label + '<textarea name="' + name + '" rows="3" maxlength="' + o.max + '">' + esc(v) + '</textarea></label>';
         const input = type === 'line' ? 'text' : type;
@@ -497,6 +518,7 @@
         if (!e.target.classList.contains('ws-form') || !editing) return;
         e.preventDefault();
         const item = Object.fromEntries(new FormData(e.target));
+        if ('_year' in item) { item.term = termText(item._half, item._year).trim(); delete item._half; delete item._year; }
         send({ action: 'save', kind: editing.kind, id: editing.id, updated: editing.updated, item }, 'Guardado');
     });
 
