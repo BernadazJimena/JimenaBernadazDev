@@ -308,7 +308,10 @@
                 + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1er cuatrimestre', 2: '2do cuatrimestre' }, 'Cuatrimestre')) + '</div>'
                 + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Nota</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
                     + list.map((s) => { const x = study(s); const c = careerOf(s);
-                        const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
+                        // TPs sin nota: Desaprob. si alguno se desaprobó, Aprob. solo si todos están aprobados, Ent. si ya se entregaron y Pend. si falta entregar
+                        const tpDone = (a) => a.result === 'aprobado' || a.status === 'aprobado';
+                        const tpWord = !x.tpOk ? 'Desaprob.' : x.tps.every(tpDone) ? 'Aprob.' : x.tps.every((a) => tpDone(a) || a.status === 'entregado') ? '<abbr title="Entregado, sin nota todavía">Ent.</abbr>' : '<abbr title="Falta entregar">Pend.</abbr>';
+                        const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : tpWord) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
                         const isOpen = folded.has(s.id);
                         return '<tr' + rowAttrs('materia', s, isOpen ? 'is-open' : '') + '><td data-label="Materia"><button type="button" class="ws-fold" data-ws-fold="' + s.id + '" aria-expanded="' + isOpen + '" aria-label="Ver notas de ' + esc(s.name) + '"></button><strong>' + esc(s.name) + '</strong>' + ((c && !st.studyCareer) || s.term || s.code ?'<br><span class="small muted ws-sub">' + [s.code ? esc(s.code) : '', s.term ? esc(termLabel(s) || s.term) : '', c && !st.studyCareer ? careerShort(c) : ''].filter(Boolean).join(' · ') + '</span>' : '') + linksOf(s) + '</td>'
                             + '<td data-label="Estado">' + (s.status === 'pendiente' ? tag('por-cursar', { 'por-cursar': 'Pendiente' }) : tag(s.status, SUBJECT_STATUS)) + '</td>'
