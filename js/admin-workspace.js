@@ -174,7 +174,8 @@
         const total = num(c && c.total);
         return { subjects, passed: passed.length, total, left: total !== null ? Math.max(total - passed.length, 0) : null,
             avg: avg(grades), avgAll: avg(grades.concat(failedFinals)), finalsTaken, finalsLeft: regular.length, enrolled,
-            current: subjects.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length };
+            current: subjects.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length,
+            pending: info.filter((i) => i.s.status === 'pendiente' && !i.x.approved).length }; // cargadas como pendientes: todavía no las cursó
     };
     // Año y cuatrimestre se leen del texto de la cursada ("1er cuatrimestre 2026", "2.º cuatrimestre 2025", "Segundo cuatrimestre 2026")
     const termYear = (s) => { const m = String(s.term || '').match(/\b(19|20)\d{2}\b/); return m ? m[0] : ''; };
@@ -257,6 +258,7 @@
                     + kpi(k.passed + (k.total !== null ? ' <small>de ' + k.total + '</small>' : ''), 'Materias aprobadas')
                     + kpi(fmt(k.avg), 'Promedio' + (k.avgAll !== null && k.avgAll !== k.avg ? ' <small>(con aplazos ' + fmt(k.avgAll) + ')</small>' : ''))
                     + kpi(k.current, 'Cursando o inscripta')
+                    + kpi(k.pending, 'Materias pendientes')
                     + kpi(k.finalsTaken, 'Finales rendidos')
                     + kpi(k.finalsLeft, 'Finales que te quedan')
                     + kpi(k.enrolled, 'Inscripciones a finales')
