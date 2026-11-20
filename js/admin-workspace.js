@@ -63,7 +63,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', studyTab: 'carreras', studyCareer: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos' };
+    const st = { agendaView: 'proximos', studyTab: 'carreras', studyCareer: '', studyYear: '', studyHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -108,7 +108,7 @@
         const recup = num(s.recup);
         if (recup !== null) { const known = parts.filter((n) => n !== null); const low = known.length ? Math.min(...known) : null; const i = parts.indexOf(low); parts[i >= 0 ? i : parts.indexOf(null)] = recup; }
         const given = parts.filter((n) => n !== null);
-        const cursada = avg(given);
+        const cursada = given.length ? Math.round(avg(given)) : null; // 7,5 → 8; 9,5 → 10
         const tps = tpsOf(s);
         const tpNums = tps.map((t) => num(t.grade)).filter((n) => n !== null);
         const tpBad = tps.some((t) => t.result === 'desaprobado' || (num(t.grade) !== null && num(t.grade) < L.aprueba));
@@ -143,6 +143,13 @@
             avg: avg(grades), avgAll: avg(grades.concat(failedFinals)), finalsTaken, finalsLeft: regular.length, enrolled,
             current: subjects.filter((s) => ['inscripta', 'cursando'].includes(s.status)).length };
     };
+    // Año y cuatrimestre se leen del texto de la cursada ("1er cuatrimestre 2026", "2.º cuatrimestre 2025", "Segundo cuatrimestre 2026")
+    const termYear = (s) => { const m = String(s.term || '').match(/\b(19|20)\d{2}\b/); return m ? m[0] : ''; };
+    const termHalf = (s) => { const t = String(s.term || '').toLowerCase();
+        if (/\b(1|primer|primero)\s*(\.?\s*(er|ero|ro|º|°|o))?\s*cuatri/.test(t)) return '1';
+        if (/\b(2|segundo)\s*(\.?\s*(do|º|°|o))?\s*cuatri/.test(t)) return '2';
+        return ''; };
+    const folded = new Set(); // materias abiertas en el celular
     const kpi = (n, label) => '<div class="ws-kpi"><span class="ws-kpi-n">' + n + '</span><span class="ws-kpi-l">' + label + '</span></div>';
 
     const renderStudies = () => {
@@ -171,18 +178,24 @@
             body = w.carrera.length || loose ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose ? card(null) : '') + '</div>'
                 : empty('Empezá cargando tu carrera con “Nueva carrera”. Si cursás dos en simultáneo, cargá las dos.');
         } else if (st.studyTab === 'materias') {
-            const list = w.materia.filter((s) => !st.studyCareer || String(s.carrera) === st.studyCareer);
+            const years = [...new Set(w.materia.map(termYear).filter(Boolean))].sort();
+            const list = w.materia.filter((s) => (!st.studyCareer || String(s.carrera) === st.studyCareer)
+                && (!st.studyYear || termYear(s) === st.studyYear) && (!st.studyHalf || termHalf(s) === st.studyHalf))
+                .sort((a, b) => (termYear(a) || '9999').localeCompare(termYear(b) || '9999') || (termHalf(a) || '9').localeCompare(termHalf(b) || '9') || String(a.name).localeCompare(String(b.name), 'es'));
             const n = (v) => (num(v) === null ? '—' : fmt(num(v)));
-            body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '') + '</div>'
+            body = '<div class="ws-filters">' + (w.carrera.length ? select('studyCareer', st.studyCareer, careers, 'Carrera') : '')
+                + select('studyYear', st.studyYear, { '': 'Todos los años', ...Object.fromEntries(years.map((y) => [y, y])) }, 'Año')
+                + select('studyHalf', st.studyHalf, { '': 'Los dos cuatrimestres', 1: '1.er cuatrimestre', 2: '2.º cuatrimestre' }, 'Cuatrimestre') + '</div>'
                 + (list.length ? '<div class="table-wrap"><table class="ws-table ws-grades"><thead><tr><th>Materia</th><th>Estado</th><th class="n">1.er parcial</th><th class="n">2.º parcial</th><th class="n">Recup.</th><th class="n">TPs</th><th class="n">Promedio</th><th class="n">Final</th><th>Condición</th></tr></thead><tbody>'
                     + list.map((s) => { const x = study(s); const c = careerOf(s);
                         const tpTxt = x.tps.length ? (x.tpAvg !== null ? fmt(x.tpAvg) : (x.tpOk ? 'Aprob.' : 'Desaprob.')) + ' <span class="small muted">(' + x.tps.length + ')</span>' : '—';
-                        return '<tr' + rowAttrs('materia', s) + '><td data-label="Materia"><strong>' + esc(s.name) + '</strong>' + (c && !st.studyCareer ? '<br><span class="small muted">' + esc(c.name) + '</span>' : '') + (s.term ? '<br><span class="small muted">' + esc(s.term) + '</span>' : '') + '</td>'
+                        const isOpen = folded.has(s.id);
+                        return '<tr' + rowAttrs('materia', s, isOpen ? 'is-open' : '') + '><td data-label="Materia"><button type="button" class="ws-fold" data-ws-fold="' + s.id + '" aria-expanded="' + isOpen + '" aria-label="Ver notas de ' + esc(s.name) + '"></button><strong>' + esc(s.name) + '</strong>' + (c && !st.studyCareer ? '<br><span class="small muted">' + esc(c.name) + '</span>' : '') + (s.term ? '<br><span class="small muted">' + esc(s.term) + '</span>' : '') + '</td>'
                             + '<td data-label="Estado">' + tag(s.status, SUBJECT_STATUS) + '</td>'
                             + '<td class="n" data-label="1.er parcial">' + n(s.p1) + '</td><td class="n" data-label="2.º parcial">' + n(s.p2) + '</td><td class="n" data-label="Recuperatorio">' + n(s.recup) + '</td>'
                             + '<td class="n" data-label="TPs">' + tpTxt + '</td><td class="n" data-label="Promedio de parciales"><strong>' + fmt(x.cursada) + '</strong></td><td class="n" data-label="Final">' + n(s.final) + '</td>'
                             + '<td data-label="Condición">' + tag(x.tone === 'ok' ? 'aprobado' : x.tone === 'bad' ? 'desaprobado' : x.tone === 'warn' ? 'regular' : 'en-curso', { aprobado: x.cond, desaprobado: x.cond, regular: x.cond, 'en-curso': x.cond }) + '</td></tr>'; }).join('')
-                    + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
+                    + '</tbody></table></div><p class="small muted ws-note">El recuperatorio reemplaza al parcial más bajo. El promedio se redondea al entero (7,5 → 8). Promoción y aprobación según las notas de cada carrera (por defecto 7 y 4). Los TPs se cargan como actividades de tipo “Trabajo práctico”.</p>'
                     : empty('Todavía no hay materias' + (st.studyCareer ? ' en esta carrera' : '') + '. Inscribite con “Nueva materia”.'));
         } else {
             let list = w.actividad.slice();
@@ -279,6 +292,9 @@
     };
 
     document.addEventListener('click', (e) => {
+        const fold = e.target.closest('[data-ws-fold]');
+        if (fold) { const id = Number(fold.dataset.wsFold); const on = !folded.has(id); if (on) folded.add(id); else folded.delete(id);
+            fold.closest('tr').classList.toggle('is-open', on); fold.setAttribute('aria-expanded', on); return; }
         const set = e.target.closest('[data-ws-set]');
         if (set) { st[set.dataset.wsSet] = set.dataset.value; if (RENDER[current]) RENDER[current](); return; }
         const nw = e.target.closest('[data-ws-new]');
@@ -292,7 +308,7 @@
         }
     });
     document.addEventListener('keydown', (e) => {
-        const op = e.key === 'Enter' && e.target.closest && e.target.closest('tr[data-ws-open]');
+        const op = e.key === 'Enter' && e.target.closest && !e.target.closest('button') && e.target.closest('tr[data-ws-open]');
         if (op) op.click();
     });
     document.addEventListener('change', (e) => {

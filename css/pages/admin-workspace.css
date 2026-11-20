@@ -38,6 +38,16 @@
   .ws-head .row button { flex: 1 1 auto; }
   .ws-table tbody tr:hover td { background: none; }
 }
+@media (max-width: 700px) {
+  /* Notas en el celular: cada materia se despliega con la flecha; cerrada muestra solo nombre y condición */
+  .ws-grades tbody tr { position: relative; }
+  .ws-grades tbody tr:not(.is-open) td:not(:first-child):not(:last-child) { display: none; }
+  .ws-grades td:first-child { padding-right: 2.6rem; }
+  .ws-fold { align-items: center; background: none; border: 1px solid var(--line); border-radius: 999px; color: var(--accent-ink); display: flex; height: 2.2rem; justify-content: center; min-height: 0; padding: 0; position: absolute; right: .6rem; top: .6rem; width: 2.2rem; }
+  .ws-fold::before { border-bottom: 2px solid currentColor; border-right: 2px solid currentColor; content: ""; height: .5rem; transform: translateY(-2px) rotate(45deg); transition: transform .2s; width: .5rem; }
+  .ws-fold[aria-expanded="true"]::before { transform: translateY(2px) rotate(-135deg); }
+}
+@media (min-width: 701px) { .ws-fold { display: none; } }
 @media (max-width: 520px) {
   .ws-form .task-form-grid { grid-template-columns: minmax(0, 1fr); }
 }
