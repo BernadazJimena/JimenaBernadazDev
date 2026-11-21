@@ -167,7 +167,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', agMonth: null, agYear: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', wGroup: 'mes', wYear: '', trView: 'pendientes' };
+    const st = { agendaView: 'proximos', agendaKind: '', agMonth: null, agYear: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', hMonth: null, hYear: null, trSport: '', trSub: '', trDay: '', trMonth: '', wGroup: 'mes', wYear: '', trView: 'pendientes' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const segNav = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -700,7 +700,11 @@
         const hoursOf = (h) => String(h.hours || '').split(/\s*(?:,|;|\by\b|\/)\s*/).map((x) => x.trim()).filter(Boolean);
         const meds = list.filter((h) => h.kind === 'medicamento' && h.status !== 'finalizado').sort((a, b) => String(a.title).localeCompare(String(b.title), 'es'));
         const oldMeds = list.filter((h) => h.kind === 'medicamento' && h.status === 'finalizado');
-        const rest = list.filter((h) => h.kind !== 'medicamento').sort((a, b) => { const fa = (a.date || '') >= t; const fb = (b.date || '') >= t;
+        // Consultas, estudios y vacunas: por defecto, solo las del mes en curso; se cambia con los filtros de mes y año
+        if (st.hMonth === null) st.hMonth = 'm' + t.slice(5, 7); if (st.hYear === null) st.hYear = t.slice(0, 4);
+        const hYears = [...new Set(all.map((h) => (h.date || '').slice(0, 4)).filter(Boolean).concat(t.slice(0, 4)))].sort();
+        const inPeriod = (h) => (!st.hYear || (h.date || '').slice(0, 4) === st.hYear) && (!st.hMonth || 'm' + (h.date || '').slice(5, 7) === st.hMonth);
+        const rest = list.filter((h) => h.kind !== 'medicamento' && inPeriod(h)).sort((a, b) => { const fa = (a.date || '') >= t; const fb = (b.date || '') >= t;
             return fa !== fb ? (fa ? -1 : 1) : fa ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || ''); });
         const takes = meds.flatMap((h) => hoursOf(h).map((x) => ({ x, h }))).sort((a, b) => a.x.localeCompare(b.x, 'es', { numeric: true }));
         const medBox = (h) => evBox(h.status === 'finalizado' ? 'ws-done' : '', '<span class="small ws-ev-time">' + (hoursOf(h).length ? esc(hoursOf(h).join(' · ')) : 'Sin horario') + '</span>' + (h.status === 'finalizado' ? tag('pendiente', { pendiente: 'Ya no lo tomo' }) : ''),
@@ -721,10 +725,13 @@
         root('salud').innerHTML = head('Salud', 'Consultas, estudios, vacunas y los medicamentos que tomás, con sus horarios y quién te los indicó.', '<button type="button" data-ws-set="hTypes" data-value="' + (st.hTypes ? '' : '1') + '" aria-pressed="' + !!st.hTypes + '">Tipos</button><button type="button" class="primary" data-ws-new="salud">+ Nuevo registro</button>')
             + typesPanel
             + '<div class="ws-filters">' + select('hKind', st.hKind, { '': 'Todos los tipos', ...healthTypes() }, 'Tipo') + (Object.keys(specs).length ? select('hSpec', st.hSpec, { '': 'Todas las especialidades', ...specs }, 'Especialidad') : '')
-                + (Object.keys(docs).length ? select('hDoc', st.hDoc, { '': 'Todos los profesionales', ...docs }, 'Profesional') : '') + '</div>'
+                + (Object.keys(docs).length ? select('hDoc', st.hDoc, { '': 'Todos los profesionales', ...docs }, 'Profesional') : '')
+                + select('hMonth', st.hMonth, { '': 'Todos los meses', ...Object.fromEntries(MONTHS.map((x, i) => ['m' + String(i + 1).padStart(2, '0'), x.charAt(0).toUpperCase() + x.slice(1)])) }, 'Mes')
+                + select('hYear', st.hYear, Object.fromEntries([['', 'Todos los años']].concat(hYears.map((y) => [y, y]))), 'Año') + '</div>'
             + (!all.length ? empty('Todavía no cargaste nada. Sumá un chequeo o un medicamento con “Nuevo registro”.') : !list.length ? empty('No hay registros con estos filtros.') : '')
             + (meds.length ? '<p class="ws-day">Medicamentos que tomás</p>' + (takes.length ? '<p class="small ws-note">⏰ ' + takes.map((k) => '<strong>' + esc(k.x) + '</strong> ' + esc(k.h.title) + (doseText(k.h) ? ' ' + esc(doseText(k.h)) : '')).join(' · ') + '</p>' : '') + evGrid(meds.map(medBox).join('')) : '')
-            + (rest.length ? '<p class="ws-day">Chequeos, consultas y estudios</p>' + evGrid(rest.map(recBox).join('')) : '')
+            + (list.some((h) => h.kind !== 'medicamento') ? '<p class="ws-day">Consultas, estudios y vacunas' + (st.hMonth || st.hYear ? ' · ' + [st.hMonth ? MONTHS[Number(st.hMonth.slice(1)) - 1] : '', st.hYear].filter(Boolean).join(' de ') : '') + '</p>'
+                + (rest.length ? evGrid(rest.map(recBox).join('')) : '<p class="small muted ws-note">No hay consultas, estudios ni vacunas en este período.</p>') : '')
             + (oldMeds.length ? '<p class="ws-day">Medicamentos que ya no tomás</p>' + evGrid(oldMeds.map(medBox).join('')) : '');
     };
 
