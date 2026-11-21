@@ -773,8 +773,11 @@
         const o = opt || {}; const v = r[name] ?? '';
         const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.course ? ' data-ws-course' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '') + (o.notBday ? ' data-ws-nobday' : '') + (o.areas ? ' data-ws-areas="' + o.areas.join(' ') + '"' : '');
         if (type === 'days') { const sel = trainDays(r); // casillas: uno, varios o todos los días
-            return '<fieldset class="wide ws-days"><legend>' + label + '</legend><label class="ws-day-chip"><input type="checkbox" data-ws-alldays' + (sel.length === 7 ? ' checked' : '') + '> Todos los días</label>'
-                + Object.entries(WEEK).map(([k, l]) => '<label class="ws-day-chip"><input type="checkbox" name="_day" value="' + k + '"' + (sel.includes(k) ? ' checked' : '') + '> ' + l + '</label>').join('') + '</fieldset>'; }
+            // Siete botones iguales (Lun… Dom) que se marcan al tocarlos, y abajo "Todos los días"
+            const short = { lunes: 'Lun', martes: 'Mar', miercoles: 'Mié', jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom' };
+            return '<fieldset class="wide ws-days"><legend>' + label + '</legend><div class="ws-days-row">'
+                + Object.entries(WEEK).map(([k, l]) => '<label class="ws-day-chip" title="' + l + '"><input type="checkbox" name="_day" value="' + k + '" aria-label="' + l + '"' + (sel.includes(k) ? ' checked' : '') + '><span>' + short[k] + '</span></label>').join('')
+                + '</div><label class="ws-day-all"><input type="checkbox" data-ws-alldays' + (sel.length === 7 ? ' checked' : '') + '><span>Todos los días</span></label></fieldset>'; }
         if (type === 'pick') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">' + esc(o.empty || '—') + '</option>' + o.values.map((x) => '<option' + (x === String(v) ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + (v && !o.values.includes(String(v)) ? '<option selected>' + esc(v) + '</option>' : '') + '</select></label>';
         if (type === 'line' && o.list) return '<label' + wide + '>' + label + '<input type="text" name="' + name + '" value="' + esc(v) + '" list="ws-list-' + name + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + '><datalist id="ws-list-' + name + '">' + o.list.map((x) => '<option value="' + esc(x) + '">').join('') + '</datalist></label>';
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string' && k !== 'hint').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';

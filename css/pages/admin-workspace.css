@@ -110,11 +110,17 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-ev summary { min-width: 0; }
 .ws-ev.is-train-done { border-left-color: var(--ok); }
 /* Entrenamiento: días de la semana con casillas (uno, varios o todos) */
-.ws-days { border: 0; display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; }
-.ws-days legend { font-weight: 700; margin-bottom: .35rem; padding: 0; }
-.ws-day-chip { align-items: center; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; display: inline-flex; font-size: .85rem; gap: .35rem; padding: .3rem .7rem; }
-.ws-day-chip:has(input:checked) { background: color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
-.ws-day-chip input { accent-color: var(--accent); margin: 0; }
+.ws-days { border: 0; margin: 0; min-width: 0; padding: 0; }
+.ws-days legend { font-size: .85rem; font-weight: 700; margin-bottom: .35rem; padding: 0; }
+.ws-days-row { display: grid; gap: .3rem; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.ws-days .ws-day-chip, .ws-days .ws-day-all { align-items: center; border: 1px solid var(--line); border-radius: .5rem; cursor: pointer; display: flex; font-size: .8rem; font-weight: 700;
+  justify-content: center; min-height: 2.1rem; padding: .25rem; position: relative; text-align: center; user-select: none; }
+.ws-days .ws-day-all { display: inline-flex; gap: .35rem; margin-top: .4rem; min-height: 1.9rem; padding: .2rem .7rem; }
+.ws-days input { height: 1px; margin: 0; opacity: 0; pointer-events: none; position: absolute; width: 1px; } /* la casilla no se ve: se marca todo el botón */
+.ws-days .ws-day-chip:hover, .ws-days .ws-day-all:hover { border-color: var(--accent); }
+.ws-days label:has(input:checked) { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ws-days .ws-day-all:has(input:checked)::before { content: "✓"; }
+.ws-days label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Entrenamiento: calendario del mes con los días entrenados */
 .ws-cal { display: grid; gap: .3rem; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: .4rem 0 1rem; }
 .ws-cal-h { color: var(--muted); font-size: .7rem; font-weight: 800; text-align: center; text-transform: uppercase; }
