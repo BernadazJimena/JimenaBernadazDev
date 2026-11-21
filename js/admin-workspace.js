@@ -15,6 +15,8 @@
 
     // ---- Opciones (las mismas claves que valida el servidor en worker/core/workspace.js)
     const AGENDA_KIND = { evento: 'Evento', turno: 'Turno', reunion: 'Reunión', recordatorio: 'Recordatorio', cumpleanos: 'Cumpleaños', otro: 'Otro' };
+    // Para elegir en la Agenda: "Universidad" son las actividades de Estudios (TPs, parciales, finales…); "Otro" siempre al final
+    const AGENDA_PICK = { evento: 'Evento', turno: 'Turno', reunion: 'Reunión', recordatorio: 'Recordatorio', cumpleanos: 'Cumpleaños', universidad: 'Universidad (TPs, exámenes, finales…)', otro: 'Otro' };
     const CAREER_STATUS = { cursando: 'Cursando', pausada: 'En pausa', finalizada: 'Finalizada' };
     const SUBJECT_STATUS = { inscripta: 'Inscripta', cursando: 'Cursando', regular: 'Regular (debe final)', promocionada: 'Promocionada', aprobada: 'Aprobada', libre: 'Libre', abandonada: 'Abandonada', pendiente: 'Pendiente' };
     const ACT_KIND = { tp: 'Trabajo práctico', parcial: 'Parcial', final: 'Final', recuperatorio: 'Recuperatorio', entrega: 'Entrega', fecha: 'Fecha importante' };
@@ -42,7 +44,7 @@
     // ---- Formularios: [campo, etiqueta, tipo, opciones]
     const FORMS = {
         agenda: { title: 'evento', fields: [
-            ['title', 'Qué', 'line', { required: true, max: 160, wide: true }], ['kind', 'Tipo', 'select', AGENDA_KIND], ['date', 'Fecha', 'date'],
+            ['title', 'Qué', 'line', { required: true, max: 160, wide: true }], ['kind', 'Tipo', 'select', AGENDA_PICK], ['date', 'Fecha', 'date'],
             // Para los cumpleaños no hacen falta hora, lugar ni estado (se repiten todos los años)
             ['time', 'Hora de inicio', 'time', { notBday: true }], ['end', 'Hora de fin', 'time', { notBday: true }], ['place', 'Lugar', 'line', { max: 160, notBday: true }],
             ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho', notBday: true }], ['notes', 'Notas', 'text', { max: 2000 }],
@@ -100,7 +102,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso' };
+    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -124,16 +126,23 @@
     const renderAgenda = () => {
         const t = today();
         // Cumpleaños: cajas compactas una al lado de la otra (quién, cuándo y la edad que cumple), fuera de las tablas por día
-        const k = st.agendaKind; // filtro por tipo ('' = todos; 'examen' = parciales, finales y recuperatorios de Estudios)
+        const k = st.agendaKind; // filtro por tipo ('' = todos; 'universidad' = las actividades con fecha de Estudios)
         const bdays = st.agendaView === 'pasados' || (k && k !== 'cumpleanos') ? [] : agendaItems().filter((e) => e.birth);
         const bdayBox = (e) => { const n = daysTo(e.date);
             return '<button type="button" class="ws-bday' + (n === 0 ? ' is-today' : '') + '" data-ws-open="agenda:' + e.id + '"><span class="ws-bday-i" aria-hidden="true">🎂</span>'
                 + '<strong>' + esc(e.title) + '</strong><span class="small ws-bday-when">' + (n === 0 ? '¡Es hoy!' : n === 1 ? 'Mañana' : Number(e.date.slice(8)) + ' de ' + MONTHS[Number(e.date.slice(5, 7)) - 1]) + '</span>'
                 + '<span class="small muted">' + (ageOf(e) > 0 ? (n === 0 ? 'Cumple ' + ageOf(e) : ageNow(e) + (ageNow(e) === 1 ? ' año' : ' años')) : 'Cumpleaños') + (n > 1 && n <= 30 ? ' · faltan ' + n + ' días' : '') + '</span></button>'; };
-        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-bdays">' + bdays.map(bdayBox).join('') + '</div>' : '';
+        // Ordenados como un calendario (enero a diciembre, por día), con un título por mes y una lista para ver un solo mes.
+        // Los meses van como 'm01'…'m12': con números solos, JavaScript pone 10, 11 y 12 primero
+        const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+        const byMonth = {}; bdays.slice().sort((a, b) => a.birth.slice(5).localeCompare(b.birth.slice(5)) || String(a.title).localeCompare(String(b.title), 'es'))
+            .forEach((e) => { const m = 'm' + e.birth.slice(5, 7); (byMonth[m] = byMonth[m] || []).push(e); });
+        const shown = Object.keys(byMonth).filter((m) => !st.bdayMonth || m === st.bdayMonth);
+        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-filters">' + select('bdayMonth', st.bdayMonth, { '': 'Todos los meses', ...Object.fromEntries(MONTHS.map((x, i) => { const key = 'm' + String(i + 1).padStart(2, '0'); return [key, cap(x) + (byMonth[key] ? ' (' + byMonth[key].length + ')' : '')]; })) }, 'Mes del cumpleaños') + '</div>'
+            + (shown.length ? shown.map((m) => '<p class="ws-term">' + cap(MONTHS[Number(m.slice(1)) - 1]) + '</p><div class="ws-bdays">' + byMonth[m].map(bdayBox).join('') + '</div>').join('') : empty('No hay cumpleaños en ' + MONTHS[Number(st.bdayMonth.slice(1)) - 1] + '.')) : '';
         // Exámenes de Estudios (con fecha) en el calendario; se abren y se editan en su ficha de actividad
-        const exams = W().actividad.filter((a) => ['parcial', 'final', 'recuperatorio'].includes(a.kind) && a.date)
-            .map((a) => ({ id: a.id, exam: a, kind: 'examen', title: a.title, subject: subjectName(a.subject), date: a.date, time: a.time || '', notes: a.notes || '', done: ACT_OPEN.includes(actStatus(a)) ? 'no' : 'si' }));
+        const exams = W().actividad.filter((a) => a.date)
+            .map((a) => ({ id: a.id, exam: a, kind: 'universidad', title: a.title, subject: subjectName(a.subject), date: a.date, time: a.time || '', notes: a.notes || '', done: ACT_OPEN.includes(actStatus(a)) ? 'no' : 'si' }));
         let list = agendaItems().filter((e) => !e.birth).concat(exams).filter((e) => !k || e.kind === k)
             .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.time || '').localeCompare(b.time || '') || a.id - b.id);
         if (st.agendaView === 'proximos') list = list.filter((e) => e.done !== 'si' && (!e.date || e.date >= t));
@@ -143,7 +152,7 @@
         if (st.agendaView === 'proximos') days.sort((a, b) => (a.k === '' ? 1 : b.k === '' ? -1 : 0));
         // Cada evento es una caja compacta (hora, qué y tipo); al tocarla se despliega con el resto: estado, lugar, notas y el botón para editar
         const boxes = (items) => '<div class="ws-evs">' + items.map((e) => {
-            const type = e.exam ? 'Examen · ' + ACT_KIND[e.exam.kind] : AGENDA_KIND[e.kind] || e.kind;
+            const type = e.exam ? 'Universidad · ' + ACT_KIND[e.exam.kind] : AGENDA_KIND[e.kind] || e.kind;
             const state = e.exam ? tag(actStatus(e.exam), ACT_STATUS) : e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' });
             return '<details class="ws-ev' + (e.exam ? ' is-exam' : '') + (e.done === 'si' ? ' ws-done' : '') + '"><summary><span class="small ws-ev-time">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</span>'
                 + '<strong>' + esc(e.title) + '</strong><span class="small muted">' + esc(type) + '</span></summary><div class="ws-ev-body">' + state
@@ -153,14 +162,14 @@
         const table = (items) => '<table class="ws-table ws-agenda"><thead><tr><th>Hora</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
             + items.map((e) => '<tr' + rowAttrs(e.exam ? 'actividad' : 'agenda', e, e.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Hora">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</td>'
                 + '<td data-label="Qué"><strong>' + (e.birth ? '🎂 ' : '') + esc(e.title) + '</strong>' + (e.exam ? '<br><span class="small muted">📚 ' + esc(e.subject || 'Estudios') + '</span>' : '') + (e.place && !e.birth ? '<br><span class="small muted">📍 ' + esc(e.place) + '</span>' : '') + (e.birth ? '<br><span class="small muted">Nació el ' + Number(e.birth.slice(8)) + '/' + Number(e.birth.slice(5, 7)) + '/' + e.birth.slice(0, 4) + '</span>' : '') + '</td>'
-                + '<td data-label="Tipo">' + esc(e.exam ? 'Examen · ' + ACT_KIND[e.exam.kind] : AGENDA_KIND[e.kind] || e.kind) + '</td><td data-label="Estado">' + (e.exam ? tag(actStatus(e.exam), ACT_STATUS) : e.birth ? (ageOf(e) > 0 ? tag('en-curso', { 'en-curso': (e.date === t ? 'Hoy cumple ' : 'Cumple ') + ageOf(e) }) : tag('en-curso', { 'en-curso': e.date === t ? '¡Hoy!' : 'Cumpleaños' })) : e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' })) + '</td></tr>').join('')
+                + '<td data-label="Tipo">' + esc(e.exam ? 'Universidad · ' + ACT_KIND[e.exam.kind] : AGENDA_KIND[e.kind] || e.kind) + '</td><td data-label="Estado">' + (e.exam ? tag(actStatus(e.exam), ACT_STATUS) : e.birth ? (ageOf(e) > 0 ? tag('en-curso', { 'en-curso': (e.date === t ? 'Hoy cumple ' : 'Cumple ') + ageOf(e) }) : tag('en-curso', { 'en-curso': e.date === t ? '¡Hoy!' : 'Cumpleaños' })) : e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' })) + '</td></tr>').join('')
             + '</tbody></table>';
-        root('mi-agenda').innerHTML = head('Agenda', 'Turnos, reuniones, eventos, recordatorios, cumpleaños (se repiten todos los años) y los exámenes de Estudios.', '<button type="button" class="primary" data-ws-new="agenda">+ Nuevo evento</button>')
+        root('mi-agenda').innerHTML = head('Agenda', 'Turnos, reuniones, eventos, recordatorios, cumpleaños (se repiten todos los años) y las fechas de la universidad, que se cargan y se ven también en Estudios.', '<button type="button" class="primary" data-ws-new="agenda">+ Nuevo evento</button>')
             + '<div class="ws-filters">' + seg('agendaView', st.agendaView, { proximos: 'Próximos', pasados: 'Pasados', todos: 'Todos' })
-                + select('agendaKind', k, { '': 'Todos los tipos', ...AGENDA_KIND, examen: 'Exámenes (de Estudios)' }, 'Tipo') + '</div>'
+                + select('agendaKind', k, { '': 'Todos los tipos', ...AGENDA_PICK, universidad: 'Universidad' }, 'Tipo') + '</div>'
             + bdayHtml
             + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t ? ' is-today' : '') + '">' + (d.k === t ? 'Hoy · ' : '') + esc(fdate(d.k)) + '</p>' + boxes(d.items)).join('')
-                : bdays.length ? '' : empty(k ? 'No hay ' + (k === 'examen' ? 'exámenes' : 'eventos de este tipo') + (st.agendaView === 'proximos' ? ' próximos.' : st.agendaView === 'pasados' ? ' pasados.' : '.') : st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
+                : bdays.length ? '' : empty(k ? 'No hay ' + (k === 'universidad' ? 'fechas de la universidad' : 'eventos de este tipo') + (st.agendaView === 'proximos' ? ' próximos.' : st.agendaView === 'pasados' ? ' pasados.' : '.') : st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
     };
 
     // ---- Estudios: carreras, materias (inscripción, notas y condición) y actividades (TPs, exámenes, finales y fechas)
@@ -611,6 +620,12 @@
         }
         if (kind === 'agenda') { // cumpleaños: nombre y fecha de nacimiento; sin hora, lugar ni estado
             const k = d.querySelector('[name="kind"]');
+            const uni = k.querySelector('option[value="universidad"]');
+            if (r.id) uni.remove(); // un evento ya guardado no se pasa a Estudios
+            else k.addEventListener('change', () => { if (k.value !== 'universidad') return; // se guarda en Estudios y aparece en las dos
+                const val = (n) => d.querySelector('[name="' + n + '"]').value;
+                const pre = { title: val('title'), date: val('date'), time: val('time'), notes: val('notes'), kind: 'tp' };
+                d.close(); editing = null; open('actividad', null, pre); });
             const sync = () => { const b = k.value === 'cumpleanos';
                 d.querySelectorAll('[data-ws-nobday]').forEach((x) => { x.hidden = b; });
                 d.querySelector('[name="date"]').previousSibling.textContent = b ? 'Fecha de nacimiento' : 'Fecha';
