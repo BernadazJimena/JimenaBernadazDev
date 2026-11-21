@@ -108,6 +108,13 @@
     const empty = (text) => '<p class="empty">' + text + '</p>';
     const rowAttrs = (kind, r, extra) => ' tabindex="0" data-ws-open="' + kind + ':' + r.id + '"' + (extra ? ' class="' + extra + '"' : '');
 
+    // Caja compacta que se despliega al tocarla (Agenda, Gastos y Vencimientos): arriba lo principal, adentro el detalle y el botón para editar
+    const notesHtml = (t) => (t ? '<p class="small ws-ev-notes">' + esc(t).replace(/\n/g, '<br>') + '</p>' : '');
+    const evBox = (cls, top, title, sub, body, openRef, btn, extra) => '<details class="ws-ev' + (cls ? ' ' + cls : '') + '"><summary><span class="ws-ev-top">' + top + '</span>'
+        + '<strong>' + title + '</strong>' + (sub ? '<span class="small muted">' + sub + '</span>' : '') + '</summary><div class="ws-ev-body">' + body
+        + '<button type="button" data-ws-open="' + openRef + '"' + (extra || '') + '>' + (btn || 'Editar') + '</button></div></details>';
+    const evGrid = (html) => '<div class="ws-evs">' + html + '</div>';
+
     // ---- Agenda. Los cumpleaños guardan la fecha de nacimiento y se muestran en el próximo cumpleaños con la edad que cumple
     const isBday = (e) => e.kind === 'cumpleanos' && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '');
     const agendaItems = () => W().agenda.map((e) => (isBday(e) ? { ...e, birth: e.date, date: nextDue(e.date, 'anual', today()), done: 'no', time: '', end: '' } : e))
@@ -126,7 +133,7 @@
         const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-bdays">' + bdays.map(bdayBox).join('') + '</div>' : '';
         // Exámenes de Estudios (con fecha) en el calendario; se abren y se editan en su ficha de actividad
         const exams = W().actividad.filter((a) => ['parcial', 'final', 'recuperatorio'].includes(a.kind) && a.date)
-            .map((a) => ({ id: a.id, exam: a, kind: 'examen', title: a.title, subject: subjectName(a.subject), date: a.date, time: a.time || '', done: ACT_OPEN.includes(actStatus(a)) ? 'no' : 'si' }));
+            .map((a) => ({ id: a.id, exam: a, kind: 'examen', title: a.title, subject: subjectName(a.subject), date: a.date, time: a.time || '', notes: a.notes || '', done: ACT_OPEN.includes(actStatus(a)) ? 'no' : 'si' }));
         let list = agendaItems().filter((e) => !e.birth).concat(exams).filter((e) => !k || e.kind === k)
             .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.time || '').localeCompare(b.time || '') || a.id - b.id);
         if (st.agendaView === 'proximos') list = list.filter((e) => e.done !== 'si' && (!e.date || e.date >= t));
@@ -134,6 +141,15 @@
         const days = [];
         list.forEach((e) => { const k = e.date || ''; const g = days.find((d) => d.k === k); if (g) g.items.push(e); else days.push({ k, items: [e] }); });
         if (st.agendaView === 'proximos') days.sort((a, b) => (a.k === '' ? 1 : b.k === '' ? -1 : 0));
+        // Cada evento es una caja compacta (hora, qué y tipo); al tocarla se despliega con el resto: estado, lugar, notas y el botón para editar
+        const boxes = (items) => '<div class="ws-evs">' + items.map((e) => {
+            const type = e.exam ? 'Examen · ' + ACT_KIND[e.exam.kind] : AGENDA_KIND[e.kind] || e.kind;
+            const state = e.exam ? tag(actStatus(e.exam), ACT_STATUS) : e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' });
+            return '<details class="ws-ev' + (e.exam ? ' is-exam' : '') + (e.done === 'si' ? ' ws-done' : '') + '"><summary><span class="small ws-ev-time">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</span>'
+                + '<strong>' + esc(e.title) + '</strong><span class="small muted">' + esc(type) + '</span></summary><div class="ws-ev-body">' + state
+                + (e.exam ? '<span class="small">📚 ' + esc(e.subject || 'Estudios') + '</span>' : '') + (e.place ? '<span class="small">📍 ' + esc(e.place) + '</span>' : '')
+                + (e.notes ? '<p class="small ws-ev-notes">' + esc(e.notes).replace(/\n/g, '<br>') + '</p>' : '')
+                + '<button type="button" data-ws-open="' + (e.exam ? 'actividad' : 'agenda') + ':' + e.id + '">' + (e.exam ? 'Abrir en Estudios' : 'Editar') + '</button></div></details>'; }).join('') + '</div>';
         const table = (items) => '<table class="ws-table ws-agenda"><thead><tr><th>Hora</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
             + items.map((e) => '<tr' + rowAttrs(e.exam ? 'actividad' : 'agenda', e, e.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Hora">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</td>'
                 + '<td data-label="Qué"><strong>' + (e.birth ? '🎂 ' : '') + esc(e.title) + '</strong>' + (e.exam ? '<br><span class="small muted">📚 ' + esc(e.subject || 'Estudios') + '</span>' : '') + (e.place && !e.birth ? '<br><span class="small muted">📍 ' + esc(e.place) + '</span>' : '') + (e.birth ? '<br><span class="small muted">Nació el ' + Number(e.birth.slice(8)) + '/' + Number(e.birth.slice(5, 7)) + '/' + e.birth.slice(0, 4) + '</span>' : '') + '</td>'
@@ -143,7 +159,7 @@
             + '<div class="ws-filters">' + seg('agendaView', st.agendaView, { proximos: 'Próximos', pasados: 'Pasados', todos: 'Todos' })
                 + select('agendaKind', k, { '': 'Todos los tipos', ...AGENDA_KIND, examen: 'Exámenes (de Estudios)' }, 'Tipo') + '</div>'
             + bdayHtml
-            + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t ? ' is-today' : '') + '">' + (d.k === t ? 'Hoy · ' : '') + esc(fdate(d.k)) + '</p>' + table(d.items)).join('')
+            + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t ? ' is-today' : '') + '">' + (d.k === t ? 'Hoy · ' : '') + esc(fdate(d.k)) + '</p>' + boxes(d.items)).join('')
                 : bdays.length ? '' : empty(k ? 'No hay ' + (k === 'examen' ? 'exámenes' : 'eventos de este tipo') + (st.agendaView === 'proximos' ? ' próximos.' : st.agendaView === 'pasados' ? ' pasados.' : '.') : st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
     };
 
@@ -454,11 +470,13 @@
                 + (prev !== null ? kpi(ars(prev), 'Mes anterior' + (prev ? ' <small>(' + (total >= prev ? '+' : '−') + Math.abs(Math.round((total - prev) / prev * 100)) + ' %)</small>' : '')) : '') + '</div>'
             // Totales por categoría: tocar una filtra la lista por esa categoría (y tocarla de nuevo vuelve a todas)
             + (cats.length > 1 ? '<div class="ws-cats">' + cats.map((c) => '<button type="button" class="ws-cat" data-ws-set="expCat" data-value="' + (st.expCat === c.k ? '' : c.k) + '" aria-pressed="' + (st.expCat === c.k) + '"><span>' + esc(EXP_CAT[c.k]) + '</span>' + bar(c.n / cats[0].n) + '<span class="ws-cat-n">' + ars(c.n) + '</span></button>').join('') + '</div>' : '')
-            + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="n">Monto</th></tr></thead><tbody>'
-                + list.map((g) => '<tr' + rowAttrs(g.dl ? 'vencimiento' : 'gasto', g) + (g.dl ? ' data-ws-month="' + g.month + '"' : '') + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(g.date)) + '</td><td data-label="Concepto"><strong>' + (g.dl ? '🔁 ' : '') + esc(g.concept) + '</strong>'
-                    + (g.dl ? '<br><span class="small muted">De Vencimientos' + (g.repeat === 'mensual' ? ' · todos los meses' : g.repeat === 'anual' ? ' · todos los años' : '') + '</span>' : g.method ? '<br><span class="small muted">' + esc(EXP_METHOD[g.method] || '') + '</span>' : '') + '</td>'
-                    + '<td data-label="Categoría">' + esc(EXP_CAT[g.category] || g.category) + '</td><td class="n" data-label="Monto"><strong>' + (money(g.amount) === null ? '—' : ars(money(g.amount))) + '</strong></td></tr>').join('')
-                + '</tbody></table>' : empty('No hay gastos ' + (st.expMonth ? 'en ' + mLabel(st.expMonth).toLowerCase() : 'cargados') + '. Sumá el primero con “Nuevo gasto”.'));
+            + (list.length ? evGrid(list.map((g) => evBox(g.dl ? 'is-fixed' : '',
+                '<span class="small ws-ev-time">' + esc(fshort(g.date)) + '</span><span class="ws-ev-amt">' + (money(g.amount) === null ? '—' : ars(money(g.amount))) + '</span>',
+                (g.dl ? '🔁 ' : '') + esc(g.concept), esc(EXP_CAT[g.category] || g.category),
+                (g.dl ? '<span class="small">De Vencimientos' + (g.repeat === 'mensual' ? ' · todos los meses' : g.repeat === 'anual' ? ' · todos los años' : '') + '</span>' : '')
+                    + (g.method ? '<span class="small">💳 ' + esc(EXP_METHOD[g.method] || '') + '</span>' : '') + (g.dl ? '' : notesHtml(g.notes)),
+                (g.dl ? 'vencimiento:' : 'gasto:') + g.id, g.dl ? 'Cambiar el monto de este mes' : 'Editar', g.dl ? ' data-ws-month="' + g.month + '"' : '')).join(''))
+                : empty('No hay gastos ' + (st.expMonth ? 'en ' + mLabel(st.expMonth).toLowerCase() : 'cargados') + '. Sumá el primero con “Nuevo gasto”.'));
     };
 
     // ---- Vencimientos personales: DNI, carnet, seguro, turnos; aviso por mail "notice" días antes (por defecto 7)
@@ -482,15 +500,17 @@
         if (st.dlView === 'hechos') list = list.filter((v) => v.done === 'si').reverse();
         root('vencimientos').innerHTML = head('Vencimientos', 'DNI, carnet, seguros, impuestos, cuotas mensuales y turnos. Te llega un mail a tu casilla de contacto los días antes que elijas (por defecto, 7).', '<button type="button" class="primary" data-ws-new="vencimiento">+ Nuevo vencimiento</button>')
             + '<div class="ws-filters">' + seg('dlView', st.dlView, { proximos: 'Pendientes', hechos: 'Hechos', todos: 'Todos' }) + select('dlKind', st.dlKind, { '': 'Todos los tipos', ...DL_KIND }, 'Tipo') + '</div>'
-            + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
-                + list.map((v) => { const n = v.date ? daysTo(v.date) : null;
+            + (list.length ? evGrid(list.map((v) => { const n = v.date ? daysTo(v.date) : null;
                     const state = v.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : n === null ? tag('pendiente', { pendiente: 'Sin fecha' })
                         : n < 0 ? tag('desaprobado', { desaprobado: 'Vencido' }) : tag(n <= noticeOf(v) ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' });
-                    const rep = repeatText({ ...v, date: v.first });
-                    return '<tr' + rowAttrs('vencimiento', v, v.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(v.date)) + (v.time ? '<br><span class="small muted">' + esc(v.time) + ' h</span>' : '') + (rep ? '<br><span class="small muted">🔁 ' + esc(rep) + '</span>' : '') + '</td>'
-                        + '<td data-label="Qué"><strong>' + esc(v.title) + '</strong>' + (money(amountFor(v, today().slice(0, 7))) !== null ? '<br><span class="small muted">' + ars(money(amountFor(v, today().slice(0, 7)))) + ' este mes · suma en Gastos (' + esc((EXP_CAT[v.category] || EXP_CAT.otros).toLowerCase()) + ')</span>' : '') + (v.place ? '<br><span class="small muted">📍 ' + esc(v.place) + '</span>' : '') + '</td>'
-                        + '<td data-label="Tipo">' + esc(DL_KIND[v.kind] || v.kind) + '</td><td data-label="Estado">' + state + (v.done !== 'si' ? '<br><span class="small muted">Aviso ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + '</td></tr>'; }).join('')
-                + '</tbody></table>' : empty(st.dlView === 'proximos' ? 'No tenés vencimientos pendientes. Cargá el primero con “Nuevo vencimiento”.' : 'No hay vencimientos para mostrar.'));
+                    const rep = repeatText({ ...v, date: v.first }); const amt = money(amountFor(v, today().slice(0, 7)));
+                    return evBox(v.done === 'si' ? 'ws-done' : n !== null && n < 0 ? 'is-late' : n !== null && n <= noticeOf(v) ? 'is-soon' : '',
+                        '<span class="small ws-ev-time">' + esc(fshort(v.date)) + (v.time ? ' · ' + esc(v.time) + ' h' : '') + '</span>' + state,
+                        (rep ? '🔁 ' : '') + esc(v.title), esc(DL_KIND[v.kind] || v.kind) + (amt !== null ? ' · ' + ars(amt) : ''),
+                        (rep ? '<span class="small">🔁 ' + esc(rep) + '</span>' : '') + (amt !== null ? '<span class="small">💲 ' + ars(amt) + ' este mes · suma en Gastos (' + esc((EXP_CAT[v.category] || EXP_CAT.otros).toLowerCase()) + ')</span>' : '')
+                            + (v.place ? '<span class="small">📍 ' + esc(v.place) + '</span>' : '') + (v.done !== 'si' ? '<span class="small muted">Aviso por mail ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + notesHtml(v.notes),
+                        'vencimiento:' + v.id); }).join(''))
+                : empty(st.dlView === 'proximos' ? 'No tenés vencimientos pendientes. Cargá el primero con “Nuevo vencimiento”.' : 'No hay vencimientos para mostrar.'));
     };
 
     // ---- Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período)
