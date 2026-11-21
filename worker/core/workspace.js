@@ -71,6 +71,7 @@ export const WS = {
     start: ['date'], end: ['date'], status: [['activo', 'finalizado']], result: ['text', 2000], notes: ['text', 2000],
     // Medicamentos: unidad de la dosis, si es crónico o por un tiempo (antibiótico: desde y hasta) y si las tomas del día aparecen en el Dashboard
     unit: [['', 'mg', 'g', 'mcg', 'ml', 'gotas', 'comprimido', 'capsula', 'UI', 'puff', 'sobre']], course: [['cronico', 'temporal']], remind: [['no', 'si']],
+    taken: ['text', 2000], // tomas ya hechas ("2026-11-20 08:00;…"): la del día desaparece del Dashboard hasta el día siguiente
   } },
   // Entrenamiento: rutina por día de la semana (gimnasio por zona, cardio y otros deportes como natación). log: fechas en que se hizo
   entreno: { table: 'ws_training', required: 'area', fields: {

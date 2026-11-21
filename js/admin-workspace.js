@@ -886,6 +886,11 @@
         const nw = e.target.closest('[data-ws-new]');
         if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'salud' ? { unit: 'mg' } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
+        // Dashboard: tocar una toma de medicamento la marca como tomada hoy (vuelve a aparecer mañana)
+        const tk = e.target.closest('[data-ws-take]');
+        if (tk) { const [hid, at] = tk.dataset.wsTake.split('|'); const rec = W().salud.find((x) => x.id === Number(hid)); if (!rec) return;
+            const key = today() + ' ' + at; const keep = String(rec.taken || '').split(';').filter((x) => x && x >= addDays(today(), -7)); // solo la última semana
+            send({ action: 'save', kind: 'salud', id: rec.id, updated: rec.updated || '', item: { ...rec, taken: keep.concat(key).join(';') } }, '💊 Listo: ' + rec.title + ' tomado'); return; }
         const tr = e.target.closest('[data-ws-train]');
         if (tr) { const [tid, tday] = tr.dataset.wsTrain.split('|'); const rec = W().entreno.find((x) => x.id === Number(tid)); if (!rec) return; const t = tday || today();
             const on = !logOf(rec).includes(t); const dates = (on ? logOf(rec).concat(t) : logOf(rec).filter((x) => x !== t)).sort().slice(-300);
@@ -964,7 +969,8 @@
             // Medicamentos con recordatorio: cada toma del día (los de "por un tiempo", solo entre su desde y hasta)
             w.salud.filter((h) => h.kind === 'medicamento' && h.status !== 'finalizado' && h.remind === 'si' && (h.course !== 'temporal' || ((!h.start || h.start <= t) && (!h.end || h.end >= t))))
                 .forEach((h) => String(h.hours || '').split(/\s*(?:,|;|\/|\by\b)\s*/).map((x) => x.trim()).filter(Boolean)
-                    .forEach((x) => out.push({ section: 'Salud', text: '💊 Tomar ' + h.title + (doseText(h) ? ' ' + doseText(h) : ''), date: t, time: x, scope: 'personal', go: 'salud' })));
+                    .filter((x) => !String(h.taken || '').split(';').includes(t + ' ' + x)) // la que ya se tomó hoy no aparece
+                    .forEach((x) => out.push({ section: 'Salud', text: '💊 Tomar ' + h.title + (doseText(h) ? ' ' + doseText(h) : ''), date: t, time: x, scope: 'personal', go: 'salud', take: h.id + '|' + x })));
             w.salud.filter((h) => h.kind !== 'medicamento' && h.date && h.date >= t).forEach((h) => out.push({ section: 'Salud', text: (HEALTH_KIND[h.kind] || '') + ': ' + h.title + (h.doctor ? ' · ' + h.doctor : ''), date: h.date, time: h.time || '', scope: 'personal', go: 'salud', noPast: true }));
             w.vencimiento.filter((v) => v.done !== 'si' && v.date && !isPaid(v, dueOf(v))).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
