@@ -158,7 +158,7 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 /* Botones de la caja: chicos y en una fila (la acción y Editar) */
 .ws-ev-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .15rem; }
 .ws-ev-body button { font-size: .8rem; line-height: 1.2; min-height: 0; padding: .3rem .75rem; white-space: nowrap; }
-@media (max-width: 420px) { .ws-evs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .ws-evs { grid-template-columns: minmax(0, 1fr); } .ws-ev[open] .ws-ev-body { min-height: 0; } } /* en el celular, una caja por fila: se lee todo sin cortes (y abierta, sin espacio vacío) */
 /* Cumpleaños: calendario del año (doce meses de enero a diciembre) */
 .ws-year { display: grid; gap: .5rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: .6rem; }
 @media (max-width: 1100px) { .ws-year { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -196,8 +196,23 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
   .ws-agenda th:nth-child(1) { width: 9rem; } .ws-agenda th:nth-child(3) { width: 9rem; } .ws-agenda th:nth-child(4) { width: 8rem; }
 }
 @media (max-width: 760px) {
-  .ws-head .row { width: 100%; }
-  .ws-head .row button { flex: 1 1 auto; }
+  /* Celular: encabezado compacto, botones chicos (dos por fila si hay varios; uno solo, a la izquierda) */
+  .ws-head { gap: .6rem; }
+  .ws-head h2 { font-size: 1.25rem; }
+  .ws-head .row { display: grid; gap: .4rem; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .ws-head .row:has(> button:only-child) { display: flex; }
+  .ws-head .row button { font-size: .82rem; min-height: 2.25rem; padding: .4rem .8rem; white-space: nowrap; }
+  .ws-head .row > button:last-child:nth-child(odd):not(:only-child) { grid-column: 1 / -1; }
+  /* Filtros: las vistas en una sola fila que se desliza; las listas de a dos, del mismo ancho (si quedan impares, la última ocupa la fila) */
+  .ws-filters { display: grid; gap: .45rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ws-filters > nav { display: flex; flex-wrap: nowrap; gap: .35rem; grid-column: 1 / -1; overflow-x: auto; scrollbar-width: none; }
+  .ws-filters > nav::-webkit-scrollbar { display: none; }
+  .ws-filters > nav button { flex: 0 0 auto; font-size: .82rem; min-height: 2.1rem; padding: .35rem .8rem; white-space: nowrap; }
+  .ws-filters > label { min-width: 0; }
+  .ws-filters > label select { font-size: .8rem; min-height: 2.3rem; padding-left: .6rem; text-overflow: ellipsis; width: 100%; }
+  .ws-filters > label:last-of-type:nth-of-type(odd) { grid-column: 1 / -1; }
+  /* Botones dentro de las cajas: nunca más anchos que la caja */
+  .ws-ev-actions button, .ws-bday-info button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .ws-table tbody tr:hover td { background: none; }
   .ws-week { grid-template-columns: minmax(0, 1fr); }
   .ws-wday.is-empty { display: none; }

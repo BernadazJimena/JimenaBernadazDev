@@ -130,7 +130,7 @@
         // Entrenamiento: según la actividad, series, repeticiones y kilos (gimnasio), estilo y metros (natación), kilómetros y minutos
         entreno: { title: 'ejercicio', switch: '_sport', fields: [
             ['_sport', 'Actividad', 'select', SPORT], ['area', 'Zona', 'select', { ...GYM_ZONE, areas: ['gym'] }],
-            ['style', 'Tipo', 'select', { '': 'Sin indicar', areas: Object.keys(SUB) }], ['days', 'Días', 'days'],
+            ['style', 'Tipo', 'select', { '': 'Sin indicar', areas: Object.keys(SUB) }], ['days', 'Días', 'days'], ['_did', 'Lo hice el (opcional)', 'date', { hint: 'Para anotarlo en el historial' }],
             ['exercise', 'Ejercicio', 'line', { max: 120, wide: true, hint: 'Sentadilla', list: EXERCISES, areas: ['gym', 'otro'] }],
             ['sets', 'Series', 'pick', { values: range(1, 10, 1), empty: '—', areas: ['gym'] }], ['reps', 'Repeticiones', 'pick', { values: range(1, 50, 1), empty: '—', areas: ['gym'] }],
             ['kg', 'Kilos', 'pick', { values: KG, empty: 'Sin peso', areas: ['gym'] }],
@@ -599,7 +599,7 @@
                 (g.dl ? '🔁 ' : '') + esc(g.concept), esc(EXP_CAT[g.category] || g.category),
                 (g.dl ? '<span class="small">De Vencimientos' + (g.repeat === 'mensual' ? ' · todos los meses' : g.repeat === 'anual' ? ' · todos los años' : '') + '</span>' : '')
                     + (g.method ? '<span class="small">💳 ' + esc(EXP_METHOD[g.method] || '') + '</span>' : '') + (g.dl ? '' : notesHtml(g.notes)),
-                (g.dl ? 'vencimiento:' : 'gasto:') + g.id, g.dl ? 'Cambiar el monto de este mes' : 'Editar', g.dl ? ' data-ws-month="' + g.month + '"' : '')).join(''))
+                (g.dl ? 'vencimiento:' : 'gasto:') + g.id, g.dl ? 'Cambiar monto' : 'Editar', g.dl ? ' data-ws-month="' + g.month + '"' : '')).join(''))
                 : empty('No hay gastos ' + (st.expMonth ? 'en ' + mLabel(st.expMonth).toLowerCase() : 'cargados') + '. Sumá el primero con “Nuevo gasto”.'));
     };
 
@@ -985,6 +985,9 @@
         const prev = editing.id ? (W()[editing.kind] || []).find((x) => x.id === editing.id) : null;
         const item = { ...(prev || {}), ...Object.fromEntries(new FormData(e.target)) };
         if (e.target.querySelector('[name="_day"]')) { item.days = new FormData(e.target).getAll('_day').join(','); item.weekday = ''; delete item._day; }
+        if ('_did' in item) { // "Lo hice el…": suma esa fecha al historial (sirve para anotar días pasados de cualquier mes)
+            if (/^\d{4}-\d{2}-\d{2}$/.test(item._did)) item.log = [...new Set(String(item.log || '').split(';').filter(Boolean).concat(item._did))].sort().slice(-300).join(';');
+            delete item._did; }
         if (editing.kind === 'salud') { if (String(item.kind || '').startsWith('t:')) { item.subtype = item.kind.slice(2); item.kind = 'otro'; } else item.subtype = ''; }
         if ('_sport' in item) { if (item._sport !== 'gym') item.area = item._sport; if (!SUB[item._sport]) item.style = ''; delete item._sport; } // fuera del gimnasio, la actividad va en "area"
         if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
