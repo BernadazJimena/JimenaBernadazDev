@@ -84,6 +84,8 @@ export const WS = {
     meters: ['line', 8], km: ['line', 8], minutes: ['line', 4], log: ['text', 4000], notes: ['text', 2000],
     days: ['line', 80], // varios días: "lunes,miercoles,viernes" (weekday queda de los primeros registros, con un solo día)
   } },
+  // Peso (en Entrenamiento): un registro por pesada, con su fecha; el panel arma el cambio por semana y por mes
+  peso: { table: 'ws_weights', required: 'kg', fields: { date: ['date'], kg: ['line', 8], notes: ['text', 500] } },
   // Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período "term")
   meta: { table: 'ws_goals', required: 'title', fields: {
     title: ['line', 160], term: ['line', 80], deadline: ['date'], auto: [['', 'materias', 'promedio']],

@@ -56,6 +56,9 @@
 .ws-bar-track { align-items: flex-end; display: flex; height: 5rem; width: 1.4rem; }
 .ws-bar-f { background: var(--accent); border-radius: 4px 4px 0 0; display: block; width: 100%; }
 .ws-bar-l { color: var(--muted); font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.ws-bar-d { color: var(--muted); font-size: .68rem; font-weight: 800; white-space: nowrap; } /* peso: ↓ baja (verde) / ↑ sube */
+.ws-bar-d.is-down { color: var(--ok); } .ws-bar-d.is-up { color: var(--warn); }
+.ws-small { font-size: .82rem; min-height: 0; padding: .4rem .85rem; }
 /* Horario semanal: una columna por día (en el celular, uno abajo del otro y sin los días libres) */
 .ws-week { display: grid; gap: .6rem; grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .ws-wday .ws-day { margin-top: 0; }
@@ -219,10 +222,13 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
   .ws-scroll > nav::-webkit-scrollbar { display: none; }
   .ws-scroll > nav button { flex: 0 0 auto; font-size: .82rem; min-height: 2.1rem; padding: .35rem .8rem; white-space: nowrap; }
   /* Flechitas de carrusel: aparecen solo si hay más opciones hacia ese lado, sobre un degradé que se funde con el fondo */
-  .ws-scroll-btn { align-items: center; border: 0; border-radius: 999px; color: var(--accent-ink); display: none; font-size: 1.3rem; font-weight: 800; height: 2.1rem; justify-content: center; line-height: 1;
-    min-height: 0; padding: 0; position: absolute; top: 0; width: 2.4rem; z-index: 2; }
-  .ws-scroll-btn.is-prev { background: linear-gradient(90deg, var(--bg) 55%, transparent); justify-content: flex-start; left: -2px; padding-left: .2rem; }
-  .ws-scroll-btn.is-next { background: linear-gradient(270deg, var(--bg) 55%, transparent); justify-content: flex-end; padding-right: .2rem; right: -2px; }
+  /* Flechas de carrusel: un circulito con borde violeta sobre un degradé, bien visible */
+  .ws-scroll-btn { align-items: center; border: 0; color: var(--accent-ink); display: none; height: 2.1rem; min-height: 0; padding: 0; position: absolute; top: 0; width: 2.9rem; z-index: 2; }
+  .ws-scroll-btn::before { align-items: center; background: var(--soft); border: 1px solid var(--accent); border-radius: 999px; box-shadow: 0 2px 8px rgba(0, 0, 0, .35); content: attr(data-arrow); display: flex;
+    font-size: 1rem; font-weight: 800; height: 1.6rem; justify-content: center; line-height: 1; width: 1.6rem; }
+  .ws-scroll-btn { font-size: 0; }
+  .ws-scroll-btn.is-prev { background: linear-gradient(90deg, var(--bg) 60%, transparent); justify-content: flex-start; left: -2px; }
+  .ws-scroll-btn.is-next { background: linear-gradient(270deg, var(--bg) 60%, transparent); justify-content: flex-end; right: -2px; }
   .ws-scroll.can-prev .is-prev, .ws-scroll.can-next .is-next { display: flex; }
   .ws-filters > label { min-width: 0; }
   .ws-filters > label select { font-size: .8rem; min-height: 2.3rem; padding-left: .6rem; text-overflow: ellipsis; width: 100%; }

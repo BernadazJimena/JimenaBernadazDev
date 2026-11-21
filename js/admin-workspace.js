@@ -4,7 +4,7 @@
 // Son datos personales: no van en la copia JNB (worker/core/backup-policy.js).
 (() => {
     const panel = () => window.JNBPanel;
-    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], curso: [], trabajo: [], gasto: [], vencimiento: [], meta: [], salud: [], entreno: [], saludtipo: [], ...((panel().data() || {}).workspace || {}) });
+    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], curso: [], trabajo: [], gasto: [], vencimiento: [], meta: [], salud: [], entreno: [], saludtipo: [], peso: [], ...((panel().data() || {}).workspace || {}) });
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const today = () => (window.JNBHolidays ? window.JNBHolidays.now().date : new Date().toISOString().slice(0, 10));
     const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -126,6 +126,7 @@
             ['place', 'Lugar', 'line', { max: 160, areas: ['consulta', 'estudio', 'vacuna', 'otro'] }],
             ['result', 'Resultado o indicaciones', 'text', { max: 2000, areas: ['consulta', 'estudio', 'vacuna', 'otro'] }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
+        peso: { title: 'peso', fields: [['date', 'Fecha', 'date'], ['kg', 'Peso (kg)', 'line', { required: true, max: 8, mode: 'decimal', hint: '68,5' }], ['notes', 'Notas', 'text', { max: 500 }]] },
         saludtipo: { title: 'tipo de registro', fields: [['name', 'Nombre del tipo', 'line', { required: true, max: 60, wide: true, hint: 'Kinesiología, Odontología…' }]] },
         // Entrenamiento: según la actividad, series, repeticiones y kilos (gimnasio), estilo y metros (natación), kilómetros y minutos
         entreno: { title: 'ejercicio', switch: '_sport', fields: [
@@ -166,13 +167,13 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', agMonth: null, agYear: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
+    const st = { agendaView: 'proximos', agendaKind: '', agMonth: null, agYear: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', wGroup: 'mes', wYear: '', trView: 'pendientes' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const segNav = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
     // En el celular, las vistas van en una fila que se desliza: flechitas a los costados indican que hay más (ver updateScrollers)
-    const seg = (key, value, options) => '<div class="ws-scroll"><button type="button" class="ws-scroll-btn is-prev" data-ws-scroll="-1" aria-label="Ver las anteriores" tabindex="-1">‹</button>' + segNav(key, value, options)
-        + '<button type="button" class="ws-scroll-btn is-next" data-ws-scroll="1" aria-label="Ver más opciones" tabindex="-1">›</button></div>';
+    const seg = (key, value, options) => '<div class="ws-scroll"><button type="button" class="ws-scroll-btn is-prev" data-ws-scroll="-1" data-arrow="‹" aria-label="Ver las anteriores" tabindex="-1">‹</button>' + segNav(key, value, options)
+        + '<button type="button" class="ws-scroll-btn is-next" data-ws-scroll="1" data-arrow="›" aria-label="Ver más opciones" tabindex="-1">›</button></div>';
     const updateScrollers = () => document.querySelectorAll('.ws-scroll').forEach((w) => { const n = w.querySelector('nav'); if (!n) return;
         w.classList.toggle('can-prev', n.scrollLeft > 4); w.classList.toggle('can-next', n.scrollLeft + n.clientWidth < n.scrollWidth - 4); });
     let scrollRaf = 0; const queueScrollers = () => { cancelAnimationFrame(scrollRaf); scrollRaf = requestAnimationFrame(updateScrollers); };
@@ -758,6 +759,41 @@
             + '<div class="ws-cal">' + cells + '</div>'
             + (days.length ? '' : empty('No anotaste entrenamientos en ' + MONTHS[mo - 1] + ' de ' + y + '. Se anotan con “✓ Lo hice hoy” en cada ejercicio.'));
     };
+    // Peso: último registro, cambio del mes y desde el primero; gráfico con el peso de cada mes (el último del mes) y cuánto subió o bajó
+    const kgNum = (v) => { const n = Number(String(v || '').replace(',', '.')); return Number.isFinite(n) && n > 0 ? n : null; };
+    const kgTxt = (n) => n.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' kg';
+    const diffTxt = (d) => (Math.abs(d) < 0.05 ? 'igual' : (d < 0 ? '↓ ' : '↑ ') + Math.abs(d).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' kg');
+    // Agrupado por semana (desde el lunes), por mes o por año: el último peso de cada período y cuánto cambió contra el anterior
+    const weightView = () => {
+        const all = W().peso.filter((p) => kgNum(p.kg) !== null && p.date).sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+        const years = [...new Set(all.map((p) => p.date.slice(0, 4)))].sort();
+        if (st.wYear && !years.includes(st.wYear)) st.wYear = '';
+        const g = st.wGroup || 'mes';
+        const head = '<div class="ws-filters">' + (all.length ? select('wGroup', g, { semana: 'Por semana', mes: 'Por mes', anio: 'Por año' }, 'Agrupar') + select('wYear', st.wYear, Object.fromEntries([['', 'Todos los años']].concat(years.map((y) => [y, y]))), 'Año') : '') + '</div>';
+        if (!all.length) return head + empty('Todavía no registraste tu peso. Sumá la primera pesada con “Registrar peso”: después vas a ver cuánto cambió por semana, por mes y por año.');
+        const monday = (iso) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
+        const keyOf = (p) => (g === 'semana' ? monday(p.date) : g === 'anio' ? p.date.slice(0, 4) : p.date.slice(0, 7));
+        const labelOf = (k) => (g === 'semana' ? Number(k.slice(8)) + '/' + Number(k.slice(5, 7)) : g === 'anio' ? k : MONTHS[Number(k.slice(5)) - 1].slice(0, 3) + ' ' + k.slice(2, 4));
+        const byKey = {}; all.forEach((p) => { byKey[keyOf(p)] = p; }); // el último de cada período
+        const keys = Object.keys(byKey).sort(); const prevOf = (k) => { const i = keys.indexOf(k); return i > 0 ? byKey[keys[i - 1]] : null; };
+        const list = all.filter((p) => !st.wYear || p.date.slice(0, 4) === st.wYear);
+        const shown = keys.filter((k) => !st.wYear || byKey[k].date.slice(0, 4) === st.wYear).slice(g === 'semana' ? -16 : -12);
+        const t = today(); const nowK = keyOf({ date: t }); const cur = byKey[nowK];
+        const curPrev = !cur ? null : g === 'anio' ? all.find((p) => p.date.slice(0, 4) === nowK) : prevOf(nowK); // el año: contra la primera pesada del año
+        const last = list[list.length - 1] || all[all.length - 1]; const first = list[0] || all[0];
+        const vals = shown.map((k) => kgNum(byKey[k].kg)); const lo = Math.min(...vals) - 1; const hi = Math.max(...vals) + 1;
+        const chart = '<div class="ws-chart"><p class="ws-chart-t">Peso de cada ' + (g === 'semana' ? 'semana' : g === 'anio' ? 'año' : 'mes') + ' (la última pesada) y cuánto cambió</p><div class="ws-bars">'
+            + shown.map((k) => { const v = kgNum(byKey[k].kg); const pv = prevOf(k); const d = pv ? v - kgNum(pv.kg) : null;
+                return '<div class="ws-bar-col"><span class="ws-bar-v">' + v.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '</span><span class="ws-bar-track"><span class="ws-bar-f" style="height:' + Math.round(((v - lo) / (hi - lo || 1)) * 100) + '%"></span></span>'
+                    + '<span class="ws-bar-l">' + labelOf(k) + '</span>' + (d !== null ? '<span class="ws-bar-d' + (d < -0.05 ? ' is-down' : d > 0.05 ? ' is-up' : '') + '">' + diffTxt(d) + '</span>' : '<span class="ws-bar-d">inicio</span>') + '</div>'; }).join('') + '</div></div>';
+        const rows = list.slice().reverse().slice(0, 40).map((p) => { const i = all.indexOf(p); const prev = i > 0 ? all[i - 1] : null; const d = prev ? kgNum(p.kg) - kgNum(prev.kg) : null;
+            return evBox('', '<span class="small ws-ev-time">' + esc(fshort(p.date)) + '</span>' + (d !== null ? '<span class="small ws-bar-d' + (d < -0.05 ? ' is-down' : d > 0.05 ? ' is-up' : '') + '">' + diffTxt(d) + '</span>' : ''),
+                kgTxt(kgNum(p.kg)), prev ? 'desde el ' + fshort(prev.date) : 'Primera pesada', notesHtml(p.notes), 'peso:' + p.id); }).join('');
+        return head + kpiGrid([kpi(kgTxt(kgNum(last.kg)), 'Último peso <small>(' + fshort(last.date) + ')</small>'),
+            kpi(cur && curPrev ? diffTxt(kgNum(cur.kg) - kgNum(curPrev.kg)) : '—', g === 'semana' ? 'Esta semana' : g === 'anio' ? 'Este año' : 'Este mes'),
+            kpi(list.length > 1 ? diffTxt(kgNum(last.kg) - kgNum(first.kg)) : '—', (st.wYear ? 'En ' + st.wYear : 'Desde el ' + fshort(first.date)))])
+            + (shown.length > 1 ? chart : '') + (list.length ? '<p class="ws-day">Pesadas</p>' + evGrid(rows) : empty('No hay pesadas en ' + st.wYear + '.'));
+    };
     const renderTraining = () => {
         const all = W().entreno; const t = today(); const todayKey = DOW[new Date(t + 'T12:00:00Z').getUTCDay()];
         const subOpts = st.trSport === 'gym' ? GYM_ZONE : SUB[st.trSport] || null;
@@ -781,11 +817,12 @@
                 (detail(r) ? '<span class="small">' + esc(detail(r)) + '</span>' : '') + '<span class="small muted">' + (last ? 'Última vez: ' + esc(fshort(last)) + ' · ' + logOf(r).length + (logOf(r).length === 1 ? ' vez' : ' veces') : 'Todavía no lo hiciste') + '</span>' + notesHtml(r.notes)
                     + (trainDays(r).length > 1 ? '<span class="small muted">📅 ' + (trainDays(r).length === 7 ? 'Todos los días' : trainDays(r).map((x) => WEEK[x]).join(', ')) + '</span>' : ''), 'entreno:' + r.id, '', '', btn); };
         const days = Object.keys(WEEK).concat('').map((k) => ({ k, items: list.filter((x) => x.k === k) })).filter((g) => g.items.length);
-        const top = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>')
-            + '<div class="ws-filters">' + seg('trView', st.trView, { todas: 'Toda la rutina', pendientes: 'Pendientes de la semana', hechas: 'Hechas esta semana', historial: 'Historial por mes' })
-                + select('trSport', st.trSport, { '': 'Todas las actividades', ...SPORT }, 'Actividad')
+        const top = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', (st.trView === 'peso' ? '<button type="button" class="primary" data-ws-new="peso">+ Registrar peso</button>' : '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>'))
+            + '<div class="ws-filters">' + seg('trView', st.trView, { pendientes: 'Pendientes de la semana', todas: 'Toda la rutina', hechas: 'Hechas esta semana', historial: 'Historial por mes', peso: 'Peso' }) // por prioridad: lo que falta hacer primero
+                + (st.trView === 'peso' ? '' : select('trSport', st.trSport, { '': 'Todas las actividades', ...SPORT }, 'Actividad')
                 + (subOpts ? select('trSub', st.trSub, { '': st.trSport === 'gym' ? 'Todas las zonas' : 'Todos los tipos', ...subOpts }, 'Tipo') : '')
-                + select('trDay', st.trDay, { '': 'Todos los días', ...WEEK }, 'Día') + '</div>';
+                + select('trDay', st.trDay, { '': 'Todos los días', ...WEEK }, 'Día')) + '</div>';
+        if (st.trView === 'peso') { root('entrenamiento').innerHTML = top + weightView(); return; }
         if (st.trView === 'historial') { root('entrenamiento').innerHTML = top + trainingHistory(scope); return; }
         root('entrenamiento').innerHTML = top
             + (scope.length ? kpiGrid([kpi(doneN + ' <small>de ' + slots.length + '</small>', 'Hechos esta semana'), mins ? kpi(mins + ' <small>min</small>', 'Minutos esta semana') : '',
@@ -795,7 +832,7 @@
     };
 
     const RENDER = { 'mi-agenda': renderAgenda, salud: renderHealth, entrenamiento: renderTraining, estudios: renderStudies, trabajo: renderJobs, gastos: renderExpenses, vencimientos: renderDeadlines, metas: renderGoals };
-    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', curso: 'estudios', trabajo: 'trabajo', gasto: 'gastos', vencimiento: 'vencimientos', salud: 'salud', saludtipo: 'salud', entreno: 'entrenamiento', meta: 'metas' };
+    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', curso: 'estudios', trabajo: 'trabajo', gasto: 'gastos', vencimiento: 'vencimientos', salud: 'salud', saludtipo: 'salud', peso: 'entrenamiento', entreno: 'entrenamiento', meta: 'metas' };
     let current = '';
 
     // ---- Contadores del menú: agenda de hoy, entregas y exámenes de los próximos 7 días (o vencidos), entrevistas próximas
@@ -849,7 +886,7 @@
         const r = rec || { id: 0, updated: '', ...(preset || {}) };
         editing = { kind, id: r.id || 0, updated: r.updated || '' };
         const d = dialog();
-        d.innerHTML = '<form method="dialog" class="task-form ws-form"><div class="task-form-head"><strong>' + (r.id ? 'Editar ' : ['agenda', 'trabajo', 'gasto', 'vencimiento', 'curso', 'salud', 'entreno', 'saludtipo'].includes(kind) ? 'Nuevo ' : 'Nueva ') + f.title + '</strong>'
+        d.innerHTML = '<form method="dialog" class="task-form ws-form"><div class="task-form-head"><strong>' + (r.id ? 'Editar ' : ['agenda', 'trabajo', 'gasto', 'vencimiento', 'curso', 'salud', 'entreno', 'saludtipo', 'peso'].includes(kind) ? 'Nuevo ' : 'Nueva ') + f.title + '</strong>'
             + '<button type="button" class="task-icon-btn" data-ws-close aria-label="Cerrar">×</button></div>'
             + '<div class="task-form-body"><div class="task-form-grid">' + f.fields.map(fieldHtml(r)).join('') + '</div></div>'
             + '<div class="task-form-foot">' + (r.id ? '<button type="button" data-ws-delete>Eliminar</button>' : '<span></span>')
@@ -942,7 +979,7 @@
         const set = e.target.closest('[data-ws-set]');
         if (set) { st[set.dataset.wsSet] = set.dataset.value; if (RENDER[current]) RENDER[current](); return; }
         const nw = e.target.closest('[data-ws-new]');
-        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'salud' ? { unit: 'mg' } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
+        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'salud' ? { unit: 'mg' } : kind === 'peso' ? { date: today() } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
         // Dashboard: tocar una toma de medicamento la marca como tomada hoy (vuelve a aparecer mañana)
         const trd = e.target.closest('[data-ws-trday]');
