@@ -160,7 +160,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
+    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -547,7 +547,7 @@
         const months = [...new Set(all.map((g) => (g.date || '').slice(0, 7)).filter(Boolean).concat(month, dlMonths))].sort().reverse();
         const mLabel = (m) => MONTHS[Number(m.slice(5)) - 1].replace(/^./, (c) => c.toUpperCase()) + ' ' + m.slice(0, 4);
         const inMonth = (m) => all.filter((g) => !m || (g.date || '').slice(0, 7) === m).concat(m ? fixedIn(m) : months.flatMap(fixedIn));
-        const list = inMonth(st.expMonth).filter((g) => !st.expCat || g.category === st.expCat).sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id - a.id);
+        const list = inMonth(st.expMonth).filter((g) => !st.expCat || g.category === st.expCat).sort((a, b) => (st.expSort === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')) || a.id - b.id); // por fecha del gasto
         const sum = (l) => l.reduce((n, g) => n + (money(g.amount) || 0), 0);
         const total = sum(list);
         const prevKey = st.expMonth ? (() => { const d = new Date(st.expMonth + '-15T12:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); })() : '';
@@ -555,7 +555,7 @@
         const monthList = inMonth(st.expMonth);
         const cats = Object.keys(EXP_CAT).map((k) => ({ k, n: sum(monthList.filter((g) => g.category === k)) })).filter((c) => c.n > 0).sort((a, b) => b.n - a.n);
         root('gastos').innerHTML = head('Gastos', 'Tus gastos personales en pesos, separados de los números de JNB.', '<button type="button" class="primary" data-ws-new="gasto">+ Nuevo gasto</button>')
-            + '<div class="ws-filters">' + select('expMonth', st.expMonth, { '': 'Todos los meses', ...Object.fromEntries(months.map((m) => [m, mLabel(m)])) }, 'Mes') + select('expCat', st.expCat, { '': 'Todas las categorías', ...EXP_CAT }, 'Categoría') + '</div>'
+            + '<div class="ws-filters">' + select('expMonth', st.expMonth, { '': 'Todos los meses', ...Object.fromEntries(months.map((m) => [m, mLabel(m)])) }, 'Mes') + select('expCat', st.expCat, { '': 'Todas las categorías', ...EXP_CAT }, 'Categoría') + select('expSort', st.expSort, { asc: 'Por fecha: del 1 al 31', desc: 'Por fecha: los más recientes primero' }, 'Orden') + '</div>'
             + '<div class="ws-kpis ws-kpis-top">' + kpi(ars(total), (st.expMonth ? 'Total de ' + mLabel(st.expMonth).toLowerCase() : 'Total') + (st.expCat ? ' en ' + esc(EXP_CAT[st.expCat].toLowerCase()) : '')) + kpi(list.length, list.length === 1 ? 'Gasto' : 'Gastos') + (list.some((g) => g.dl) ? kpi(ars(sum(list.filter((g) => g.dl))), 'De vencimientos <small>(incluido en el total)</small>') : '')
                 + (prev !== null ? kpi(ars(prev), 'Mes anterior' + (prev ? ' <small>(' + (total >= prev ? '+' : '−') + Math.abs(Math.round((total - prev) / prev * 100)) + ' %)</small>' : '')) : '') + '</div>'
             // Totales por categoría: tocar una filtra la lista por esa categoría (y tocarla de nuevo vuelve a todas)

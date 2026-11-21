@@ -63,6 +63,7 @@
 .ws-slot strong { font-size: .85rem; line-height: 1.25; }
 /* Gastos: totales por categoría */
 .ws-kpis-top { margin-bottom: 1rem; }
+.ws-kpis-top .ws-kpi-n { font-size: 1.2rem; white-space: nowrap; } /* montos en una sola línea */
 .ws-cats { display: grid; gap: .45rem; margin-bottom: 1rem; max-width: 40rem; }
 .ws-cat { align-items: center; display: grid; gap: .6rem; grid-template-columns: 9rem 1fr 7rem; font-size: .85rem; }
 .ws-cat-n { font-weight: 700; text-align: right; }
