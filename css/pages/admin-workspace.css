@@ -129,6 +129,12 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-cal-d.is-empty { background: none; border-color: transparent; }
 .ws-cal-d.has { background: color-mix(in srgb, var(--ok) 14%, var(--soft)); border-color: var(--ok); }
 .ws-cal-d.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+/* Todos los días del calendario miden lo mismo: número, el nombre, "+N" y "Ver más", uno debajo del otro */
+.ws-cal-d:not(.is-empty) { height: 5.2rem; min-height: 0; overflow: hidden; }
+.ws-cal-foot { align-items: flex-start; display: flex; flex-direction: column; gap: .15rem; margin-top: auto; min-width: 0; } /* +N en su línea y "Ver más" abajo */
+.ws-cal-foot .ws-cal-more { flex-shrink: 0; margin-top: 0; white-space: nowrap; }
+.ws-cal-plus { color: var(--muted); font-size: .68rem; font-weight: 800; }
+@media (max-width: 600px) { .ws-cal-d:not(.is-empty) { height: 2.9rem; } .ws-cal-foot { display: contents; } .ws-cal-plus { display: none; } }
 .ws-cal-d.has-bday { background: color-mix(in srgb, #f6b73c 16%, var(--soft)); border-color: #f6b73c; }
 .ws-cal-d .ws-cal-i.ws-inline { color: inherit; display: block; font-size: .68rem; overflow: hidden; text-align: left; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
 /* "Ver más" en el día del cumpleaños: abre la info de quien cumple (en el celular, todo el día se toca) */

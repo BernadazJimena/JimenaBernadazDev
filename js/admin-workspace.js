@@ -229,8 +229,8 @@
             return '<div class="ws-cal">' + ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((x) => '<span class="ws-cal-h">' + x + '</span>').join('') + '<span class="ws-cal-d is-empty"></span>'.repeat(lead)
                 + [...Array(nd)].map((_, i) => { const iso = y + '-' + String(mo).padStart(2, '0') + '-' + String(i + 1).padStart(2, '0'); const who = l.filter((e) => Number(e.birth.slice(8)) === i + 1);
                     return '<span class="ws-cal-d' + (who.length ? ' has-bday' : '') + (iso === t ? ' is-today' : '') + '"><span class="ws-cal-n">' + (i + 1) + '</span>'
-                        + (who.length ? '<span class="ws-cal-c">🎂' + (who.length > 1 ? who.length : '') + '</span>' + who.map((e) => '<span class="ws-cal-i">🎂 ' + esc(e.title) + '</span>').join('')
-                            + '<button type="button" class="ws-cal-more" data-ws-bday="' + who.map((e) => e.id).join(',') + '" aria-label="Ver los cumpleaños del ' + (i + 1) + '">Ver más</button>' : '') + '</span>'; }).join('') + '</div>'
+                        + (who.length ? '<span class="ws-cal-c">🎂' + (who.length > 1 ? who.length : '') + '</span>' + '<span class="ws-cal-i">🎂 ' + esc(who[0].title) + '</span>'
+                            + '<span class="ws-cal-foot">' + (who.length > 1 ? '<span class="ws-cal-plus">+' + (who.length - 1) + '</span>' : '') + '<button type="button" class="ws-cal-more" data-ws-bday="' + who.map((e) => e.id).join(',') + '" aria-label="Ver los cumpleaños del ' + (i + 1) + '">Ver más</button></span>' : '') + '</span>'; }).join('') + '</div>'
                 + (l.length ? '' : '<p class="small muted ws-note">No hay cumpleaños en ' + MONTHS[mo - 1] + '.</p>'); }; // el detalle se ve con "Ver más" en el día
         const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p>' + (!st.agMonth ? '<div class="ws-year">' + year + '</div>' : monthCal(st.agMonth)) : '';
         // Exámenes de Estudios (con fecha) en el calendario; se abren y se editan en su ficha de actividad
@@ -749,8 +749,8 @@
             + '<span class="ws-cal-d is-empty"></span>'.repeat(lead)
             + [...Array(nd)].map((_, i) => { const iso = m + '-' + String(i + 1).padStart(2, '0'); const l = byDay[iso] || [];
                 return '<span class="ws-cal-d' + (l.length ? ' has' : '') + (iso === t ? ' is-today' : '') + '"><span class="ws-cal-n">' + (i + 1) + '</span>'
-                    + (l.length ? '<span class="ws-cal-c">' + l.length + '</span>' + l.slice(0, 2).map((r) => '<span class="ws-cal-i">' + esc(trainName(r)) + '</span>').join('') + (l.length > 2 ? '<span class="ws-cal-i muted">+' + (l.length - 2) + ' más</span>' : '')
-                        + '<button type="button" class="ws-cal-more is-train" data-ws-trday="' + iso + '" aria-label="Ver lo que hiciste el ' + (i + 1) + '">Ver más</button>' : '') + '</span>'; }).join('');
+                    + (l.length ? '<span class="ws-cal-c">' + l.length + '</span>' + '<span class="ws-cal-i">' + esc(trainName(l[0])) + '</span>' // dos líneas: el primer ejercicio y abajo "+N · Ver más"
+                        + '<span class="ws-cal-foot">' + (l.length > 1 ? '<span class="ws-cal-plus">+' + (l.length - 1) + '</span>' : '') + '<button type="button" class="ws-cal-more is-train" data-ws-trday="' + iso + '" aria-label="Ver lo que hiciste el ' + (i + 1) + '">Ver más</button></span>' : '') + '</span>'; }).join('');
         const days = Object.keys(byDay).sort().reverse();
         return '<div class="ws-filters">' + select('trMonth', m, Object.fromEntries(months.map((x) => [x, cap(MONTHS[Number(x.slice(5)) - 1]) + ' ' + x.slice(0, 4)])), 'Mes') + '</div>'
             + kpiGrid([kpi(days.length, days.length === 1 ? 'Día entrenado' : 'Días entrenados'), kpi(all.length, 'Ejercicios hechos'), sum('minutes') ? kpi(sum('minutes') + ' <small>min</small>', 'Minutos') : '',
