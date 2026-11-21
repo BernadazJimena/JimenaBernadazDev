@@ -112,7 +112,8 @@
     const isBday = (e) => e.kind === 'cumpleanos' && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '');
     const agendaItems = () => W().agenda.map((e) => (isBday(e) ? { ...e, birth: e.date, date: nextDue(e.date, 'anual', today()), done: 'no', time: '', end: '' } : e))
         .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.time || '').localeCompare(b.time || '') || a.id - b.id);
-    const ageOf = (e) => (e.birth ? Number(e.date.slice(0, 4)) - Number(e.birth.slice(0, 4)) : 0);
+    const ageOf = (e) => (e.birth ? Number(e.date.slice(0, 4)) - Number(e.birth.slice(0, 4)) : 0); // la edad que cumple en el próximo cumpleaños
+    const ageNow = (e) => ageOf(e) - (e.date === today() ? 0 : 1); // la que tiene hoy: hasta el día anterior al cumpleaños, la de antes
     const renderAgenda = () => {
         const t = today();
         // Cumpleaños: cajas compactas una al lado de la otra (quién, cuándo y la edad que cumple), fuera de las tablas por día
@@ -120,7 +121,7 @@
         const bdayBox = (e) => { const n = daysTo(e.date);
             return '<button type="button" class="ws-bday' + (n === 0 ? ' is-today' : '') + '" data-ws-open="agenda:' + e.id + '"><span class="ws-bday-i" aria-hidden="true">🎂</span>'
                 + '<strong>' + esc(e.title) + '</strong><span class="small ws-bday-when">' + (n === 0 ? '¡Es hoy!' : n === 1 ? 'Mañana' : Number(e.date.slice(8)) + ' de ' + MONTHS[Number(e.date.slice(5, 7)) - 1]) + '</span>'
-                + '<span class="small muted">' + (ageOf(e) > 0 ? 'Cumple ' + ageOf(e) : 'Cumpleaños') + (n > 1 && n <= 30 ? ' · faltan ' + n + ' días' : '') + '</span></button>'; };
+                + '<span class="small muted">' + (ageOf(e) > 0 ? (n === 0 ? 'Cumple ' + ageOf(e) : ageNow(e) + (ageNow(e) === 1 ? ' año' : ' años')) : 'Cumpleaños') + (n > 1 && n <= 30 ? ' · faltan ' + n + ' días' : '') + '</span></button>'; };
         const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-bdays">' + bdays.map(bdayBox).join('') + '</div>' : '';
         let list = agendaItems().filter((e) => !e.birth);
         if (st.agendaView === 'proximos') list = list.filter((e) => e.done !== 'si' && (!e.date || e.date >= t));
@@ -678,7 +679,7 @@
         // Para el Dashboard: lo personal con fecha (agenda pendiente desde hoy, actividades y trabajo abiertos)
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
-            agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: e.birth ? '🎂 Cumpleaños de ' + e.title + (ageOf(e) > 0 ? ' (' + ageOf(e) + ')' : '') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
+            agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: e.birth ? '🎂 Cumpleaños de ' + e.title + (ageOf(e) > 0 ? (e.date === t ? ' (cumple ' + ageOf(e) + ')' : ' (tiene ' + ageNow(e) + ', cumple ' + ageOf(e) + ')') : '') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
             w.vencimiento.filter((v) => v.done !== 'si' && v.date).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
             w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.kind !== 'empleo').forEach((j) => out.push({ section: 'Trabajo', text: (JOB_KIND[j.kind] || '') + ': ' + j.title + (j.company ? ' · ' + j.company : ''), date: j.date, time: j.time || '', scope: 'trabajo', go: 'trabajo' }));
