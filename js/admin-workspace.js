@@ -119,7 +119,7 @@
         const bdays = st.agendaView === 'pasados' ? [] : agendaItems().filter((e) => e.birth);
         const bdayBox = (e) => { const n = daysTo(e.date);
             return '<button type="button" class="ws-bday' + (n === 0 ? ' is-today' : '') + '" data-ws-open="agenda:' + e.id + '"><span class="ws-bday-i" aria-hidden="true">🎂</span>'
-                + '<strong>' + esc(e.title) + '</strong><span class="small">' + (n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : Number(e.date.slice(8)) + ' de ' + MONTHS[Number(e.date.slice(5, 7)) - 1]) + '</span>'
+                + '<strong>' + esc(e.title) + '</strong><span class="small ws-bday-when">' + (n === 0 ? '¡Es hoy!' : n === 1 ? 'Mañana' : Number(e.date.slice(8)) + ' de ' + MONTHS[Number(e.date.slice(5, 7)) - 1]) + '</span>'
                 + '<span class="small muted">' + (ageOf(e) > 0 ? 'Cumple ' + ageOf(e) : 'Cumpleaños') + (n > 1 && n <= 30 ? ' · faltan ' + n + ' días' : '') + '</span></button>'; };
         const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-bdays">' + bdays.map(bdayBox).join('') + '</div>' : '';
         let list = agendaItems().filter((e) => !e.birth);
