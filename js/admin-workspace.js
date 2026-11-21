@@ -169,7 +169,16 @@
     const st = { agendaView: 'proximos', agendaKind: '', agMonth: null, agYear: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
-    const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
+    const segNav = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
+    // En el celular, las vistas van en una fila que se desliza: flechitas a los costados indican que hay más (ver updateScrollers)
+    const seg = (key, value, options) => '<div class="ws-scroll"><button type="button" class="ws-scroll-btn is-prev" data-ws-scroll="-1" aria-label="Ver las anteriores" tabindex="-1">‹</button>' + segNav(key, value, options)
+        + '<button type="button" class="ws-scroll-btn is-next" data-ws-scroll="1" aria-label="Ver más opciones" tabindex="-1">›</button></div>';
+    const updateScrollers = () => document.querySelectorAll('.ws-scroll').forEach((w) => { const n = w.querySelector('nav'); if (!n) return;
+        w.classList.toggle('can-prev', n.scrollLeft > 4); w.classList.toggle('can-next', n.scrollLeft + n.clientWidth < n.scrollWidth - 4); });
+    let scrollRaf = 0; const queueScrollers = () => { cancelAnimationFrame(scrollRaf); scrollRaf = requestAnimationFrame(updateScrollers); };
+    document.addEventListener('scroll', (e) => { if (e.target.closest && e.target.closest('.ws-scroll')) queueScrollers(); }, true);
+    window.addEventListener('resize', queueScrollers);
+    new MutationObserver(queueScrollers).observe(document.body, { childList: true, subtree: true });
     const select = (key, value, options, label) => '<label><span class="sr-only">' + label + '</span><select data-ws-select="' + key + '">' + Object.entries(options).sort((a, b) => (a[0] === '' ? -1 : b[0] === '' ? 1 : 0)).map(([v, l]) => '<option value="' + esc(v) + '"' + (value === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
     const empty = (text) => '<p class="empty">' + text + '</p>';
     const rowAttrs = (kind, r, extra) => ' tabindex="0" data-ws-open="' + kind + ':' + r.id + '"' + (extra ? ' class="' + extra + '"' : '');
@@ -740,15 +749,14 @@
             + '<span class="ws-cal-d is-empty"></span>'.repeat(lead)
             + [...Array(nd)].map((_, i) => { const iso = m + '-' + String(i + 1).padStart(2, '0'); const l = byDay[iso] || [];
                 return '<span class="ws-cal-d' + (l.length ? ' has' : '') + (iso === t ? ' is-today' : '') + '"><span class="ws-cal-n">' + (i + 1) + '</span>'
-                    + (l.length ? '<span class="ws-cal-c">' + l.length + '</span>' + l.slice(0, 2).map((r) => '<span class="ws-cal-i">' + esc(trainName(r)) + '</span>').join('') + (l.length > 2 ? '<span class="ws-cal-i muted">+' + (l.length - 2) + ' más</span>' : '') : '') + '</span>'; }).join('');
+                    + (l.length ? '<span class="ws-cal-c">' + l.length + '</span>' + l.slice(0, 2).map((r) => '<span class="ws-cal-i">' + esc(trainName(r)) + '</span>').join('') + (l.length > 2 ? '<span class="ws-cal-i muted">+' + (l.length - 2) + ' más</span>' : '')
+                        + '<button type="button" class="ws-cal-more is-train" data-ws-trday="' + iso + '" aria-label="Ver lo que hiciste el ' + (i + 1) + '">Ver más</button>' : '') + '</span>'; }).join('');
         const days = Object.keys(byDay).sort().reverse();
         return '<div class="ws-filters">' + select('trMonth', m, Object.fromEntries(months.map((x) => [x, cap(MONTHS[Number(x.slice(5)) - 1]) + ' ' + x.slice(0, 4)])), 'Mes') + '</div>'
             + kpiGrid([kpi(days.length, days.length === 1 ? 'Día entrenado' : 'Días entrenados'), kpi(all.length, 'Ejercicios hechos'), sum('minutes') ? kpi(sum('minutes') + ' <small>min</small>', 'Minutos') : '',
                 sum('meters') ? kpi(sum('meters').toLocaleString('es-AR') + ' <small>m</small>', 'Metros nadados') : '', sum('km') ? kpi(fmt(sum('km')) + ' <small>km</small>', 'Kilómetros') : ''])
             + '<div class="ws-cal">' + cells + '</div>'
-            + (days.length ? days.map((d) => '<p class="ws-term">' + esc(fdate(d)) + '</p><ul class="ws-cal-list">' + byDay[d].map((r) => '<li><button type="button" class="ws-inline" data-ws-open="entreno:' + r.id + '">' + esc(trainName(r)) + '</button>'
-                + (r.sets || r.kg || r.meters || r.km || r.minutes ? ' <span class="small muted">' + esc([r.sets && r.reps ? r.sets + ' × ' + r.reps : '', r.kg ? r.kg + ' kg' : '', r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ')) + '</span>' : '') + '</li>').join('') + '</ul>').join('')
-                : empty('No anotaste entrenamientos en ' + MONTHS[mo - 1] + ' de ' + y + '. Se anotan con “✓ Lo hice hoy” en cada ejercicio.'));
+            + (days.length ? '' : empty('No anotaste entrenamientos en ' + MONTHS[mo - 1] + ' de ' + y + '. Se anotan con “✓ Lo hice hoy” en cada ejercicio.'));
     };
     const renderTraining = () => {
         const all = W().entreno; const t = today(); const todayKey = DOW[new Date(t + 'T12:00:00Z').getUTCDay()];
@@ -937,6 +945,15 @@
         if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'salud' ? { unit: 'mg' } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
         // Dashboard: tocar una toma de medicamento la marca como tomada hoy (vuelve a aparecer mañana)
+        const trd = e.target.closest('[data-ws-trday]');
+        if (trd) { const day = trd.dataset.wsTrday; const done = W().entreno.filter((r) => logOf(r).includes(day)); if (!done.length) return;
+            const d = dialog(); editing = null;
+            const det = (r) => [r.sets && r.reps ? r.sets + ' × ' + r.reps : '', r.kg ? r.kg + ' kg' : '', r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ');
+            d.innerHTML = '<div class="task-form ws-form"><div class="task-form-head"><strong>🏋️ ' + esc(fdate(day).replace(/^./, (c) => c.toUpperCase())) + '</strong><button type="button" class="task-icon-btn" data-ws-close aria-label="Cerrar">×</button></div><div class="task-form-body">'
+                + done.map((r) => '<div class="ws-bday-info"><h3>' + esc(trainName(r)) + '</h3><p class="small muted">' + esc(SPORT[sportOf(r)] + (sportOf(r) === 'gym' && subOf(r) ? ' · ' + subOf(r) : '')) + '</p>'
+                    + (det(r) ? '<p>' + esc(det(r)) + '</p>' : '') + notesHtml(r.notes) + '<button type="button" data-ws-open="entreno:' + r.id + '">Editar</button></div>').join('')
+                + '</div></div>';
+            d.showModal(); return; }
         const bd = e.target.closest('[data-ws-bday]');
         if (bd) { const ids = bd.dataset.wsBday.split(',').map(Number); const people = agendaItems().filter((x) => x.birth && ids.includes(x.id)); if (!people.length) return;
             const d = dialog(); editing = null;
@@ -948,6 +965,8 @@
                         + '<button type="button" data-ws-open="agenda:' + p.id + '">Editar</button></div>'; }).join('')
                 + '</div></div>';
             d.showModal(); return; }
+        const sc = e.target.closest('[data-ws-scroll]');
+        if (sc) { const n = sc.parentElement.querySelector('nav'); n.scrollBy({ left: Number(sc.dataset.wsScroll) * n.clientWidth * 0.7, behavior: 'smooth' }); return; }
         const tk = e.target.closest('[data-ws-take]');
         if (tk && tk.dataset.wsTake.startsWith('agenda:')) { const rec = W().agenda.find((x) => x.id === Number(tk.dataset.wsTake.slice(7))); if (!rec) return;
             send({ action: 'save', kind: 'agenda', id: rec.id, updated: rec.updated || '', item: { ...rec, done: 'si' } }, '✓ Listo: ' + rec.title); return; }
