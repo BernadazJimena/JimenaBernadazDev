@@ -69,6 +69,8 @@ export const WS = {
     kind: [['chequeo', 'medicamento', 'consulta', 'estudio', 'vacuna', 'otro']], title: ['line', 160], date: ['date'], time: ['time'],
     specialty: ['line', 80], doctor: ['line', 120], place: ['line', 160], dose: ['line', 80], hours: ['line', 120],
     start: ['date'], end: ['date'], status: [['activo', 'finalizado']], result: ['text', 2000], notes: ['text', 2000],
+    // Medicamentos: unidad de la dosis, si es crónico o por un tiempo (antibiótico: desde y hasta) y si las tomas del día aparecen en el Dashboard
+    unit: [['', 'mg', 'g', 'mcg', 'ml', 'gotas', 'comprimido', 'capsula', 'UI', 'puff', 'sobre']], course: [['cronico', 'temporal']], remind: [['no', 'si']],
   } },
   // Entrenamiento: rutina por día de la semana (gimnasio por zona, cardio y otros deportes como natación). log: fechas en que se hizo
   entreno: { table: 'ws_training', required: 'area', fields: {
@@ -76,6 +78,7 @@ export const WS = {
     exercise: ['line', 120], weekday: [['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']],
     sets: ['line', 4], reps: ['line', 4], kg: ['line', 8], style: [['', 'crol', 'pecho', 'espalda', 'mariposa', 'combinado', 'trote', 'fondo', 'pasadas', 'fartlek', 'ruta', 'spinning', 'montana', 'yoga', 'pilates', 'stretching']],
     meters: ['line', 8], km: ['line', 8], minutes: ['line', 4], log: ['text', 4000], notes: ['text', 2000],
+    days: ['line', 80], // varios días: "lunes,miercoles,viernes" (weekday queda de los primeros registros, con un solo día)
   } },
   // Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período "term")
   meta: { table: 'ws_goals', required: 'title', fields: {

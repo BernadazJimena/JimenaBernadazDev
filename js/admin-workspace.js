@@ -40,6 +40,8 @@
     const GOAL_AUTO = { '': 'Lo actualizo a mano', materias: 'Materias aprobadas (de Estudios)', promedio: 'Promedio (de Estudios)' };
     const COURSE_STATUS = { 'en-curso': 'En curso', finalizado: 'Finalizado', abandonado: 'Abandonado' };
     // Salud y entrenamiento
+    const MED_UNIT = { mg: 'mg', '': 'Sin unidad', g: 'g', mcg: 'mcg', ml: 'ml', gotas: 'gotas', comprimido: 'comprimido', capsula: 'cápsula', UI: 'UI', puff: 'puff', sobre: 'sobre' };
+    const doseText = (h) => (h.dose ? h.dose + (h.unit ? ' ' + (MED_UNIT[h.unit] || h.unit) + (['comprimido', 'capsula', 'sobre'].includes(h.unit) && !/^1([.,]0+)?$/.test(h.dose) ? 's' : '') : '') : '');
     const HEALTH_KIND = { chequeo: 'Chequeo', medicamento: 'Medicamento', consulta: 'Consulta', estudio: 'Estudio o análisis', vacuna: 'Vacuna', otro: 'Otro' };
     // Dos niveles, iguales en el formulario y en el filtro: primero la actividad (Gimnasio, Natación, Running…) y adentro su tipo:
     // en el gimnasio, la zona (tren superior, inferior, core…); en natación, el estilo; en running, ciclismo y yoga, el tipo de entrenamiento.
@@ -109,9 +111,11 @@
         // Salud: los campos con areas se ven según el tipo (switch: 'kind')
         salud: { title: 'registro', switch: 'kind', fields: [
             ['kind', 'Tipo', 'select', HEALTH_KIND], ['title', 'Qué', 'line', { required: true, max: 160, wide: true, hint: 'Chequeo anual, Enalapril 10 mg…' }],
-            ['specialty', 'Especialidad', 'line', { max: 80, hint: 'Cardiólogo, clínica médica…' }], ['doctor', 'Profesional', 'line', { max: 120, hint: 'Dra. Pérez' }],
-            ['dose', 'Dosis', 'line', { max: 80, hint: '1 comprimido', areas: ['medicamento'] }], ['hours', 'A qué hora', 'line', { max: 120, hint: '08:00, 20:00', areas: ['medicamento'] }],
-            ['start', 'Desde', 'date', { areas: ['medicamento'] }], ['end', 'Hasta', 'date', { areas: ['medicamento'] }],
+            ['specialty', 'Especialidad', 'line', { max: 80, hint: 'Cardiólogo, clínica médica…', areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['doctor', 'Profesional', 'line', { max: 120, hint: 'Dra. Pérez', areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
+            ['dose', 'Dosis', 'line', { max: 20, hint: '2,5', mode: 'decimal', areas: ['medicamento'] }], ['unit', 'Unidad', 'select', { ...MED_UNIT, areas: ['medicamento'] }],
+            ['hours', 'A qué hora', 'line', { max: 120, hint: '08:00, 20:00', areas: ['medicamento'] }], ['remind', 'Recordatorio', 'select', { no: 'Sin recordatorio', si: 'Mostrar las tomas del día en el Dashboard', areas: ['medicamento'] }],
+            ['course', 'Tratamiento', 'select', { cronico: 'Crónico (todos los días)', temporal: 'Por un tiempo (antibiótico…)', areas: ['medicamento'] }],
+            ['start', 'Desde', 'date', { areas: ['medicamento'], course: true }], ['end', 'Hasta', 'date', { areas: ['medicamento'], course: true }],
             ['status', 'Estado', 'select', { activo: 'Lo estoy tomando', finalizado: 'Ya no lo tomo', areas: ['medicamento'] }],
             ['date', 'Fecha', 'date', { areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['time', 'Hora', 'time', { areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
             ['place', 'Lugar', 'line', { max: 160, areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
@@ -120,7 +124,7 @@
         // Entrenamiento: según la actividad, series, repeticiones y kilos (gimnasio), estilo y metros (natación), kilómetros y minutos
         entreno: { title: 'ejercicio', switch: '_sport', fields: [
             ['_sport', 'Actividad', 'select', SPORT], ['area', 'Zona', 'select', { ...GYM_ZONE, areas: ['gym'] }],
-            ['style', 'Tipo', 'select', { '': 'Sin indicar', areas: Object.keys(SUB) }], ['weekday', 'Día', 'select', { '': 'Sin día fijo', ...WEEK }],
+            ['style', 'Tipo', 'select', { '': 'Sin indicar', areas: Object.keys(SUB) }], ['days', 'Días', 'days'],
             ['exercise', 'Ejercicio', 'line', { max: 120, wide: true, hint: 'Sentadilla', list: EXERCISES, areas: ['gym', 'otro'] }],
             ['sets', 'Series', 'pick', { values: range(1, 10, 1), empty: '—', areas: ['gym'] }], ['reps', 'Repeticiones', 'pick', { values: range(1, 50, 1), empty: '—', areas: ['gym'] }],
             ['kg', 'Kilos', 'pick', { values: KG, empty: 'Sin peso', areas: ['gym'] }],
@@ -652,9 +656,10 @@
             return fa !== fb ? (fa ? -1 : 1) : fa ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || ''); });
         const takes = meds.flatMap((h) => hoursOf(h).map((x) => ({ x, h }))).sort((a, b) => a.x.localeCompare(b.x, 'es', { numeric: true }));
         const medBox = (h) => evBox(h.status === 'finalizado' ? 'ws-done' : '', '<span class="small ws-ev-time">' + (hoursOf(h).length ? esc(hoursOf(h).join(' · ')) : 'Sin horario') + '</span>' + (h.status === 'finalizado' ? tag('pendiente', { pendiente: 'Ya no lo tomo' }) : ''),
-            '💊 ' + esc(h.title), [h.dose ? esc(h.dose) : '', who(h)].filter(Boolean).join(' · '),
-            (h.dose ? '<span class="small">Dosis: ' + esc(h.dose) + '</span>' : '') + (who(h) ? '<span class="small">🩺 Lo indicó: ' + who(h) + '</span>' : '')
-                + (h.start || h.end ? '<span class="small">📅 ' + (h.start ? 'Desde el ' + esc(fshort(h.start)) : '') + (h.end ? (h.start ? ' hasta el ' : 'Hasta el ') + esc(fshort(h.end)) : '') + '</span>' : '') + notesHtml(h.notes), 'salud:' + h.id);
+            '💊 ' + esc(h.title), [esc(doseText(h)), h.course === 'temporal' ? 'Por un tiempo' : 'Crónico'].filter(Boolean).join(' · ') + (h.remind === 'si' ? ' · 🔔' : ''),
+            (doseText(h) ? '<span class="small">Dosis: ' + esc(doseText(h)) + '</span>' : '') + (who(h) ? '<span class="small">🩺 Lo indicó: ' + who(h) + '</span>' : '')
+                + '<span class="small">' + (h.remind === 'si' ? '🔔 Aparece en el Dashboard a la hora de tomarlo' : '🔕 Sin recordatorio') + '</span>'
+                + (h.course === 'temporal' && (h.start || h.end) ? '<span class="small">📅 ' + (h.start ? 'Desde el ' + esc(fshort(h.start)) : '') + (h.end ? (h.start ? ' hasta el ' : 'Hasta el ') + esc(fshort(h.end)) : '') + '</span>' : '') + notesHtml(h.notes), 'salud:' + h.id);
         const recBox = (h) => { const n = h.date ? daysTo(h.date) : null;
             return evBox(n !== null && n >= 0 && n <= 7 ? 'is-soon' : n !== null && n < 0 ? 'ws-done' : '', '<span class="small ws-ev-time">' + esc(fshort(h.date)) + (h.time ? ' · ' + esc(h.time) + ' h' : '') + '</span>'
                 + (n === null ? '' : n < 0 ? tag('aprobado', { aprobado: 'Hecho' }) : tag(n <= 7 ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' })),
@@ -665,7 +670,7 @@
             + '<div class="ws-filters">' + select('hKind', st.hKind, { '': 'Todos los tipos', ...HEALTH_KIND }, 'Tipo') + (Object.keys(specs).length ? select('hSpec', st.hSpec, { '': 'Todas las especialidades', ...specs }, 'Especialidad') : '')
                 + (Object.keys(docs).length ? select('hDoc', st.hDoc, { '': 'Todos los profesionales', ...docs }, 'Profesional') : '') + '</div>'
             + (!all.length ? empty('Todavía no cargaste nada. Sumá un chequeo o un medicamento con “Nuevo registro”.') : !list.length ? empty('No hay registros con estos filtros.') : '')
-            + (meds.length ? '<p class="ws-day">Medicamentos que tomás</p>' + (takes.length ? '<p class="small ws-note">⏰ ' + takes.map((k) => '<strong>' + esc(k.x) + '</strong> ' + esc(k.h.title)).join(' · ') + '</p>' : '') + evGrid(meds.map(medBox).join('')) : '')
+            + (meds.length ? '<p class="ws-day">Medicamentos que tomás</p>' + (takes.length ? '<p class="small ws-note">⏰ ' + takes.map((k) => '<strong>' + esc(k.x) + '</strong> ' + esc(k.h.title) + (doseText(k.h) ? ' ' + esc(doseText(k.h)) : '')).join(' · ') + '</p>' : '') + evGrid(meds.map(medBox).join('')) : '')
             + (rest.length ? '<p class="ws-day">Chequeos, consultas y estudios</p>' + evGrid(rest.map(recBox).join('')) : '')
             + (oldMeds.length ? '<p class="ws-day">Medicamentos que ya no tomás</p>' + evGrid(oldMeds.map(medBox).join('')) : '');
     };
@@ -675,6 +680,8 @@
     const weekStart = () => { const d = new Date(today() + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
     const logOf = (r) => String(r.log || '').split(';').filter(Boolean);
     const doneWeek = (r) => logOf(r).some((x) => x >= weekStart() && x <= today());
+    const trainDays = (r) => (r.days ? String(r.days).split(',').filter((k) => WEEK[k]) : r.weekday ? [r.weekday] : []);
+    const dayDate = (k) => { const d = new Date(weekStart() + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + Object.keys(WEEK).indexOf(k)); return d.toISOString().slice(0, 10); }; // fecha de ese día en esta semana
     // Historial por mes: calendario con los días entrenados (de lo anotado con "Lo hice hoy") y, debajo, qué se hizo cada día
     const trainName = (r) => (['gym', 'otro'].includes(sportOf(r)) && r.exercise ? r.exercise : SPORT[sportOf(r)] + (subOf(r) ? ' · ' + subOf(r) : ''));
     const trainingHistory = (items) => {
@@ -705,19 +712,24 @@
         const subOpts = st.trSport === 'gym' ? GYM_ZONE : SUB[st.trSport] || null;
         if (!subOpts || !(st.trSub in subOpts)) st.trSub = '';
         const areaOk = (r) => (!st.trSport || sportOf(r) === st.trSport) && (!st.trSub || (st.trSport === 'gym' ? r.area === st.trSub : r.style === st.trSub));
-        let list = all.filter((r) => areaOk(r) && (!st.trDay || r.weekday === st.trDay));
-        if (st.trView === 'pendientes') list = list.filter((r) => !doneWeek(r)); if (st.trView === 'hechas') list = list.filter(doneWeek);
-        const scope = all.filter((r) => areaOk(r) && (!st.trDay || r.weekday === st.trDay)); const doneN = scope.filter(doneWeek).length;
+        // Cada ejercicio aparece en cada uno de sus días; "hecho" es por día (la fecha de ese día en esta semana). Sin día fijo: hecho si se hizo en la semana
+        const scope = all.filter((r) => areaOk(r) && (!st.trDay || trainDays(r).includes(st.trDay)));
+        const slots = scope.flatMap((r) => (trainDays(r).length ? trainDays(r).filter((k) => !st.trDay || k === st.trDay).map((k) => ({ r, k, date: dayDate(k) })) : [{ r, k: '', date: '' }]))
+            .map((x) => ({ ...x, done: x.date ? logOf(x.r).includes(x.date) : doneWeek(x.r) }));
+        let list = slots; if (st.trView === 'pendientes') list = list.filter((x) => !x.done); if (st.trView === 'hechas') list = list.filter((x) => x.done);
+        const doneN = slots.filter((x) => x.done).length;
         const sumWeek = (f) => scope.reduce((n, r) => n + logOf(r).filter((x) => x >= weekStart() && x <= t).length * (Number(String(r[f] || '').replace(',', '.')) || 0), 0);
         const mins = sumWeek('minutes'); const meters = sumWeek('meters'); const km = sumWeek('km');
         const detail = (r) => [r.sets && r.reps ? r.sets + ' × ' + r.reps : r.sets ? r.sets + ' series' : r.reps ? r.reps + ' rep.' : '', r.kg ? r.kg + ' kg' : '',
             r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ');
-        const box = (r) => { const done = doneWeek(r); const last = logOf(r).slice(-1)[0];
+        const box = ({ r, k, date, done }) => { const last = logOf(r).slice(-1)[0]; const mark = date || t; // el día que marca el botón
+            const btn = date && date > t ? '<span class="small muted">Te toca el ' + WEEK[k].toLowerCase() + '</span>'
+                : '<button type="button" class="' + (logOf(r).includes(mark) ? '' : 'primary') + '" data-ws-train="' + r.id + '|' + mark + '">' + (logOf(r).includes(mark) ? 'Desmarcar' : '✓ Lo hice ' + (mark === t ? 'hoy' : 'el ' + WEEK[k].toLowerCase())) + '</button>';
             return evBox(done ? 'is-train-done' : '', tag(done ? 'aprobado' : 'en-curso', { aprobado: '✓ Hecho', 'en-curso': SPORT[sportOf(r)] }) + '<span class="small muted">' + esc(done ? SPORT[sportOf(r)] + (sportOf(r) === 'gym' ? ' · ' + subOf(r) : '') : sportOf(r) === 'gym' ? subOf(r) : '') + '</span>',
                 esc(['gym', 'otro'].includes(sportOf(r)) && r.exercise ? r.exercise : sportOf(r) === 'gym' ? subOf(r) : subOf(r) || SPORT[sportOf(r)]), esc(detail(r)),
                 (detail(r) ? '<span class="small">' + esc(detail(r)) + '</span>' : '') + '<span class="small muted">' + (last ? 'Última vez: ' + esc(fshort(last)) + ' · ' + logOf(r).length + (logOf(r).length === 1 ? ' vez' : ' veces') : 'Todavía no lo hiciste') + '</span>' + notesHtml(r.notes)
-                    + '<button type="button" class="' + (logOf(r).includes(t) ? '' : 'primary') + '" data-ws-train="' + r.id + '">' + (logOf(r).includes(t) ? 'Desmarcar lo de hoy' : '✓ Lo hice hoy') + '</button>', 'entreno:' + r.id); };
-        const days = Object.keys(WEEK).concat('').map((k) => ({ k, items: list.filter((r) => (r.weekday || '') === k) })).filter((g) => g.items.length);
+                    + (trainDays(r).length > 1 ? '<span class="small muted">📅 ' + (trainDays(r).length === 7 ? 'Todos los días' : trainDays(r).map((x) => WEEK[x]).join(', ')) + '</span>' : '') + btn, 'entreno:' + r.id); };
+        const days = Object.keys(WEEK).concat('').map((k) => ({ k, items: list.filter((x) => x.k === k) })).filter((g) => g.items.length);
         const top = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>')
             + '<div class="ws-filters">' + seg('trView', st.trView, { todas: 'Toda la rutina', pendientes: 'Pendientes de la semana', hechas: 'Hechas esta semana', historial: 'Historial por mes' })
                 + select('trSport', st.trSport, { '': 'Todas las actividades', ...SPORT }, 'Actividad')
@@ -725,7 +737,7 @@
                 + select('trDay', st.trDay, { '': 'Todos los días', ...WEEK }, 'Día') + '</div>';
         if (st.trView === 'historial') { root('entrenamiento').innerHTML = top + trainingHistory(scope); return; }
         root('entrenamiento').innerHTML = top
-            + (scope.length ? kpiGrid([kpi(doneN + ' <small>de ' + scope.length + '</small>', 'Hechos esta semana'), mins ? kpi(mins + ' <small>min</small>', 'Minutos esta semana') : '',
+            + (scope.length ? kpiGrid([kpi(doneN + ' <small>de ' + slots.length + '</small>', 'Hechos esta semana'), mins ? kpi(mins + ' <small>min</small>', 'Minutos esta semana') : '',
                 meters ? kpi(meters.toLocaleString('es-AR') + ' <small>m</small>', 'Metros nadados esta semana') : '', km ? kpi(fmt(km) + ' <small>km</small>', 'Kilómetros esta semana') : '']) : '')
             + (days.length ? days.map((g) => '<p class="ws-day' + (g.k === todayKey ? ' is-today' : '') + '">' + (g.k === todayKey ? 'Hoy · ' : '') + (g.k ? WEEK[g.k] : 'Sin día fijo') + '</p>' + evGrid(g.items.map(box).join(''))).join('')
                 : empty(all.length ? 'No hay ejercicios con estos filtros.' : 'Armá tu rutina con “Nuevo ejercicio”: elegí la actividad, el día y, si querés, series, repeticiones y kilos.'));
@@ -756,7 +768,10 @@
     };
     const fieldHtml = (r) => ([name, label, type, opt]) => {
         const o = opt || {}; const v = r[name] ?? '';
-        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '') + (o.notBday ? ' data-ws-nobday' : '') + (o.areas ? ' data-ws-areas="' + o.areas.join(' ') + '"' : '');
+        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.course ? ' data-ws-course' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '') + (o.notBday ? ' data-ws-nobday' : '') + (o.areas ? ' data-ws-areas="' + o.areas.join(' ') + '"' : '');
+        if (type === 'days') { const sel = trainDays(r); // casillas: uno, varios o todos los días
+            return '<fieldset class="wide ws-days"><legend>' + label + '</legend><label class="ws-day-chip"><input type="checkbox" data-ws-alldays' + (sel.length === 7 ? ' checked' : '') + '> Todos los días</label>'
+                + Object.entries(WEEK).map(([k, l]) => '<label class="ws-day-chip"><input type="checkbox" name="_day" value="' + k + '"' + (sel.includes(k) ? ' checked' : '') + '> ' + l + '</label>').join('') + '</fieldset>'; }
         if (type === 'pick') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">' + esc(o.empty || '—') + '</option>' + o.values.map((x) => '<option' + (x === String(v) ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + (v && !o.values.includes(String(v)) ? '<option selected>' + esc(v) + '</option>' : '') + '</select></label>';
         if (type === 'line' && o.list) return '<label' + wide + '>' + label + '<input type="text" name="' + name + '" value="' + esc(v) + '" list="ws-list-' + name + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + '><datalist id="ws-list-' + name + '">' + o.list.map((x) => '<option value="' + esc(x) + '">').join('') + '</datalist></label>';
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string' && k !== 'hint').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
@@ -788,7 +803,10 @@
             const sync = () => { const fin = k.value === 'final'; o.hidden = o.disabled = !fin; if (!fin && s.value === 'inscripta') s.value = 'pendiente'; };
             k.addEventListener('change', sync); sync();
         }
-        if (kind === 'entreno') {
+        if (kind === 'entreno') { // "Todos los días" marca o desmarca los siete
+            const all = d.querySelector('[data-ws-alldays]'); const boxes = [...d.querySelectorAll('[name="_day"]')];
+            all.addEventListener('change', () => boxes.forEach((b) => { b.checked = all.checked; }));
+            boxes.forEach((b) => b.addEventListener('change', () => { all.checked = boxes.every((x) => x.checked); }));
             const sp = d.querySelector('[name="_sport"]'); if (r.area) sp.value = sportOf(r);
             const stl = d.querySelector('[name="style"]'); const cur = r.style || '';
             const sync = () => { const opts = SUB[sp.value]; if (!opts) return;
@@ -800,6 +818,9 @@
             const sw = d.querySelector('[name="' + f.switch + '"]');
             const sync = () => d.querySelectorAll('[data-ws-areas]').forEach((x) => { x.hidden = !x.dataset.wsAreas.split(' ').includes(sw.value); });
             sw.addEventListener('change', sync); sync();
+            const course = d.querySelector('[name="course"]');
+            if (course) { const syncCourse = () => d.querySelectorAll('[data-ws-course]').forEach((x) => { x.hidden = sw.value !== 'medicamento' || course.value !== 'temporal'; });
+                sw.addEventListener('change', syncCourse); course.addEventListener('change', syncCourse); syncCourse(); }
         }
         if (kind === 'trabajo') { // los datos del empleo aparecen solo con el tipo "Empleo"; un empleo nuevo arranca como "Activo"
             const k = d.querySelector('[name="kind"]'); const s = d.querySelector('[name="status"]');
@@ -863,10 +884,10 @@
         const set = e.target.closest('[data-ws-set]');
         if (set) { st[set.dataset.wsSet] = set.dataset.value; if (RENDER[current]) RENDER[current](); return; }
         const nw = e.target.closest('[data-ws-new]');
-        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
+        if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'salud' ? { unit: 'mg' } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
         const tr = e.target.closest('[data-ws-train]');
-        if (tr) { const rec = W().entreno.find((x) => x.id === Number(tr.dataset.wsTrain)); if (!rec) return; const t = today();
+        if (tr) { const [tid, tday] = tr.dataset.wsTrain.split('|'); const rec = W().entreno.find((x) => x.id === Number(tid)); if (!rec) return; const t = tday || today();
             const on = !logOf(rec).includes(t); const dates = (on ? logOf(rec).concat(t) : logOf(rec).filter((x) => x !== t)).sort().slice(-300);
             send({ action: 'save', kind: 'entreno', id: rec.id, updated: rec.updated || '', item: { ...rec, log: dates.join(';') } }, on ? '¡Bien! Quedó anotado' : 'Desmarcado'); return; }
         const pay = e.target.closest('[data-ws-pay]');
@@ -895,6 +916,7 @@
         e.preventDefault();
         const prev = editing.id ? (W()[editing.kind] || []).find((x) => x.id === editing.id) : null;
         const item = { ...(prev || {}), ...Object.fromEntries(new FormData(e.target)) };
+        if (e.target.querySelector('[name="_day"]')) { item.days = new FormData(e.target).getAll('_day').join(','); item.weekday = ''; delete item._day; }
         if ('_sport' in item) { if (item._sport !== 'gym') item.area = item._sport; if (!SUB[item._sport]) item.style = ''; delete item._sport; } // fuera del gimnasio, la actividad va en "area"
         if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
         if (editing.kind === 'curso') { st.studyTab = 'carreras'; if (st.studyGroup === 'carreras') st.studyGroup = 'todos'; } // para ver el curso recién guardado
@@ -939,6 +961,10 @@
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
             agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: e.birth ? '🎂 ' + e.title + (ageOf(e) > 0 ? ' cumple ' + ageOf(e) + ' años' : ' cumple años') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
+            // Medicamentos con recordatorio: cada toma del día (los de "por un tiempo", solo entre su desde y hasta)
+            w.salud.filter((h) => h.kind === 'medicamento' && h.status !== 'finalizado' && h.remind === 'si' && (h.course !== 'temporal' || ((!h.start || h.start <= t) && (!h.end || h.end >= t))))
+                .forEach((h) => String(h.hours || '').split(/\s*(?:,|;|\/|\by\b)\s*/).map((x) => x.trim()).filter(Boolean)
+                    .forEach((x) => out.push({ section: 'Salud', text: '💊 Tomar ' + h.title + (doseText(h) ? ' ' + doseText(h) : ''), date: t, time: x, scope: 'personal', go: 'salud' })));
             w.salud.filter((h) => h.kind !== 'medicamento' && h.date && h.date >= t).forEach((h) => out.push({ section: 'Salud', text: (HEALTH_KIND[h.kind] || '') + ': ' + h.title + (h.doctor ? ' · ' + h.doctor : ''), date: h.date, time: h.time || '', scope: 'personal', go: 'salud', noPast: true }));
             w.vencimiento.filter((v) => v.done !== 'si' && v.date && !isPaid(v, dueOf(v))).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));

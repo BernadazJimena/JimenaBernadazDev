@@ -101,6 +101,12 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-ev[open] summary > strong { white-space: normal; }
 .ws-ev summary { min-width: 0; }
 .ws-ev.is-train-done { border-left-color: var(--ok); }
+/* Entrenamiento: días de la semana con casillas (uno, varios o todos) */
+.ws-days { border: 0; display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; }
+.ws-days legend { font-weight: 700; margin-bottom: .35rem; padding: 0; }
+.ws-day-chip { align-items: center; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; display: inline-flex; font-size: .85rem; gap: .35rem; padding: .3rem .7rem; }
+.ws-day-chip:has(input:checked) { background: color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
+.ws-day-chip input { accent-color: var(--accent); margin: 0; }
 /* Entrenamiento: calendario del mes con los días entrenados */
 .ws-cal { display: grid; gap: .3rem; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: .4rem 0 1rem; }
 .ws-cal-h { color: var(--muted); font-size: .7rem; font-weight: 800; text-align: center; text-transform: uppercase; }
