@@ -28,6 +28,8 @@ export const MODULES = [
   m('gastos', 'Gastos', 'card', 'Personal', 'personal', { section: true }),
   m('vencimientos', 'Vencimientos', 'clock', 'Personal', 'personal', { badge: true, section: true }),
   m('metas', 'Metas', 'star', 'Personal', 'personal', { section: true }),
+  m('salud', 'Salud', 'heart', 'Personal', 'personal', { section: true }),
+  m('entrenamiento', 'Entrenamiento', 'activity', 'Personal', 'personal', { section: true }),
   m('clientes', 'Clientes', 'users', 'Comercial', 'jnb', { badge: true }),
   m('consultas', 'Consultas', 'mail', 'Comercial', 'jnb', { badge: true }),
   m('presupuestos', 'Presupuestos', 'file', 'Comercial', 'jnb', { badge: true }),

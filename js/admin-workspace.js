@@ -4,7 +4,7 @@
 // Son datos personales: no van en la copia JNB (worker/core/backup-policy.js).
 (() => {
     const panel = () => window.JNBPanel;
-    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], trabajo: [], gasto: [], vencimiento: [], meta: [], ...((panel().data() || {}).workspace || {}) });
+    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], curso: [], trabajo: [], gasto: [], vencimiento: [], meta: [], salud: [], entreno: [], ...((panel().data() || {}).workspace || {}) });
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const today = () => (window.JNBHolidays ? window.JNBHolidays.now().date : new Date().toISOString().slice(0, 10));
     const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -38,6 +38,25 @@
     const DL_KIND = { documento: 'Documento', turno: 'Turno', seguro: 'Seguro', impuesto: 'Impuesto', servicio: 'Servicio', suscripcion: 'Suscripción', cuota: 'Cuota', otro: 'Otro' };
     const DL_REPEAT = { '': 'Una sola vez', mensual: 'Todos los meses', anual: 'Todos los años' };
     const GOAL_AUTO = { '': 'Lo actualizo a mano', materias: 'Materias aprobadas (de Estudios)', promedio: 'Promedio (de Estudios)' };
+    const COURSE_STATUS = { 'en-curso': 'En curso', finalizado: 'Finalizado', abandonado: 'Abandonado' };
+    // Salud y entrenamiento
+    const HEALTH_KIND = { chequeo: 'Chequeo', medicamento: 'Medicamento', consulta: 'Consulta', estudio: 'Estudio o análisis', vacuna: 'Vacuna', otro: 'Otro' };
+    const TRAIN_AREA = { superior: 'Tren superior', inferior: 'Tren inferior', core: 'Core', completo: 'Cuerpo completo', cardio: 'Cardio', movilidad: 'Movilidad y elongación',
+        natacion: 'Natación', running: 'Running', ciclismo: 'Ciclismo', caminata: 'Caminata', yoga: 'Yoga o pilates', otro: 'Otro deporte' };
+    const GYM = ['superior', 'inferior', 'core', 'completo']; const DIST = ['running', 'ciclismo', 'caminata'];
+    const TIMED = Object.keys(TRAIN_AREA).filter((a) => !['superior', 'inferior'].includes(a));
+    const SWIM_STYLE = { '': 'Sin indicar', crol: 'Crol', pecho: 'Pecho', espalda: 'Espalda', mariposa: 'Mariposa', combinado: 'Combinado' };
+    const WEEK = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo' };
+    const EXERCISES = ['Press de banca', 'Press militar', 'Remo con barra', 'Remo con mancuerna', 'Dominadas', 'Jalón al pecho', 'Curl de bíceps', 'Tríceps en polea', 'Fondos', 'Flexiones', 'Vuelos laterales',
+        'Sentadilla', 'Peso muerto', 'Peso muerto rumano', 'Estocadas', 'Prensa', 'Hip thrust', 'Sillón de cuádriceps', 'Camilla de femorales', 'Gemelos', 'Abductores',
+        'Plancha', 'Plancha lateral', 'Abdominales', 'Crunch en polea', 'Russian twist', 'Elevación de piernas', 'Rueda abdominal', 'Cinta', 'Bicicleta fija', 'Elíptica', 'Soga', 'Escaladora', 'HIIT'];
+    const range = (a, b, step) => { const out = []; for (let x = a; x <= b + 1e-9; x += step) out.push(String(Math.round(x * 10) / 10)); return out; };
+    const KG = range(0.5, 10, 0.5).concat(range(12.5, 200, 2.5)).map((x) => x.replace('.', ','));
+    // Sin mayúsculas, sin acentos y sin espacios de más: "Cardiólogo", "cardiologo" y "CARDIOLOGO " son el mismo
+    const norm = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const variants = (list) => { const g = {}; list.filter((x) => norm(x)).forEach((x) => { const k = norm(x); (g[k] = g[k] || []).push(x.trim()); });
+        return Object.fromEntries(Object.entries(g).map(([k, v]) => { const best = v.find((x) => /[^\x00-\x7f]/.test(x)) || v[0]; return [k, best.charAt(0).toUpperCase() + best.slice(1)]; })
+            .sort((a, b) => a[1].localeCompare(b[1], 'es'))); };
     const GOAL_STATUS = { 'en-curso': 'En curso', cumplida: 'Cumplida', abandonada: 'Abandonada' };
     const subjectName = (id) => { const s = W().materia.find((x) => String(x.id) === String(id)); return s ? s.name : ''; };
 
@@ -73,6 +92,33 @@
             ['grade', 'Nota (número)', 'line', { max: 10, mode: 'decimal' }], ['result', 'O resultado', 'select', ACT_RESULT], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         // Los campos con job: true se ven solo cuando el tipo es "Empleo"
+        curso: { title: 'curso', fields: [
+            ['name', 'Curso', 'line', { required: true, max: 160, wide: true, hint: 'Diseño UX/UI' }], ['institution', 'Dónde lo hiciste', 'line', { max: 160, hint: 'Coderhouse, Udemy, Google…' }],
+            ['status', 'Estado', 'select', COURSE_STATUS], ['start', 'Desde', 'date'], ['end', 'Hasta', 'date'],
+            ['hours', 'Duración o carga horaria', 'line', { max: 20, hint: '40 h' }], ['certificate', 'Link del certificado', 'url', { hint: 'https://…' }],
+            ['url', 'Link del curso', 'url', { hint: 'https://…' }], ['notes', 'Notas', 'text', { max: 2000 }],
+        ] },
+        // Salud: los campos con areas se ven según el tipo (switch: 'kind')
+        salud: { title: 'registro', switch: 'kind', fields: [
+            ['kind', 'Tipo', 'select', HEALTH_KIND], ['title', 'Qué', 'line', { required: true, max: 160, wide: true, hint: 'Chequeo anual, Enalapril 10 mg…' }],
+            ['specialty', 'Especialidad', 'line', { max: 80, hint: 'Cardiólogo, clínica médica…' }], ['doctor', 'Profesional', 'line', { max: 120, hint: 'Dra. Pérez' }],
+            ['dose', 'Dosis', 'line', { max: 80, hint: '1 comprimido', areas: ['medicamento'] }], ['hours', 'A qué hora', 'line', { max: 120, hint: '08:00, 20:00', areas: ['medicamento'] }],
+            ['start', 'Desde', 'date', { areas: ['medicamento'] }], ['end', 'Hasta', 'date', { areas: ['medicamento'] }],
+            ['status', 'Estado', 'select', { activo: 'Lo estoy tomando', finalizado: 'Ya no lo tomo', areas: ['medicamento'] }],
+            ['date', 'Fecha', 'date', { areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['time', 'Hora', 'time', { areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
+            ['place', 'Lugar', 'line', { max: 160, areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
+            ['result', 'Resultado o indicaciones', 'text', { max: 2000, areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['notes', 'Notas', 'text', { max: 2000 }],
+        ] },
+        // Entrenamiento: según la actividad, series, repeticiones y kilos (gimnasio), estilo y metros (natación), kilómetros y minutos
+        entreno: { title: 'ejercicio', switch: 'area', fields: [
+            ['area', 'Actividad', 'select', TRAIN_AREA], ['weekday', 'Día', 'select', { '': 'Sin día fijo', ...WEEK }],
+            ['exercise', 'Ejercicio', 'line', { max: 120, wide: true, hint: 'Sentadilla', list: EXERCISES, areas: Object.keys(TRAIN_AREA).filter((a) => a !== 'natacion') }],
+            ['style', 'Estilo', 'select', { ...SWIM_STYLE, areas: ['natacion'] }],
+            ['sets', 'Series', 'pick', { values: range(1, 10, 1), empty: '—', areas: GYM }], ['reps', 'Repeticiones', 'pick', { values: range(1, 50, 1), empty: '—', areas: GYM }],
+            ['kg', 'Kilos', 'pick', { values: KG, empty: 'Sin peso', areas: GYM }],
+            ['meters', 'Metros', 'pick', { values: range(25, 5000, 25), empty: '—', areas: ['natacion'] }], ['km', 'Kilómetros', 'line', { max: 8, mode: 'decimal', hint: '5', areas: DIST }],
+            ['minutes', 'Duración de la sesión (minutos)', 'pick', { values: range(5, 240, 5), empty: '—', areas: TIMED }], ['notes', 'Notas', 'text', { max: 2000 }],
+        ] },
         trabajo: { title: 'registro', fields: [
             ['kind', 'Tipo', 'select', JOB_KIND], ['title', 'Puesto, búsqueda o curso', 'line', { required: true, max: 160 }],
             ['company', 'Empresa o institución', 'line', { max: 160 }], ['status', 'Estado', 'select', JOB_STATUS],
@@ -92,7 +138,7 @@
             ['title', 'Qué vence', 'line', { required: true, max: 160, wide: true, hint: 'Renovar el DNI' }], ['kind', 'Tipo', 'select', DL_KIND],
             ['date', 'Fecha', 'date'], ['repeat', 'Se repite', 'select', DL_REPEAT], ['time', 'Hora', 'time'], ['notice', 'Avisarme por mail (días antes)', 'line', { max: 3, mode: 'numeric', hint: '7' }],
             ['amount', 'Monto a pagar (en pesos)', 'line', { max: 20, mode: 'decimal', hint: 'Vacío si no se paga' }], ['category', 'Categoría en Gastos', 'select', { servicios: EXP_CAT.servicios, ...EXP_CAT }],
-            ['place', 'Lugar', 'line', { max: 160 }], ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho (si se repite, deja de avisar)' }], ['notes', 'Notas', 'text', { max: 2000 }],
+            ['place', 'Lugar', 'line', { max: 160 }], ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Pagado o hecho' }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         meta: { title: 'meta', fields: [
             ['title', 'Meta', 'line', { required: true, max: 160, wide: true, hint: 'Aprobar 4 materias' }], ['term', 'Período', 'line', { max: 80, hint: '2027 o 1er cuatrimestre 2027' }],
@@ -102,7 +148,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso' };
+    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trArea: '', trDay: '', trView: 'todas' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -113,7 +159,7 @@
     // Caja compacta que se despliega al tocarla (Agenda, Gastos y Vencimientos): arriba lo principal, adentro el detalle y el botón para editar
     const notesHtml = (t) => (t ? '<p class="small ws-ev-notes">' + esc(t).replace(/\n/g, '<br>') + '</p>' : '');
     const evBox = (cls, top, title, sub, body, openRef, btn, extra) => '<details class="ws-ev' + (cls ? ' ' + cls : '') + '"><summary><span class="ws-ev-top">' + top + '</span>'
-        + '<strong>' + title + '</strong>' + (sub ? '<span class="small muted">' + sub + '</span>' : '') + '</summary><div class="ws-ev-body">' + body
+        + '<strong>' + title + '</strong><span class="small muted">' + (sub || '&nbsp;') + '</span></summary><div class="ws-ev-body">' + body
         + '<button type="button" data-ws-open="' + openRef + '"' + (extra || '') + '>' + (btn || 'Editar') + '</button></div></details>';
     const evGrid = (html) => '<div class="ws-evs">' + html + '</div>';
 
@@ -296,10 +342,25 @@
     const renderStudies = () => {
         const t = today();
         const w = W();
-        const tabs = seg('studyTab', st.studyTab, { materias: 'Materias', actividades: 'TPs, exámenes y finales', horario: 'Horario', correlativas: 'Correlativas', carreras: 'Carreras' });
+        const tabs = seg('studyTab', st.studyTab, { materias: 'Materias', actividades: 'TPs, exámenes y finales', horario: 'Horario', correlativas: 'Correlativas', carreras: 'Carreras y cursos' });
         const careers = { '': 'Todas las carreras', ...Object.fromEntries(w.carrera.map((c) => [String(c.id), c.name])) };
         if (w.carrera.length < 2) st.studyCareer = ''; // con una sola carrera no hay filtro
         let body;
+        const coursesHtml = () => {
+            // Cursos: una caja por curso (dónde, desde y hasta, duración) con el link del certificado; los en curso primero
+            const span = (c) => { if (!c.start) return c.end ? 'Hasta el ' + fshort(c.end) : '';
+                const months = c.end ? Math.max(0, Math.round((new Date(c.end) - new Date(c.start)) / 2629746e3)) : null;
+                return fshort(c.start) + ' – ' + (c.end ? fshort(c.end) : 'hoy') + (months ? ' (' + months + (months === 1 ? ' mes' : ' meses') + ')' : ''); };
+            const list = w.curso.slice().sort((a, b) => (a.status === 'en-curso' ? 0 : 1) - (b.status === 'en-curso' ? 0 : 1) || (b.end || b.start || '').localeCompare(a.end || a.start || ''));
+            return list.length ? evGrid(list.map((c) => evBox(c.status === 'en-curso' ? 'is-soon' : c.status === 'abandonado' ? 'ws-done' : '',
+                '<span class="small ws-ev-time">' + esc(span(c) || 'Sin fechas') + '</span>' + tag(c.status === 'finalizado' ? 'aprobado' : c.status === 'abandonado' ? 'desaprobado' : 'en-curso', { aprobado: 'Finalizado', desaprobado: 'Abandonado', 'en-curso': 'En curso' }),
+                esc(c.name), [c.institution, c.hours].filter(Boolean).map(esc).join(' · '),
+                (c.institution ? '<span class="small">🏫 ' + esc(c.institution) + '</span>' : '') + (c.hours ? '<span class="small">⏱ ' + esc(c.hours) + '</span>' : '')
+                    + (c.certificate ? '<a class="small" href="' + esc(c.certificate) + '" target="_blank" rel="noopener">📜 Ver el certificado</a>' : c.status === 'finalizado' ? '<span class="small muted">Sin link del certificado</span>' : '')
+                    + (c.url ? '<a class="small" href="' + esc(c.url) + '" target="_blank" rel="noopener">🔗 Página del curso</a>' : '') + notesHtml(c.notes),
+                'curso:' + c.id)).join(''))
+                : empty('Todavía no cargaste cursos. Sumá el primero con “Nuevo curso”: dónde lo hiciste, desde y hasta cuándo y el link del certificado.');
+        };
         if (st.studyTab === 'carreras') {
             // Avance: porcentaje del plan aprobado y promedio de las materias aprobadas en cada cuatrimestre
             const progress = (k) => {
@@ -333,6 +394,11 @@
             body = w.carrera.length || loose.length ? '<div class="ws-careers">' + w.carrera.map(card).join('') + (loose.length && !w.carrera.length ? card(null) : '') + '</div>'
                 + (loose.length && w.carrera.length ? '<p class="small muted ws-note">' + (loose.length === 1 ? 'Esta materia no tiene carrera' : 'Estas materias no tienen carrera') + ' y no se cuentan: ' + loose.map((s) => '<button type="button" class="ws-inline" data-ws-open="materia:' + s.id + '">' + esc(s.name) + '</button>').join(', ') + '. Abrila y elegí la carrera.</p>' : '')
                 : empty('Empezá cargando tu carrera con “Nueva carrera”. Si cursás dos en simultáneo, cargá las dos.');
+            // Lista para agrupar: solo carreras, solo cursos o las dos cosas
+            const g = st.studyGroup;
+            body = '<div class="ws-filters">' + select('studyGroup', g, { todos: 'Carreras y cursos', carreras: 'Solo carreras', cursos: 'Solo cursos' }, 'Qué ver') + '</div>'
+                + (g !== 'cursos' ? (g === 'todos' ? '<p class="ws-day">Carreras</p>' : '') + body : '')
+                + (g !== 'carreras' ? (g === 'todos' ? '<p class="ws-day">Cursos</p>' : '') + coursesHtml() : '');
         } else if (st.studyTab === 'materias') {
             const view = st.subjView; // lista desplegable: en curso, pendientes, aprobadas o todas
             // Cursando (inscriptas o en curso) y Pendientes (todavía no cursadas) van sin filtro de año ni cuatrimestre; Aprobadas y Todas, con filtros
@@ -412,8 +478,8 @@
                             + '<td data-label="Tipo">' + esc(ACT_KIND[a.kind] || a.kind) + '</td><td data-label="Estado">' + tag(actStatus(a), ACT_STATUS) + res + '</td></tr>'; }).join('')
                     + '</tbody></table>' : empty(st.studyView === 'abiertas' ? 'No tenés TPs, exámenes ni inscripciones a finales pendientes.' : 'No hay actividades para mostrar.'));
         }
-        root('estudios').innerHTML = head('Estudios', 'Carreras, materias, notas, promedios, TPs, exámenes y finales.',
-            '<button type="button" data-ws-new="carrera">+ Nueva carrera</button><button type="button" data-ws-new="materia">+ Nueva materia</button><button type="button" class="primary" data-ws-new="actividad">+ Nueva actividad</button>')
+        root('estudios').innerHTML = head('Estudios', 'Carreras, materias, notas, promedios, TPs, exámenes, finales y cursos.',
+            '<button type="button" data-ws-new="carrera">+ Nueva carrera</button><button type="button" data-ws-new="materia">+ Nueva materia</button><button type="button" data-ws-new="curso">+ Nuevo curso</button><button type="button" class="primary" data-ws-new="actividad">+ Nueva actividad</button>')
             + '<div class="ws-filters">' + tabs + '</div>' + body;
     };
 
@@ -499,25 +565,41 @@
         let d = make();
         for (let i = 0; d < t && i < 1200; i++) { if (repeat === 'anual') y++; else if (++m > 12) { m = 1; y++; } d = make(); }
         return d; };
-    const dueOf = (v) => (v.done === 'si' ? v.date : nextDue(v.date, v.repeat, today()));
+    // Pagos: "paid" guarda las fechas pagadas. En los que se repiten y tienen monto, si el último vencimiento (de hasta un mes atrás)
+    // quedó sin pagar, se muestra ese, como vencido, hasta que se marque como pagado; si no, el próximo.
+    const paidOf = (v) => String(v.paid || '').split(';').filter(Boolean);
+    const isPaid = (v, d) => !!d && paidOf(v).includes(d);
+    const prevDue = (v, next) => { if (!v.repeat || !next) return '';
+        const day = Number(v.date.slice(8)); let y = Number(next.slice(0, 4)); let m = Number(next.slice(5, 7));
+        if (v.repeat === 'anual') y--; else if (--m < 1) { m = 12; y--; }
+        const d = y + '-' + String(m).padStart(2, '0') + '-' + String(Math.min(day, new Date(Date.UTC(y, m, 0)).getUTCDate())).padStart(2, '0');
+        return d >= v.date ? d : ''; };
+    const dueOf = (v) => { if (v.done === 'si' || !v.repeat) return v.date;
+        const next = nextDue(v.date, v.repeat, today()); const prev = prevDue(v, next);
+        return prev && !isPaid(v, prev) && daysTo(prev) >= -31 && money(amountFor(v, prev.slice(0, 7))) !== null ? prev : next; };
     const repeatText = (v) => (v.repeat === 'mensual' && v.date ? 'Todos los ' + Number(v.date.slice(8)) + ' de cada mes' : v.repeat === 'anual' && v.date ? 'Todos los años el ' + Number(v.date.slice(8)) + '/' + Number(v.date.slice(5, 7)) : '');
     const renderDeadlines = () => {
         let list = W().vencimiento.map((v) => ({ ...v, date: dueOf(v), first: v.date }));
         if (st.dlKind) list = list.filter((v) => v.kind === st.dlKind);
         list.sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.id - b.id);
         if (st.dlView === 'proximos') list = list.filter((v) => v.done !== 'si');
-        if (st.dlView === 'hechos') list = list.filter((v) => v.done === 'si').reverse();
+        if (st.dlView === 'hechos') list = list.filter((v) => v.done === 'si' || (v.repeat && isPaid(v, v.date))).reverse();
         root('vencimientos').innerHTML = head('Vencimientos', 'DNI, carnet, seguros, impuestos, cuotas mensuales y turnos. Te llega un mail a tu casilla de contacto los días antes que elijas (por defecto, 7).', '<button type="button" class="primary" data-ws-new="vencimiento">+ Nuevo vencimiento</button>')
-            + '<div class="ws-filters">' + seg('dlView', st.dlView, { proximos: 'Pendientes', hechos: 'Hechos', todos: 'Todos' }) + select('dlKind', st.dlKind, { '': 'Todos los tipos', ...DL_KIND }, 'Tipo') + '</div>'
+            + '<div class="ws-filters">' + seg('dlView', st.dlView, { proximos: 'Pendientes', hechos: 'Pagados o hechos', todos: 'Todos' }) + select('dlKind', st.dlKind, { '': 'Todos los tipos', ...DL_KIND }, 'Tipo') + '</div>'
             + (list.length ? evGrid(list.map((v) => { const n = v.date ? daysTo(v.date) : null;
-                    const state = v.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : n === null ? tag('pendiente', { pendiente: 'Sin fecha' })
-                        : n < 0 ? tag('desaprobado', { desaprobado: 'Vencido' }) : tag(n <= noticeOf(v) ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' });
+                    const pays = money(amountFor(v, (v.date || today()).slice(0, 7))) !== null; const paid = isPaid(v, v.date);
+                    const state = v.done === 'si' ? tag(v.repeat ? 'pendiente' : 'aprobado', { pendiente: 'Dado de baja', aprobado: pays ? 'Pagado' : 'Hecho' })
+                        : paid ? tag('aprobado', { aprobado: 'Pagado' }) : n === null ? tag('pendiente', { pendiente: 'Sin fecha' })
+                        : n < 0 ? tag('desaprobado', { desaprobado: pays ? 'Vencido · sin pagar' : 'Vencido' }) : tag(n <= noticeOf(v) ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' });
                     const rep = repeatText({ ...v, date: v.first }); const amt = money(amountFor(v, today().slice(0, 7)));
-                    return evBox(v.done === 'si' ? 'ws-done' : n !== null && n < 0 ? 'is-late' : n !== null && n <= noticeOf(v) ? 'is-soon' : '',
+                    // Botón para marcar el pago de esta fecha (o "hecho" si no se paga); en los que se repiten, cada mes por separado
+                    const payBtn = v.done === 'si' || !v.date || (!pays && v.repeat) ? '' : '<button type="button" class="' + (paid ? '' : 'primary') + '" data-ws-pay="' + v.id + '|' + v.date + '">'
+                        + (paid ? 'Desmarcar el pago' : pays ? '✓ Marcar como pagado' + (v.repeat ? ' (' + MONTHS[Number(v.date.slice(5, 7)) - 1] + ')' : '') : '✓ Marcar como hecho') + '</button>';
+                    return evBox(v.done === 'si' || paid ? 'ws-done' : n !== null && n < 0 ? 'is-late' : n !== null && n <= noticeOf(v) ? 'is-soon' : '',
                         '<span class="small ws-ev-time">' + esc(fshort(v.date)) + (v.time ? ' · ' + esc(v.time) + ' h' : '') + '</span>' + state,
                         (rep ? '🔁 ' : '') + esc(v.title), esc(DL_KIND[v.kind] || v.kind) + (amt !== null ? ' · ' + ars(amt) : ''),
                         (rep ? '<span class="small">🔁 ' + esc(rep) + '</span>' : '') + (amt !== null ? '<span class="small">💲 ' + ars(amt) + ' este mes · suma en Gastos (' + esc((EXP_CAT[v.category] || EXP_CAT.otros).toLowerCase()) + ')</span>' : '')
-                            + (v.place ? '<span class="small">📍 ' + esc(v.place) + '</span>' : '') + (v.done !== 'si' ? '<span class="small muted">Aviso por mail ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + notesHtml(v.notes),
+                            + (v.place ? '<span class="small">📍 ' + esc(v.place) + '</span>' : '') + payBtn + (v.done !== 'si' && !paid ? '<span class="small muted">Aviso por mail ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + notesHtml(v.notes),
                         'vencimiento:' + v.id); }).join(''))
                 : empty(st.dlView === 'proximos' ? 'No tenés vencimientos pendientes. Cargá el primero con “Nuevo vencimiento”.' : 'No hay vencimientos para mostrar.'));
     };
@@ -548,8 +630,71 @@
             }).join('') + '</div>' : empty(st.goalView === 'en-curso' ? 'No tenés metas en curso. Sumá la primera con “Nueva meta”.' : 'No hay metas para mostrar.'));
     };
 
-    const RENDER = { 'mi-agenda': renderAgenda, estudios: renderStudies, trabajo: renderJobs, gastos: renderExpenses, vencimientos: renderDeadlines, metas: renderGoals };
-    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', trabajo: 'trabajo', gasto: 'gastos', vencimiento: 'vencimientos', meta: 'metas' };
+    // ---- Salud: medicamentos que tomás (con sus horarios) y chequeos, consultas, estudios y vacunas; filtros por tipo, especialidad y profesional
+    const renderHealth = () => {
+        const all = W().salud; const t = today();
+        const specs = variants(all.map((h) => h.specialty)); const docs = variants(all.map((h) => h.doctor));
+        if (st.hSpec && !specs[st.hSpec]) st.hSpec = ''; if (st.hDoc && !docs[st.hDoc]) st.hDoc = '';
+        const list = all.filter((h) => (!st.hKind || h.kind === st.hKind) && (!st.hSpec || norm(h.specialty) === st.hSpec) && (!st.hDoc || norm(h.doctor) === st.hDoc));
+        const who = (h) => [h.specialty ? specs[norm(h.specialty)] : '', h.doctor ? docs[norm(h.doctor)] : ''].filter(Boolean).map(esc).join(' · ');
+        const hoursOf = (h) => String(h.hours || '').split(/\s*(?:,|;|\by\b|\/)\s*/).map((x) => x.trim()).filter(Boolean);
+        const meds = list.filter((h) => h.kind === 'medicamento' && h.status !== 'finalizado').sort((a, b) => String(a.title).localeCompare(String(b.title), 'es'));
+        const oldMeds = list.filter((h) => h.kind === 'medicamento' && h.status === 'finalizado');
+        const rest = list.filter((h) => h.kind !== 'medicamento').sort((a, b) => { const fa = (a.date || '') >= t; const fb = (b.date || '') >= t;
+            return fa !== fb ? (fa ? -1 : 1) : fa ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || ''); });
+        const takes = meds.flatMap((h) => hoursOf(h).map((x) => ({ x, h }))).sort((a, b) => a.x.localeCompare(b.x, 'es', { numeric: true }));
+        const medBox = (h) => evBox(h.status === 'finalizado' ? 'ws-done' : '', '<span class="small ws-ev-time">' + (hoursOf(h).length ? esc(hoursOf(h).join(' · ')) : 'Sin horario') + '</span>' + (h.status === 'finalizado' ? tag('pendiente', { pendiente: 'Ya no lo tomo' }) : ''),
+            '💊 ' + esc(h.title), [h.dose ? esc(h.dose) : '', who(h)].filter(Boolean).join(' · '),
+            (h.dose ? '<span class="small">Dosis: ' + esc(h.dose) + '</span>' : '') + (who(h) ? '<span class="small">🩺 Lo indicó: ' + who(h) + '</span>' : '')
+                + (h.start || h.end ? '<span class="small">📅 ' + (h.start ? 'Desde el ' + esc(fshort(h.start)) : '') + (h.end ? (h.start ? ' hasta el ' : 'Hasta el ') + esc(fshort(h.end)) : '') + '</span>' : '') + notesHtml(h.notes), 'salud:' + h.id);
+        const recBox = (h) => { const n = h.date ? daysTo(h.date) : null;
+            return evBox(n !== null && n >= 0 && n <= 7 ? 'is-soon' : n !== null && n < 0 ? 'ws-done' : '', '<span class="small ws-ev-time">' + esc(fshort(h.date)) + (h.time ? ' · ' + esc(h.time) + ' h' : '') + '</span>'
+                + (n === null ? '' : n < 0 ? tag('aprobado', { aprobado: 'Hecho' }) : tag(n <= 7 ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' })),
+                esc(h.title), [esc(HEALTH_KIND[h.kind] || h.kind), who(h)].filter(Boolean).join(' · '),
+                (who(h) ? '<span class="small">🩺 ' + who(h) + '</span>' : '') + (h.place ? '<span class="small">📍 ' + esc(h.place) + '</span>' : '')
+                    + (h.result ? '<p class="small ws-ev-notes"><strong>Resultado:</strong> ' + esc(h.result).replace(/\n/g, '<br>') + '</p>' : '') + notesHtml(h.notes), 'salud:' + h.id); };
+        root('salud').innerHTML = head('Salud', 'Chequeos, consultas, estudios, vacunas y los medicamentos que tomás, con sus horarios y quién te los indicó.', '<button type="button" class="primary" data-ws-new="salud">+ Nuevo registro</button>')
+            + '<div class="ws-filters">' + select('hKind', st.hKind, { '': 'Todos los tipos', ...HEALTH_KIND }, 'Tipo') + (Object.keys(specs).length ? select('hSpec', st.hSpec, { '': 'Todas las especialidades', ...specs }, 'Especialidad') : '')
+                + (Object.keys(docs).length ? select('hDoc', st.hDoc, { '': 'Todos los profesionales', ...docs }, 'Profesional') : '') + '</div>'
+            + (!all.length ? empty('Todavía no cargaste nada. Sumá un chequeo o un medicamento con “Nuevo registro”.') : !list.length ? empty('No hay registros con estos filtros.') : '')
+            + (meds.length ? '<p class="ws-day">Medicamentos que tomás</p>' + (takes.length ? '<p class="small ws-note">⏰ ' + takes.map((k) => '<strong>' + esc(k.x) + '</strong> ' + esc(k.h.title)).join(' · ') + '</p>' : '') + evGrid(meds.map(medBox).join('')) : '')
+            + (rest.length ? '<p class="ws-day">Chequeos, consultas y estudios</p>' + evGrid(rest.map(recBox).join('')) : '')
+            + (oldMeds.length ? '<p class="ws-day">Medicamentos que ya no tomás</p>' + evGrid(oldMeds.map(medBox).join('')) : '');
+    };
+
+    // ---- Entrenamiento: rutina por día; cada ejercicio se marca como hecho y queda anotado el día (log)
+    const DOW = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const weekStart = () => { const d = new Date(today() + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
+    const logOf = (r) => String(r.log || '').split(';').filter(Boolean);
+    const doneWeek = (r) => logOf(r).some((x) => x >= weekStart() && x <= today());
+    const renderTraining = () => {
+        const all = W().entreno; const t = today(); const todayKey = DOW[new Date(t + 'T12:00:00Z').getUTCDay()];
+        const areaOk = (r) => !st.trArea || (st.trArea === 'gym' ? GYM.includes(r.area) : st.trArea === 'deportes' ? !GYM.includes(r.area) && r.area !== 'cardio' : r.area === st.trArea);
+        let list = all.filter((r) => areaOk(r) && (!st.trDay || r.weekday === st.trDay));
+        if (st.trView === 'pendientes') list = list.filter((r) => !doneWeek(r)); if (st.trView === 'hechas') list = list.filter(doneWeek);
+        const scope = all.filter((r) => areaOk(r) && (!st.trDay || r.weekday === st.trDay)); const doneN = scope.filter(doneWeek).length;
+        const sumWeek = (f) => scope.reduce((n, r) => n + logOf(r).filter((x) => x >= weekStart() && x <= t).length * (Number(String(r[f] || '').replace(',', '.')) || 0), 0);
+        const mins = sumWeek('minutes'); const meters = sumWeek('meters'); const km = sumWeek('km');
+        const detail = (r) => [r.sets && r.reps ? r.sets + ' × ' + r.reps : r.sets ? r.sets + ' series' : r.reps ? r.reps + ' rep.' : '', r.kg ? r.kg + ' kg' : '',
+            r.area === 'natacion' && r.style ? SWIM_STYLE[r.style] : '', r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ');
+        const box = (r) => { const done = doneWeek(r); const last = logOf(r).slice(-1)[0];
+            return evBox(done ? 'is-train-done' : '', tag(done ? 'aprobado' : 'en-curso', { aprobado: '✓ Hecho', 'en-curso': TRAIN_AREA[r.area] || r.area }) + (done ? '<span class="small muted">' + esc(TRAIN_AREA[r.area] || '') + '</span>' : ''),
+                esc(r.area === 'natacion' ? 'Natación' + (r.style ? ' · ' + SWIM_STYLE[r.style] : '') : r.exercise || TRAIN_AREA[r.area]), esc(detail(r)),
+                (detail(r) ? '<span class="small">' + esc(detail(r)) + '</span>' : '') + '<span class="small muted">' + (last ? 'Última vez: ' + esc(fshort(last)) + ' · ' + logOf(r).length + (logOf(r).length === 1 ? ' vez' : ' veces') : 'Todavía no lo hiciste') + '</span>' + notesHtml(r.notes)
+                    + '<button type="button" class="' + (logOf(r).includes(t) ? '' : 'primary') + '" data-ws-train="' + r.id + '">' + (logOf(r).includes(t) ? 'Desmarcar lo de hoy' : '✓ Lo hice hoy') + '</button>', 'entreno:' + r.id); };
+        const days = Object.keys(WEEK).concat('').map((k) => ({ k, items: list.filter((r) => (r.weekday || '') === k) })).filter((g) => g.items.length);
+        root('entrenamiento').innerHTML = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>')
+            + '<div class="ws-filters">' + seg('trView', st.trView, { todas: 'Toda la rutina', pendientes: 'Pendientes de la semana', hechas: 'Hechas esta semana' })
+                + select('trArea', st.trArea, { '': 'Todas las actividades', gym: 'Gimnasio (todo)', ...TRAIN_AREA, deportes: 'Deportes (todos)' }, 'Actividad')
+                + select('trDay', st.trDay, { '': 'Todos los días', ...WEEK }, 'Día') + '</div>'
+            + (scope.length ? kpiGrid([kpi(doneN + ' <small>de ' + scope.length + '</small>', 'Hechos esta semana'), mins ? kpi(mins + ' <small>min</small>', 'Minutos esta semana') : '',
+                meters ? kpi(meters.toLocaleString('es-AR') + ' <small>m</small>', 'Metros nadados esta semana') : '', km ? kpi(fmt(km) + ' <small>km</small>', 'Kilómetros esta semana') : '']) : '')
+            + (days.length ? days.map((g) => '<p class="ws-day' + (g.k === todayKey ? ' is-today' : '') + '">' + (g.k === todayKey ? 'Hoy · ' : '') + (g.k ? WEEK[g.k] : 'Sin día fijo') + '</p>' + evGrid(g.items.map(box).join(''))).join('')
+                : empty(all.length ? 'No hay ejercicios con estos filtros.' : 'Armá tu rutina con “Nuevo ejercicio”: elegí la actividad, el día y, si querés, series, repeticiones y kilos.'));
+    };
+
+    const RENDER = { 'mi-agenda': renderAgenda, salud: renderHealth, entrenamiento: renderTraining, estudios: renderStudies, trabajo: renderJobs, gastos: renderExpenses, vencimientos: renderDeadlines, metas: renderGoals };
+    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', curso: 'estudios', trabajo: 'trabajo', gasto: 'gastos', vencimiento: 'vencimientos', salud: 'salud', entreno: 'entrenamiento', meta: 'metas' };
     let current = '';
 
     // ---- Contadores del menú: agenda de hoy, entregas y exámenes de los próximos 7 días (o vencidos), entrevistas próximas
@@ -559,7 +704,7 @@
         const ag = agendaItems().filter((e) => e.done !== 'si' && e.date === t).length;
         const st7 = w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date && a.date <= week).length;
         const jb = w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.date >= t && j.date <= week).length;
-        const dl = w.vencimiento.filter((v) => v.done !== 'si' && v.date && daysTo(dueOf(v)) <= noticeOf(v)).length;
+        const dl = w.vencimiento.filter((v) => v.done !== 'si' && v.date && !isPaid(v, dueOf(v)) && daysTo(dueOf(v)) <= noticeOf(v)).length;
         set('vencimientos', dl, dl + (dl === 1 ? ' vencimiento cerca o vencido' : ' vencimientos cerca o vencidos'));
         set('mi-agenda', ag, ag + ' para hoy'); set('estudios', st7, st7 + ' en los próximos 7 días o vencidas'); set('trabajo', jb, jb + ' en los próximos 7 días');
     };
@@ -573,8 +718,10 @@
     };
     const fieldHtml = (r) => ([name, label, type, opt]) => {
         const o = opt || {}; const v = r[name] ?? '';
-        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '') + (o.notBday ? ' data-ws-nobday' : '');
-        if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+        const wide = (type === 'text' || o.wide ? ' class="wide"' : '') + (o.job ? ' data-ws-job' : o.nojob ? ' data-ws-nojob' : '') + (o.notBday ? ' data-ws-nobday' : '') + (o.areas ? ' data-ws-areas="' + o.areas.join(' ') + '"' : '');
+        if (type === 'pick') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">' + esc(o.empty || '—') + '</option>' + o.values.map((x) => '<option' + (x === String(v) ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + (v && !o.values.includes(String(v)) ? '<option selected>' + esc(v) + '</option>' : '') + '</select></label>';
+        if (type === 'line' && o.list) return '<label' + wide + '>' + label + '<input type="text" name="' + name + '" value="' + esc(v) + '" list="ws-list-' + name + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + '><datalist id="ws-list-' + name + '">' + o.list.map((x) => '<option value="' + esc(x) + '">').join('') + '</datalist></label>';
+        if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string' && k !== 'hint').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
         if (type === 'career') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">Sin carrera</option>' + W().carrera.map((c) => '<option value="' + c.id + '"' + (String(c.id) === String(v) ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></label>';
         if (type === 'term') { // dos listas: cuatrimestre y año (se guarda como "1er cuatrimestre 2026")
             const y0 = Number(today().slice(0, 4)); const ry = termYear(r); const rh = termHalf(r);
@@ -593,7 +740,7 @@
         const r = rec || { id: 0, updated: '', ...(preset || {}) };
         editing = { kind, id: r.id || 0, updated: r.updated || '' };
         const d = dialog();
-        d.innerHTML = '<form method="dialog" class="task-form ws-form"><div class="task-form-head"><strong>' + (r.id ? 'Editar ' : ['agenda', 'trabajo', 'gasto', 'vencimiento'].includes(kind) ? 'Nuevo ' : 'Nueva ') + f.title + '</strong>'
+        d.innerHTML = '<form method="dialog" class="task-form ws-form"><div class="task-form-head"><strong>' + (r.id ? 'Editar ' : ['agenda', 'trabajo', 'gasto', 'vencimiento', 'curso', 'salud', 'entreno'].includes(kind) ? 'Nuevo ' : 'Nueva ') + f.title + '</strong>'
             + '<button type="button" class="task-icon-btn" data-ws-close aria-label="Cerrar">×</button></div>'
             + '<div class="task-form-body"><div class="task-form-grid">' + f.fields.map(fieldHtml(r)).join('') + '</div></div>'
             + '<div class="task-form-foot">' + (r.id ? '<button type="button" data-ws-delete>Eliminar</button>' : '<span></span>')
@@ -603,6 +750,11 @@
             const sync = () => { const fin = k.value === 'final'; o.hidden = o.disabled = !fin; if (!fin && s.value === 'inscripta') s.value = 'pendiente'; };
             k.addEventListener('change', sync); sync();
         }
+        if (f.switch) { // campos que dependen de otro (tipo de registro de salud, actividad del entrenamiento)
+            const sw = d.querySelector('[name="' + f.switch + '"]');
+            const sync = () => d.querySelectorAll('[data-ws-areas]').forEach((x) => { x.hidden = !x.dataset.wsAreas.split(' ').includes(sw.value); });
+            sw.addEventListener('change', sync); sync();
+        }
         if (kind === 'trabajo') { // los datos del empleo aparecen solo con el tipo "Empleo"; un empleo nuevo arranca como "Activo"
             const k = d.querySelector('[name="kind"]'); const s = d.querySelector('[name="status"]');
             const sync = () => { const job = k.value === 'empleo';
@@ -611,6 +763,11 @@
                 d.querySelector('[name="title"]').previousSibling.textContent = job ? 'Puesto' : 'Puesto, búsqueda o curso';
                 if (!r.id && job && s.value === 'pendiente') s.value = 'activo'; };
             k.addEventListener('change', sync); sync();
+        }
+        if (kind === 'vencimiento') { // estado: "Pagado o hecho" en los de una vez; "Dado de baja" en los que se repiten (cada mes se paga con el botón de la caja)
+            const rp = d.querySelector('[name="repeat"]'); const ds = d.querySelector('[name="done"]');
+            const sync = () => { ds.options[0].text = rp.value ? 'Activo' : 'Pendiente'; ds.options[1].text = rp.value ? 'Dado de baja (deja de repetirse y de avisar)' : 'Pagado o hecho'; };
+            rp.addEventListener('change', sync); sync();
         }
         if (kind === 'vencimiento') { // el monto es el de un mes: el que se abrió desde Gastos o el actual; los meses anteriores no cambian
             const m = editMonth || today().slice(0, 7); const a = d.querySelector('[name="amount"]');
@@ -662,6 +819,15 @@
         const nw = e.target.closest('[data-ws-new]');
         if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
+        const tr = e.target.closest('[data-ws-train]');
+        if (tr) { const rec = W().entreno.find((x) => x.id === Number(tr.dataset.wsTrain)); if (!rec) return; const t = today();
+            const on = !logOf(rec).includes(t); const dates = (on ? logOf(rec).concat(t) : logOf(rec).filter((x) => x !== t)).sort().slice(-300);
+            send({ action: 'save', kind: 'entreno', id: rec.id, updated: rec.updated || '', item: { ...rec, log: dates.join(';') } }, on ? '¡Bien! Quedó anotado' : 'Desmarcado'); return; }
+        const pay = e.target.closest('[data-ws-pay]');
+        if (pay) { const [id, day] = pay.dataset.wsPay.split('|'); const rec = W().vencimiento.find((x) => x.id === Number(id)); if (!rec) return;
+            const on = !isPaid(rec, day); const dates = (on ? paidOf(rec).concat(day) : paidOf(rec).filter((x) => x !== day)).sort().slice(-60);
+            const item = { ...rec, paid: dates.join(';') }; if (!rec.repeat) item.done = on ? 'si' : 'no';
+            send({ action: 'save', kind: 'vencimiento', id: rec.id, updated: rec.updated || '', item }, on ? 'Marcado como pagado' : 'Pago desmarcado'); return; }
         const op = e.target.closest('[data-ws-open]');
         if (op) { const [kind, id] = op.dataset.wsOpen.split(':'); const rec = W()[kind].find((x) => x.id === Number(id)); editMonth = op.dataset.wsMonth || ''; if (rec) open(kind, rec); return; }
         if (e.target.closest('[data-ws-close]')) { close(); return; }
@@ -681,8 +847,10 @@
     document.addEventListener('submit', (e) => {
         if (!e.target.classList.contains('ws-form') || !editing) return;
         e.preventDefault();
-        const item = Object.fromEntries(new FormData(e.target));
+        const prev = editing.id ? (W()[editing.kind] || []).find((x) => x.id === editing.id) : null;
+        const item = { ...(prev || {}), ...Object.fromEntries(new FormData(e.target)) };
         if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
+        if (editing.kind === 'curso') { st.studyTab = 'carreras'; if (st.studyGroup === 'carreras') st.studyGroup = 'todos'; } // para ver el curso recién guardado
         if (editing.kind === 'vencimiento') { // guarda el monto en el historial desde ese mes, sin cambiar los anteriores
             const rec = W().vencimiento.find((x) => x.id === editing.id); const m = editing.month || today().slice(0, 7);
             const h = rec ? amountsOf(rec) : {};
@@ -712,6 +880,9 @@
             w.vencimiento.filter((v) => hit(v.title, v.place, v.notes)).forEach((v) => out.push({ go: 'vencimientos|vencimiento:' + v.id, title: '⏰ ' + v.title, sub: 'Vencimiento' + (v.date ? ' · ' + fshort(v.date) : ''), scope: 'personal' }));
             w.meta.filter((g) => hit(g.title, g.term, g.notes)).forEach((g) => out.push({ go: 'metas|meta:' + g.id, title: '🎯 ' + g.title, sub: 'Meta' + (g.term ? ' · ' + g.term : ''), scope: 'personal' }));
             w.materia.filter((m) => hit(m.name, m.code, m.teacher, m.notes)).forEach((m) => out.push({ go: 'estudios|materia:' + m.id, title: '📚 ' + m.name, sub: 'Materia' + (m.term ? ' · ' + m.term : ''), scope: 'estudios' }));
+            w.salud.filter((h) => hit(h.title, h.specialty, h.doctor, h.notes, h.result)).forEach((h) => out.push({ go: 'salud|salud:' + h.id, title: (h.kind === 'medicamento' ? '💊 ' : '🩺 ') + h.title, sub: (HEALTH_KIND[h.kind] || '') + (h.doctor ? ' · ' + h.doctor : ''), scope: 'personal' }));
+            w.entreno.filter((r) => hit(r.exercise, TRAIN_AREA[r.area], r.notes)).forEach((r) => out.push({ go: 'entrenamiento|entreno:' + r.id, title: '🏋️ ' + (r.exercise || TRAIN_AREA[r.area]), sub: 'Entrenamiento · ' + (TRAIN_AREA[r.area] || ''), scope: 'personal' }));
+            w.curso.filter((c) => hit(c.name, c.institution, c.notes)).forEach((c) => out.push({ go: 'estudios|curso:' + c.id, title: '🎓 ' + c.name, sub: 'Curso' + (c.institution ? ' · ' + c.institution : ''), scope: 'estudios' }));
             w.actividad.filter((a) => hit(a.title, a.notes, subjectName(a.subject))).forEach((a) => out.push({ go: 'estudios|actividad:' + a.id, title: '📝 ' + a.title, sub: (ACT_KIND[a.kind] || '') + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : '') + (a.date ? ' · ' + fshort(a.date) : ''), scope: 'estudios' }));
             w.trabajo.filter((j) => hit(j.title, j.company, j.contact, j.notes, j.address, j.functions)).forEach((j) => out.push({ go: 'trabajo|trabajo:' + j.id, title: '💼 ' + j.title, sub: (JOB_KIND[j.kind] || '') + (j.company ? ' · ' + j.company : ''), scope: 'trabajo' }));
             return out;
@@ -721,7 +892,8 @@
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
             agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: e.birth ? '🎂 ' + e.title + (ageOf(e) > 0 ? ' cumple ' + ageOf(e) + ' años' : ' cumple años') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
-            w.vencimiento.filter((v) => v.done !== 'si' && v.date).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
+            w.salud.filter((h) => h.kind !== 'medicamento' && h.date && h.date >= t).forEach((h) => out.push({ section: 'Salud', text: (HEALTH_KIND[h.kind] || '') + ': ' + h.title + (h.doctor ? ' · ' + h.doctor : ''), date: h.date, time: h.time || '', scope: 'personal', go: 'salud', noPast: true }));
+            w.vencimiento.filter((v) => v.done !== 'si' && v.date && !isPaid(v, dueOf(v))).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
             w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.kind !== 'empleo').forEach((j) => out.push({ section: 'Trabajo', text: (JOB_KIND[j.kind] || '') + ': ' + j.title + (j.company ? ' · ' + j.company : ''), date: j.date, time: j.time || '', scope: 'trabajo', go: 'trabajo' }));
             return out;

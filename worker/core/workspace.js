@@ -31,6 +31,11 @@ export const WS = {
     date: ['date'], time: ['time'], status: [['pendiente', 'inscripta', 'en-curso', 'entregado', 'aprobado', 'desaprobado']],
     grade: ['line', 10], result: [['', 'aprobado', 'desaprobado']], notes: ['text', 2000],
   } },
+  // Cursos (fuera de la carrera): dónde, desde cuándo hasta cuándo, carga horaria y link del certificado
+  curso: { table: 'ws_courses', required: 'name', fields: {
+    name: ['line', 160], institution: ['line', 160], start: ['date'], end: ['date'], hours: ['line', 20],
+    status: [['en-curso', 'finalizado', 'abandonado']], certificate: ['url'], url: ['url'], notes: ['text', 2000],
+  } },
   trabajo: { table: 'ws_jobs', required: 'title', fields: {
     kind: [['postulacion', 'entrevista', 'empleo', 'capacitacion']], title: ['line', 160], company: ['line', 160],
     date: ['date'], time: ['time'],
@@ -55,7 +60,22 @@ export const WS = {
     repeat: [['', 'mensual', 'anual']],
     // Si es algo que se paga (Netflix, la obra social): monto en pesos y categoría con la que suma en Gastos
     // amounts: historial del monto por mes ("2026-10=11999;2026-11=12999"): cada monto vale desde su mes; amount es el actual
-    amount: ['line', 20], amounts: ['text', 3000], category: [['servicios', 'otros', 'super', 'comida', 'transporte', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos']],
+    // paid: fechas ya pagadas ("2026-11-05;2026-12-05"); en los que se repiten, cada mes se marca aparte
+    amount: ['line', 20], amounts: ['text', 3000], paid: ['text', 2000], category: [['servicios', 'otros', 'super', 'comida', 'transporte', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos']],
+  } },
+  // Salud: chequeos, consultas, estudios, vacunas y medicamentos (con dosis y horarios). specialty y doctor se escriben a mano;
+  // el panel los agrupa sin distinguir mayúsculas ni acentos (cardiologo = Cardiólogo)
+  salud: { table: 'ws_health', required: 'title', fields: {
+    kind: [['chequeo', 'medicamento', 'consulta', 'estudio', 'vacuna', 'otro']], title: ['line', 160], date: ['date'], time: ['time'],
+    specialty: ['line', 80], doctor: ['line', 120], place: ['line', 160], dose: ['line', 80], hours: ['line', 120],
+    start: ['date'], end: ['date'], status: [['activo', 'finalizado']], result: ['text', 2000], notes: ['text', 2000],
+  } },
+  // Entrenamiento: rutina por día de la semana (gimnasio por zona, cardio y otros deportes como natación). log: fechas en que se hizo
+  entreno: { table: 'ws_training', required: 'area', fields: {
+    area: [['superior', 'inferior', 'core', 'completo', 'cardio', 'movilidad', 'natacion', 'running', 'ciclismo', 'caminata', 'yoga', 'otro']],
+    exercise: ['line', 120], weekday: [['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']],
+    sets: ['line', 4], reps: ['line', 4], kg: ['line', 8], style: [['', 'crol', 'pecho', 'espalda', 'mariposa', 'combinado']],
+    meters: ['line', 8], km: ['line', 8], minutes: ['line', 4], log: ['text', 4000], notes: ['text', 2000],
   } },
   // Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período "term")
   meta: { table: 'ws_goals', required: 'title', fields: {

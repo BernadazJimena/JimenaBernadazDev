@@ -19,7 +19,7 @@ export const JNB_FILTER = ['tasks', 'task_categories', 'settings'];
 // Tablas que nunca van en la copia JNB
 export const JNB_EXCLUDE = ['brief_chunks', 'admin_sessions', 'rate_limits', 'security_log', 'change_log',
   // Espacio Personal (worker/core/workspace.js): Agenda, materias, actividades de estudio y Trabajo. Solo van en la copia completa cifrada.
-  'ws_agenda', 'ws_careers', 'ws_subjects', 'ws_study_items', 'ws_jobs', 'ws_expenses', 'ws_deadlines', 'ws_goals',
+  'ws_agenda', 'ws_careers', 'ws_subjects', 'ws_study_items', 'ws_jobs', 'ws_expenses', 'ws_deadlines', 'ws_goals', 'ws_courses', 'ws_health', 'ws_training',
 ];
 
 // Claves de "settings" que van en la copia JNB

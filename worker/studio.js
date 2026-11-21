@@ -1243,10 +1243,10 @@ export class StudioData extends DurableObject {
   // Vencimientos personales que hoy están dentro de su aviso y todavía no se avisaron para esa fecha
   dueDeadlines(today) {
     const sent = JSON.parse((this.sql.exec("SELECT value FROM settings WHERE key = 'wsAvisos'").toArray()[0] || {}).value || '{}');
-    return this.sql.exec("SELECT id, title, date, time, place, notice, repeat FROM ws_deadlines WHERE done != 'si' AND date != ''").toArray()
+    return this.sql.exec("SELECT id, title, date, time, place, notice, repeat, paid FROM ws_deadlines WHERE done != 'si' AND date != ''").toArray()
       .map((r) => ({ ...r, date: nextDue(r.date, r.repeat, today) })) // los mensuales y anuales, en su próxima fecha
       .filter((r) => {
-        if (r.date < today) return false;
+        if (r.date < today || String(r.paid || '').split(';').includes(r.date)) return false; // ya pagado: no avisa
         const days = /^\d{1,3}$/.test(r.notice) ? Number(r.notice) : 7;
         const from = new Date(r.date + 'T12:00:00Z'); from.setUTCDate(from.getUTCDate() - days);
         return from.toISOString().slice(0, 10) <= today && sent[r.id] !== r.date;
