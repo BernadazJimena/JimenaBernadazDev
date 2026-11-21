@@ -33,7 +33,7 @@
     const JOB_OPEN = ['pendiente', 'enviada', 'en-proceso', 'activo'];
     const JOB_CONTRACT = { '': 'Sin indicar', indeterminado: 'Por tiempo indeterminado', 'plazo-fijo': 'Plazo fijo', temporada: 'De temporada', eventual: 'Eventual', pasantia: 'Pasantía', 'por-proyecto': 'Por proyecto o freelance', otro: 'Otra' };
     const JOB_REGIME = { '': 'Sin indicar', dependencia: 'Relación de dependencia (recibo de sueldo)', monotributo: 'Monotributo (factura)', 'responsable-inscripto': 'Responsable inscripta (factura)', informal: 'Sin registrar' };
-    const EXP_CAT = { super: 'Supermercado', comida: 'Comida y delivery', transporte: 'Transporte', servicios: 'Servicios', alquiler: 'Alquiler', salud: 'Salud', estudio: 'Estudio', ocio: 'Salidas y ocio', ropa: 'Ropa', regalos: 'Regalos', impuestos: 'Impuestos', otros: 'Otros' };
+    const EXP_CAT = { super: 'Supermercado', comida: 'Comida y delivery', transporte: 'Transporte', servicios: 'Servicios', alquiler: 'Alquiler', salud: 'Salud', estudio: 'Estudio', ocio: 'Salidas y ocio', ropa: 'Ropa', regalos: 'Regalos', impuestos: 'Impuestos', suscripcion: 'Suscripciones', otros: 'Otros' }; // "Otros" siempre al final
     const EXP_METHOD = { '': 'Sin indicar', efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia', mercadopago: 'Mercado Pago' };
     const DL_KIND = { documento: 'Documento', turno: 'Turno', seguro: 'Seguro', impuesto: 'Impuesto', servicio: 'Servicio', suscripcion: 'Suscripción', cuota: 'Cuota', otro: 'Otro' };
     const DL_REPEAT = { '': 'Una sola vez', mensual: 'Todos los meses', anual: 'Todos los años' };
@@ -41,11 +41,19 @@
     const COURSE_STATUS = { 'en-curso': 'En curso', finalizado: 'Finalizado', abandonado: 'Abandonado' };
     // Salud y entrenamiento
     const HEALTH_KIND = { chequeo: 'Chequeo', medicamento: 'Medicamento', consulta: 'Consulta', estudio: 'Estudio o análisis', vacuna: 'Vacuna', otro: 'Otro' };
-    const TRAIN_AREA = { superior: 'Tren superior', inferior: 'Tren inferior', core: 'Core', completo: 'Cuerpo completo', cardio: 'Cardio', movilidad: 'Movilidad y elongación',
-        natacion: 'Natación', running: 'Running', ciclismo: 'Ciclismo', caminata: 'Caminata', yoga: 'Yoga o pilates', otro: 'Otro deporte' };
-    const GYM = ['superior', 'inferior', 'core', 'completo']; const DIST = ['running', 'ciclismo', 'caminata'];
-    const TIMED = Object.keys(TRAIN_AREA).filter((a) => !['superior', 'inferior'].includes(a));
-    const SWIM_STYLE = { '': 'Sin indicar', crol: 'Crol', pecho: 'Pecho', espalda: 'Espalda', mariposa: 'Mariposa', combinado: 'Combinado' };
+    // Dos niveles, iguales en el formulario y en el filtro: primero la actividad (Gimnasio, Natación, Running…) y adentro su tipo:
+    // en el gimnasio, la zona (tren superior, inferior, core…); en natación, el estilo; en running, ciclismo y yoga, el tipo de entrenamiento.
+    // En la base, "area" es la zona del gimnasio o la actividad misma (natacion, running…) y "style" el tipo.
+    const SPORT = { gym: 'Gimnasio', natacion: 'Natación', running: 'Running', ciclismo: 'Ciclismo', caminata: 'Caminata', yoga: 'Yoga o pilates', otro: 'Otro deporte' };
+    const GYM_ZONE = { superior: 'Tren superior', inferior: 'Tren inferior', core: 'Core', completo: 'Cuerpo completo', cardio: 'Cardio', movilidad: 'Movilidad y elongación' };
+    const SUB = { natacion: { crol: 'Crol', pecho: 'Pecho', espalda: 'Espalda', mariposa: 'Mariposa', combinado: 'Combinado' },
+        running: { trote: 'Trote', fondo: 'Fondo', pasadas: 'Pasadas o series', fartlek: 'Fartlek' },
+        ciclismo: { ruta: 'Ruta', spinning: 'Spinning o bici fija', montana: 'Montaña' }, yoga: { yoga: 'Yoga', pilates: 'Pilates', stretching: 'Elongación' } };
+    const SUB_LABEL = { natacion: 'Estilo', running: 'Tipo de entrenamiento', ciclismo: 'Tipo', yoga: 'Disciplina' };
+    const TRAIN_AREA = { ...GYM_ZONE, ...Object.fromEntries(Object.entries(SPORT).filter(([k]) => k !== 'gym')) };
+    const GYM = Object.keys(GYM_ZONE); const DIST = ['running', 'ciclismo', 'caminata'];
+    const sportOf = (r) => (GYM.includes(r.area) ? 'gym' : r.area || 'gym');
+    const subOf = (r) => (sportOf(r) === 'gym' ? GYM_ZONE[r.area] : (SUB[sportOf(r)] || {})[r.style] || '');
     const WEEK = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo' };
     const EXERCISES = ['Press de banca', 'Press militar', 'Remo con barra', 'Remo con mancuerna', 'Dominadas', 'Jalón al pecho', 'Curl de bíceps', 'Tríceps en polea', 'Fondos', 'Flexiones', 'Vuelos laterales',
         'Sentadilla', 'Peso muerto', 'Peso muerto rumano', 'Estocadas', 'Prensa', 'Hip thrust', 'Sillón de cuádriceps', 'Camilla de femorales', 'Gemelos', 'Abductores',
@@ -110,14 +118,14 @@
             ['result', 'Resultado o indicaciones', 'text', { max: 2000, areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         // Entrenamiento: según la actividad, series, repeticiones y kilos (gimnasio), estilo y metros (natación), kilómetros y minutos
-        entreno: { title: 'ejercicio', switch: 'area', fields: [
-            ['area', 'Actividad', 'select', TRAIN_AREA], ['weekday', 'Día', 'select', { '': 'Sin día fijo', ...WEEK }],
-            ['exercise', 'Ejercicio', 'line', { max: 120, wide: true, hint: 'Sentadilla', list: EXERCISES, areas: Object.keys(TRAIN_AREA).filter((a) => a !== 'natacion') }],
-            ['style', 'Estilo', 'select', { ...SWIM_STYLE, areas: ['natacion'] }],
-            ['sets', 'Series', 'pick', { values: range(1, 10, 1), empty: '—', areas: GYM }], ['reps', 'Repeticiones', 'pick', { values: range(1, 50, 1), empty: '—', areas: GYM }],
-            ['kg', 'Kilos', 'pick', { values: KG, empty: 'Sin peso', areas: GYM }],
+        entreno: { title: 'ejercicio', switch: '_sport', fields: [
+            ['_sport', 'Actividad', 'select', SPORT], ['area', 'Zona', 'select', { ...GYM_ZONE, areas: ['gym'] }],
+            ['style', 'Tipo', 'select', { '': 'Sin indicar', areas: Object.keys(SUB) }], ['weekday', 'Día', 'select', { '': 'Sin día fijo', ...WEEK }],
+            ['exercise', 'Ejercicio', 'line', { max: 120, wide: true, hint: 'Sentadilla', list: EXERCISES, areas: ['gym', 'otro'] }],
+            ['sets', 'Series', 'pick', { values: range(1, 10, 1), empty: '—', areas: ['gym'] }], ['reps', 'Repeticiones', 'pick', { values: range(1, 50, 1), empty: '—', areas: ['gym'] }],
+            ['kg', 'Kilos', 'pick', { values: KG, empty: 'Sin peso', areas: ['gym'] }],
             ['meters', 'Metros', 'pick', { values: range(25, 5000, 25), empty: '—', areas: ['natacion'] }], ['km', 'Kilómetros', 'line', { max: 8, mode: 'decimal', hint: '5', areas: DIST }],
-            ['minutes', 'Duración de la sesión (minutos)', 'pick', { values: range(5, 240, 5), empty: '—', areas: TIMED }], ['notes', 'Notas', 'text', { max: 2000 }],
+            ['minutes', 'Duración de la sesión (minutos)', 'pick', { values: range(5, 240, 5), empty: '—', areas: Object.keys(SPORT) }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         trabajo: { title: 'registro', fields: [
             ['kind', 'Tipo', 'select', JOB_KIND], ['title', 'Puesto, búsqueda o curso', 'line', { required: true, max: 160 }],
@@ -148,7 +156,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trArea: '', trDay: '', trView: 'todas' };
+    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -667,26 +675,56 @@
     const weekStart = () => { const d = new Date(today() + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
     const logOf = (r) => String(r.log || '').split(';').filter(Boolean);
     const doneWeek = (r) => logOf(r).some((x) => x >= weekStart() && x <= today());
+    // Historial por mes: calendario con los días entrenados (de lo anotado con "Lo hice hoy") y, debajo, qué se hizo cada día
+    const trainName = (r) => (['gym', 'otro'].includes(sportOf(r)) && r.exercise ? r.exercise : SPORT[sportOf(r)] + (subOf(r) ? ' · ' + subOf(r) : ''));
+    const trainingHistory = (items) => {
+        const t = today(); const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+        const months = [...new Set(items.flatMap((r) => logOf(r).map((x) => x.slice(0, 7))).concat(t.slice(0, 7)))].sort().reverse();
+        if (!months.includes(st.trMonth)) st.trMonth = t.slice(0, 7);
+        const m = st.trMonth; const y = Number(m.slice(0, 4)); const mo = Number(m.slice(5));
+        const byDay = {}; items.forEach((r) => logOf(r).filter((x) => x.slice(0, 7) === m).forEach((x) => { (byDay[x] = byDay[x] || []).push(r); }));
+        const all = Object.values(byDay).flat();
+        const sum = (f) => all.reduce((n, r) => n + (Number(String(r[f] || '').replace(',', '.')) || 0), 0);
+        const lead = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7; const nd = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+        const cells = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((x) => '<span class="ws-cal-h">' + x + '</span>').join('')
+            + '<span class="ws-cal-d is-empty"></span>'.repeat(lead)
+            + [...Array(nd)].map((_, i) => { const iso = m + '-' + String(i + 1).padStart(2, '0'); const l = byDay[iso] || [];
+                return '<span class="ws-cal-d' + (l.length ? ' has' : '') + (iso === t ? ' is-today' : '') + '"><span class="ws-cal-n">' + (i + 1) + '</span>'
+                    + (l.length ? '<span class="ws-cal-c">' + l.length + '</span>' + l.slice(0, 2).map((r) => '<span class="ws-cal-i">' + esc(trainName(r)) + '</span>').join('') + (l.length > 2 ? '<span class="ws-cal-i muted">+' + (l.length - 2) + ' más</span>' : '') : '') + '</span>'; }).join('');
+        const days = Object.keys(byDay).sort().reverse();
+        return '<div class="ws-filters">' + select('trMonth', m, Object.fromEntries(months.map((x) => [x, cap(MONTHS[Number(x.slice(5)) - 1]) + ' ' + x.slice(0, 4)])), 'Mes') + '</div>'
+            + kpiGrid([kpi(days.length, days.length === 1 ? 'Día entrenado' : 'Días entrenados'), kpi(all.length, 'Ejercicios hechos'), sum('minutes') ? kpi(sum('minutes') + ' <small>min</small>', 'Minutos') : '',
+                sum('meters') ? kpi(sum('meters').toLocaleString('es-AR') + ' <small>m</small>', 'Metros nadados') : '', sum('km') ? kpi(fmt(sum('km')) + ' <small>km</small>', 'Kilómetros') : ''])
+            + '<div class="ws-cal">' + cells + '</div>'
+            + (days.length ? days.map((d) => '<p class="ws-term">' + esc(fdate(d)) + '</p><ul class="ws-cal-list">' + byDay[d].map((r) => '<li><button type="button" class="ws-inline" data-ws-open="entreno:' + r.id + '">' + esc(trainName(r)) + '</button>'
+                + (r.sets || r.kg || r.meters || r.km || r.minutes ? ' <span class="small muted">' + esc([r.sets && r.reps ? r.sets + ' × ' + r.reps : '', r.kg ? r.kg + ' kg' : '', r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ')) + '</span>' : '') + '</li>').join('') + '</ul>').join('')
+                : empty('No anotaste entrenamientos en ' + MONTHS[mo - 1] + ' de ' + y + '. Se anotan con “✓ Lo hice hoy” en cada ejercicio.'));
+    };
     const renderTraining = () => {
         const all = W().entreno; const t = today(); const todayKey = DOW[new Date(t + 'T12:00:00Z').getUTCDay()];
-        const areaOk = (r) => !st.trArea || (st.trArea === 'gym' ? GYM.includes(r.area) : st.trArea === 'deportes' ? !GYM.includes(r.area) && r.area !== 'cardio' : r.area === st.trArea);
+        const subOpts = st.trSport === 'gym' ? GYM_ZONE : SUB[st.trSport] || null;
+        if (!subOpts || !(st.trSub in subOpts)) st.trSub = '';
+        const areaOk = (r) => (!st.trSport || sportOf(r) === st.trSport) && (!st.trSub || (st.trSport === 'gym' ? r.area === st.trSub : r.style === st.trSub));
         let list = all.filter((r) => areaOk(r) && (!st.trDay || r.weekday === st.trDay));
         if (st.trView === 'pendientes') list = list.filter((r) => !doneWeek(r)); if (st.trView === 'hechas') list = list.filter(doneWeek);
         const scope = all.filter((r) => areaOk(r) && (!st.trDay || r.weekday === st.trDay)); const doneN = scope.filter(doneWeek).length;
         const sumWeek = (f) => scope.reduce((n, r) => n + logOf(r).filter((x) => x >= weekStart() && x <= t).length * (Number(String(r[f] || '').replace(',', '.')) || 0), 0);
         const mins = sumWeek('minutes'); const meters = sumWeek('meters'); const km = sumWeek('km');
         const detail = (r) => [r.sets && r.reps ? r.sets + ' × ' + r.reps : r.sets ? r.sets + ' series' : r.reps ? r.reps + ' rep.' : '', r.kg ? r.kg + ' kg' : '',
-            r.area === 'natacion' && r.style ? SWIM_STYLE[r.style] : '', r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ');
+            r.meters ? r.meters + ' m' : '', r.km ? r.km + ' km' : '', r.minutes ? r.minutes + ' min' : ''].filter(Boolean).join(' · ');
         const box = (r) => { const done = doneWeek(r); const last = logOf(r).slice(-1)[0];
-            return evBox(done ? 'is-train-done' : '', tag(done ? 'aprobado' : 'en-curso', { aprobado: '✓ Hecho', 'en-curso': TRAIN_AREA[r.area] || r.area }) + (done ? '<span class="small muted">' + esc(TRAIN_AREA[r.area] || '') + '</span>' : ''),
-                esc(r.area === 'natacion' ? 'Natación' + (r.style ? ' · ' + SWIM_STYLE[r.style] : '') : r.exercise || TRAIN_AREA[r.area]), esc(detail(r)),
+            return evBox(done ? 'is-train-done' : '', tag(done ? 'aprobado' : 'en-curso', { aprobado: '✓ Hecho', 'en-curso': SPORT[sportOf(r)] }) + '<span class="small muted">' + esc(done ? SPORT[sportOf(r)] + (sportOf(r) === 'gym' ? ' · ' + subOf(r) : '') : sportOf(r) === 'gym' ? subOf(r) : '') + '</span>',
+                esc(['gym', 'otro'].includes(sportOf(r)) && r.exercise ? r.exercise : sportOf(r) === 'gym' ? subOf(r) : subOf(r) || SPORT[sportOf(r)]), esc(detail(r)),
                 (detail(r) ? '<span class="small">' + esc(detail(r)) + '</span>' : '') + '<span class="small muted">' + (last ? 'Última vez: ' + esc(fshort(last)) + ' · ' + logOf(r).length + (logOf(r).length === 1 ? ' vez' : ' veces') : 'Todavía no lo hiciste') + '</span>' + notesHtml(r.notes)
                     + '<button type="button" class="' + (logOf(r).includes(t) ? '' : 'primary') + '" data-ws-train="' + r.id + '">' + (logOf(r).includes(t) ? 'Desmarcar lo de hoy' : '✓ Lo hice hoy') + '</button>', 'entreno:' + r.id); };
         const days = Object.keys(WEEK).concat('').map((k) => ({ k, items: list.filter((r) => (r.weekday || '') === k) })).filter((g) => g.items.length);
-        root('entrenamiento').innerHTML = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>')
-            + '<div class="ws-filters">' + seg('trView', st.trView, { todas: 'Toda la rutina', pendientes: 'Pendientes de la semana', hechas: 'Hechas esta semana' })
-                + select('trArea', st.trArea, { '': 'Todas las actividades', gym: 'Gimnasio (todo)', ...TRAIN_AREA, deportes: 'Deportes (todos)' }, 'Actividad')
-                + select('trDay', st.trDay, { '': 'Todos los días', ...WEEK }, 'Día') + '</div>'
+        const top = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>')
+            + '<div class="ws-filters">' + seg('trView', st.trView, { todas: 'Toda la rutina', pendientes: 'Pendientes de la semana', hechas: 'Hechas esta semana', historial: 'Historial por mes' })
+                + select('trSport', st.trSport, { '': 'Todas las actividades', ...SPORT }, 'Actividad')
+                + (subOpts ? select('trSub', st.trSub, { '': st.trSport === 'gym' ? 'Todas las zonas' : 'Todos los tipos', ...subOpts }, 'Tipo') : '')
+                + select('trDay', st.trDay, { '': 'Todos los días', ...WEEK }, 'Día') + '</div>';
+        if (st.trView === 'historial') { root('entrenamiento').innerHTML = top + trainingHistory(scope); return; }
+        root('entrenamiento').innerHTML = top
             + (scope.length ? kpiGrid([kpi(doneN + ' <small>de ' + scope.length + '</small>', 'Hechos esta semana'), mins ? kpi(mins + ' <small>min</small>', 'Minutos esta semana') : '',
                 meters ? kpi(meters.toLocaleString('es-AR') + ' <small>m</small>', 'Metros nadados esta semana') : '', km ? kpi(fmt(km) + ' <small>km</small>', 'Kilómetros esta semana') : '']) : '')
             + (days.length ? days.map((g) => '<p class="ws-day' + (g.k === todayKey ? ' is-today' : '') + '">' + (g.k === todayKey ? 'Hoy · ' : '') + (g.k ? WEEK[g.k] : 'Sin día fijo') + '</p>' + evGrid(g.items.map(box).join(''))).join('')
@@ -749,6 +787,14 @@
             const k = d.querySelector('[name="kind"]'); const s = d.querySelector('[name="status"]'); const o = s.querySelector('option[value="inscripta"]');
             const sync = () => { const fin = k.value === 'final'; o.hidden = o.disabled = !fin; if (!fin && s.value === 'inscripta') s.value = 'pendiente'; };
             k.addEventListener('change', sync); sync();
+        }
+        if (kind === 'entreno') {
+            const sp = d.querySelector('[name="_sport"]'); if (r.area) sp.value = sportOf(r);
+            const stl = d.querySelector('[name="style"]'); const cur = r.style || '';
+            const sync = () => { const opts = SUB[sp.value]; if (!opts) return;
+                stl.innerHTML = '<option value="">Sin indicar</option>' + Object.entries(opts).map(([k, l]) => '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + l + '</option>').join('');
+                stl.previousSibling.textContent = SUB_LABEL[sp.value]; };
+            sp.addEventListener('change', sync); sync();
         }
         if (f.switch) { // campos que dependen de otro (tipo de registro de salud, actividad del entrenamiento)
             const sw = d.querySelector('[name="' + f.switch + '"]');
@@ -849,6 +895,7 @@
         e.preventDefault();
         const prev = editing.id ? (W()[editing.kind] || []).find((x) => x.id === editing.id) : null;
         const item = { ...(prev || {}), ...Object.fromEntries(new FormData(e.target)) };
+        if ('_sport' in item) { if (item._sport !== 'gym') item.area = item._sport; if (!SUB[item._sport]) item.style = ''; delete item._sport; } // fuera del gimnasio, la actividad va en "area"
         if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
         if (editing.kind === 'curso') { st.studyTab = 'carreras'; if (st.studyGroup === 'carreras') st.studyGroup = 'todos'; } // para ver el curso recién guardado
         if (editing.kind === 'vencimiento') { // guarda el monto en el historial desde ese mes, sin cambiar los anteriores

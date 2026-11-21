@@ -49,7 +49,7 @@ export const WS = {
   // Gastos personales (en pesos), separados de los números de JNB
   gasto: { table: 'ws_expenses', required: 'concept', fields: {
     date: ['date'], concept: ['line', 160], amount: ['line', 20],
-    category: [['otros', 'super', 'comida', 'transporte', 'servicios', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos']],
+    category: [['otros', 'super', 'comida', 'transporte', 'servicios', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos', 'suscripcion']],
     method: [['', 'efectivo', 'debito', 'credito', 'transferencia', 'mercadopago']], notes: ['text', 2000],
   } },
   // Vencimientos personales (DNI, carnet, seguro, turnos): aviso por mail "notice" días antes (vacío = 7).
@@ -61,7 +61,7 @@ export const WS = {
     // Si es algo que se paga (Netflix, la obra social): monto en pesos y categoría con la que suma en Gastos
     // amounts: historial del monto por mes ("2026-10=11999;2026-11=12999"): cada monto vale desde su mes; amount es el actual
     // paid: fechas ya pagadas ("2026-11-05;2026-12-05"); en los que se repiten, cada mes se marca aparte
-    amount: ['line', 20], amounts: ['text', 3000], paid: ['text', 2000], category: [['servicios', 'otros', 'super', 'comida', 'transporte', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos']],
+    amount: ['line', 20], amounts: ['text', 3000], paid: ['text', 2000], category: [['servicios', 'otros', 'super', 'comida', 'transporte', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos', 'suscripcion']],
   } },
   // Salud: chequeos, consultas, estudios, vacunas y medicamentos (con dosis y horarios). specialty y doctor se escriben a mano;
   // el panel los agrupa sin distinguir mayúsculas ni acentos (cardiologo = Cardiólogo)
@@ -74,7 +74,7 @@ export const WS = {
   entreno: { table: 'ws_training', required: 'area', fields: {
     area: [['superior', 'inferior', 'core', 'completo', 'cardio', 'movilidad', 'natacion', 'running', 'ciclismo', 'caminata', 'yoga', 'otro']],
     exercise: ['line', 120], weekday: [['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']],
-    sets: ['line', 4], reps: ['line', 4], kg: ['line', 8], style: [['', 'crol', 'pecho', 'espalda', 'mariposa', 'combinado']],
+    sets: ['line', 4], reps: ['line', 4], kg: ['line', 8], style: [['', 'crol', 'pecho', 'espalda', 'mariposa', 'combinado', 'trote', 'fondo', 'pasadas', 'fartlek', 'ruta', 'spinning', 'montana', 'yoga', 'pilates', 'stretching']],
     meters: ['line', 8], km: ['line', 8], minutes: ['line', 4], log: ['text', 4000], notes: ['text', 2000],
   } },
   // Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período "term")

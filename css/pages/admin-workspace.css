@@ -101,6 +101,23 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-ev[open] summary > strong { white-space: normal; }
 .ws-ev summary { min-width: 0; }
 .ws-ev.is-train-done { border-left-color: var(--ok); }
+/* Entrenamiento: calendario del mes con los días entrenados */
+.ws-cal { display: grid; gap: .3rem; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: .4rem 0 1rem; }
+.ws-cal-h { color: var(--muted); font-size: .7rem; font-weight: 800; text-align: center; text-transform: uppercase; }
+.ws-cal-d { background: var(--soft); border: 1px solid var(--line); border-radius: .5rem; display: flex; flex-direction: column; gap: .1rem; min-height: 4.4rem; min-width: 0; padding: .25rem .35rem; }
+.ws-cal-d.is-empty { background: none; border-color: transparent; }
+.ws-cal-d.has { background: color-mix(in srgb, var(--ok) 14%, var(--soft)); border-color: var(--ok); }
+.ws-cal-d.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+.ws-cal-n { font-size: .75rem; font-weight: 800; }
+.ws-cal-i { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-cal-c { display: none; }
+.ws-cal-list { margin: 0 0 .4rem; padding-left: 1.1rem; }
+.ws-cal-list li { margin-bottom: .2rem; }
+@media (max-width: 600px) {
+  .ws-cal-d { align-items: center; min-height: 2.7rem; padding: .2rem; }
+  .ws-cal-i { display: none; }
+  .ws-cal-c { color: var(--ok); display: block; font-size: .72rem; font-weight: 800; }
+}
 .ws-ev-amt { font-weight: 800; white-space: nowrap; }
 .ws-ev.is-fixed { border-left-color: var(--accent-ink); }
 .ws-ev.is-soon { border-left-color: var(--warn); }
