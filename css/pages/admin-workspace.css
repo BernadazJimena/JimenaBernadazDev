@@ -81,7 +81,7 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-bday.is-today .ws-bday-when { background: var(--bd); border-radius: 999px; color: #2a1a00; font-weight: 800; justify-self: start; padding: 0 .5rem; }
 @media (max-width: 420px) { .ws-bdays { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* Agenda: eventos en cajas compactas que se despliegan al tocarlas */
-.ws-evs { align-items: start; display: grid; gap: .5rem; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
+.ws-evs { align-items: start; display: grid; gap: .5rem; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
 .ws-ev { background: var(--soft); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: .6rem; }
 .ws-ev.is-exam { border-left-color: var(--warn); }
 .ws-ev.ws-done { opacity: .65; }
@@ -96,7 +96,7 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 /* Todas las cajas cerradas iguales: cada renglón en una sola línea (lo que no entra termina en "…" y se ve al abrirla) */
 .ws-ev-top { align-items: center; display: flex; flex-wrap: nowrap; gap: .5rem; justify-content: space-between; min-height: 1.4rem; min-width: 0; }
 .ws-ev-top > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ws-ev-top > .ws-tag { flex-shrink: 0; }
+.ws-ev-top > .ws-ev-time { flex-shrink: 0; } /* la fecha siempre entera; si falta lugar se acorta la etiqueta */
 .ws-ev summary > strong, .ws-ev summary > .muted { display: block; min-height: 1.2em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-ev[open] summary > strong { white-space: normal; }
 .ws-ev summary { min-width: 0; }
@@ -130,7 +130,9 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-ev.is-late { border-left-color: #f2a7b5; }
 .ws-ev-body { display: grid; gap: .35rem; justify-items: start; padding: 0 .65rem .6rem; }
 .ws-ev-notes { margin: 0; white-space: normal; }
-.ws-ev-body button { min-height: 0; padding: .3rem .8rem; }
+/* Botones de la caja: chicos y en una fila (la acción y Editar) */
+.ws-ev-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .15rem; }
+.ws-ev-body button { font-size: .8rem; line-height: 1.2; min-height: 0; padding: .3rem .75rem; white-space: nowrap; }
 @media (max-width: 420px) { .ws-evs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* Correlativas: un título chico por cuatrimestre */
 .ws-term { color: var(--accent-ink); font-size: .8rem; font-weight: 700; margin: .7rem 0 .3rem; }

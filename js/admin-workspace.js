@@ -170,9 +170,9 @@
 
     // Caja compacta que se despliega al tocarla (Agenda, Gastos y Vencimientos): arriba lo principal, adentro el detalle y el botón para editar
     const notesHtml = (t) => (t ? '<p class="small ws-ev-notes">' + esc(t).replace(/\n/g, '<br>') + '</p>' : '');
-    const evBox = (cls, top, title, sub, body, openRef, btn, extra) => '<details class="ws-ev' + (cls ? ' ' + cls : '') + '"><summary><span class="ws-ev-top">' + top + '</span>'
+    const evBox = (cls, top, title, sub, body, openRef, btn, extra, action) => '<details class="ws-ev' + (cls ? ' ' + cls : '') + '"><summary><span class="ws-ev-top">' + top + '</span>'
         + '<strong>' + title + '</strong><span class="small muted">' + (sub || '&nbsp;') + '</span></summary><div class="ws-ev-body">' + body
-        + '<button type="button" data-ws-open="' + openRef + '"' + (extra || '') + '>' + (btn || 'Editar') + '</button></div></details>';
+        + '<div class="ws-ev-actions">' + (action || '') + '<button type="button" data-ws-open="' + openRef + '"' + (extra || '') + '>' + (btn || 'Editar') + '</button></div></div></details>';
     const evGrid = (html) => '<div class="ws-evs">' + html + '</div>';
 
     // ---- Agenda. Los cumpleaños guardan la fecha de nacimiento y se muestran en el próximo cumpleaños con la edad que cumple
@@ -605,14 +605,14 @@
                         : n < 0 ? tag('desaprobado', { desaprobado: pays ? 'Vencido · sin pagar' : 'Vencido' }) : tag(n <= noticeOf(v) ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' });
                     const rep = repeatText({ ...v, date: v.first }); const amt = money(amountFor(v, today().slice(0, 7)));
                     // Botón para marcar el pago de esta fecha (o "hecho" si no se paga); en los que se repiten, cada mes por separado
-                    const payBtn = v.done === 'si' || !v.date || (!pays && v.repeat) ? '' : '<button type="button" class="' + (paid ? '' : 'primary') + '" data-ws-pay="' + v.id + '|' + v.date + '">'
-                        + (paid ? 'Desmarcar el pago' : pays ? '✓ Marcar como pagado' + (v.repeat ? ' (' + MONTHS[Number(v.date.slice(5, 7)) - 1] + ')' : '') : '✓ Marcar como hecho') + '</button>';
+                    const payBtn = v.done === 'si' || !v.date || (!pays && v.repeat) ? '' : '<button type="button" class="' + (paid ? '' : 'primary') + '" data-ws-pay="' + v.id + '|' + v.date + '" title="' + (paid ? 'Desmarcar el pago' : pays ? 'Marcar como pagado' + (v.repeat ? ' el de ' + MONTHS[Number(v.date.slice(5, 7)) - 1] : '') : 'Marcar como hecho') + '">'
+                        + (paid ? 'Desmarcar' : pays ? '✓ Pagado' : '✓ Hecho') + '</button>';
                     return evBox(v.done === 'si' || paid ? 'ws-done' : n !== null && n < 0 ? 'is-late' : n !== null && n <= noticeOf(v) ? 'is-soon' : '',
                         '<span class="small ws-ev-time">' + esc(fshort(v.date)) + (v.time ? ' · ' + esc(v.time) + ' h' : '') + '</span>' + state,
                         (rep ? '🔁 ' : '') + esc(v.title), esc(DL_KIND[v.kind] || v.kind) + (amt !== null ? ' · ' + ars(amt) : ''),
                         (rep ? '<span class="small">🔁 ' + esc(rep) + '</span>' : '') + (amt !== null ? '<span class="small">💲 ' + ars(amt) + ' este mes · suma en Gastos (' + esc((EXP_CAT[v.category] || EXP_CAT.otros).toLowerCase()) + ')</span>' : '')
-                            + (v.place ? '<span class="small">📍 ' + esc(v.place) + '</span>' : '') + payBtn + (v.done !== 'si' && !paid ? '<span class="small muted">Aviso por mail ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + notesHtml(v.notes),
-                        'vencimiento:' + v.id); }).join(''))
+                            + (v.place ? '<span class="small">📍 ' + esc(v.place) + '</span>' : '') + (v.done !== 'si' && !paid ? '<span class="small muted">Aviso por mail ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + notesHtml(v.notes),
+                        'vencimiento:' + v.id, '', '', payBtn); }).join(''))
                 : empty(st.dlView === 'proximos' ? 'No tenés vencimientos pendientes. Cargá el primero con “Nuevo vencimiento”.' : 'No hay vencimientos para mostrar.'));
     };
 
@@ -728,7 +728,7 @@
             return evBox(done ? 'is-train-done' : '', tag(done ? 'aprobado' : 'en-curso', { aprobado: '✓ Hecho', 'en-curso': SPORT[sportOf(r)] }) + '<span class="small muted">' + esc(done ? SPORT[sportOf(r)] + (sportOf(r) === 'gym' ? ' · ' + subOf(r) : '') : sportOf(r) === 'gym' ? subOf(r) : '') + '</span>',
                 esc(['gym', 'otro'].includes(sportOf(r)) && r.exercise ? r.exercise : sportOf(r) === 'gym' ? subOf(r) : subOf(r) || SPORT[sportOf(r)]), esc(detail(r)),
                 (detail(r) ? '<span class="small">' + esc(detail(r)) + '</span>' : '') + '<span class="small muted">' + (last ? 'Última vez: ' + esc(fshort(last)) + ' · ' + logOf(r).length + (logOf(r).length === 1 ? ' vez' : ' veces') : 'Todavía no lo hiciste') + '</span>' + notesHtml(r.notes)
-                    + (trainDays(r).length > 1 ? '<span class="small muted">📅 ' + (trainDays(r).length === 7 ? 'Todos los días' : trainDays(r).map((x) => WEEK[x]).join(', ')) + '</span>' : '') + btn, 'entreno:' + r.id); };
+                    + (trainDays(r).length > 1 ? '<span class="small muted">📅 ' + (trainDays(r).length === 7 ? 'Todos los días' : trainDays(r).map((x) => WEEK[x]).join(', ')) + '</span>' : ''), 'entreno:' + r.id, '', '', btn); };
         const days = Object.keys(WEEK).concat('').map((k) => ({ k, items: list.filter((x) => x.k === k) })).filter((g) => g.items.length);
         const top = head('Entrenamiento', 'Tu rutina por día: tren superior, inferior, core, cardio, natación y otros deportes. Marcá lo que hiciste y queda anotado el día.', '<button type="button" class="primary" data-ws-new="entreno">+ Nuevo ejercicio</button>')
             + '<div class="ws-filters">' + seg('trView', st.trView, { todas: 'Toda la rutina', pendientes: 'Pendientes de la semana', hechas: 'Hechas esta semana', historial: 'Historial por mes' })
