@@ -33,7 +33,7 @@
     const JOB_REGIME = { '': 'Sin indicar', dependencia: 'Relación de dependencia (recibo de sueldo)', monotributo: 'Monotributo (factura)', 'responsable-inscripto': 'Responsable inscripta (factura)', informal: 'Sin registrar' };
     const EXP_CAT = { super: 'Supermercado', comida: 'Comida y delivery', transporte: 'Transporte', servicios: 'Servicios', alquiler: 'Alquiler', salud: 'Salud', estudio: 'Estudio', ocio: 'Salidas y ocio', ropa: 'Ropa', regalos: 'Regalos', impuestos: 'Impuestos', otros: 'Otros' };
     const EXP_METHOD = { '': 'Sin indicar', efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia', mercadopago: 'Mercado Pago' };
-    const DL_KIND = { documento: 'Documento', turno: 'Turno', seguro: 'Seguro', impuesto: 'Impuesto', servicio: 'Servicio', cuota: 'Cuota', otro: 'Otro' };
+    const DL_KIND = { documento: 'Documento', turno: 'Turno', seguro: 'Seguro', impuesto: 'Impuesto', servicio: 'Servicio', suscripcion: 'Suscripción', cuota: 'Cuota', otro: 'Otro' };
     const DL_REPEAT = { '': 'Una sola vez', mensual: 'Todos los meses', anual: 'Todos los años' };
     const GOAL_AUTO = { '': 'Lo actualizo a mano', materias: 'Materias aprobadas (de Estudios)', promedio: 'Promedio (de Estudios)' };
     const GOAL_STATUS = { 'en-curso': 'En curso', cumplida: 'Cumplida', abandonada: 'Abandonada' };
@@ -89,6 +89,7 @@
         vencimiento: { title: 'vencimiento', fields: [
             ['title', 'Qué vence', 'line', { required: true, max: 160, wide: true, hint: 'Renovar el DNI' }], ['kind', 'Tipo', 'select', DL_KIND],
             ['date', 'Fecha', 'date'], ['repeat', 'Se repite', 'select', DL_REPEAT], ['time', 'Hora', 'time'], ['notice', 'Avisarme por mail (días antes)', 'line', { max: 3, mode: 'numeric', hint: '7' }],
+            ['amount', 'Monto a pagar (en pesos)', 'line', { max: 20, mode: 'decimal', hint: 'Vacío si no se paga' }], ['category', 'Categoría en Gastos', 'select', { servicios: EXP_CAT.servicios, ...EXP_CAT }],
             ['place', 'Lugar', 'line', { max: 160 }], ['done', 'Estado', 'select', { no: 'Pendiente', si: 'Hecho (si se repite, deja de avisar)' }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
         meta: { title: 'meta', fields: [
@@ -409,13 +410,30 @@
     };
 
     // ---- Gastos personales: total del mes, por categoría y lista (en pesos)
+    // Vencimientos con monto que caen en el mes (AAAA-MM): suman en Gastos con su categoría. Los mensuales, todos los meses desde
+    // su fecha; los anuales, en su mes; los de una vez, en el suyo. Uno que se repite y se marcó "Hecho" deja de sumar desde ese mes.
+    // Monto de un mes: el último cargado desde ese mes o antes (los servicios aumentan y se actualizan mes a mes sin tocar los anteriores)
+    const amountsOf = (v) => Object.fromEntries(String(v.amounts || '').split(';').map((x) => x.split('=')).filter(([m, a]) => /^\d{4}-\d{2}$/.test(m || '') && money(a) !== null));
+    const amountFor = (v, m) => { const h = amountsOf(v); const keys = Object.keys(h).sort(); if (!keys.length) return v.amount;
+        const k = keys.filter((x) => x <= m).pop(); return h[k || keys[0]]; };
+    const monthAfter = (m) => { const d = new Date(m + '-15T12:00:00Z'); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString().slice(0, 7); };
+    let editMonth = ''; // mes del monto que se edita (al abrir un vencimiento desde Gastos)
+    const dlIn = (v, m) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date || '') || money(amountFor(v, m)) === null || m < v.date.slice(0, 7)) return '';
+        if (!v.repeat) return v.date.slice(0, 7) === m ? v.date : '';
+        if (v.repeat === 'anual' && m.slice(5) !== v.date.slice(5, 7)) return '';
+        if (v.done === 'si' && v.updated && m > String(v.updated).slice(0, 7)) return '';
+        return m + '-' + String(Math.min(Number(v.date.slice(8)), new Date(Date.UTC(Number(m.slice(0, 4)), Number(m.slice(5)), 0)).getUTCDate())).padStart(2, '0'); };
+    const fixedIn = (m) => W().vencimiento.map((v) => { const d = dlIn(v, m); return d ? { id: v.id, dl: true, month: m, concept: v.title, amount: amountFor(v, m), category: v.category || 'otros', date: d, repeat: v.repeat } : null; }).filter(Boolean);
     const renderExpenses = () => {
         const all = W().gasto;
         const month = today().slice(0, 7);
         if (st.expMonth === null) st.expMonth = month;
-        const months = [...new Set(all.map((g) => (g.date || '').slice(0, 7)).filter(Boolean).concat(month))].sort().reverse();
+        // Meses con gastos, el actual y los meses en que corre algún vencimiento con monto (hasta 2 años atrás)
+        const dlMonths = []; for (let m = month, i = 0; i < 24; i++) { if (W().vencimiento.some((v) => dlIn(v, m))) dlMonths.push(m); const d = new Date(m + '-15T12:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1); m = d.toISOString().slice(0, 7); }
+        const months = [...new Set(all.map((g) => (g.date || '').slice(0, 7)).filter(Boolean).concat(month, dlMonths))].sort().reverse();
         const mLabel = (m) => MONTHS[Number(m.slice(5)) - 1].replace(/^./, (c) => c.toUpperCase()) + ' ' + m.slice(0, 4);
-        const inMonth = (m) => all.filter((g) => !m || (g.date || '').slice(0, 7) === m);
+        const inMonth = (m) => all.filter((g) => !m || (g.date || '').slice(0, 7) === m).concat(m ? fixedIn(m) : months.flatMap(fixedIn));
         const list = inMonth(st.expMonth).filter((g) => !st.expCat || g.category === st.expCat).sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id - a.id);
         const sum = (l) => l.reduce((n, g) => n + (money(g.amount) || 0), 0);
         const total = sum(list);
@@ -425,12 +443,13 @@
         const cats = Object.keys(EXP_CAT).map((k) => ({ k, n: sum(monthList.filter((g) => g.category === k)) })).filter((c) => c.n > 0).sort((a, b) => b.n - a.n);
         root('gastos').innerHTML = head('Gastos', 'Tus gastos personales en pesos, separados de los números de JNB.', '<button type="button" class="primary" data-ws-new="gasto">+ Nuevo gasto</button>')
             + '<div class="ws-filters">' + select('expMonth', st.expMonth, { '': 'Todos los meses', ...Object.fromEntries(months.map((m) => [m, mLabel(m)])) }, 'Mes') + select('expCat', st.expCat, { '': 'Todas las categorías', ...EXP_CAT }, 'Categoría') + '</div>'
-            + '<div class="ws-kpis ws-kpis-top">' + kpi(ars(total), (st.expMonth ? 'Total de ' + mLabel(st.expMonth).toLowerCase() : 'Total') + (st.expCat ? ' en ' + esc(EXP_CAT[st.expCat].toLowerCase()) : '')) + kpi(list.length, list.length === 1 ? 'Gasto' : 'Gastos')
+            + '<div class="ws-kpis ws-kpis-top">' + kpi(ars(total), (st.expMonth ? 'Total de ' + mLabel(st.expMonth).toLowerCase() : 'Total') + (st.expCat ? ' en ' + esc(EXP_CAT[st.expCat].toLowerCase()) : '')) + kpi(list.length, list.length === 1 ? 'Gasto' : 'Gastos') + (list.some((g) => g.dl) ? kpi(ars(sum(list.filter((g) => g.dl))), 'De vencimientos <small>(incluido en el total)</small>') : '')
                 + (prev !== null ? kpi(ars(prev), 'Mes anterior' + (prev ? ' <small>(' + (total >= prev ? '+' : '−') + Math.abs(Math.round((total - prev) / prev * 100)) + ' %)</small>' : '')) : '') + '</div>'
             // Totales por categoría: tocar una filtra la lista por esa categoría (y tocarla de nuevo vuelve a todas)
             + (cats.length > 1 ? '<div class="ws-cats">' + cats.map((c) => '<button type="button" class="ws-cat" data-ws-set="expCat" data-value="' + (st.expCat === c.k ? '' : c.k) + '" aria-pressed="' + (st.expCat === c.k) + '"><span>' + esc(EXP_CAT[c.k]) + '</span>' + bar(c.n / cats[0].n) + '<span class="ws-cat-n">' + ars(c.n) + '</span></button>').join('') + '</div>' : '')
             + (list.length ? '<table class="ws-table"><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="n">Monto</th></tr></thead><tbody>'
-                + list.map((g) => '<tr' + rowAttrs('gasto', g) + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(g.date)) + '</td><td data-label="Concepto"><strong>' + esc(g.concept) + '</strong>' + (g.method ? '<br><span class="small muted">' + esc(EXP_METHOD[g.method] || '') + '</span>' : '') + '</td>'
+                + list.map((g) => '<tr' + rowAttrs(g.dl ? 'vencimiento' : 'gasto', g) + (g.dl ? ' data-ws-month="' + g.month + '"' : '') + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(g.date)) + '</td><td data-label="Concepto"><strong>' + (g.dl ? '🔁 ' : '') + esc(g.concept) + '</strong>'
+                    + (g.dl ? '<br><span class="small muted">De Vencimientos' + (g.repeat === 'mensual' ? ' · todos los meses' : g.repeat === 'anual' ? ' · todos los años' : '') + '</span>' : g.method ? '<br><span class="small muted">' + esc(EXP_METHOD[g.method] || '') + '</span>' : '') + '</td>'
                     + '<td data-label="Categoría">' + esc(EXP_CAT[g.category] || g.category) + '</td><td class="n" data-label="Monto"><strong>' + (money(g.amount) === null ? '—' : ars(money(g.amount))) + '</strong></td></tr>').join('')
                 + '</tbody></table>' : empty('No hay gastos ' + (st.expMonth ? 'en ' + mLabel(st.expMonth).toLowerCase() : 'cargados') + '. Sumá el primero con “Nuevo gasto”.'));
     };
@@ -462,7 +481,7 @@
                         : n < 0 ? tag('desaprobado', { desaprobado: 'Vencido' }) : tag(n <= noticeOf(v) ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' });
                     const rep = repeatText({ ...v, date: v.first });
                     return '<tr' + rowAttrs('vencimiento', v, v.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Fecha">' + esc(fshort(v.date)) + (v.time ? '<br><span class="small muted">' + esc(v.time) + ' h</span>' : '') + (rep ? '<br><span class="small muted">🔁 ' + esc(rep) + '</span>' : '') + '</td>'
-                        + '<td data-label="Qué"><strong>' + esc(v.title) + '</strong>' + (v.place ? '<br><span class="small muted">📍 ' + esc(v.place) + '</span>' : '') + '</td>'
+                        + '<td data-label="Qué"><strong>' + esc(v.title) + '</strong>' + (money(amountFor(v, today().slice(0, 7))) !== null ? '<br><span class="small muted">' + ars(money(amountFor(v, today().slice(0, 7)))) + ' este mes · suma en Gastos (' + esc((EXP_CAT[v.category] || EXP_CAT.otros).toLowerCase()) + ')</span>' : '') + (v.place ? '<br><span class="small muted">📍 ' + esc(v.place) + '</span>' : '') + '</td>'
                         + '<td data-label="Tipo">' + esc(DL_KIND[v.kind] || v.kind) + '</td><td data-label="Estado">' + state + (v.done !== 'si' ? '<br><span class="small muted">Aviso ' + noticeOf(v) + (noticeOf(v) === 1 ? ' día' : ' días') + ' antes</span>' : '') + '</td></tr>'; }).join('')
                 + '</tbody></table>' : empty(st.dlView === 'proximos' ? 'No tenés vencimientos pendientes. Cargá el primero con “Nuevo vencimiento”.' : 'No hay vencimientos para mostrar.'));
     };
@@ -557,6 +576,12 @@
                 if (!r.id && job && s.value === 'pendiente') s.value = 'activo'; };
             k.addEventListener('change', sync); sync();
         }
+        if (kind === 'vencimiento') { // el monto es el de un mes: el que se abrió desde Gastos o el actual; los meses anteriores no cambian
+            const m = editMonth || today().slice(0, 7); const a = d.querySelector('[name="amount"]');
+            a.value = r.id ? (amountFor(r, m) || '') : a.value;
+            a.previousSibling.textContent = 'Monto de ' + MONTHS[Number(m.slice(5)) - 1] + ' ' + m.slice(0, 4) + ' (en pesos)';
+            editing.month = m;
+        }
         if (kind === 'agenda') { // cumpleaños: nombre y fecha de nacimiento; sin hora, lugar ni estado
             const k = d.querySelector('[name="kind"]');
             const sync = () => { const b = k.value === 'cumpleanos';
@@ -570,7 +595,7 @@
         d.showModal();
         const first = d.querySelector('input, select, textarea'); if (first) first.focus();
     };
-    const close = () => { const d = document.getElementById('ws-dialog'); if (d && d.open) d.close(); editing = null; };
+    const close = () => { const d = document.getElementById('ws-dialog'); if (d && d.open) d.close(); editing = null; editMonth = ''; };
     const changed = (workspace) => {
         panel().data().workspace = workspace;
         if (current && RENDER[current]) RENDER[current]();
@@ -596,7 +621,7 @@
         if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
         const op = e.target.closest('[data-ws-open]');
-        if (op) { const [kind, id] = op.dataset.wsOpen.split(':'); const rec = W()[kind].find((x) => x.id === Number(id)); if (rec) open(kind, rec); return; }
+        if (op) { const [kind, id] = op.dataset.wsOpen.split(':'); const rec = W()[kind].find((x) => x.id === Number(id)); editMonth = op.dataset.wsMonth || ''; if (rec) open(kind, rec); return; }
         if (e.target.closest('[data-ws-close]')) { close(); return; }
         if (e.target.closest('[data-ws-delete]') && editing) {
             if (!confirm('¿Eliminar este registro? No se puede deshacer.')) return;
@@ -616,6 +641,20 @@
         e.preventDefault();
         const item = Object.fromEntries(new FormData(e.target));
         if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
+        if (editing.kind === 'vencimiento') { // guarda el monto en el historial desde ese mes, sin cambiar los anteriores
+            const rec = W().vencimiento.find((x) => x.id === editing.id); const m = editing.month || today().slice(0, 7);
+            const h = rec ? amountsOf(rec) : {};
+            if (rec && !Object.keys(h).length && money(rec.amount) !== null) h[(rec.date || m).slice(0, 7) < m ? rec.date.slice(0, 7) : m] = rec.amount; // lo que había, desde el principio
+            const before = rec ? amountFor(rec, m) : '';
+            if (String(item.amount || '') !== String(before || '')) {
+                const next = monthAfter(m);
+                if (rec && m < today().slice(0, 7) && !(next in h) && Object.keys(h).length) h[next] = amountFor({ amounts: Object.entries(h).map((x) => x.join('=')).join(';') }, next); // corregir un mes pasado no cambia los siguientes
+                if (money(item.amount) !== null) h[m] = item.amount; else if (m in h) delete h[m];
+            }
+            const keys = Object.keys(h).sort();
+            item.amounts = keys.map((k) => k + '=' + h[k]).join(';');
+            item.amount = keys.length ? h[keys[keys.length - 1]] : item.amount; // el más reciente
+        }
         send({ action: 'save', kind: editing.kind, id: editing.id, updated: editing.updated, item }, 'Guardado');
     });
 

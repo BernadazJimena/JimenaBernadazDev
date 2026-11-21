@@ -50,9 +50,12 @@ export const WS = {
   // Vencimientos personales (DNI, carnet, seguro, turnos): aviso por mail "notice" días antes (vacío = 7).
   // repeat: '' (una vez), 'mensual' o 'anual'; los que se repiten pasan solos a la próxima fecha (nextDue)
   vencimiento: { table: 'ws_deadlines', required: 'title', fields: {
-    title: ['line', 160], kind: [['documento', 'turno', 'seguro', 'impuesto', 'servicio', 'cuota', 'otro']],
+    title: ['line', 160], kind: [['documento', 'turno', 'seguro', 'impuesto', 'servicio', 'suscripcion', 'cuota', 'otro']],
     date: ['date'], time: ['time'], notice: ['line', 3], place: ['line', 160], done: [['no', 'si']], notes: ['text', 2000],
     repeat: [['', 'mensual', 'anual']],
+    // Si es algo que se paga (Netflix, la obra social): monto en pesos y categoría con la que suma en Gastos
+    // amounts: historial del monto por mes ("2026-10=11999;2026-11=12999"): cada monto vale desde su mes; amount es el actual
+    amount: ['line', 20], amounts: ['text', 3000], category: [['servicios', 'otros', 'super', 'comida', 'transporte', 'alquiler', 'salud', 'estudio', 'ocio', 'ropa', 'regalos', 'impuestos']],
   } },
   // Metas: avance a mano o calculado desde Estudios (materias aprobadas o promedio del período "term")
   meta: { table: 'ws_goals', required: 'title', fields: {
