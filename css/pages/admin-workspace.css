@@ -75,6 +75,7 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-bday > :not(.ws-bday-i) { grid-column: 2; }
 .ws-bday-i { font-size: 1.3rem; grid-row: 1 / span 3; line-height: 1.2; }
 .ws-bday strong { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-bday > span:not(.ws-bday-i) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* cumpleaños: todas las cajas del mismo alto */
 .ws-bday:hover, .ws-bday:focus-visible { border-color: var(--accent); }
 /* El día del cumpleaños: dorado para que llame la atención (solo en los cumpleaños) */
 .ws-bday.is-today { --bd: #f6b73c; background: color-mix(in srgb, var(--bd) 22%, var(--soft)); border-color: var(--bd); box-shadow: inset 0 0 0 1px var(--bd), 0 0 0 3px color-mix(in srgb, var(--bd) 25%, transparent); }
@@ -98,7 +99,13 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-ev-top > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-ev-top > .ws-ev-time { flex-shrink: 0; } /* la fecha siempre entera; si falta lugar se acorta la etiqueta */
 .ws-ev summary > strong, .ws-ev summary > .muted { display: block; min-height: 1.2em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ws-ev[open] summary > strong { white-space: normal; }
+/* Abierta, la caja no se agranda: el detalle se despliega encima de las de abajo, así todas siguen del mismo ancho y alto */
+.ws-ev { position: relative; }
+.ws-ev[open] { border-bottom-left-radius: 0; border-bottom-right-radius: 0; z-index: 6; }
+.ws-ev[open] .ws-ev-body { background: var(--soft); border: 1px solid var(--accent); border-left: 3px solid; border-left-color: inherit; border-radius: 0 0 .6rem .6rem; border-top: 0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .35); left: -3px; padding-top: .3rem; position: absolute; right: -1px; top: calc(100% - 1px); }
+.ws-ev[open] .ws-ev-body { align-items: flex-start; display: flex; flex-direction: column; min-height: 9.5rem; } /* abiertas, también del mismo alto */
+.ws-ev[open] .ws-ev-actions { margin-top: auto; } /* los botones siempre abajo */
 .ws-ev summary { min-width: 0; }
 .ws-ev.is-train-done { border-left-color: var(--ok); }
 /* Entrenamiento: días de la semana con casillas (uno, varios o todos) */

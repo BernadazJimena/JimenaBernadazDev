@@ -174,6 +174,9 @@
         + '<strong>' + title + '</strong><span class="small muted">' + (sub || '&nbsp;') + '</span></summary><div class="ws-ev-body">' + body
         + '<div class="ws-ev-actions">' + (action || '') + '<button type="button" data-ws-open="' + openRef + '"' + (extra || '') + '>' + (btn || 'Editar') + '</button></div></div></details>';
     const evGrid = (html) => '<div class="ws-evs">' + html + '</div>';
+    // Una sola caja abierta a la vez: al abrir otra, se cierra la anterior
+    document.addEventListener('toggle', (e) => { const d = e.target; if (!d.matches || !d.matches('details.ws-ev') || !d.open) return;
+        document.querySelectorAll('details.ws-ev[open]').forEach((x) => { if (x !== d) x.open = false; }); }, true);
 
     // ---- Agenda. Los cumpleaños guardan la fecha de nacimiento y se muestran en el próximo cumpleaños con la edad que cumple
     const isBday = (e) => e.kind === 'cumpleanos' && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '');
