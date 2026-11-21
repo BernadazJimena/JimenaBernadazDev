@@ -166,7 +166,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', agMonth: '', agYear: '', bdayMonth: null, studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
+    const st = { agendaView: 'proximos', agendaKind: '', agMonth: null, agYear: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -213,17 +213,17 @@
         const year = MONTHS.map((x, i) => 'm' + String(i + 1).padStart(2, '0')).map((m) => '<div class="ws-cal-month' + (m === nowM ? ' is-now' : '') + '"><p class="ws-cal-title">' + cap(MONTHS[Number(m.slice(1)) - 1])
             + (byMonth[m] ? ' <span class="small muted">' + byMonth[m].length + '</span>' : '') + '</p>' + (byMonth[m] ? byMonth[m].map(bdayRow).join('') : '<p class="small muted ws-cal-none">Sin cumpleaños</p>') + '</div>').join('');
         // Un mes como calendario (lunes a domingo, con los cumpleaños en su día); por defecto, el mes actual. "Todo el año" muestra los doce meses
-        if (st.bdayMonth === null) st.bdayMonth = nowM;
-        const monthCal = (m) => { const mo = Number(m.slice(1)); const y = Number(t.slice(0, 4)) + (mo < Number(t.slice(5, 7)) ? 1 : 0); // el próximo
+        // Un solo filtro de mes para toda la Agenda (cumpleaños y eventos); por defecto, el mes actual
+        if (st.agMonth === null) st.agMonth = nowM;
+        const monthCal = (m) => { const mo = Number(m.slice(1)); const y = st.agYear ? Number(st.agYear) : Number(t.slice(0, 4)) + (mo < Number(t.slice(5, 7)) ? 1 : 0); // el año elegido o el próximo
             const lead = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7; const nd = new Date(Date.UTC(y, mo, 0)).getUTCDate(); const l = byMonth[m] || [];
             return '<div class="ws-cal">' + ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((x) => '<span class="ws-cal-h">' + x + '</span>').join('') + '<span class="ws-cal-d is-empty"></span>'.repeat(lead)
                 + [...Array(nd)].map((_, i) => { const iso = y + '-' + String(mo).padStart(2, '0') + '-' + String(i + 1).padStart(2, '0'); const who = l.filter((e) => Number(e.birth.slice(8)) === i + 1);
                     return '<span class="ws-cal-d' + (who.length ? ' has-bday' : '') + (iso === t ? ' is-today' : '') + '"><span class="ws-cal-n">' + (i + 1) + '</span>'
                         + (who.length ? '<span class="ws-cal-c">🎂' + (who.length > 1 ? who.length : '') + '</span>' + who.map((e) => '<span class="ws-cal-i">🎂 ' + esc(e.title) + '</span>').join('')
                             + '<button type="button" class="ws-cal-more" data-ws-bday="' + who.map((e) => e.id).join(',') + '" aria-label="Ver los cumpleaños del ' + (i + 1) + '">Ver más</button>' : '') + '</span>'; }).join('') + '</div>'
-                + (l.length ? '<div class="ws-bdays">' + l.map(bdayBox).join('') + '</div>' : empty('No hay cumpleaños en ' + MONTHS[mo - 1] + '.')); };
-        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-filters">' + select('bdayMonth', st.bdayMonth, { ...Object.fromEntries(MONTHS.map((x, i) => { const key = 'm' + String(i + 1).padStart(2, '0'); return [key, cap(x) + (byMonth[key] ? ' (' + byMonth[key].length + ')' : '')]; })), '': 'Todo el año' }, 'Mes del cumpleaños') + '</div>'
-            + (!st.bdayMonth ? '<div class="ws-year">' + year + '</div>' : monthCal(st.bdayMonth)) : '';
+                + (l.length ? '' : '<p class="small muted ws-note">No hay cumpleaños en ' + MONTHS[mo - 1] + '.</p>'); }; // el detalle se ve con "Ver más" en el día
+        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p>' + (!st.agMonth ? '<div class="ws-year">' + year + '</div>' : monthCal(st.agMonth)) : '';
         // Exámenes de Estudios (con fecha) en el calendario; se abren y se editan en su ficha de actividad
         const exams = W().actividad.filter((a) => a.date)
             .map((a) => ({ id: a.id, exam: a, kind: 'universidad', title: a.title, subject: subjectName(a.subject), date: a.date, time: a.time || '', notes: a.notes || '', done: ACT_OPEN.includes(actStatus(a)) ? 'no' : 'si' }));
