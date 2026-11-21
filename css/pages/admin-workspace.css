@@ -128,6 +128,17 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-cal-d.is-empty { background: none; border-color: transparent; }
 .ws-cal-d.has { background: color-mix(in srgb, var(--ok) 14%, var(--soft)); border-color: var(--ok); }
 .ws-cal-d.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+.ws-cal-d.has-bday { background: color-mix(in srgb, #f6b73c 16%, var(--soft)); border-color: #f6b73c; }
+.ws-cal-d .ws-cal-i.ws-inline { color: inherit; display: block; font-size: .68rem; overflow: hidden; text-align: left; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
+/* "Ver más" en el día del cumpleaños: abre la info de quien cumple (en el celular, todo el día se toca) */
+.ws-cal-d { position: relative; }
+.ws-cal-more { align-self: flex-start; background: none; border: 1px solid #f6b73c; border-radius: 999px; color: inherit; font-size: .62rem; font-weight: 700; line-height: 1.2; margin-top: auto; min-height: 0; padding: .05rem .45rem; }
+.ws-cal-more:hover, .ws-cal-more:focus-visible { background: #f6b73c; color: #2a1a00; }
+.ws-bday-info { border-bottom: 1px solid var(--line); display: grid; gap: .3rem; justify-items: start; padding-bottom: .8rem; }
+.ws-bday-info:last-child { border-bottom: 0; padding-bottom: 0; }
+.ws-bday-info h3, .ws-bday-info p { margin: 0; }
+.ws-bday-info button { font-size: .8rem; min-height: 0; padding: .3rem .75rem; }
+@media (max-width: 600px) { .ws-cal-more { border: 0; border-radius: .5rem; color: transparent; inset: 0; margin: 0; position: absolute; } .ws-cal-more:hover, .ws-cal-more:focus-visible { background: transparent; } }
 .ws-cal-n { font-size: .75rem; font-weight: 800; }
 .ws-cal-i { font-size: .68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-cal-c { display: none; }
@@ -148,6 +159,26 @@ button.ws-cat[aria-pressed="true"] { border-color: var(--accent); }
 .ws-ev-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .15rem; }
 .ws-ev-body button { font-size: .8rem; line-height: 1.2; min-height: 0; padding: .3rem .75rem; white-space: nowrap; }
 @media (max-width: 420px) { .ws-evs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Cumpleaños: calendario del año (doce meses de enero a diciembre) */
+.ws-year { display: grid; gap: .5rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: .6rem; }
+@media (max-width: 1100px) { .ws-year { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .ws-year { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ws-cal-month { background: var(--soft); border: 1px solid var(--line); border-radius: .7rem; min-height: 6.2rem; min-width: 0; padding: .45rem .55rem; }
+.ws-cal-month.is-now { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.ws-cal-title { font-size: .85rem; font-weight: 800; margin: 0 0 .3rem; }
+.ws-cal-none { margin: 0; }
+.ws-cal-row { align-items: center; background: none; border: 0; border-radius: .4rem; color: inherit; display: grid; font: inherit; gap: .4rem; grid-template-columns: 1.6rem minmax(0, 1fr) auto; min-height: 0; padding: .15rem .2rem; text-align: left; width: 100%; }
+.ws-cal-row:hover, .ws-cal-row:focus-visible { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.ws-cal-row.is-today { background: color-mix(in srgb, #f6b73c 24%, transparent); }
+.ws-cal-day { background: color-mix(in srgb, var(--accent) 22%, transparent); border-radius: .35rem; font-size: .75rem; font-weight: 800; text-align: center; }
+.ws-cal-row.is-today .ws-cal-day { background: #f6b73c; color: #2a1a00; }
+.ws-cal-who { font-size: .82rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Salud: tipos propios (se agregan, se editan y se borran) */
+.ws-types { margin: 0 0 1rem; padding: .8rem 1rem; }
+.ws-types p { margin: 0 0 .5rem; }
+.ws-type-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ws-type { font-size: .82rem; min-height: 0; padding: .3rem .75rem; }
+.ws-type.is-new { border-style: dashed; }
 /* Correlativas: un título chico por cuatrimestre */
 .ws-term { color: var(--accent-ink); font-size: .8rem; font-weight: 700; margin: .7rem 0 .3rem; }
 @media (min-width: 761px) { /* las tablas de todos los cuatrimestres con las mismas columnas */

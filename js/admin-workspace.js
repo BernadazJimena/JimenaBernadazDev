@@ -4,7 +4,7 @@
 // Son datos personales: no van en la copia JNB (worker/core/backup-policy.js).
 (() => {
     const panel = () => window.JNBPanel;
-    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], curso: [], trabajo: [], gasto: [], vencimiento: [], meta: [], salud: [], entreno: [], ...((panel().data() || {}).workspace || {}) });
+    const W = () => ({ agenda: [], carrera: [], materia: [], actividad: [], curso: [], trabajo: [], gasto: [], vencimiento: [], meta: [], salud: [], entreno: [], saludtipo: [], ...((panel().data() || {}).workspace || {}) });
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const today = () => (window.JNBHolidays ? window.JNBHolidays.now().date : new Date().toISOString().slice(0, 10));
     const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -42,7 +42,12 @@
     // Salud y entrenamiento
     const MED_UNIT = { mg: 'mg', '': 'Sin unidad', g: 'g', mcg: 'mcg', ml: 'ml', gotas: 'gotas', comprimido: 'comprimido', capsula: 'cápsula', UI: 'UI', puff: 'puff', sobre: 'sobre' };
     const doseText = (h) => (h.dose ? h.dose + (h.unit ? ' ' + (MED_UNIT[h.unit] || h.unit) + (['comprimido', 'capsula', 'sobre'].includes(h.unit) && !/^1([.,]0+)?$/.test(h.dose) ? 's' : '') : '') : '');
-    const HEALTH_KIND = { chequeo: 'Chequeo', medicamento: 'Medicamento', consulta: 'Consulta', estudio: 'Estudio o análisis', vacuna: 'Vacuna', otro: 'Otro' };
+    // Tipos fijos de Salud ("Chequeo" se unió con Consulta); más los que agrega la usuaria (saludtipo), que van como "t:<id>"; "Otro" siempre al final
+    const HEALTH_KIND = { consulta: 'Consulta', medicamento: 'Medicamento', estudio: 'Estudio o análisis', vacuna: 'Vacuna', otro: 'Otro' };
+    const healthTypes = () => { const own = Object.fromEntries(W().saludtipo.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'es')).map((x) => ['t:' + x.id, x.name]));
+        const { otro, ...base } = HEALTH_KIND; return { ...base, ...own, otro }; };
+    const typeKey = (h) => (h.subtype && W().saludtipo.some((x) => String(x.id) === String(h.subtype)) ? 't:' + h.subtype : h.kind === 'chequeo' ? 'consulta' : h.kind);
+    const typeLabel = (h) => healthTypes()[typeKey(h)] || 'Otro';
     // Dos niveles, iguales en el formulario y en el filtro: primero la actividad (Gimnasio, Natación, Running…) y adentro su tipo:
     // en el gimnasio, la zona (tren superior, inferior, core…); en natación, el estilo; en running, ciclismo y yoga, el tipo de entrenamiento.
     // En la base, "area" es la zona del gimnasio o la actividad misma (natacion, running…) y "style" el tipo.
@@ -110,17 +115,18 @@
         ] },
         // Salud: los campos con areas se ven según el tipo (switch: 'kind')
         salud: { title: 'registro', switch: 'kind', fields: [
-            ['kind', 'Tipo', 'select', HEALTH_KIND], ['title', 'Qué', 'line', { required: true, max: 160, wide: true, hint: 'Chequeo anual, Enalapril 10 mg…' }],
-            ['specialty', 'Especialidad', 'line', { max: 80, hint: 'Cardiólogo, clínica médica…', areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['doctor', 'Profesional', 'line', { max: 120, hint: 'Dra. Pérez', areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
+            ['kind', 'Tipo', 'htype'], ['title', 'Qué', 'line', { required: true, max: 160, wide: true, hint: 'Control anual, Enalapril 10 mg…' }],
+            ['specialty', 'Especialidad', 'line', { max: 80, hint: 'Cardiólogo, clínica médica…', areas: ['consulta', 'estudio', 'vacuna', 'otro'] }], ['doctor', 'Profesional', 'line', { max: 120, hint: 'Dra. Pérez', areas: ['consulta', 'estudio', 'vacuna', 'otro'] }],
             ['dose', 'Dosis', 'line', { max: 20, hint: '2,5', mode: 'decimal', areas: ['medicamento'] }], ['unit', 'Unidad', 'select', { ...MED_UNIT, areas: ['medicamento'] }],
             ['hours', 'A qué hora', 'line', { max: 120, hint: '08:00, 20:00', areas: ['medicamento'] }], ['remind', 'Recordatorio', 'select', { no: 'Sin recordatorio', si: 'Mostrar las tomas del día en el Dashboard', areas: ['medicamento'] }],
             ['course', 'Tratamiento', 'select', { cronico: 'Crónico (todos los días)', temporal: 'Por un tiempo (antibiótico…)', areas: ['medicamento'] }],
             ['start', 'Desde', 'date', { areas: ['medicamento'], course: true }], ['end', 'Hasta', 'date', { areas: ['medicamento'], course: true }],
             ['status', 'Estado', 'select', { activo: 'Lo estoy tomando', finalizado: 'Ya no lo tomo', areas: ['medicamento'] }],
-            ['date', 'Fecha', 'date', { areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['time', 'Hora', 'time', { areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
-            ['place', 'Lugar', 'line', { max: 160, areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }],
-            ['result', 'Resultado o indicaciones', 'text', { max: 2000, areas: ['chequeo', 'consulta', 'estudio', 'vacuna', 'otro'] }], ['notes', 'Notas', 'text', { max: 2000 }],
+            ['date', 'Fecha', 'date', { areas: ['consulta', 'estudio', 'vacuna', 'otro'] }], ['time', 'Hora', 'time', { areas: ['consulta', 'estudio', 'vacuna', 'otro'] }],
+            ['place', 'Lugar', 'line', { max: 160, areas: ['consulta', 'estudio', 'vacuna', 'otro'] }],
+            ['result', 'Resultado o indicaciones', 'text', { max: 2000, areas: ['consulta', 'estudio', 'vacuna', 'otro'] }], ['notes', 'Notas', 'text', { max: 2000 }],
         ] },
+        saludtipo: { title: 'tipo de registro', fields: [['name', 'Nombre del tipo', 'line', { required: true, max: 60, wide: true, hint: 'Kinesiología, Odontología…' }]] },
         // Entrenamiento: según la actividad, series, repeticiones y kilos (gimnasio), estilo y metros (natación), kilómetros y minutos
         entreno: { title: 'ejercicio', switch: '_sport', fields: [
             ['_sport', 'Actividad', 'select', SPORT], ['area', 'Zona', 'select', { ...GYM_ZONE, areas: ['gym'] }],
@@ -160,7 +166,7 @@
     };
 
     // ---- Estado de cada vista
-    const st = { agendaView: 'proximos', agendaKind: '', bdayMonth: '', studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
+    const st = { agendaView: 'proximos', agendaKind: '', agMonth: '', agYear: '', bdayMonth: null, studyTab: 'materias', studyGroup: 'todos', subjView: 'cursando', studyCareer: '', studyYear: '', studyHalf: '', corrYear: '', corrHalf: '', studySubject: '', studyView: 'abiertas', jobKind: '', jobView: 'abiertos', expMonth: null, expCat: '', expSort: 'asc', dlView: 'proximos', dlKind: '', goalView: 'en-curso', hKind: '', hSpec: '', hDoc: '', trSport: '', trSub: '', trDay: '', trMonth: '', trView: 'todas' };
     const root = (mod) => document.getElementById('m-' + mod);
     const head = (title, text, buttons) => '<div class="ws-head"><div><h2>' + title + '</h2><p class="small muted">' + text + '</p></div><div class="row">' + buttons + '</div></div>';
     const seg = (key, value, options) => '<nav aria-label="Vista">' + Object.entries(options).map(([v, l]) => '<button type="button" data-ws-set="' + key + '" data-value="' + v + '" aria-pressed="' + (value === v) + '">' + l + '</button>').join('') + '</nav>';
@@ -198,9 +204,26 @@
         const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
         const byMonth = {}; bdays.slice().sort((a, b) => a.birth.slice(5).localeCompare(b.birth.slice(5)) || String(a.title).localeCompare(String(b.title), 'es'))
             .forEach((e) => { const m = 'm' + e.birth.slice(5, 7); (byMonth[m] = byMonth[m] || []).push(e); });
-        const shown = Object.keys(byMonth).filter((m) => !st.bdayMonth || m === st.bdayMonth);
-        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-filters">' + select('bdayMonth', st.bdayMonth, { '': 'Todos los meses', ...Object.fromEntries(MONTHS.map((x, i) => { const key = 'm' + String(i + 1).padStart(2, '0'); return [key, cap(x) + (byMonth[key] ? ' (' + byMonth[key].length + ')' : '')]; })) }, 'Mes del cumpleaños') + '</div>'
-            + (shown.length ? shown.map((m) => '<p class="ws-term">' + cap(MONTHS[Number(m.slice(1)) - 1]) + '</p><div class="ws-bdays">' + byMonth[m].map(bdayBox).join('') + '</div>').join('') : empty('No hay cumpleaños en ' + MONTHS[Number(st.bdayMonth.slice(1)) - 1] + '.')) : '';
+        // Calendario del año: los doce meses de enero a diciembre (también los que no tienen cumpleaños); el mes actual resaltado.
+        // Con la lista se ve un solo mes, con las cajas grandes de cada cumpleaños
+        const nowM = 'm' + t.slice(5, 7);
+        const bdayRow = (e) => { const n = daysTo(e.date);
+            return '<button type="button" class="ws-cal-row' + (n === 0 ? ' is-today' : '') + '" data-ws-open="agenda:' + e.id + '"><span class="ws-cal-day">' + Number(e.birth.slice(8)) + '</span>'
+                + '<span class="ws-cal-who">' + esc(e.title) + '</span><span class="small muted">' + (n === 0 ? '🎂 ¡Hoy!' : ageOf(e) > 0 ? ageNow(e) + (ageNow(e) === 1 ? ' año' : ' años') : '') + '</span></button>'; };
+        const year = MONTHS.map((x, i) => 'm' + String(i + 1).padStart(2, '0')).map((m) => '<div class="ws-cal-month' + (m === nowM ? ' is-now' : '') + '"><p class="ws-cal-title">' + cap(MONTHS[Number(m.slice(1)) - 1])
+            + (byMonth[m] ? ' <span class="small muted">' + byMonth[m].length + '</span>' : '') + '</p>' + (byMonth[m] ? byMonth[m].map(bdayRow).join('') : '<p class="small muted ws-cal-none">Sin cumpleaños</p>') + '</div>').join('');
+        // Un mes como calendario (lunes a domingo, con los cumpleaños en su día); por defecto, el mes actual. "Todo el año" muestra los doce meses
+        if (st.bdayMonth === null) st.bdayMonth = nowM;
+        const monthCal = (m) => { const mo = Number(m.slice(1)); const y = Number(t.slice(0, 4)) + (mo < Number(t.slice(5, 7)) ? 1 : 0); // el próximo
+            const lead = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7; const nd = new Date(Date.UTC(y, mo, 0)).getUTCDate(); const l = byMonth[m] || [];
+            return '<div class="ws-cal">' + ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((x) => '<span class="ws-cal-h">' + x + '</span>').join('') + '<span class="ws-cal-d is-empty"></span>'.repeat(lead)
+                + [...Array(nd)].map((_, i) => { const iso = y + '-' + String(mo).padStart(2, '0') + '-' + String(i + 1).padStart(2, '0'); const who = l.filter((e) => Number(e.birth.slice(8)) === i + 1);
+                    return '<span class="ws-cal-d' + (who.length ? ' has-bday' : '') + (iso === t ? ' is-today' : '') + '"><span class="ws-cal-n">' + (i + 1) + '</span>'
+                        + (who.length ? '<span class="ws-cal-c">🎂' + (who.length > 1 ? who.length : '') + '</span>' + who.map((e) => '<span class="ws-cal-i">🎂 ' + esc(e.title) + '</span>').join('')
+                            + '<button type="button" class="ws-cal-more" data-ws-bday="' + who.map((e) => e.id).join(',') + '" aria-label="Ver los cumpleaños del ' + (i + 1) + '">Ver más</button>' : '') + '</span>'; }).join('') + '</div>'
+                + (l.length ? '<div class="ws-bdays">' + l.map(bdayBox).join('') + '</div>' : empty('No hay cumpleaños en ' + MONTHS[mo - 1] + '.')); };
+        const bdayHtml = bdays.length ? '<p class="ws-day">Cumpleaños</p><div class="ws-filters">' + select('bdayMonth', st.bdayMonth, { ...Object.fromEntries(MONTHS.map((x, i) => { const key = 'm' + String(i + 1).padStart(2, '0'); return [key, cap(x) + (byMonth[key] ? ' (' + byMonth[key].length + ')' : '')]; })), '': 'Todo el año' }, 'Mes del cumpleaños') + '</div>'
+            + (!st.bdayMonth ? '<div class="ws-year">' + year + '</div>' : monthCal(st.bdayMonth)) : '';
         // Exámenes de Estudios (con fecha) en el calendario; se abren y se editan en su ficha de actividad
         const exams = W().actividad.filter((a) => a.date)
             .map((a) => ({ id: a.id, exam: a, kind: 'universidad', title: a.title, subject: subjectName(a.subject), date: a.date, time: a.time || '', notes: a.notes || '', done: ACT_OPEN.includes(actStatus(a)) ? 'no' : 'si' }));
@@ -208,18 +231,27 @@
             .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.time || '').localeCompare(b.time || '') || a.id - b.id);
         if (st.agendaView === 'proximos') list = list.filter((e) => e.done !== 'si' && (!e.date || e.date >= t));
         if (st.agendaView === 'pasados') list = list.filter((e) => e.date && e.date < t).reverse();
+        // Filtros de mes y año; los eventos van agrupados por mes, como un calendario
+        const years = [...new Set(list.map((e) => (e.date || '').slice(0, 4)).filter(Boolean).concat(t.slice(0, 4)))].sort();
+        if (st.agYear && !years.includes(st.agYear)) st.agYear = '';
+        list = list.filter((e) => (!st.agYear || (e.date || '').slice(0, 4) === st.agYear) && (!st.agMonth || 'm' + (e.date || '').slice(5, 7) === st.agMonth));
+        const capM = (x) => x.charAt(0).toUpperCase() + x.slice(1);
         const days = [];
-        list.forEach((e) => { const k = e.date || ''; const g = days.find((d) => d.k === k); if (g) g.items.push(e); else days.push({ k, items: [e] }); });
+        list.forEach((e) => { const k = (e.date || '').slice(0, 7); const g = days.find((d) => d.k === k); if (g) g.items.push(e); else days.push({ k, items: [e] }); });
         if (st.agendaView === 'proximos') days.sort((a, b) => (a.k === '' ? 1 : b.k === '' ? -1 : 0));
+        const WD = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const when = (e) => (e.date ? (e.date === t ? 'Hoy' : WD[new Date(e.date + 'T12:00:00Z').getUTCDay()] + ' ' + Number(e.date.slice(8)) + '/' + Number(e.date.slice(5, 7))) : 'Sin fecha')
+            + (e.time ? ' · ' + esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : '');
         // Cada evento es una caja compacta (hora, qué y tipo); al tocarla se despliega con el resto: estado, lugar, notas y el botón para editar
         const boxes = (items) => '<div class="ws-evs">' + items.map((e) => {
             const type = e.exam ? 'Universidad · ' + ACT_KIND[e.exam.kind] : AGENDA_KIND[e.kind] || e.kind;
             const state = e.exam ? tag(actStatus(e.exam), ACT_STATUS) : e.done === 'si' ? tag('aprobado', { aprobado: 'Hecho' }) : tag('pendiente', { pendiente: 'Pendiente' });
-            return '<details class="ws-ev' + (e.exam ? ' is-exam' : '') + (e.done === 'si' ? ' ws-done' : '') + '"><summary><span class="small ws-ev-time">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</span>'
+            return '<details class="ws-ev' + (e.exam ? ' is-exam' : '') + (e.done === 'si' ? ' ws-done' : e.date === t ? ' is-soon' : '') + '"><summary><span class="ws-ev-top"><span class="small ws-ev-time">' + when(e) + '</span></span>'
                 + '<strong>' + esc(e.title) + '</strong><span class="small muted">' + esc(type) + '</span></summary><div class="ws-ev-body">' + state
                 + (e.exam ? '<span class="small">📚 ' + esc(e.subject || 'Estudios') + '</span>' : '') + (e.place ? '<span class="small">📍 ' + esc(e.place) + '</span>' : '')
                 + (e.notes ? '<p class="small ws-ev-notes">' + esc(e.notes).replace(/\n/g, '<br>') + '</p>' : '')
-                + '<button type="button" data-ws-open="' + (e.exam ? 'actividad' : 'agenda') + ':' + e.id + '">' + (e.exam ? 'Abrir en Estudios' : 'Editar') + '</button></div></details>'; }).join('') + '</div>';
+                + '<div class="ws-ev-actions">' + (!e.exam && e.done !== 'si' && e.date && e.date <= t ? '<button type="button" class="primary" data-ws-take="agenda:' + e.id + '">✓ Hecho</button>' : '')
+                + '<button type="button" data-ws-open="' + (e.exam ? 'actividad' : 'agenda') + ':' + e.id + '">' + (e.exam ? 'Abrir en Estudios' : 'Editar') + '</button></div></div></details>'; }).join('') + '</div>';
         const table = (items) => '<table class="ws-table ws-agenda"><thead><tr><th>Hora</th><th>Qué</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'
             + items.map((e) => '<tr' + rowAttrs(e.exam ? 'actividad' : 'agenda', e, e.done === 'si' ? 'ws-done' : '') + '><td class="ws-nowrap" data-label="Hora">' + (e.time ? esc(e.time) + (e.end ? '–' + esc(e.end) : '') + ' h' : 'Todo el día') + '</td>'
                 + '<td data-label="Qué"><strong>' + (e.birth ? '🎂 ' : '') + esc(e.title) + '</strong>' + (e.exam ? '<br><span class="small muted">📚 ' + esc(e.subject || 'Estudios') + '</span>' : '') + (e.place && !e.birth ? '<br><span class="small muted">📍 ' + esc(e.place) + '</span>' : '') + (e.birth ? '<br><span class="small muted">Nació el ' + Number(e.birth.slice(8)) + '/' + Number(e.birth.slice(5, 7)) + '/' + e.birth.slice(0, 4) + '</span>' : '') + '</td>'
@@ -227,10 +259,12 @@
             + '</tbody></table>';
         root('mi-agenda').innerHTML = head('Agenda', 'Turnos, reuniones, eventos, recordatorios, cumpleaños (se repiten todos los años) y las fechas de la universidad, que se cargan y se ven también en Estudios.', '<button type="button" class="primary" data-ws-new="agenda">+ Nuevo evento</button>')
             + '<div class="ws-filters">' + seg('agendaView', st.agendaView, { proximos: 'Próximos', pasados: 'Pasados', todos: 'Todos' })
-                + select('agendaKind', k, { '': 'Todos los tipos', ...AGENDA_PICK, universidad: 'Universidad' }, 'Tipo') + '</div>'
+                + select('agendaKind', k, { '': 'Todos los tipos', ...AGENDA_PICK, universidad: 'Universidad' }, 'Tipo')
+                + select('agMonth', st.agMonth, { '': 'Todos los meses', ...Object.fromEntries(MONTHS.map((x, i) => ['m' + String(i + 1).padStart(2, '0'), capM(x)])) }, 'Mes')
+                + select('agYear', st.agYear, Object.fromEntries([['', 'Todos los años']].concat(years.map((y) => [y, y]))), 'Año') + '</div>'
             + bdayHtml
-            + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t ? ' is-today' : '') + '">' + (d.k === t ? 'Hoy · ' : '') + esc(fdate(d.k)) + '</p>' + boxes(d.items)).join('')
-                : bdays.length ? '' : empty(k ? 'No hay ' + (k === 'universidad' ? 'fechas de la universidad' : 'eventos de este tipo') + (st.agendaView === 'proximos' ? ' próximos.' : st.agendaView === 'pasados' ? ' pasados.' : '.') : st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
+            + (days.length ? days.map((d) => '<p class="ws-day' + (d.k === t.slice(0, 7) ? ' is-today' : '') + '">' + (d.k ? capM(MONTHS[Number(d.k.slice(5)) - 1]) + ' ' + d.k.slice(0, 4) : 'Sin fecha') + '</p>' + boxes(d.items)).join('')
+                : bdays.length ? '' : empty(st.agMonth || st.agYear ? 'No hay eventos en ese período.' : k ? 'No hay ' + (k === 'universidad' ? 'fechas de la universidad' : 'eventos de este tipo') + (st.agendaView === 'proximos' ? ' próximos.' : st.agendaView === 'pasados' ? ' pasados.' : '.') : st.agendaView === 'proximos' ? 'No tenés eventos próximos. Agregá el primero con “Nuevo evento”.' : 'No hay eventos para mostrar.'));
     };
 
     // ---- Estudios: carreras, materias (inscripción, notas y condición) y actividades (TPs, exámenes, finales y fechas)
@@ -650,7 +684,8 @@
         const all = W().salud; const t = today();
         const specs = variants(all.map((h) => h.specialty)); const docs = variants(all.map((h) => h.doctor));
         if (st.hSpec && !specs[st.hSpec]) st.hSpec = ''; if (st.hDoc && !docs[st.hDoc]) st.hDoc = '';
-        const list = all.filter((h) => (!st.hKind || h.kind === st.hKind) && (!st.hSpec || norm(h.specialty) === st.hSpec) && (!st.hDoc || norm(h.doctor) === st.hDoc));
+        if (st.hKind && !healthTypes()[st.hKind]) st.hKind = '';
+        const list = all.filter((h) => (!st.hKind || typeKey(h) === st.hKind) && (!st.hSpec || norm(h.specialty) === st.hSpec) && (!st.hDoc || norm(h.doctor) === st.hDoc));
         const who = (h) => [h.specialty ? specs[norm(h.specialty)] : '', h.doctor ? docs[norm(h.doctor)] : ''].filter(Boolean).map(esc).join(' · ');
         const hoursOf = (h) => String(h.hours || '').split(/\s*(?:,|;|\by\b|\/)\s*/).map((x) => x.trim()).filter(Boolean);
         const meds = list.filter((h) => h.kind === 'medicamento' && h.status !== 'finalizado').sort((a, b) => String(a.title).localeCompare(String(b.title), 'es'));
@@ -666,11 +701,16 @@
         const recBox = (h) => { const n = h.date ? daysTo(h.date) : null;
             return evBox(n !== null && n >= 0 && n <= 7 ? 'is-soon' : n !== null && n < 0 ? 'ws-done' : '', '<span class="small ws-ev-time">' + esc(fshort(h.date)) + (h.time ? ' · ' + esc(h.time) + ' h' : '') + '</span>'
                 + (n === null ? '' : n < 0 ? tag('aprobado', { aprobado: 'Hecho' }) : tag(n <= 7 ? 'regular' : 'en-curso', { regular: n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Faltan ' + n + ' días', 'en-curso': 'Faltan ' + n + ' días' })),
-                esc(h.title), [esc(HEALTH_KIND[h.kind] || h.kind), who(h)].filter(Boolean).join(' · '),
+                esc(h.title), [esc(typeLabel(h)), who(h)].filter(Boolean).join(' · '),
                 (who(h) ? '<span class="small">🩺 ' + who(h) + '</span>' : '') + (h.place ? '<span class="small">📍 ' + esc(h.place) + '</span>' : '')
                     + (h.result ? '<p class="small ws-ev-notes"><strong>Resultado:</strong> ' + esc(h.result).replace(/\n/g, '<br>') + '</p>' : '') + notesHtml(h.notes), 'salud:' + h.id); };
-        root('salud').innerHTML = head('Salud', 'Chequeos, consultas, estudios, vacunas y los medicamentos que tomás, con sus horarios y quién te los indicó.', '<button type="button" class="primary" data-ws-new="salud">+ Nuevo registro</button>')
-            + '<div class="ws-filters">' + select('hKind', st.hKind, { '': 'Todos los tipos', ...HEALTH_KIND }, 'Tipo') + (Object.keys(specs).length ? select('hSpec', st.hSpec, { '': 'Todas las especialidades', ...specs }, 'Especialidad') : '')
+        // Tipos propios: se agregan, se cambian de nombre o se borran (los fijos no se tocan)
+        const typesPanel = st.hTypes ? '<div class="ws-types card"><p class="small muted">Los tipos fijos son Consulta, Medicamento, Estudio o análisis, Vacuna y Otro. Podés sumar los tuyos y cambiarles el nombre o borrarlos; los registros de un tipo borrado pasan a “Otro”.</p><div class="ws-type-list">'
+            + W().saludtipo.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'es')).map((x) => '<button type="button" class="ws-type" data-ws-open="saludtipo:' + x.id + '" title="Cambiar el nombre o borrar">' + esc(x.name) + ' <span aria-hidden="true">✎</span></button>').join('')
+            + '<button type="button" class="ws-type is-new" data-ws-new="saludtipo">+ Agregar tipo</button></div></div>' : '';
+        root('salud').innerHTML = head('Salud', 'Consultas, estudios, vacunas y los medicamentos que tomás, con sus horarios y quién te los indicó.', '<button type="button" data-ws-set="hTypes" data-value="' + (st.hTypes ? '' : '1') + '" aria-pressed="' + !!st.hTypes + '">Tipos</button><button type="button" class="primary" data-ws-new="salud">+ Nuevo registro</button>')
+            + typesPanel
+            + '<div class="ws-filters">' + select('hKind', st.hKind, { '': 'Todos los tipos', ...healthTypes() }, 'Tipo') + (Object.keys(specs).length ? select('hSpec', st.hSpec, { '': 'Todas las especialidades', ...specs }, 'Especialidad') : '')
                 + (Object.keys(docs).length ? select('hDoc', st.hDoc, { '': 'Todos los profesionales', ...docs }, 'Profesional') : '') + '</div>'
             + (!all.length ? empty('Todavía no cargaste nada. Sumá un chequeo o un medicamento con “Nuevo registro”.') : !list.length ? empty('No hay registros con estos filtros.') : '')
             + (meds.length ? '<p class="ws-day">Medicamentos que tomás</p>' + (takes.length ? '<p class="small ws-note">⏰ ' + takes.map((k) => '<strong>' + esc(k.x) + '</strong> ' + esc(k.h.title) + (doseText(k.h) ? ' ' + esc(doseText(k.h)) : '')).join(' · ') + '</p>' : '') + evGrid(meds.map(medBox).join('')) : '')
@@ -747,7 +787,7 @@
     };
 
     const RENDER = { 'mi-agenda': renderAgenda, salud: renderHealth, entrenamiento: renderTraining, estudios: renderStudies, trabajo: renderJobs, gastos: renderExpenses, vencimientos: renderDeadlines, metas: renderGoals };
-    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', curso: 'estudios', trabajo: 'trabajo', gasto: 'gastos', vencimiento: 'vencimientos', salud: 'salud', entreno: 'entrenamiento', meta: 'metas' };
+    const MOD_OF = { agenda: 'mi-agenda', carrera: 'estudios', materia: 'estudios', actividad: 'estudios', curso: 'estudios', trabajo: 'trabajo', gasto: 'gastos', vencimiento: 'vencimientos', salud: 'salud', saludtipo: 'salud', entreno: 'entrenamiento', meta: 'metas' };
     let current = '';
 
     // ---- Contadores del menú: agenda de hoy, entregas y exámenes de los próximos 7 días (o vencidos), entrevistas próximas
@@ -778,6 +818,8 @@
             return '<fieldset class="wide ws-days"><legend>' + label + '</legend><div class="ws-days-row">'
                 + Object.entries(WEEK).map(([k, l]) => '<label class="ws-day-chip" title="' + l + '"><input type="checkbox" name="_day" value="' + k + '" aria-label="' + l + '"' + (sel.includes(k) ? ' checked' : '') + '><span>' + short[k] + '</span></label>').join('')
                 + '<label class="ws-day-chip ws-day-all" title="Todos los días"><input type="checkbox" data-ws-alldays aria-label="Todos los días"' + (sel.length === 7 ? ' checked' : '') + '><span>Todos</span></label></div></fieldset>'; }
+        if (type === 'htype') { const cur = r.id ? typeKey(r) : (r.kind || 'consulta');
+            return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(healthTypes()).map(([k, l]) => '<option value="' + esc(k) + '"' + (k === cur ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>'; }
         if (type === 'pick') return '<label' + wide + '>' + label + '<select name="' + name + '"><option value="">' + esc(o.empty || '—') + '</option>' + o.values.map((x) => '<option' + (x === String(v) ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + (v && !o.values.includes(String(v)) ? '<option selected>' + esc(v) + '</option>' : '') + '</select></label>';
         if (type === 'line' && o.list) return '<label' + wide + '>' + label + '<input type="text" name="' + name + '" value="' + esc(v) + '" list="ws-list-' + name + '"' + (o.max ? ' maxlength="' + o.max + '"' : '') + (o.hint ? ' placeholder="' + esc(o.hint) + '"' : '') + '><datalist id="ws-list-' + name + '">' + o.list.map((x) => '<option value="' + esc(x) + '">').join('') + '</datalist></label>';
         if (type === 'select') return '<label' + wide + '>' + label + '<select name="' + name + '">' + Object.entries(o).filter(([k]) => typeof o[k] === 'string' && k !== 'hint').map(([k, l]) => '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
@@ -799,7 +841,7 @@
         const r = rec || { id: 0, updated: '', ...(preset || {}) };
         editing = { kind, id: r.id || 0, updated: r.updated || '' };
         const d = dialog();
-        d.innerHTML = '<form method="dialog" class="task-form ws-form"><div class="task-form-head"><strong>' + (r.id ? 'Editar ' : ['agenda', 'trabajo', 'gasto', 'vencimiento', 'curso', 'salud', 'entreno'].includes(kind) ? 'Nuevo ' : 'Nueva ') + f.title + '</strong>'
+        d.innerHTML = '<form method="dialog" class="task-form ws-form"><div class="task-form-head"><strong>' + (r.id ? 'Editar ' : ['agenda', 'trabajo', 'gasto', 'vencimiento', 'curso', 'salud', 'entreno', 'saludtipo'].includes(kind) ? 'Nuevo ' : 'Nueva ') + f.title + '</strong>'
             + '<button type="button" class="task-icon-btn" data-ws-close aria-label="Cerrar">×</button></div>'
             + '<div class="task-form-body"><div class="task-form-grid">' + f.fields.map(fieldHtml(r)).join('') + '</div></div>'
             + '<div class="task-form-foot">' + (r.id ? '<button type="button" data-ws-delete>Eliminar</button>' : '<span></span>')
@@ -822,7 +864,8 @@
         }
         if (f.switch) { // campos que dependen de otro (tipo de registro de salud, actividad del entrenamiento)
             const sw = d.querySelector('[name="' + f.switch + '"]');
-            const sync = () => d.querySelectorAll('[data-ws-areas]').forEach((x) => { x.hidden = !x.dataset.wsAreas.split(' ').includes(sw.value); });
+            const sync = () => { const v = sw.value.startsWith('t:') ? 'otro' : sw.value; // los tipos propios se comportan como "Otro"
+                d.querySelectorAll('[data-ws-areas]').forEach((x) => { x.hidden = !x.dataset.wsAreas.split(' ').includes(v); }); };
             sw.addEventListener('change', sync); sync();
             const course = d.querySelector('[name="course"]');
             if (course) { const syncCourse = () => d.querySelectorAll('[data-ws-course]').forEach((x) => { x.hidden = sw.value !== 'medicamento' || course.value !== 'temporal'; });
@@ -864,6 +907,7 @@
         }
         const ys = d.querySelector('[name="_year"]'); // "Otro año…": aparece el campo para escribirlo
         if (ys) { const box = d.querySelector('[data-ws-year-other]'); const sync = () => { box.hidden = ys.value !== 'otro'; box.querySelector('input').required = !box.hidden; }; ys.addEventListener('change', sync); sync(); }
+        if (d.open) d.close(); // si venía de otra ventana (la info de un cumpleaños), se reemplaza
         d.showModal();
         const first = d.querySelector('input, select, textarea'); if (first) first.focus();
     };
@@ -893,7 +937,20 @@
         if (nw) { const kind = nw.dataset.wsNew; open(kind, null, kind === 'actividad' && st.studySubject ? { subject: st.studySubject } : kind === 'materia' && (st.studyCareer || W().carrera.length === 1) ? { carrera: st.studyCareer || String(W().carrera[0].id) } : kind === 'salud' ? { unit: 'mg' } : kind === 'gasto' ? { date: today(), ...(st.expCat ? { category: st.expCat } : {}) } : null); return; }
         if (e.target.closest('a[href]')) return; // los links de una materia se abren sin abrir la ficha
         // Dashboard: tocar una toma de medicamento la marca como tomada hoy (vuelve a aparecer mañana)
+        const bd = e.target.closest('[data-ws-bday]');
+        if (bd) { const ids = bd.dataset.wsBday.split(',').map(Number); const people = agendaItems().filter((x) => x.birth && ids.includes(x.id)); if (!people.length) return;
+            const d = dialog(); editing = null;
+            d.innerHTML = '<div class="task-form ws-form"><div class="task-form-head"><strong>🎂 ' + (people.length === 1 ? 'Cumpleaños' : 'Cumpleaños del día') + '</strong><button type="button" class="task-icon-btn" data-ws-close aria-label="Cerrar">×</button></div><div class="task-form-body">'
+                + people.map((p) => { const n = daysTo(p.date); const when = Number(p.date.slice(8)) + ' de ' + MONTHS[Number(p.date.slice(5, 7)) - 1];
+                    return '<div class="ws-bday-info"><h3>' + esc(p.title) + '</h3>'
+                        + '<p>' + (n === 0 ? '<strong>¡Hoy cumple ' + ageOf(p) + '!</strong>' : ageOf(p) > 0 ? 'Tiene <strong>' + ageNow(p) + (ageNow(p) === 1 ? ' año' : ' años') + '</strong> · cumple ' + ageOf(p) + ' el ' + when : 'Cumple el ' + when) + (n > 0 ? ' (' + (n === 1 ? 'mañana' : 'faltan ' + n + ' días') + ')' : '') + '</p>'
+                        + '<p class="small muted">Nació el ' + Number(p.birth.slice(8)) + '/' + Number(p.birth.slice(5, 7)) + '/' + p.birth.slice(0, 4) + '</p>' + notesHtml(p.notes)
+                        + '<button type="button" data-ws-open="agenda:' + p.id + '">Editar</button></div>'; }).join('')
+                + '</div></div>';
+            d.showModal(); return; }
         const tk = e.target.closest('[data-ws-take]');
+        if (tk && tk.dataset.wsTake.startsWith('agenda:')) { const rec = W().agenda.find((x) => x.id === Number(tk.dataset.wsTake.slice(7))); if (!rec) return;
+            send({ action: 'save', kind: 'agenda', id: rec.id, updated: rec.updated || '', item: { ...rec, done: 'si' } }, '✓ Listo: ' + rec.title); return; }
         if (tk) { const [hid, at] = tk.dataset.wsTake.split('|'); const rec = W().salud.find((x) => x.id === Number(hid)); if (!rec) return;
             const key = today() + ' ' + at; const keep = String(rec.taken || '').split(';').filter((x) => x && x >= addDays(today(), -7)); // solo la última semana
             send({ action: 'save', kind: 'salud', id: rec.id, updated: rec.updated || '', item: { ...rec, taken: keep.concat(key).join(';') } }, '💊 Listo: ' + rec.title + ' tomado'); return; }
@@ -928,6 +985,7 @@
         const prev = editing.id ? (W()[editing.kind] || []).find((x) => x.id === editing.id) : null;
         const item = { ...(prev || {}), ...Object.fromEntries(new FormData(e.target)) };
         if (e.target.querySelector('[name="_day"]')) { item.days = new FormData(e.target).getAll('_day').join(','); item.weekday = ''; delete item._day; }
+        if (editing.kind === 'salud') { if (String(item.kind || '').startsWith('t:')) { item.subtype = item.kind.slice(2); item.kind = 'otro'; } else item.subtype = ''; }
         if ('_sport' in item) { if (item._sport !== 'gym') item.area = item._sport; if (!SUB[item._sport]) item.style = ''; delete item._sport; } // fuera del gimnasio, la actividad va en "area"
         if ('_year' in item) { const y = item._year === 'otro' ? String(item._yearOther || '').trim() : item._year; item.term = termText(item._half, /^(19|20)\d{2}$/.test(y) ? y : '').trim(); delete item._half; delete item._year; delete item._yearOther; }
         if (editing.kind === 'curso') { st.studyTab = 'carreras'; if (st.studyGroup === 'carreras') st.studyGroup = 'todos'; } // para ver el curso recién guardado
@@ -960,7 +1018,7 @@
             w.vencimiento.filter((v) => hit(v.title, v.place, v.notes)).forEach((v) => out.push({ go: 'vencimientos|vencimiento:' + v.id, title: '⏰ ' + v.title, sub: 'Vencimiento' + (v.date ? ' · ' + fshort(v.date) : ''), scope: 'personal' }));
             w.meta.filter((g) => hit(g.title, g.term, g.notes)).forEach((g) => out.push({ go: 'metas|meta:' + g.id, title: '🎯 ' + g.title, sub: 'Meta' + (g.term ? ' · ' + g.term : ''), scope: 'personal' }));
             w.materia.filter((m) => hit(m.name, m.code, m.teacher, m.notes)).forEach((m) => out.push({ go: 'estudios|materia:' + m.id, title: '📚 ' + m.name, sub: 'Materia' + (m.term ? ' · ' + m.term : ''), scope: 'estudios' }));
-            w.salud.filter((h) => hit(h.title, h.specialty, h.doctor, h.notes, h.result)).forEach((h) => out.push({ go: 'salud|salud:' + h.id, title: (h.kind === 'medicamento' ? '💊 ' : '🩺 ') + h.title, sub: (HEALTH_KIND[h.kind] || '') + (h.doctor ? ' · ' + h.doctor : ''), scope: 'personal' }));
+            w.salud.filter((h) => hit(h.title, h.specialty, h.doctor, h.notes, h.result)).forEach((h) => out.push({ go: 'salud|salud:' + h.id, title: (h.kind === 'medicamento' ? '💊 ' : '🩺 ') + h.title, sub: typeLabel(h) + (h.doctor ? ' · ' + h.doctor : ''), scope: 'personal' }));
             w.entreno.filter((r) => hit(r.exercise, TRAIN_AREA[r.area], r.notes)).forEach((r) => out.push({ go: 'entrenamiento|entreno:' + r.id, title: '🏋️ ' + (r.exercise || TRAIN_AREA[r.area]), sub: 'Entrenamiento · ' + (TRAIN_AREA[r.area] || ''), scope: 'personal' }));
             w.curso.filter((c) => hit(c.name, c.institution, c.notes)).forEach((c) => out.push({ go: 'estudios|curso:' + c.id, title: '🎓 ' + c.name, sub: 'Curso' + (c.institution ? ' · ' + c.institution : ''), scope: 'estudios' }));
             w.actividad.filter((a) => hit(a.title, a.notes, subjectName(a.subject))).forEach((a) => out.push({ go: 'estudios|actividad:' + a.id, title: '📝 ' + a.title, sub: (ACT_KIND[a.kind] || '') + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : '') + (a.date ? ' · ' + fshort(a.date) : ''), scope: 'estudios' }));
@@ -971,13 +1029,13 @@
         // Para el Dashboard: lo personal con fecha (agenda pendiente desde hoy, actividades y trabajo abiertos)
         upcoming: () => {
             const t = today(); const w = W(); const out = [];
-            agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ section: 'Agenda', text: e.birth ? '🎂 ' + e.title + (ageOf(e) > 0 ? ' cumple ' + ageOf(e) + ' años' : ' cumple años') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
+            agendaItems().filter((e) => e.done !== 'si' && e.date && e.date >= t).forEach((e) => out.push({ ...(e.date === t && !e.birth ? { take: 'agenda:' + e.id, takeText: 'Tocá cuando lo hagas' } : {}), section: 'Agenda', text: e.birth ? '🎂 ' + e.title + (ageOf(e) > 0 ? ' cumple ' + ageOf(e) + ' años' : ' cumple años') : (AGENDA_KIND[e.kind] && e.kind !== 'evento' ? AGENDA_KIND[e.kind] + ': ' : '') + e.title + (e.place ? ' · ' + e.place : ''), date: e.date, time: e.time || '', scope: 'personal', go: 'mi-agenda', noPast: true }));
             // Medicamentos con recordatorio: cada toma del día (los de "por un tiempo", solo entre su desde y hasta)
             w.salud.filter((h) => h.kind === 'medicamento' && h.status !== 'finalizado' && h.remind === 'si' && (h.course !== 'temporal' || ((!h.start || h.start <= t) && (!h.end || h.end >= t))))
                 .forEach((h) => String(h.hours || '').split(/\s*(?:,|;|\/|\by\b)\s*/).map((x) => x.trim()).filter(Boolean)
                     .filter((x) => !String(h.taken || '').split(';').includes(t + ' ' + x)) // la que ya se tomó hoy no aparece
                     .forEach((x) => out.push({ section: 'Salud', text: '💊 Tomar ' + h.title + (doseText(h) ? ' ' + doseText(h) : ''), date: t, time: x, scope: 'personal', go: 'salud', take: h.id + '|' + x })));
-            w.salud.filter((h) => h.kind !== 'medicamento' && h.date && h.date >= t).forEach((h) => out.push({ section: 'Salud', text: (HEALTH_KIND[h.kind] || '') + ': ' + h.title + (h.doctor ? ' · ' + h.doctor : ''), date: h.date, time: h.time || '', scope: 'personal', go: 'salud', noPast: true }));
+            w.salud.filter((h) => h.kind !== 'medicamento' && h.date && h.date >= t).forEach((h) => out.push({ section: 'Salud', text: typeLabel(h) + ': ' + h.title + (h.doctor ? ' · ' + h.doctor : ''), date: h.date, time: h.time || '', scope: 'personal', go: 'salud', noPast: true }));
             w.vencimiento.filter((v) => v.done !== 'si' && v.date && !isPaid(v, dueOf(v))).forEach((v) => out.push({ section: 'Vencimientos', text: (DL_KIND[v.kind] && v.kind !== 'otro' ? DL_KIND[v.kind] + ': ' : '') + v.title, date: dueOf(v), time: v.time || '', scope: 'personal', go: 'vencimientos' }));
             w.actividad.filter((a) => ACT_OPEN.includes(actStatus(a)) && a.date).forEach((a) => out.push({ section: 'Estudios', text: (ACT_KIND[a.kind] || '') + ': ' + a.title + (subjectName(a.subject) ? ' · ' + subjectName(a.subject) : ''), date: a.date, time: a.time || '', scope: 'estudios', go: 'estudios' }));
             w.trabajo.filter((j) => JOB_OPEN.includes(j.status) && j.date && j.kind !== 'empleo').forEach((j) => out.push({ section: 'Trabajo', text: (JOB_KIND[j.kind] || '') + ': ' + j.title + (j.company ? ' · ' + j.company : ''), date: j.date, time: j.time || '', scope: 'trabajo', go: 'trabajo' }));

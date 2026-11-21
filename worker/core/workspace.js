@@ -66,13 +66,16 @@ export const WS = {
   // Salud: chequeos, consultas, estudios, vacunas y medicamentos (con dosis y horarios). specialty y doctor se escriben a mano;
   // el panel los agrupa sin distinguir mayúsculas ni acentos (cardiologo = Cardiólogo)
   salud: { table: 'ws_health', required: 'title', fields: {
-    kind: [['chequeo', 'medicamento', 'consulta', 'estudio', 'vacuna', 'otro']], title: ['line', 160], date: ['date'], time: ['time'],
+    // kind: "chequeo" queda solo por los registros viejos (se muestra como Consulta). subtype: tipo creado por la usuaria (ws_health_types), con kind "otro"
+    kind: [['consulta', 'medicamento', 'estudio', 'vacuna', 'otro', 'chequeo']], subtype: ['ref'], title: ['line', 160], date: ['date'], time: ['time'],
     specialty: ['line', 80], doctor: ['line', 120], place: ['line', 160], dose: ['line', 80], hours: ['line', 120],
     start: ['date'], end: ['date'], status: [['activo', 'finalizado']], result: ['text', 2000], notes: ['text', 2000],
     // Medicamentos: unidad de la dosis, si es crónico o por un tiempo (antibiótico: desde y hasta) y si las tomas del día aparecen en el Dashboard
     unit: [['', 'mg', 'g', 'mcg', 'ml', 'gotas', 'comprimido', 'capsula', 'UI', 'puff', 'sobre']], course: [['cronico', 'temporal']], remind: [['no', 'si']],
     taken: ['text', 2000], // tomas ya hechas ("2026-11-20 08:00;…"): la del día desaparece del Dashboard hasta el día siguiente
   } },
+  // Tipos de registro de Salud que agrega la usuaria (Kinesiología, Odontología…): se pueden editar y borrar
+  saludtipo: { table: 'ws_health_types', required: 'name', fields: { name: ['line', 60] } },
   // Entrenamiento: rutina por día de la semana (gimnasio por zona, cardio y otros deportes como natación). log: fechas en que se hizo
   entreno: { table: 'ws_training', required: 'area', fields: {
     area: [['superior', 'inferior', 'core', 'completo', 'cardio', 'movilidad', 'natacion', 'running', 'ciclismo', 'caminata', 'yoga', 'otro']],

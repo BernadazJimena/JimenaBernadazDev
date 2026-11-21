@@ -1105,7 +1105,7 @@ ${sectionsHtml()}        <section class="module" id="m-clientes" hidden></sectio
     const tasks = window.JNBTasks && window.JNBTasks.list ? window.JNBTasks.list() : null;
     (tasks || []).filter((t) => !t.archived && t.status !== 'done' && t.due).forEach((t) => dated({ section: 'Gestor de tareas', text: t.title, go: 'tareas', taskId: t.id, scope: t.scope || 'jnb', time: t.due_time || '' }, t.due.slice(0, 10)));
     // Espacio Personal (js/admin-workspace.js): agenda, TPs y exámenes, entrevistas y postulaciones con fecha
-    if (window.JNBWorkspace) window.JNBWorkspace.upcoming().forEach((x) => dated({ section: x.section, text: x.text, go: x.go, scope: x.scope, time: x.time, take: x.take, stateFn: x.take ? () => 'Tocá al tomarlo' : undefined }, x.date, x.noPast));
+    if (window.JNBWorkspace) window.JNBWorkspace.upcoming().forEach((x) => dated({ section: x.section, text: x.text, go: x.go, scope: x.scope, time: x.time, take: x.take, stateFn: x.take ? () => x.takeText || 'Tocá al tomarlo' : undefined }, x.date, x.noPast));
     // Pagos sin acreditar con vencimiento
     (data.payments || []).filter((y) => !y.paid && y.due).forEach((y) => { const c = clientById(y.clientId); dated({ section: 'Pagos', text: [y.concept || 'Pago', money(y.currency, y.amount), c && c.name].filter(Boolean).join(' · '), go: 'pagos', openCode: y.projectCode || '' }, y.due.slice(0, 10)); });
     // Plazos y vencimientos (js/admin-agenda.js)
@@ -1146,7 +1146,7 @@ ${sectionsHtml()}        <section class="module" id="m-clientes" hidden></sectio
   const nowHM = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' });
   // Urgente: vencido, o de hoy con horario que ya pasó · Hoy: vence hoy (sin hora o con hora por venir) y avisos sin fecha · Próximos 7 días
   const levelOf = (x) => {
-    if (!x.date || x.take) return 'today'; // las tomas de medicamentos nunca "vencen": quedan en Hoy hasta que se tocan
+    if (!x.date || x.take) return 'today'; // las tomas de medicamentos y los eventos del día no "vencen": quedan en Hoy hasta que se tocan
     const n = daysTo(x.date);
     if (n < 0 || (n === 0 && x.time && x.time <= nowHM())) return 'urgent';
     return n === 0 ? 'today' : 'next';
